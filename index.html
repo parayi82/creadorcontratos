@@ -194,6 +194,11 @@ nav{position:fixed;top:0;left:0;right:0;z-index:100;background:rgba(11,26,44,.82
 .feature-card--accent{border-color:rgba(13,148,136,.4);background:linear-gradient(180deg,#f5fdfb,#ecfbf6);}
 .feature-card--navy{border-color:rgba(26,58,92,.35);background:linear-gradient(180deg,#f7fafd,#eef4fb);}
 .feature-card--navy::after{background:linear-gradient(90deg,var(--navy2),var(--navy3));}
+.fc-icon{font-size:30px;margin-bottom:14px;line-height:1;}
+.fc-title{font-family:var(--font);font-size:15.5px;font-weight:700;color:var(--navy);margin-bottom:8px;letter-spacing:-.013em;line-height:1.28;}
+.fc-title--teal{color:var(--teal-deep);}
+.fc-title--navy2{color:var(--navy2);}
+.fc-body{font-family:var(--font);font-size:13.5px;color:var(--ink3);line-height:1.72;}
 
 /* SERVICIO (columna izquierda con lista) */
 .servicio{padding:96px 32px;background:var(--white);}
@@ -652,112 +657,113 @@ src="https://www.facebook.com/tr?id=772478098942349&ev=PageView&noscript=1"
 </section>
 
 <!-- SERVICIO -->
-<section style="padding:72px 20px;background:#fff;">
+<section id="servicio" style="padding:72px 20px;background:#fff;">
   <div style="max-width:960px;margin:0 auto;">
-    <h2 style="text-align:center;font-size:28px;font-weight:800;color:var(--navy);margin-bottom:12px;">
+    <div class="section-label">Plataforma de compliance</div>
+    <h2 class="section-title">
       Todo lo que su empresa necesita para cumplir la LFT — en un solo plan
     </h2>
-    <p style="text-align:center;color:var(--ink3);font-size:15px;margin-bottom:48px;line-height:1.7;max-width:680px;margin-left:auto;margin-right:auto;">
+    <p class="section-sub">
       Desde el primer contrato hasta el control de asistencias y la reforma de 40 horas. Documentos, expedientes y cumplimiento normativo en su portal, listos para usar.
     </p>
     <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:24px;">
 
       <!-- Contratos -->
       <div class="feature-card">
-        <div style="font-size:28px;margin-bottom:12px;">📄</div>
-        <div style="font-weight:700;font-size:15px;color:var(--navy);margin-bottom:8px;">Contratos en 8+ modalidades</div>
-        <div style="font-size:13px;color:var(--ink3);line-height:1.7;">Indeterminado, determinado, a prueba, capacitación inicial, comisionista, colectivo, teletrabajo y trabajo a domicilio. Cláusulas personalizables por sector.</div>
+        <div class="fc-icon">📄</div>
+        <div class="fc-title">Contratos en 8+ modalidades</div>
+        <div class="fc-body">Indeterminado, determinado, a prueba, capacitación inicial, comisionista, colectivo, teletrabajo y trabajo a domicilio. Cláusulas personalizables por sector.</div>
       </div>
 
       <!-- Reforma 40 horas -->
       <div class="feature-card feature-card--accent">
-        <div style="font-size:28px;margin-bottom:12px;">⏱️</div>
-        <div style="font-weight:700;font-size:15px;color:var(--teal,#0f766e);margin-bottom:8px;">Reforma de jornada 40 horas <span style="font-size:11px;background:#ccfbf1;color:#0f766e;padding:2px 8px;border-radius:20px;margin-left:6px;">Nuevo 2026</span></div>
-        <div style="font-size:13px;color:var(--ink3);line-height:1.7;">Cálculo automático de horas extras dobles y triples conforme a la reforma gradual 2026–2030 (Arts. 66–68 LFT). Constancias firmadas por trabajador con valor probatorio.</div>
+        <div class="fc-icon">⏱️</div>
+        <div class="fc-title fc-title--teal">Reforma de jornada 40 horas <span style="font-size:11px;background:#ccfbf1;color:#0f766e;padding:2px 8px;border-radius:20px;margin-left:6px;">Nuevo 2026</span></div>
+        <div class="fc-body">Cálculo automático de horas extras dobles y triples conforme a la reforma gradual 2026–2030 (Arts. 66–68 LFT). Constancias firmadas por trabajador con valor probatorio.</div>
       </div>
 
       <!-- Control de asistencias -->
       <div class="feature-card">
-        <div style="font-size:28px;margin-bottom:12px;">📅</div>
-        <div style="font-weight:700;font-size:15px;color:var(--navy);margin-bottom:8px;">Control de asistencias y jornada</div>
-        <div style="font-size:13px;color:var(--ink3);line-height:1.7;">Registro diario de entradas, salidas, faltas, permisos e incapacidades. Compatible con checador biométrico ZKTeco. Tablero anual de vacaciones y reportes exportables.</div>
+        <div class="fc-icon">📅</div>
+        <div class="fc-title">Control de asistencias y jornada</div>
+        <div class="fc-body">Registro diario de entradas, salidas, faltas, permisos e incapacidades. Compatible con checador biométrico ZKTeco. Tablero anual de vacaciones y reportes exportables.</div>
       </div>
 
       <!-- Expedientes digitales -->
       <div class="feature-card">
-        <div style="font-size:28px;margin-bottom:12px;">🗂️</div>
-        <div style="font-weight:700;font-size:15px;color:var(--navy);margin-bottom:8px;">Expedientes digitales por trabajador</div>
-        <div style="font-size:13px;color:var(--ink3);line-height:1.7;">INE, CURP, NSS, RFC, acta de nacimiento y documentos personalizados escaneados y archivados conforme a la LFT (Art. 804). Acceso inmediato ante una inspección o demanda.</div>
+        <div class="fc-icon">🗂️</div>
+        <div class="fc-title">Expedientes digitales por trabajador</div>
+        <div class="fc-body">INE, CURP, NSS, RFC, acta de nacimiento y documentos personalizados escaneados y archivados conforme a la LFT (Art. 804). Acceso inmediato ante una inspección o demanda.</div>
       </div>
 
       <!-- Actas y disciplina -->
       <div class="feature-card">
-        <div style="font-size:28px;margin-bottom:12px;">📝</div>
-        <div style="font-weight:700;font-size:15px;color:var(--navy);margin-bottom:8px;">Actas administrativas y disciplina</div>
-        <div style="font-size:13px;color:var(--ink3);line-height:1.7;">Apercibimiento, suspensión y rescisión con los 12 tipos de falta más comunes y las 14 causales del Art. 47 LFT. Generadas en segundos, firmadas digitalmente.</div>
+        <div class="fc-icon">📝</div>
+        <div class="fc-title">Actas administrativas y disciplina</div>
+        <div class="fc-body">Apercibimiento, suspensión y rescisión con los 12 tipos de falta más comunes y las 14 causales del Art. 47 LFT. Generadas en segundos, firmadas digitalmente.</div>
       </div>
 
       <!-- Reglamento y NOMs -->
       <div class="feature-card">
-        <div style="font-size:28px;margin-bottom:12px;">📖</div>
-        <div style="font-weight:700;font-size:15px;color:var(--navy);margin-bottom:8px;">Reglamento Interior y NOMs</div>
-        <div style="font-size:13px;color:var(--ink3);line-height:1.7;">Reglamento personalizado con NOM-035, política de acoso y teletrabajo. Las 5 comisiones mixtas obligatorias (seguridad, capacitación, productividad). Depósito ante CFCRL.</div>
+        <div class="fc-icon">📖</div>
+        <div class="fc-title">Reglamento Interior y NOMs</div>
+        <div class="fc-body">Reglamento personalizado con NOM-035, política de acoso y teletrabajo. Las 5 comisiones mixtas obligatorias (seguridad, capacitación, productividad). Depósito ante CFCRL.</div>
       </div>
 
       <!-- Formatos RH -->
       <div class="feature-card">
-        <div style="font-size:28px;margin-bottom:12px;">🗓️</div>
-        <div style="font-weight:700;font-size:15px;color:var(--navy);margin-bottom:8px;">Formatos operativos de RH</div>
-        <div style="font-size:13px;color:var(--ink3);line-height:1.7;">Permisos, ausencias, incapacidades, préstamos, asignación de herramientas y uniformes, cambios de horario, convenios de confidencialidad, renuncias y finiquitos.</div>
+        <div class="fc-icon">🗓️</div>
+        <div class="fc-title">Formatos operativos de RH</div>
+        <div class="fc-body">Permisos, ausencias, incapacidades, préstamos, asignación de herramientas y uniformes, cambios de horario, convenios de confidencialidad, renuncias y finiquitos.</div>
       </div>
 
       <!-- Alertas y asesoría -->
       <div class="feature-card">
-        <div style="font-size:28px;margin-bottom:12px;">🔔</div>
-        <div style="font-weight:700;font-size:15px;color:var(--navy);margin-bottom:8px;">Alertas automáticas y asesoría directa</div>
-        <div style="font-size:13px;color:var(--ink3);line-height:1.7;">Avisos 30, 15 y 7 días antes de cada vencimiento. Línea directa por WhatsApp con su abogado laboral para consultas y emergencias.</div>
+        <div class="fc-icon">🔔</div>
+        <div class="fc-title">Alertas automáticas y asesoría directa</div>
+        <div class="fc-body">Avisos 30, 15 y 7 días antes de cada vencimiento. Línea directa por WhatsApp con su abogado laboral para consultas y emergencias.</div>
       </div>
 
       <!-- Biblioteca jurídica -->
       <div class="feature-card">
-        <div style="font-size:28px;margin-bottom:12px;">📚</div>
-        <div style="font-weight:700;font-size:15px;color:var(--navy);margin-bottom:8px;">Biblioteca jurídica laboral + Consultas</div>
-        <div style="font-size:13px;color:var(--ink3);line-height:1.7;">46+ preguntas frecuentes con respuesta del abogado: liquidaciones, IMSS, vacaciones, jornada, horas extras, despido justificado. Calculadoras de finiquito, liquidación e indemnización constitucional. Sin costo adicional.</div>
+        <div class="fc-icon">📚</div>
+        <div class="fc-title">Biblioteca jurídica laboral + Consultas</div>
+        <div class="fc-body">46+ preguntas frecuentes con respuesta del abogado: liquidaciones, IMSS, vacaciones, jornada, horas extras, despido justificado. Calculadoras de finiquito, liquidación e indemnización constitucional. Sin costo adicional.</div>
       </div>
 
       <!-- Asistente legal IA -->
       <div class="feature-card feature-card--accent">
-        <div style="font-size:28px;margin-bottom:12px;">⚖️</div>
-        <div style="font-weight:700;font-size:15px;color:var(--navy2);margin-bottom:8px;">Asistente legal con inteligencia artificial <span style="font-size:11px;background:var(--sky2);color:var(--navy2);padding:2px 8px;border-radius:20px;margin-left:6px;">IA 24/7</span></div>
-        <div style="font-size:13px;color:var(--ink3);line-height:1.7;">Resuelva dudas laborales complejas al instante: criterios de la SCJN, interpretación de la LFT, cálculo de prestaciones y generación de cláusulas personalizadas. Disponible 24/7 en su portal.</div>
+        <div class="fc-icon">⚖️</div>
+        <div class="fc-title fc-title--navy2">Asistente legal con inteligencia artificial <span style="font-size:11px;background:var(--sky2);color:var(--navy2);padding:2px 8px;border-radius:20px;margin-left:6px;">IA 24/7</span></div>
+        <div class="fc-body">Resuelva dudas laborales complejas al instante: criterios de la SCJN, interpretación de la LFT, cálculo de prestaciones y generación de cláusulas personalizadas. Disponible 24/7 en su portal.</div>
       </div>
 
       <!-- Checklist de contratación -->
       <div class="feature-card">
-        <div style="font-size:28px;margin-bottom:12px;">✅</div>
-        <div style="font-weight:700;font-size:15px;color:var(--navy);margin-bottom:8px;">Checklist guiado de contratación</div>
-        <div style="font-size:13px;color:var(--ink3);line-height:1.7;">Proceso paso a paso para contratar correctamente: oferta de trabajo, solicitud de empleo, aviso de privacidad, contrato, alta IMSS, reglamento y entrega de recursos. Sin olvidar ningún documento.</div>
+        <div class="fc-icon">✅</div>
+        <div class="fc-title">Checklist guiado de contratación</div>
+        <div class="fc-body">Proceso paso a paso para contratar correctamente: oferta de trabajo, solicitud de empleo, aviso de privacidad, contrato, alta IMSS, reglamento y entrega de recursos. Sin olvidar ningún documento.</div>
       </div>
 
       <!-- Reportes gerenciales -->
       <div class="feature-card">
-        <div style="font-size:28px;margin-bottom:12px;">📊</div>
-        <div style="font-weight:700;font-size:15px;color:var(--navy);margin-bottom:8px;">Reportes gerenciales exportables</div>
-        <div style="font-size:13px;color:var(--ink3);line-height:1.7;">Dashboard ejecutivo con 6 indicadores desde sus datos reales: trabajadores activos, índice de asistencia, rotación del período, contratos generados, puesto más frecuente y cobertura documental. Exportable a PDF. Filtre por mes, trimestre o año.</div>
+        <div class="fc-icon">📊</div>
+        <div class="fc-title">Reportes gerenciales exportables</div>
+        <div class="fc-body">Dashboard ejecutivo con 6 indicadores desde sus datos reales: trabajadores activos, índice de asistencia, rotación del período, contratos generados, puesto más frecuente y cobertura documental. Exportable a PDF. Filtre por mes, trimestre o año.</div>
       </div>
 
       <!-- Contratos por sector -->
       <div class="feature-card">
-        <div style="font-size:28px;margin-bottom:12px;">🏭</div>
-        <div style="font-weight:700;font-size:15px;color:var(--navy);margin-bottom:8px;">Contratos y documentos por sector</div>
-        <div style="font-size:13px;color:var(--ink3);line-height:1.7;">Cláusulas pre-configuradas para su giro: clínicas (NOM-004, confidencialidad médica), restaurantes (propinas Art. 346), construcción (obra determinada, EPP, REPSE) y retail (comisiones, manejo de caja). Sin tener que buscar qué cláusulas aplican.</div>
+        <div class="fc-icon">🏭</div>
+        <div class="fc-title">Contratos y documentos por sector</div>
+        <div class="fc-body">Cláusulas pre-configuradas para su giro: clínicas (NOM-004, confidencialidad médica), restaurantes (propinas Art. 346), construcción (obra determinada, EPP, REPSE) y retail (comisiones, manejo de caja). Sin tener que buscar qué cláusulas aplican.</div>
       </div>
 
       <!-- Políticas internas -->
       <div class="feature-card">
-        <div style="font-size:28px;margin-bottom:12px;">📋</div>
-        <div style="font-weight:700;font-size:15px;color:var(--navy);margin-bottom:8px;">Políticas internas listas para usar</div>
-        <div style="font-size:13px;color:var(--ink3);line-height:1.7;">Home office (NOM-037), uso de dispositivos y redes sociales, código de vestimenta, prevención de adicciones y no discriminación. Cada una vale $3,000–$5,000 con un abogado. Incluidas en todos los planes.</div>
+        <div class="fc-icon">📋</div>
+        <div class="fc-title">Políticas internas listas para usar</div>
+        <div class="fc-body">Home office (NOM-037), uso de dispositivos y redes sociales, código de vestimenta, prevención de adicciones y no discriminación. Cada una vale $3,000–$5,000 con un abogado. Incluidas en todos los planes.</div>
       </div>
 
     </div>

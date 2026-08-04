@@ -244,6 +244,38 @@ nav{position:fixed;top:0;left:0;right:0;z-index:100;background:rgba(11,26,44,.82
 .precio-cta-ghost{background:transparent;color:var(--navy2);border:1.5px solid var(--border2);}
 .precio-cta-ghost:hover{background:var(--navy);color:#fff;border-color:var(--navy);transform:translateY(-2px);}
 
+/* TICKET MODAL + INFO BUTTON */
+.pf-ticket{background:rgba(13,148,136,.08);border-radius:8px;padding:8px 10px;margin-top:4px;}
+.ticket-info-btn{background:none;border:none;cursor:pointer;color:var(--teal-deep);font-size:11px;font-family:var(--font);font-weight:700;padding:0 3px;vertical-align:baseline;opacity:.85;transition:opacity .2s;white-space:nowrap;}
+.ticket-info-btn:hover{opacity:1;text-decoration:underline;}
+.tm-overlay{position:fixed;inset:0;background:rgba(9,26,46,.65);backdrop-filter:blur(6px);z-index:600;display:none;align-items:center;justify-content:center;padding:20px;}
+.tm-overlay.open{display:flex;}
+.tm-box{background:var(--white);border-radius:var(--r-xl);width:100%;max-width:500px;overflow:hidden;box-shadow:0 40px 100px -30px rgba(0,0,0,.55);}
+.tm-hdr{background:radial-gradient(120% 160% at 100% 0%,#173a5e,var(--navy));color:#fff;padding:22px 26px;}
+.tm-hdr h3{font-size:16px;font-weight:700;margin-bottom:4px;}
+.tm-hdr p{font-size:12px;opacity:.6;}
+.tm-bdy{padding:22px 26px;}
+.tm-meta{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:18px;}
+.tm-meta-item .lbl{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.08em;color:var(--ink3);margin-bottom:3px;}
+.tm-meta-item .val{font-size:13px;font-weight:600;color:var(--ink);}
+.tm-sep{height:1px;background:var(--border);margin:16px 0;}
+.tm-sec-title{font-size:10.5px;font-weight:700;text-transform:uppercase;letter-spacing:.08em;margin-bottom:9px;}
+.tm-sec-title.ok{color:var(--teal-deep);}
+.tm-sec-title.no{color:var(--ink3);}
+.tm-list-items{list-style:none;display:flex;flex-direction:column;gap:6px;margin-bottom:14px;}
+.tm-list-items li{font-size:12.5px;color:var(--ink2);display:flex;gap:8px;line-height:1.5;}
+.tm-list-items li::before{flex-shrink:0;font-weight:700;}
+.tm-list-items.inc li::before{content:'✓';color:var(--teal);}
+.tm-list-items.exc li::before{content:'✕';color:var(--ink3);}
+.tm-list-items.exc li{color:var(--ink3);}
+.tm-example{background:var(--surface);border-radius:10px;padding:13px 15px;font-size:12px;color:var(--ink2);line-height:1.65;}
+.tm-example strong{color:var(--ink);display:block;margin-bottom:3px;font-size:12.5px;}
+.tm-ftr{padding:14px 26px;border-top:1px solid var(--border);display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap;}
+.tm-close-btn{background:none;border:1.5px solid var(--border2);border-radius:999px;padding:8px 20px;cursor:pointer;font-family:var(--font);font-size:12.5px;font-weight:600;color:var(--ink2);transition:background .2s,border-color .2s;}
+.tm-close-btn:hover{background:var(--surface);border-color:var(--ink3);}
+.tm-ftr-note{font-size:11px;color:var(--ink3);line-height:1.5;}
+@media(max-width:520px){.tm-meta{grid-template-columns:1fr;}}
+
 /* CALCULADORA */
 .calculadora{padding:96px 32px;background:var(--white);}
 .calc-inner{max-width:860px;margin:0 auto;background:var(--surface);border-radius:var(--r-xl);padding:44px;border:1px solid var(--border);box-shadow:0 30px 70px -34px rgba(var(--shadow),.3);}
@@ -539,7 +571,7 @@ src="https://www.facebook.com/tr?id=772478098942349&ev=PageView&noscript=1"
       <div class="req-chip"><span class="rc-ic">🖐️</span> Registro de horas digital <span class="rc-ck">✓</span></div>
     </div>
     <div class="hero-ctas">
-      <button class="cta-primary" onclick="abrirContacto('Hero CTA principal')">Solicitar diagnóstico gratuito →</button>
+      <a class="cta-primary" href="diagnostico-cumplimiento.html">Hacer mi diagnóstico gratuito →</a>
       <a class="cta-secondary" href="#precios">Ver planes desde $899/mes</a>
     </div>
     <div class="hero-trial-pill">⚖️ <strong>Asesoría de abogados</strong> siempre incluida <span class="sep">•</span> sin contratos de permanencia</div>
@@ -550,61 +582,6 @@ src="https://www.facebook.com/tr?id=772478098942349&ev=PageView&noscript=1"
       <div class="trust-item">✓ <strong>Alertas automáticas</strong> de vencimientos</div>
       <div class="trust-item">✓ <strong>LFT vigente</strong> — actualización continua</div>
 
-      <!-- Semáforo de compliance -->
-      <div class="feature-card feature-card--amber">
-        <div style="font-size:28px;margin-bottom:12px;">🟡</div>
-        <div style="font-weight:700;font-size:15px;color:#92400e;margin-bottom:8px;">Semáforo de compliance laboral</div>
-        <div style="font-size:13px;color:var(--ink3);line-height:1.7;">Panel visual con 7 indicadores en tiempo real: contratos, expedientes, reglamento, NOM-035, NSS, solicitudes pendientes y constancias de jornada. Sepa exactamente qué le falta antes de una inspección del IMSS o la STPS.</div>
-      </div>
-
-      <!-- Consultas legales y biblioteca jurídica -->
-      <div class="feature-card">
-        <div style="font-size:28px;margin-bottom:12px;">📚</div>
-        <div style="font-weight:700;font-size:15px;color:var(--navy);margin-bottom:8px;">Biblioteca jurídica laboral + Consultas</div>
-        <div style="font-size:13px;color:var(--ink3);line-height:1.7;">46+ preguntas frecuentes con respuesta del abogado: liquidaciones, IMSS, vacaciones, jornada, horas extras, despido justificado. Calculadoras de finiquito, liquidación e indemnización constitucional. Sin costo adicional.</div>
-      </div>
-
-      <!-- Asistente legal IA -->
-      <div class="feature-card">
-        <div style="font-size:28px;margin-bottom:12px;">⚖️</div>
-        <div style="font-weight:700;font-size:15px;color:var(--navy);margin-bottom:8px;">Asistente legal con inteligencia artificial</div>
-        <div style="font-size:13px;color:var(--ink3);line-height:1.7;">Resuelva dudas laborales complejas al instante: criterios de la SCJN, interpretación de la LFT, cálculo de prestaciones y generación de cláusulas personalizadas. Disponible 24/7 en su portal.</div>
-      </div>
-
-      <!-- Proceso de contratación guiado -->
-      <div class="feature-card">
-        <div style="font-size:28px;margin-bottom:12px;">✅</div>
-        <div style="font-weight:700;font-size:15px;color:var(--navy);margin-bottom:8px;">Checklist guiado de contratación</div>
-        <div style="font-size:13px;color:var(--ink3);line-height:1.7;">Proceso paso a paso para contratar correctamente: oferta de trabajo, solicitud de empleo, aviso de privacidad, contrato, alta IMSS, reglamento y entrega de recursos. Sin olvidar ningún documento.</div>
-      </div>
-
-      <!-- Simulador de riesgo -->
-      <div class="feature-card feature-card--navy">
-        <div style="font-size:28px;margin-bottom:12px;">⚠️</div>
-        <div style="font-weight:700;font-size:15px;color:var(--navy,#0f2640);margin-bottom:8px;">Simulador de riesgo de demanda <span style="font-size:11px;background:#dbeafe;color:#1d4ed8;padding:2px 8px;border-radius:20px;margin-left:6px;">Gratis</span></div>
-        <div style="font-size:13px;color:var(--ink3,#888);line-height:1.7;">Calcule en 10 preguntas cuánto le costaría una demanda laboral y su probabilidad de perder. Identifique sus vulnerabilidades antes de que el trabajador contrate abogado. <a href="simulador-riesgo.html" style="color:var(--navy,#0f2640);font-weight:700;">Probar ahora →</a></div>
-      </div>
-
-      <!-- Reportes gerenciales -->
-      <div class="feature-card">
-        <div style="font-size:28px;margin-bottom:12px;">📊</div>
-        <div style="font-weight:700;font-size:15px;color:var(--navy);margin-bottom:8px;">Reportes gerenciales con KPIs reales</div>
-        <div style="font-size:13px;color:var(--ink3);line-height:1.7;">Dashboard ejecutivo con 6 indicadores desde sus datos reales: trabajadores activos, índice de asistencia, rotación del período, contratos generados, puesto más frecuente y cobertura documental. Exportable a PDF. Filtre por mes, trimestre o año.</div>
-      </div>
-
-      <!-- Módulo por sector -->
-      <div class="feature-card">
-        <div style="font-size:28px;margin-bottom:12px;">🏭</div>
-        <div style="font-weight:700;font-size:15px;color:var(--navy);margin-bottom:8px;">Contratos y documentos por sector</div>
-        <div style="font-size:13px;color:var(--ink3);line-height:1.7;">Cláusulas pre-configuradas para su giro: clínicas (NOM-004, confidencialidad médica), restaurantes (propinas Art. 346), construcción (obra determinada, EPP, REPSE) y retail (comisiones, manejo de caja). Sin tener que buscar qué cláusulas aplican.</div>
-      </div>
-
-      <!-- Políticas internas -->
-      <div class="feature-card">
-        <div style="font-size:28px;margin-bottom:12px;">📋</div>
-        <div style="font-weight:700;font-size:15px;color:var(--navy);margin-bottom:8px;">Políticas internas listas para usar</div>
-        <div style="font-size:13px;color:var(--ink3);line-height:1.7;">Home office (NOM-037), uso de dispositivos y redes sociales, código de vestimenta, prevención de adicciones y no discriminación. Cada una vale $3,000–$5,000 con un abogado. Incluidas en todos los planes.</div>
-      </div>
     </div>
   </div>
 </section>
@@ -776,7 +753,7 @@ src="https://www.facebook.com/tr?id=772478098942349&ev=PageView&noscript=1"
       <div class="step">
         <div class="step-num">4</div>
         <div class="step-title">Tranquilidad total</div>
-        <div class="step-desc">Auditoría anual de compliance y asesoría reactiva incluidas en ambos planes, sin importar el tamaño de su empresa.</div>
+        <div class="step-desc">Auditoría anual de compliance y asesoría reactiva incluidas en todos los planes, sin importar el tamaño de su empresa.</div>
       </div>
     </div>
   </div>
@@ -812,8 +789,13 @@ src="https://www.facebook.com/tr?id=772478098942349&ev=PageView&noscript=1"
         <div class="precio-monto">$899<span>/mes, IVA incl.</span></div>
         <div class="precio-desc">De 1 a 15 trabajadores</div>
         <div class="precio-features">
-          <div class="pf"><span class="pf-check">✓</span> Acceso total al software</div>
-          <div class="pf"><span class="pf-check">✓</span> <strong>1 ticket</strong> de asesoría legal / mes</div>
+          <div class="pf"><span class="pf-check">✓</span> Expedientes digitales de trabajadores</div>
+          <div class="pf"><span class="pf-check">✓</span> Contratos en 8+ modalidades LFT</div>
+          <div class="pf"><span class="pf-check">✓</span> Semáforo de compliance (7 indicadores)</div>
+          <div class="pf"><span class="pf-check">✓</span> Registro de jornada — reforma 40h</div>
+          <div class="pf"><span class="pf-check">✓</span> Actas administrativas (Art. 47 LFT)</div>
+          <div class="pf"><span class="pf-check">✓</span> Asistente legal IA 24/7</div>
+          <div class="pf pf-ticket"><span class="pf-check">⚖️</span> <strong>1 ticket</strong> de asesoría legal / mes <button class="ticket-info-btn" onclick="abrirTicketModal(event)" aria-label="¿Qué es un ticket?">ⓘ ¿qué incluye?</button></div>
         </div>
         <a class="precio-cta precio-cta-ghost" href="checkout.html?plan=micro" style="display:block;">Contratar →</a>
       </div>
@@ -825,8 +807,11 @@ src="https://www.facebook.com/tr?id=772478098942349&ev=PageView&noscript=1"
         <div class="precio-monto">$1,999<span>/mes, IVA incl.</span></div>
         <div class="precio-desc">De 16 a 50 trabajadores</div>
         <div class="precio-features">
-          <div class="pf"><span class="pf-check">✓</span> Acceso total al software</div>
-          <div class="pf"><span class="pf-check">✓</span> <strong>3 tickets</strong> de asesoría legal / mes</div>
+          <div class="pf"><span class="pf-check">✓</span> Todo lo del plan Micro</div>
+          <div class="pf"><span class="pf-check">✓</span> Reportes gerenciales en PDF</div>
+          <div class="pf"><span class="pf-check">✓</span> Contratos por sector económico</div>
+          <div class="pf"><span class="pf-check">✓</span> Soporte prioritario por WhatsApp</div>
+          <div class="pf pf-ticket"><span class="pf-check">⚖️</span> <strong>3 tickets</strong> de asesoría legal / mes <button class="ticket-info-btn" onclick="abrirTicketModal(event)" aria-label="¿Qué es un ticket?">ⓘ ¿qué incluye?</button></div>
         </div>
         <a class="precio-cta precio-cta-main" href="checkout.html?plan=pyme" style="display:block;">Contratar →</a>
       </div>
@@ -837,8 +822,10 @@ src="https://www.facebook.com/tr?id=772478098942349&ev=PageView&noscript=1"
         <div class="precio-monto">$4,499<span>/mes, IVA incl.</span></div>
         <div class="precio-desc">De 51 a 150 trabajadores</div>
         <div class="precio-features">
-          <div class="pf"><span class="pf-check">✓</span> Acceso total al software</div>
-          <div class="pf"><span class="pf-check">✓</span> <strong>5 tickets</strong> de asesoría legal / mes</div>
+          <div class="pf"><span class="pf-check">✓</span> Todo lo del plan PyME</div>
+          <div class="pf"><span class="pf-check">✓</span> Gestión multi-sucursal centralizada</div>
+          <div class="pf"><span class="pf-check">✓</span> Auditoría semestral de compliance</div>
+          <div class="pf pf-ticket"><span class="pf-check">⚖️</span> <strong>5 tickets</strong> de asesoría legal / mes <button class="ticket-info-btn" onclick="abrirTicketModal(event)" aria-label="¿Qué es un ticket?">ⓘ ¿qué incluye?</button></div>
         </div>
         <a class="precio-cta precio-cta-ghost" href="checkout.html?plan=mediana" style="display:block;">Contratar →</a>
       </div>
@@ -849,8 +836,10 @@ src="https://www.facebook.com/tr?id=772478098942349&ev=PageView&noscript=1"
         <div class="precio-monto">$9,999<span>/mes, IVA incl.</span></div>
         <div class="precio-desc">De 151 a 500 trabajadores</div>
         <div class="precio-features">
-          <div class="pf"><span class="pf-check">✓</span> Acceso total al software</div>
-          <div class="pf"><span class="pf-check">✓</span> <strong>8 tickets</strong> de asesoría legal / mes</div>
+          <div class="pf"><span class="pf-check">✓</span> Todo lo del plan Mediana</div>
+          <div class="pf"><span class="pf-check">✓</span> Abogado laboralista asignado</div>
+          <div class="pf"><span class="pf-check">✓</span> Respuesta garantizada en 24 horas</div>
+          <div class="pf pf-ticket"><span class="pf-check">⚖️</span> <strong>8 tickets</strong> de asesoría legal / mes <button class="ticket-info-btn" onclick="abrirTicketModal(event)" aria-label="¿Qué es un ticket?">ⓘ ¿qué incluye?</button></div>
         </div>
         <a class="precio-cta precio-cta-ghost" href="checkout.html?plan=empresa" style="display:block;">Contratar →</a>
       </div>
@@ -1207,6 +1196,52 @@ calcROI();
   }, { threshold:0.12, rootMargin:'0px 0px -7% 0px' });
   els.forEach(function(e){ io.observe(e); });
 })();
+</script>
+
+<!-- TICKET MODAL -->
+<div class="tm-overlay" id="ticketModal" role="dialog" aria-modal="true" aria-labelledby="tmTitle" onclick="if(event.target===this)cerrarTicketModal()">
+  <div class="tm-box">
+    <div class="tm-hdr">
+      <h3 id="tmTitle">¿Qué incluye un ticket de asesoría legal?</h3>
+      <p>Todo lo que necesita saber antes de contratar</p>
+    </div>
+    <div class="tm-bdy">
+      <div class="tm-meta">
+        <div class="tm-meta-item"><div class="lbl">Formato</div><div class="val">Consulta escrita por portal o correo</div></div>
+        <div class="tm-meta-item"><div class="lbl">Tiempo de respuesta</div><div class="val">Máx. 48 horas hábiles</div></div>
+        <div class="tm-meta-item"><div class="lbl">Quién responde</div><div class="val">Abogado laboralista con cédula profesional</div></div>
+        <div class="tm-meta-item"><div class="lbl">Tickets no usados</div><div class="val">No acumulan al mes siguiente</div></div>
+      </div>
+      <div class="tm-sep"></div>
+      <div class="tm-sec-title ok">✓ Incluye</div>
+      <ul class="tm-list-items inc">
+        <li>Consultas laborales preventivas (despidos, sanciones, LFT, IMSS)</li>
+        <li>Revisión de documentos generados en el portal</li>
+        <li>Orientación ante inspección de la STPS</li>
+        <li>Cálculo de liquidación o finiquito estándar</li>
+        <li>Respuesta con artículo de ley aplicable</li>
+      </ul>
+      <div class="tm-sec-title no">✕ No incluye</div>
+      <ul class="tm-list-items exc">
+        <li>Representación legal en juicio o audiencias</li>
+        <li>Redacción de contratos colectivos especiales</li>
+        <li>Trámites ante IMSS o INFONAVIT</li>
+      </ul>
+      <div class="tm-example">
+        <strong>Ejemplo de uso:</strong>
+        "Tengo un trabajador que llegó tarde 4 veces este mes. ¿Puedo despedirlo con causa justificada?" — El abogado le responde con el fundamento del Art. 47 LFT, los pasos del procedimiento disciplinario previo y el formato de acta que debe levantar primero.
+      </div>
+    </div>
+    <div class="tm-ftr">
+      <button class="tm-close-btn" onclick="cerrarTicketModal()">Entendido</button>
+      <div class="tm-ftr-note">Para trabajo personalizado (contratos colectivos, audiencias) hay tarifas a la medida.</div>
+    </div>
+  </div>
+</div>
+<script>
+function abrirTicketModal(e){if(e)e.stopPropagation();document.getElementById('ticketModal').classList.add('open');document.body.style.overflow='hidden';}
+function cerrarTicketModal(){document.getElementById('ticketModal').classList.remove('open');document.body.style.overflow='';}
+document.addEventListener('keydown',function(e){if(e.key==='Escape')cerrarTicketModal();});
 </script>
 </body>
 </html>

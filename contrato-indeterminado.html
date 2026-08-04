@@ -1,0 +1,568 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<script>
+(function(){
+  var params=new URLSearchParams(window.location.search);
+  var modo=params.get('editar')==='1'?'editar':params.get('recuperar')==='1'?'ver':null;
+  if(!modo) return;
+  var gen=window.location.pathname.split('/').pop();
+  var key=(modo==='editar'?'doc_editar_':'doc_recuperado_')+gen.replace('.html','');
+  var g=null; try{g=JSON.parse(localStorage.getItem(key)||'null');}catch(e){}
+  if(!g||!g.html) return;
+  // Bloquear render() para no sobreescribir el contenido
+  var _bloqueado=false,_orig=null;
+  function bloquear(){
+    if(typeof window.render==='function'&&!_bloqueado){
+      _orig=window.render; window.render=function(){}; _bloqueado=true;
+    }
+  }
+  bloquear(); var _iv=setInterval(bloquear,50);
+  function inyectar(){
+    var pr=document.getElementById('doc-preview');
+    if(!pr){setTimeout(inyectar,80);return;}
+    clearInterval(_iv); bloquear();
+    pr.innerHTML=g.html;
+    // En modo editar: activar contenteditable automáticamente
+    if(modo==='editar'){
+      pr.contentEditable='true';
+      pr.style.outline='2px dashed #0f766e';
+      pr.style.cursor='text';
+    }
+    // Banner
+    var b=document.createElement('div');
+    b.id='banner-doc';
+    b.style.cssText='position:sticky;top:0;z-index:200;background:'+(modo==='editar'?'#f0fdf4':'#eff6ff')+';border-bottom:2px solid '+(modo==='editar'?'#86efac':'#93c5fd')+';padding:10px 16px;font-size:12px;color:'+(modo==='editar'?'#166534':'#1e40af')+';display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap;';
+    var etiq=modo==='editar'?'✏️ Modo edición — edita el documento directamente':'📄 Documento guardado';
+    var sp=document.createElement('span');
+    sp.innerHTML='<strong>'+etiq+'</strong> — '+(g.nombre||'')+' · '+(g.fecha||'');
+    var bt=document.createElement('button');
+    bt.textContent=modo==='editar'?'🔄 Restaurar campos':'✏️ Editar';
+    bt.style.cssText='border:1px solid currentColor;background:transparent;color:inherit;padding:4px 12px;border-radius:6px;font-size:11px;cursor:pointer;white-space:nowrap;';
+    bt.onclick=function(){
+      _bloqueado=false;
+      pr.contentEditable='false';
+      pr.style.outline=''; pr.style.cursor='';
+      if(_orig) window.render=_orig;
+      var bel=document.getElementById('banner-doc');
+      if(bel) bel.remove();
+      localStorage.removeItem(key);
+      if(typeof window.render==='function') window.render();
+    };
+    b.appendChild(sp); b.appendChild(bt);
+    pr.insertBefore(b,pr.firstChild);
+    localStorage.removeItem(key);
+  }
+  document.readyState==='loading'?document.addEventListener('DOMContentLoaded',inyectar):inyectar();
+})();
+</script>
+
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Generador · Contrato por Tiempo Indeterminado</title>
+<style>
+  :root {
+    --ink:#1a1a18;--ink2:#4a4a46;--ink3:#8a8a84;
+    --surface:#f7f6f2;--white:#ffffff;
+    --accent:#1a3a5c;--accent2:#e8f0f8;
+    --border:#ddddd6;--danger:#c0392b;
+    --radius:6px;
+    --font-ui:'Segoe UI',system-ui,sans-serif;
+    --font-doc:'Times New Roman',Georgia,serif;
+  }
+  *{box-sizing:border-box;margin:0;padding:0;}
+  body{font-family:var(--font-ui);background:var(--surface);color:var(--ink);min-height:100vh;font-size:14px;}
+  header{background:var(--accent);color:#fff;padding:14px 28px;display:flex;align-items:center;justify-content:space-between;gap:16px;position:sticky;top:0;z-index:100;box-shadow:0 1px 4px rgba(0,0,0,.18);}
+  header h1{font-size:15px;font-weight:600;}
+  header span{font-size:12px;opacity:.7;}
+  .header-actions{display:flex;gap:10px;}
+  .btn{padding:7px 18px;border-radius:var(--radius);font-size:13px;font-weight:500;cursor:pointer;border:1px solid transparent;transition:background .15s,opacity .15s;}
+  .btn-outline{background:transparent;border-color:rgba(255,255,255,.45);color:#fff;}
+  .btn-outline:hover{background:rgba(255,255,255,.12);}
+  .btn-primary{background:#fff;color:var(--accent);}
+  .btn-primary:hover{opacity:.88;}
+  .workspace{display:grid;grid-template-columns:380px 1fr;height:calc(100vh - 52px);}
+  .form-panel{background:var(--white);border-right:1px solid var(--border);overflow-y:auto;padding:24px 24px 40px;}
+  .section-label{font-size:10px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:var(--accent);padding:20px 0 10px;border-bottom:1px solid var(--border);margin-bottom:14px;}
+  .section-label:first-child{padding-top:4px;}
+  .field{margin-bottom:13px;}
+  .field label{display:block;font-size:12px;font-weight:500;color:var(--ink2);margin-bottom:4px;}
+  .field label .req{color:var(--danger);margin-left:2px;}
+  .field input,.field select,.field textarea{width:100%;padding:8px 10px;border:1px solid var(--border);border-radius:var(--radius);font-size:13px;font-family:var(--font-ui);color:var(--ink);background:var(--white);transition:border-color .15s;}
+  .field input:focus,.field select:focus,.field textarea:focus{outline:none;border-color:var(--accent);box-shadow:0 0 0 3px var(--accent2);}
+  .field textarea{resize:vertical;min-height:68px;}
+  .field-row{display:grid;grid-template-columns:1fr 1fr;gap:10px;}
+  .field-row3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;}
+  .hint{font-size:11px;color:var(--ink3);margin-top:3px;}
+  .toggle-group{display:flex;gap:8px;flex-wrap:wrap;}
+  .toggle-opt{padding:5px 12px;border:1px solid var(--border);border-radius:20px;font-size:12px;cursor:pointer;transition:all .15s;user-select:none;color:var(--ink2);}
+  .toggle-opt.active{background:var(--accent);border-color:var(--accent);color:#fff;font-weight:500;}
+  .clause-check{display:flex;align-items:flex-start;gap:8px;margin-bottom:8px;}
+  .clause-check input[type=checkbox]{margin-top:2px;accent-color:var(--accent);}
+  .clause-check label{font-size:12px;color:var(--ink2);cursor:pointer;line-height:1.4;}
+  .preview-panel{background:#e8e7e0;overflow-y:auto;padding:32px 40px;display:flex;flex-direction:column;align-items:center;}
+  .doc-sheet{background:var(--white);width:100%;max-width:760px;min-height:1060px;padding:72px 80px;box-shadow:0 2px 16px rgba(0,0,0,.12);font-family:var(--font-doc);font-size:12pt;line-height:1.75;color:#111;}
+  
+  .doc-logo-empresa{font-size:14pt;font-weight:bold;color:var(--accent);font-family:var(--font-ui);max-width:340px;}
+  .doc-folio{font-size:9pt;color:var(--ink3);font-family:var(--font-ui);text-align:right;line-height:1.4;}
+  .doc-title{text-align:center;font-size:13pt;font-weight:bold;text-transform:uppercase;letter-spacing:.04em;margin-bottom:6px;}
+  .doc-subtitle{text-align:center;font-size:10pt;color:var(--ink3);font-family:var(--font-ui);margin-bottom:28px;}
+  .doc-p{margin-bottom:14px;text-align:justify;}
+  .doc-p .blank{font-weight:bold;color:var(--accent);border-bottom:1px solid var(--accent);padding:0 2px;}
+  .doc-p .blank.empty{color:#c0392b;border-bottom-color:#c0392b;font-style:italic;font-weight:normal;}
+  .doc-clause-title{font-weight:bold;text-transform:uppercase;font-size:10.5pt;margin:22px 0 8px;}
+  .doc-firma-grid{display:grid;grid-template-columns:1fr 1fr;gap:40px;margin-top:60px;}
+  .firma-box{border-top:1px solid #888;padding-top:8px;font-size:10pt;text-align:center;line-height:1.5;}
+  .firma-box strong{display:block;font-size:9pt;color:var(--ink3);font-family:var(--font-ui);}
+  .watermark-empty{text-align:center;color:var(--ink3);font-family:var(--font-ui);font-size:13px;padding:80px 0;}
+.firma-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.55);z-index:300;align-items:center;justify-content:center;padding:20px;}
+.firma-overlay.show{display:flex;}
+.firma-modal{background:#fff;border-radius:12px;padding:28px;max-width:560px;width:100%;max-height:90vh;overflow-y:auto;}
+.firma-modal h3{font-size:16px;margin-bottom:6px;}
+.firma-aviso{background:#fff8e1;border:1px solid #f0c040;border-radius:8px;padding:10px 14px;font-size:11.5px;color:#7a5f00;margin-bottom:16px;line-height:1.5;}
+.firma-signer{border:1px solid var(--border);border-radius:8px;padding:14px;margin-bottom:14px;}
+.firma-signer label{display:block;font-size:11px;font-weight:600;color:var(--ink2);margin-bottom:5px;}
+.firma-signer input{width:100%;padding:8px 10px;border:1px solid var(--border);border-radius:6px;font-size:13px;margin-bottom:10px;}
+.firma-canvas-wrap{border:1.5px dashed var(--border2);border-radius:6px;background:#fafafa;position:relative;}
+.firma-canvas{width:100%;height:120px;cursor:crosshair;touch-action:none;}
+.firma-canvas-actions{display:flex;justify-content:flex-end;margin-top:6px;}
+.firma-canvas-actions button{font-size:11px;background:none;border:none;color:var(--accent);cursor:pointer;text-decoration:underline;}
+.firma-modal-actions{display:flex;justify-content:flex-end;gap:10px;margin-top:8px;}
+.constancia-firma{margin-top:40px;border-top:2px solid #888;padding-top:18px;}
+.constancia-firma h4{font-size:11pt;text-transform:uppercase;font-family:var(--font-ui);color:#555;margin-bottom:10px;}
+.constancia-firma .firmante-box{display:inline-block;width:48%;vertical-align:top;margin-bottom:14px;}
+.constancia-firma img{max-height:60px;border-bottom:1px solid #888;}
+.constancia-firma .meta{font-family:var(--font-ui);font-size:8.5pt;color:#888;line-height:1.6;margin-top:16px;word-break:break-all;}
+@media print{header,.form-panel,.firma-overlay{display:none!important;}.workspace{display:block;height:auto;}.preview-panel{padding:0;background:white;}.doc-sheet{box-shadow:none;max-width:100%;padding:40px;}body{background:white;}}
+
+#auth-gate-loading{position:fixed;inset:0;background:#fff;z-index:9999;display:flex;align-items:center;justify-content:center;font-family:'Segoe UI',system-ui,sans-serif;color:#999;font-size:13px;}
+#auth-gate-blocked{position:fixed;inset:0;background:#0f2640;z-index:9999;display:none;align-items:center;justify-content:center;padding:24px;}
+#auth-gate-blocked .agb-box{background:#fff;border-radius:16px;padding:40px 36px;max-width:420px;text-align:center;font-family:'Segoe UI',system-ui,sans-serif;}
+#auth-gate-blocked .agb-box h2{font-size:18px;margin-bottom:10px;color:#0f2640;}
+#auth-gate-blocked .agb-box p{font-size:13px;color:#666;margin-bottom:20px;line-height:1.6;}
+#auth-gate-blocked .agb-btns{display:flex;gap:10px;justify-content:center;flex-wrap:wrap;}
+#auth-gate-blocked .agb-btns a{padding:10px 18px;border-radius:8px;font-size:13px;font-weight:600;text-decoration:none;}
+#auth-gate-blocked .agb-btns a.agb-primary{background:#1a3a5c;color:#fff;}
+#auth-gate-blocked .agb-btns a.agb-secondary{background:#f0f0ec;color:#1a3a5c;}
+body.modo-demo .doc-sheet{position:relative;user-select:none;-webkit-user-select:none;-moz-user-select:none;}
+body.modo-demo .doc-sheet::after{content:'MUESTRA — CUENTA DEMO, NO VÁLIDO PARA USO LEGAL';position:absolute;top:46%;left:-15%;right:-15%;text-align:center;font-size:26px;font-weight:900;color:rgba(220,38,38,.16);transform:rotate(-18deg);pointer-events:none;font-family:'Segoe UI',system-ui,sans-serif;z-index:50;}
+@media print{ body.modo-demo .doc-sheet::after{display:block!important;color:rgba(220,38,38,.35)!important;} }
+  .cl-nav-logo{display:flex;align-items:center;font-size:15px;font-weight:800;color:#fff;letter-spacing:-.01em;line-height:1;text-decoration:none;}
+  .cl-nav-logo .cl-laboral{color:#5eead4;font-weight:400;}
+</style>
+<script src="membrete.js?v=3.7"></script>
+</head>
+<body>
+<div id="auth-gate-loading">Verificando acceso…</div>
+<div id="auth-gate-blocked">
+  <div class="agb-box">
+    <h2>🔒 Esta herramienta requiere una suscripción activa</h2>
+    <p>Inicie sesión desde su portal de cliente para usar este generador, o conozca nuestros planes si todavía no es cliente de ClickLaboral.mx.</p>
+    <div class="agb-btns">
+      <a class="agb-primary" href="portal-cliente.html">Iniciar sesión →</a>
+      <a class="agb-secondary" href="index.html#precios">Ver planes</a>
+    </div>
+  </div>
+</div>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
+<script src="expediente-helper.js?v=3.7"></script>
+<script>
+(async()=>{
+  const _sb = supabase.createClient('https://hpzgqaplrywwjuvrzhcp.supabase.co','sb_publishable_1g8US8iFJ8CxnSaF_4MHgA_gqyyAr3W');
+  try {
+    const { data } = await _sb.auth.getSession();
+    document.getElementById('auth-gate-loading').style.display = 'none';
+    if (!data?.session?.user) {
+      document.getElementById('auth-gate-blocked').style.display = 'flex';
+    }
+  } catch(e) {
+    document.getElementById('auth-gate-loading').style.display = 'none';
+    document.getElementById('auth-gate-blocked').style.display = 'flex';
+  }
+})();
+
+</script>
+
+<header>
+  <div class="cl-nav-logo" style="flex-shrink:0;"><svg width="26" height="26" viewBox="0 0 100 100" style="vertical-align:-7px;margin-right:6px;flex-shrink:0;">
+        <defs><linearGradient id="clGrad" x1="10" y1="10" x2="90" y2="95" gradientUnits="userSpaceOnUse">
+          <stop offset="0%" stop-color="#1a3a5c"/><stop offset="55%" stop-color="#1e6f6c"/><stop offset="100%" stop-color="#2dd4bf"/>
+        </linearGradient></defs>
+        <path d="M50 7 L83 20 V51 C83 73 68 87 50 95 C32 87 17 73 17 51 V20 Z" fill="none" stroke="url(#clGrad)" stroke-width="6" stroke-linejoin="round"/>
+        <circle cx="40" cy="38" r="8.5" fill="#5eead4"/>
+        <path d="M25 63 C25 51 31 45 40 45 C49 45 55 51 55 63 Z" fill="#5eead4"/>
+        <circle cx="55" cy="33" r="9.5" fill="#14b8a6"/>
+        <path d="M38 61 C38 48 45.5 41 55 41 C64.5 41 72 48 72 61 Z" fill="#14b8a6"/>
+        <path d="M29 61 L45 77 L78 40" fill="none" stroke="#e8f2fc" stroke-width="9" stroke-linecap="round" stroke-linejoin="round"/>
+      </svg>Click<span class="cl-laboral">Laboral.mx</span></div>
+  <div>
+    <h1>Generador de Contratos · ClickLaboral.mx</h1>
+    <span>Contrato Individual de Trabajo por Tiempo Indeterminado — LFT</span>
+  </div>
+  <div class="header-actions">
+    <button class="btn btn-outline" onclick="limpiar()">Limpiar</button>
+    <button class="btn btn-primary" onclick="window.print()">Imprimir / PDF</button>
+  </div>
+</header>
+<div class="workspace">
+  <div class="form-panel">
+    <!-- ── MEMBRETE DEL CLIENTE ── -->
+    <div style="border-bottom:1px solid var(--border);margin-bottom:0;">
+      <div class="section-label" style="display:flex;align-items:center;justify-content:space-between;cursor:pointer;user-select:none;"
+           onclick="this.nextElementSibling.style.display=this.nextElementSibling.style.display==='none'?'block':'none'">
+        <span>🏢 Logo y pie de página</span>
+        <span style="font-size:10px;font-weight:400;color:var(--ink3);">▲ clic para colapsar</span>
+      </div>
+      <div id="mem-panel-wrap" style="display:block;padding:12px 0 14px;">
+        <div id="mem-logo-container"></div>
+      </div>
+    </div>
+    <!-- ── / MEMBRETE ── -->
+    <div class="section-label">Datos de la empresa (patrón)</div>
+    <div class="field"><label>Razón social <span class="req">*</span></label><input type="text" id="empresa" placeholder="Ej. Comercializadora Norte, S.A. de C.V." oninput="render()"></div>
+    <div class="field-row">
+      <div class="field"><label>Giro / Actividad empresarial</label><input type="text" id="giro_empresa" oninput="render()" placeholder="Ej: Servicios de salud, Restaurante..."></div>
+    <div class="field"><label>RFC del patrón</label><input type="text" id="rfc_patron" placeholder="CNO800101AAA" oninput="render()" maxlength="13"></div>
+      <div class="field"><label>Registro IMSS</label><input type="text" id="imss_patron" placeholder="11 dígitos" oninput="render()"></div>
+    </div>
+    <div class="field"><label>Domicilio del centro de trabajo <span class="req">*</span></label><input type="text" id="domicilio_empresa" placeholder="Calle, No., Colonia, Ciudad, Estado, C.P." oninput="render()"></div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;">
+        <div class="field"><label>Teléfono</label><input type="text" id="mem-tel" oninput="render()" placeholder="33 1234 5678"></div>
+        <div class="field"><label>Email</label><input type="text" id="mem-email" oninput="render()" placeholder="contacto@empresa.mx"></div>
+      </div>
+      <div class="field"><label>Sitio web</label><input type="text" id="mem-web" oninput="render()" placeholder="www.empresa.mx"></div>
+    <div class="field"><label>Representante legal</label><input type="text" id="rep_legal" placeholder="Nombre completo" oninput="render()"></div>
+
+    <div class="section-label">Datos del trabajador</div>
+    <div class="field"><label>Nombre completo <span class="req">*</span></label><input type="text" id="trabajador" placeholder="Nombre(s) Apellido Paterno Apellido Materno" oninput="render()"></div>
+    <div class="field-row">
+      <div class="field"><label>RFC del trabajador</label><input type="text" id="rfc_trab" placeholder="AAAA800101AAA" oninput="render()" maxlength="13"></div>
+      <div class="field"><label>CURP <span class="req">*</span></label><input type="text" id="curp" placeholder="18 caracteres" oninput="render()" maxlength="18"></div>
+    </div>
+    <div class="field-row">
+      <div class="field"><label>NSS</label><input type="text" id="nss" placeholder="11 dígitos" oninput="render()"></div>
+      <div class="field"><label>Estado civil</label><select id="edo_civil" onchange="render()"><option value="">—</option><option>Soltero(a)</option><option>Casado(a)</option><option>Unión libre</option><option>Divorciado(a)</option><option>Viudo(a)</option></select></div>
+    </div>
+    <div class="field"><label>Domicilio del trabajador <span class="req">*</span></label><input type="text" id="domicilio_trab" placeholder="Calle, No., Colonia, Ciudad, Estado, C.P." oninput="render()"></div>
+    <div class="field"><label>Escolaridad</label><select id="escolaridad" onchange="render()"><option value="">—</option><option>Primaria</option><option>Secundaria</option><option>Preparatoria / Bachillerato</option><option>Técnico</option><option>Licenciatura</option><option>Posgrado</option></select></div>
+
+    <div class="section-label">Condiciones de trabajo</div>
+    <div class="field"><label>Puesto / cargo <span class="req">*</span></label><input type="text" id="puesto" placeholder="Ej. Auxiliar administrativo" oninput="render()"></div>
+    <div class="field"><label>Descripción de actividades</label><textarea id="actividades" placeholder="Principales funciones y tareas..." oninput="render()"></textarea></div>
+    <div class="field"><label>Fecha de inicio <span class="req">*</span></label><input type="date" id="fecha_inicio" oninput="render()"></div>
+
+    <div class="section-label">Jornada y salario</div>
+    <div class="field">
+      <label>Tipo de jornada</label>
+      <div class="toggle-group" id="tipo_jornada">
+        <div class="toggle-opt active" onclick="selToggle(this,'tipo_jornada')">Diurna</div>
+        <div class="toggle-opt" onclick="selToggle(this,'tipo_jornada')">Nocturna</div>
+        <div class="toggle-opt" onclick="selToggle(this,'tipo_jornada')">Mixta</div>
+        <div class="toggle-opt" onclick="selToggle(this,'tipo_jornada')">Reducida</div>
+      </div>
+    </div>
+    <div class="field-row3">
+      <div class="field"><label>Hora entrada</label><input type="time" id="hora_entrada" oninput="render()"></div>
+      <div class="field"><label>Hora salida</label><input type="time" id="hora_salida" oninput="render()"></div>
+      <div class="field"><label>Día de descanso</label><input type="text" id="dias_descanso" placeholder="Domingo" oninput="render()"></div>
+    </div>
+    <div class="field-row">
+      <div class="field"><label>Salario <span class="req">*</span></label><input type="number" id="salario" placeholder="0.00" oninput="render()" min="0" step="0.01"></div>
+      <div class="field"><label>Periodicidad</label><select id="periodicidad" onchange="render()"><option value="diario">Diario</option><option value="semanal">Semanal</option><option value="quincenal">Quincenal</option><option value="mensual">Mensual</option></select></div>
+    </div>
+    <div class="field">
+      <label>Forma de pago</label>
+      <div class="toggle-group" id="forma_pago">
+        <div class="toggle-opt active" onclick="selToggle(this,'forma_pago')">Transferencia</div>
+        <div class="toggle-opt" onclick="selToggle(this,'forma_pago')">Efectivo</div>
+        <div class="toggle-opt" onclick="selToggle(this,'forma_pago')">Cheque</div>
+      </div>
+    </div>
+    <div class="field-row">
+      <div class="field"><label>Días de vacaciones (1er año)</label><input type="number" id="vacaciones" value="12" min="12" oninput="render()"><div class="hint">Mín. 12 días — art. 76 LFT</div></div>
+      <div class="field"><label>Prima vacacional (%)</label><input type="number" id="prima_vac" value="25" min="25" oninput="render()"><div class="hint">Mín. 25% — art. 80 LFT</div></div>
+    </div>
+
+    <div class="section-label">Beneficios adicionales (opcionales)</div>
+    <div class="field"><label>Fondo de ahorro (%)</label><input type="number" id="fondo_ahorro" placeholder="Ej. 13" min="0" oninput="render()"><div class="hint">Porcentaje sobre salario. Dejar vacío si no aplica.</div></div>
+    <div class="field"><label>Vales de despensa (mensual $)</label><input type="number" id="vales" placeholder="Ej. 1500" min="0" oninput="render()"></div>
+    <div class="field"><label>Seguro de gastos médicos mayores</label><select id="sgmm" onchange="render()"><option value="">No aplica</option><option value="si">Sí — proporcionado por la empresa</option></select></div>
+    <div class="field"><label>Bono de puntualidad / asistencia</label><input type="text" id="bono" placeholder="Ej. $500 mensuales por asistencia perfecta" oninput="render()"></div>
+
+    <div class="section-label">Cláusulas opcionales</div>
+    <div class="clause-check"><input type="checkbox" id="cl_confidencial" onchange="render()"><label for="cl_confidencial">Confidencialidad y secreto industrial</label></div>
+    <div class="clause-check"><input type="checkbox" id="cl_no_competencia" onchange="render()"><label for="cl_no_competencia">No competencia durante la vigencia</label></div>
+    <div class="clause-check"><input type="checkbox" id="cl_herramientas" onchange="render()"><label for="cl_herramientas">Uso y devolución de herramientas / equipo</label></div>
+    <div class="clause-check"><input type="checkbox" id="cl_nom035" onchange="render()"><label for="cl_nom035">NOM-035-STPS-2018</label></div>
+    <div class="clause-check"><input type="checkbox" id="cl_datos" onchange="render()"><label for="cl_datos">Tratamiento de datos personales (LFPDPPP)</label></div>
+    <div class="clause-check"><input type="checkbox" id="cl_subcontratacion" onchange="render()"><label for="cl_subcontratacion">Servicios especializados — REPSE (art. 13 LFT)</label></div>
+    <div class="clause-check"><input type="checkbox" id="cl_exclusividad" onchange="render()"><label for="cl_exclusividad">Exclusividad de servicios</label></div>
+
+    <div class="section-label">Cláusulas especiales (con detalle a la medida)</div>
+    <div class="alert-box" style="background:#eef7f0;border-color:rgba(22,163,74,.25);color:#14532d;margin-bottom:14px;">
+      💡 ¿Su empresa necesita una cláusula distinta a estas? Su suscripción incluye asesoría legal real con abogado — pídala desde "Solicitar asesoría" en su portal y se la redactamos a la medida de su caso.
+    </div>
+
+    <div class="clause-check"><input type="checkbox" id="cl_noncomp_post" onchange="toggleCampo('campos_noncomp','cl_noncomp_post')"><label for="cl_noncomp_post">No competencia posterior al término del contrato (compensada)</label></div>
+    <div id="campos_noncomp" style="display:none;padding-left:18px;margin-bottom:12px;">
+      <div class="alert-box" style="font-size:11px;padding:8px 12px;">⚠️ Jurídicamente delicada en México (art. 5 Constitucional). Solo es defendible si es razonable en tiempo/zona y va acompañada de compensación económica real.</div>
+      <div class="field-row">
+        <div class="field"><label>Duración (meses)</label><input type="number" id="noncomp_meses" oninput="render()" placeholder="6"></div>
+        <div class="field"><label>Zona geográfica</label><input type="text" id="noncomp_zona" oninput="render()" placeholder="Ej. Zona metropolitana de Guadalajara"></div>
+      </div>
+      <div class="field"><label>Compensación mensual durante la restricción</label><input type="number" id="noncomp_compensacion" oninput="render()" placeholder="0.00"></div>
+    </div>
+
+    <div class="clause-check"><input type="checkbox" id="cl_propiedad_intelectual" onchange="render()"><label for="cl_propiedad_intelectual">Propiedad intelectual de invenciones y desarrollos (art. 163 LFT)</label></div>
+
+    <div class="clause-check"><input type="checkbox" id="cl_movilidad" onchange="toggleCampo('campos_movilidad','cl_movilidad')"><label for="cl_movilidad">Movilidad geográfica del centro de trabajo</label></div>
+    <div id="campos_movilidad" style="display:none;padding-left:18px;margin-bottom:12px;">
+      <div class="field-row">
+        <div class="field"><label>Zona de movilidad</label><input type="text" id="mov_radio" oninput="render()" placeholder="Ej. Área metropolitana de Monterrey"></div>
+        <div class="field"><label>Aviso previo (días)</label><input type="number" id="mov_aviso" oninput="render()" placeholder="15"></div>
+      </div>
+    </div>
+
+    <div class="clause-check"><input type="checkbox" id="cl_capacitacion_permanencia" onchange="toggleCampo('campos_capper','cl_capacitacion_permanencia')"><label for="cl_capacitacion_permanencia">Capacitación pagada por la empresa, con permanencia mínima</label></div>
+    <div id="campos_capper" style="display:none;padding-left:18px;margin-bottom:12px;">
+      <div class="field-row">
+        <div class="field"><label>Meses de permanencia mínima</label><input type="number" id="capper_meses" oninput="render()" placeholder="12"></div>
+        <div class="field"><label>Monto a reembolsar si no cumple</label><input type="number" id="capper_monto" oninput="render()" placeholder="0.00"></div>
+      </div>
+    </div>
+
+    <div class="clause-check"><input type="checkbox" id="cl_comisiones" onchange="toggleCampo('campos_comisiones','cl_comisiones')"><label for="cl_comisiones">Comisiones o bonos por desempeño</label></div>
+    <div id="campos_comisiones" style="display:none;padding-left:18px;margin-bottom:12px;">
+      <div class="field"><label>Esquema (%, monto, periodicidad, metas)</label><textarea id="comisiones_detalle" oninput="render()" placeholder="Ej. 2% sobre ventas cerradas, pagadero mensualmente, sujeto a cuota mínima de $50,000 MXN"></textarea></div>
+    </div>
+
+    <div class="clause-check"><input type="checkbox" id="cl_redes_sociales" onchange="render()"><label for="cl_redes_sociales">Conducta en redes sociales y protección de reputación</label></div>
+
+    <div class="section-label">Lugar y fecha</div>
+    <div class="field-row">
+      <div class="field"><label>Ciudad de firma <span class="req">*</span></label><input type="text" id="ciudad_firma" placeholder="Monterrey, N.L." oninput="render()"></div>
+      <div class="field"><label>Fecha de firma <span class="req">*</span></label><input type="date" id="fecha_firma" oninput="render()"></div>
+    </div>
+    <div class="field-row">
+      <div class="field"><label>Testigo 1</label><input type="text" id="testigo1" placeholder="Nombre completo" oninput="render()"></div>
+      <div class="field"><label>Testigo 2</label><input type="text" id="testigo2" placeholder="Nombre completo" oninput="render()"></div>
+    </div>
+  </div>
+
+  <div class="preview-panel">
+    <div class="doc-sheet" id="doc-preview">
+      <div class="watermark-empty">Complete los datos para generar el contrato.</div>
+    </div>
+  </div>
+</div>
+
+<script>
+
+// ── Módulo por sector: pre-configurar campos desde localStorage ───────────────
+(function aplicarSector(){
+  const params = new URLSearchParams(window.location.search);
+  const sector = params.get('sector');
+  if (!sector) return;
+  let config = null;
+  try { config = JSON.parse(localStorage.getItem('sector_config')||'null'); } catch(_){}
+  if (!config || !config.giro) return;
+
+  // Esperar a que el DOM esté listo
+  function aplicar(){
+    // Pre-llenar campos del formulario
+    const set = (id, val) => { const el=document.getElementById(id); if(el && val) el.value=val; };
+    set('giro_empresa', config.giro);
+    set('actividades', config.actividades);
+    set('dias_descanso', config.dias_descanso);
+    set('hora_entrada', config.hora_entrada);
+    set('hora_salida', config.hora_salida);
+
+    // Activar cláusulas del sector
+    [...(config.clausulas||[]), ...(config.clausulas_extra||[])].forEach(id => {
+      const cb = document.getElementById(id);
+      if(cb && !cb.checked){ cb.checked = true; cb.dispatchEvent(new Event('change')); }
+    });
+
+    // Mostrar banner del sector
+    if(config.nota_sector){
+      const banner = document.createElement('div');
+      banner.style.cssText = 'background:#f0fdf4;border:1.5px solid #86efac;border-radius:10px;padding:12px 16px;font-size:12px;color:#166534;margin-bottom:16px;line-height:1.6;';
+      banner.innerHTML = config.nota_sector;
+      const firstSection = document.querySelector('.section-label');
+      if(firstSection) firstSection.parentNode.insertBefore(banner, firstSection);
+    }
+
+    // Re-renderizar
+    if(typeof render === 'function') render();
+
+    // Limpiar localStorage
+    localStorage.removeItem('sector_config');
+  }
+
+  if(document.readyState === 'loading') document.addEventListener('DOMContentLoaded', aplicar);
+  else setTimeout(aplicar, 100);
+})();
+
+function v(id){return(document.getElementById(id)||{}).value||'';}
+function chk(id){return document.getElementById(id)?.checked||false;}
+function toggleCampo(divId,checkId){document.getElementById(divId).style.display=document.getElementById(checkId).checked?'block':'none';render();}
+function b(txt,fallback){if(!txt||txt.trim()==='')return`<span class="blank empty">[${fallback}]</span>`;return`<span class="blank">${txt}</span>`;}
+function fmtFecha(iso){if(!iso)return'';const[y,m,d]=iso.split('-');const M=['enero','febrero','marzo','abril','mayo','junio','julio','agosto','septiembre','octubre','noviembre','diciembre'];return`${parseInt(d)} de ${M[parseInt(m)-1]} de ${y}`;}
+function fmtMoneda(num,per){if(!num)return'';const n=parseFloat(num).toLocaleString('es-MX',{minimumFractionDigits:2,maximumFractionDigits:2});return`$${n} MXN ${per}`;}
+function getActive(gid){const g=document.getElementById(gid);if(!g)return'';const e=g.querySelector('.toggle-opt.active');return e?e.textContent:'';}
+function selToggle(el,gid){document.querySelectorAll(`#${gid} .toggle-opt`).forEach(e=>e.classList.remove('active'));el.classList.add('active');render();}
+function limpiar(){if(!confirm('¿Limpiar todos los campos?'))return;document.querySelectorAll('input,select,textarea').forEach(el=>{if(el.type==='checkbox')el.checked=false;else el.value='';});render();}
+function numRomano(n){const r=['','I','II','III','IV','V','VI','VII','VIII','IX','X','XI','XII','XIII','XIV','XV','XVI','XVII','XVIII','XIX','XX'];return r[n]||n;}
+
+function render(){
+  const empresa=v('empresa'),rfc_p=v('rfc_patron'),imss_p=v('imss_patron'),dom_emp=v('domicilio_empresa'),rep=v('rep_legal');
+  const trab=v('trabajador'),rfc_t=v('rfc_trab'),curp=v('curp'),nss=v('nss'),dom_t=v('domicilio_trab'),edo=v('edo_civil'),esc=v('escolaridad');
+  const puesto=v('puesto'),act=v('actividades'),fi=v('fecha_inicio');
+  const jornada=getActive('tipo_jornada')||'Diurna';
+  const he=v('hora_entrada'),hs=v('hora_salida'),dd=v('dias_descanso')||'domingo';
+  const sal=v('salario'),per=v('periodicidad'),fp=getActive('forma_pago')||'Transferencia';
+  const vac=v('vacaciones')||'12',pv=v('prima_vac')||'25';
+  const fa=v('fondo_ahorro'),vales=v('vales'),sgmm=v('sgmm'),bono=v('bono');
+  const cf=v('ciudad_firma'),ff=v('fecha_firma'),t1=v('testigo1'),t2=v('testigo2');
+
+  if(!empresa&&!trab){document.getElementById('doc-preview').innerHTML='<div class="watermark-empty">Complete los datos para generar el contrato.</div>';return;}
+
+  const folio=`CTI-${new Date().getFullYear()}-${Math.floor(Math.random()*10000).toString().padStart(4,'0')}`;
+  const horario=(he&&hs)?`${he} a ${hs} horas`:'[horario]';
+
+  let html=generarMembrete({
+    empresa:   v('empresa'),
+    rfc:       v('rfc_patron'),
+    domicilio: v('domicilio_empresa'),
+    tel:       v('mem-tel'),
+    emailEmp:  v('mem-email'),
+    web:       v('mem-web'),
+    folio,
+    logoDataUrl: window._logoClienteDataUrl,
+  }) + `
+    <div class="doc-folio">Folio: ${folio}<br>RFC: ${rfc_p||'—'}${imss_p?'<br>IMSS: '+imss_p:''}</div>
+  </div>
+  <div class="doc-title">Contrato Individual de Trabajo<br>por Tiempo Indeterminado</div>
+  <div class="doc-subtitle">Celebrado conforme a los artículos 20, 25 y 35 de la Ley Federal del Trabajo</div>
+
+  <div class="doc-p">En la ciudad de ${b(cf,'ciudad')}, siendo el ${b(fmtFecha(ff),'fecha de firma')}, comparecen: ${b(empresa,'razón social')}, representada por ${b(rep,'representante legal')}, con domicilio en ${b(dom_emp,'domicilio empresa')}, en su carácter de <strong>PATRÓN</strong>; y el (la) C. ${b(trab,'nombre del trabajador')}, CURP ${b(curp,'CURP')}${rfc_t?', RFC '+b(rfc_t,'RFC'):''}${nss?', NSS '+b(nss,'NSS'):''}${edo?', '+edo:''}${esc?', escolaridad '+esc:''}, con domicilio en ${b(dom_t,'domicilio trabajador')}, en su carácter de <strong>TRABAJADOR</strong>. Ambas partes celebran el presente contrato al tenor de las siguientes:</div>
+
+  <div class="doc-clause-title">Cláusulas</div>
+
+  <div class="doc-clause-title">Primera. — Objeto</div>
+  <div class="doc-p">El TRABAJADOR prestará sus servicios en el puesto de ${b(puesto,'puesto')}${act?', realizando entre otras: '+act:''}. La relación de trabajo es por tiempo indeterminado, de conformidad con el artículo 35 de la LFT, sin perjuicio del periodo de prueba o de capacitación inicial que en su caso se hubiera pactado en instrumento separado.</div>
+
+  <div class="doc-clause-title">Segunda. — Fecha de inicio</div>
+  <div class="doc-p">La relación laboral iniciará el día ${b(fmtFecha(fi),'fecha de inicio')}. Al ser por tiempo indeterminado, la relación subsistirá hasta que alguna de las partes la dé por concluida conforme a los mecanismos que establece la LFT.</div>
+
+  <div class="doc-clause-title">Tercera. — Lugar de trabajo</div>
+  <div class="doc-p">Los servicios se prestarán en ${b(dom_emp,'domicilio del centro de trabajo')}, sin perjuicio de la facultad del PATRÓN de modificar razonablemente el lugar de trabajo previo aviso, en términos del artículo 51, fracción VI, de la LFT.</div>
+
+  <div class="doc-clause-title">Cuarta. — Jornada de trabajo</div>
+  <div class="doc-p">La jornada es ${jornada.toLowerCase()}, con horario de ${horario}, con día de descanso semanal los ${dd}. En caso de laborar el día de descanso se cubrirá prima del 25% sobre el salario ordinario conforme al artículo 71 de la LFT. Cualquier tiempo extraordinario será remunerado conforme al artículo 67 de la LFT.</div>
+
+  <div class="doc-clause-title">Quinta. — Salario</div>
+  <div class="doc-p">Se pacta un salario de ${b(fmtMoneda(sal,per),'salario y periodicidad')}, pagado mediante ${fp.toLowerCase()}, conforme a los artículos 82–84 de la LFT. Dicho salario no podrá ser inferior al mínimo general o profesional vigente.${bono?` Adicionalmente se otorgará: ${bono}, el cual no formará parte del salario base para efectos del cálculo de prestaciones, salvo pacto en contrario.`:''}</div>
+
+  <div class="doc-clause-title">Sexta. — Prestaciones de ley</div>
+  <div class="doc-p">El TRABAJADOR tendrá derecho a: vacaciones de ${vac} días por primer año (art. 76 LFT); prima vacacional del ${pv}% (art. 80 LFT); aguinaldo de 15 días anuales (art. 87 LFT); inscripción al IMSS, INFONAVIT y AFORE; y demás prestaciones legales.</div>`;
+
+  // Beneficios adicionales
+  const beneficios=[];
+  if(fa) beneficios.push(`fondo de ahorro del ${fa}% sobre salario base, con aportación paritaria del PATRÓN`);
+  if(vales) beneficios.push(`vales de despensa por $${parseFloat(vales).toLocaleString('es-MX')} MXN mensuales`);
+  if(sgmm==='si') beneficios.push('seguro de gastos médicos mayores costeado por la empresa');
+  if(beneficios.length>0){
+    html+=`<div class="doc-clause-title">Séptima. — Prestaciones superiores a la ley</div>
+    <div class="doc-p">Adicionalmente a las prestaciones mínimas, el PATRÓN otorgará: ${beneficios.join('; ')}. Dichas prestaciones podrán ser modificadas o suprimidas por acuerdo mutuo, respetando en todo momento el mínimo legal.</div>`;
+  }
+
+  let cn=beneficios.length>0?8:7;
+
+  if(chk('cl_confidencial')){html+=`<div class="doc-clause-title">${numRomano(cn)}. — Confidencialidad</div><div class="doc-p">El TRABAJADOR se obliga a guardar estricta confidencialidad sobre información técnica, comercial y financiera del PATRÓN o sus clientes, durante y después de la relación laboral. La violación constituirá causa de rescisión (art. 47, fracc. VIII, LFT).</div>`;cn++;}
+  if(chk('cl_exclusividad')){html+=`<div class="doc-clause-title">${numRomano(cn)}. — Exclusividad</div><div class="doc-p">Durante la vigencia del contrato el TRABAJADOR prestará sus servicios con exclusividad al PATRÓN, absteniéndose de trabajar simultáneamente para empresas competidoras sin autorización escrita previa.</div>`;cn++;}
+  if(chk('cl_no_competencia')){html+=`<div class="doc-clause-title">${numRomano(cn)}. — No competencia</div><div class="doc-p">Durante la vigencia de la relación laboral el TRABAJADOR no realizará actividades que compitan directamente con el objeto de negocio del PATRÓN, ya sea por cuenta propia o para terceros, sin autorización escrita.</div>`;cn++;}
+  if(chk('cl_herramientas')){html+=`<div class="doc-clause-title">${numRomano(cn)}. — Herramientas y equipo</div><div class="doc-p">Los bienes asignados al TRABAJADOR quedarán registrados en formato de entrega-recepción. El TRABAJADOR los usará solo para fines laborales y los devolverá en el mismo estado al término de la relación, respondiendo por deterioro culpable (art. 110 fracc. III LFT).</div>`;cn++;}
+  if(chk('cl_nom035')){html+=`<div class="doc-clause-title">${numRomano(cn)}. — NOM-035-STPS-2018</div><div class="doc-p">Las partes se comprometen a cumplir la NOM-035-STPS-2018. El PATRÓN implementará medidas para prevenir factores de riesgo psicosocial; el TRABAJADOR participará en evaluaciones y programas internos.</div>`;cn++;}
+  if(chk('cl_datos')){html+=`<div class="doc-clause-title">${numRomano(cn)}. — Datos personales</div><div class="doc-p">El TRABAJADOR consiente el tratamiento de sus datos personales para fines de la relación laboral, conforme a la LFPDPPP. El aviso de privacidad fue entregado previamente.</div>`;cn++;}
+  if(chk('cl_subcontratacion')){html+=`<div class="doc-clause-title">${numRomano(cn)}. — Servicios especializados</div><div class="doc-p">El PATRÓN se encuentra inscrito en el REPSE conforme al artículo 13 de la LFT, condición que mantendrá vigente durante toda la relación laboral.</div>`;cn++;}
+
+  if(chk('cl_noncomp_post')){
+    const meses=v('noncomp_meses'), zona=v('noncomp_zona'), comp=v('noncomp_compensacion');
+    html+=`<div class="doc-clause-title">${numRomano(cn)}. — No competencia posterior al término del contrato</div><div class="doc-p">Por un periodo de ${b(meses,'meses')} meses posteriores a la terminación de la relación laboral, EL TRABAJADOR se obliga a no prestar servicios, por cuenta propia o de terceros, a empresas que compitan directamente con EL PATRÓN dentro de ${b(zona,'zona geográfica')}. Como contraprestación, EL PATRÓN pagará a EL TRABAJADOR ${comp?fmtMoneda(comp,'').trim():'<span class="blank empty">[monto]</span>'} mensuales durante la vigencia de esta restricción.</div>`;cn++;
+  }
+  if(chk('cl_propiedad_intelectual')){html+=`<div class="doc-clause-title">${numRomano(cn)}. — Propiedad intelectual</div><div class="doc-p">Las invenciones, desarrollos y mejoras que EL TRABAJADOR realice en ejercicio de sus funciones serán propiedad de EL PATRÓN, en los términos del artículo 163 de la LFT, sin perjuicio de la compensación adicional que en su caso corresponda conforme a dicho artículo.</div>`;cn++;}
+  if(chk('cl_movilidad')){
+    const radio=v('mov_radio'), aviso=v('mov_aviso')||'15';
+    html+=`<div class="doc-clause-title">${numRomano(cn)}. — Movilidad geográfica</div><div class="doc-p">EL TRABAJADOR acepta que su centro de trabajo pueda reubicarse dentro de ${b(radio,'zona de movilidad')}, previo aviso de al menos ${aviso} días naturales, sin que ello constituya modificación sustancial de las condiciones de trabajo conforme al artículo 134 LFT.</div>`;cn++;
+  }
+  if(chk('cl_capacitacion_permanencia')){
+    const meses=v('capper_meses'), monto=v('capper_monto');
+    html+=`<div class="doc-clause-title">${numRomano(cn)}. — Capacitación con permanencia mínima</div><div class="doc-p">En caso de que EL PATRÓN cubra el costo de capacitación, certificación o estudios para EL TRABAJADOR, este se compromete a permanecer en la empresa al menos ${b(meses,'meses')} meses posteriores a su conclusión. De separarse voluntariamente antes de dicho plazo, reembolsará a EL PATRÓN ${monto?fmtMoneda(monto,'').trim():'<span class="blank empty">[monto]</span>'} de forma proporcional al tiempo no cumplido.</div>`;cn++;
+  }
+  if(chk('cl_comisiones')){
+    const detalle=v('comisiones_detalle');
+    html+=`<div class="doc-clause-title">${numRomano(cn)}. — Comisiones y bonos por desempeño</div><div class="doc-p">EL TRABAJADOR podrá percibir comisiones o bonos adicionales conforme al siguiente esquema: ${b(detalle,'esquema de comisiones/bonos')} Dichas percepciones tienen carácter variable y no formarán parte del salario fijo, salvo lo que en su caso determine la autoridad competente conforme a su periodicidad y generalidad.</div>`;cn++;
+  }
+  if(chk('cl_redes_sociales')){html+=`<div class="doc-clause-title">${numRomano(cn)}. — Conducta en redes sociales</div><div class="doc-p">EL TRABAJADOR se obliga a hacer un uso responsable de redes sociales y medios digitales, evitando divulgar información confidencial del PATRÓN o realizar publicaciones que dañen su reputación o la de sus clientes y colaboradores.</div>`;cn++;}
+
+  html+=`
+  <div class="doc-clause-title">${numRomano(cn)}. — Reglamento interior</div>
+  <div class="doc-p">El TRABAJADOR declara conocer y aceptar el Reglamento Interior de Trabajo, manuales y políticas internas. Su incumplimiento podrá constituir causa de rescisión conforme al artículo 47 de la LFT.</div>`;cn++;
+
+  html+=`
+  <div class="doc-clause-title">${numRomano(cn)}. — Rescisión y terminación</div>
+  <div class="doc-p">La relación de trabajo podrá rescindirse por cualquiera de las partes en los términos de los artículos 47 y 51 de la LFT, o darse por terminada mediante convenio liquidatorio suscrito ante el Tribunal o Centro de Conciliación competente. En caso de separación voluntaria el TRABAJADOR dará aviso con al menos 15 días de anticipación.</div>`;cn++;
+
+  html+=`
+  <div class="doc-clause-title">${numRomano(cn)}. — Jurisdicción</div>
+  <div class="doc-p">Para todo lo no previsto se estará a la LFT y ordenamientos aplicables. Las controversias se someterán al Tribunal Laboral del domicilio del centro de trabajo.</div>
+
+  <div class="doc-p" style="margin-top:24px;">Las partes, enteradas de su contenido y alcance legal, firman por duplicado en ${b(cf,'ciudad')}, el ${b(fmtFecha(ff),'fecha de firma')}.</div>
+
+  <div class="doc-firma-grid">
+    <div class="firma-box"><br><br>${empresa||'__________________________'}<br>${rep?rep+'<br>':''}<strong>EL PATRÓN</strong>${rfc_p?'<span style="font-size:9pt;color:#666;"> RFC: '+rfc_p+'</span>':''}</div>
+    <div class="firma-box"><br><br>${trab||'__________________________'}<br><strong>EL TRABAJADOR</strong>${curp?'<span style="font-size:9pt;color:#666;"> CURP: '+curp+'</span>':''}</div>
+  </div>
+  <div class="doc-firma-grid" style="margin-top:32px;">
+    <div class="firma-box"><br><br>${t1||'__________________________'}<br><strong>TESTIGO 1</strong></div>
+    <div class="firma-box"><br><br>${t2||'__________________________'}<br><strong>TESTIGO 2</strong></div>
+  </div>
+  <div style="margin-top:32px;font-size:9pt;color:#888;font-family:var(--font-ui);border-top:1px solid #ddd;padding-top:10px;"></div>`;
+
+  html += generarFooterDoc({...getDatosMembrete(), folio});
+  document.getElementById('doc-preview').innerHTML=html;
+}
+
+// ── INIT ──
+renderPanelMembrete('mem-logo-container');
+(async()=>{
+  try{
+    const _sb = supabase.createClient(
+      'https://hpzgqaplrywwjuvrzhcp.supabase.co',
+      'sb_publishable_1g8US8iFJ8CxnSaF_4MHgA_gqyyAr3W'
+    );
+    await precargarMembreteDesdePortal(_sb);
+  }catch(e){}
+})();
+render();
+
+// Expediente del trabajador — vincular este documento al roster
+
+if (window.ExpedienteHelper) {
+  ExpedienteHelper.init({
+    inputNombreId: 'trabajador',
+    tipoDocumento: 'contrato_indeterminado',
+    nombreDocumentoFn: () => 'Contrato individual por tiempo indeterminado',
+  });
+}
+
+</script>
+
+<script src="edicion-libre.js?v=4.6"></script>
+
+
+
+
+</body>
+</html>

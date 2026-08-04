@@ -1,0 +1,363 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Panel de Despacho</title>
+<!--
+  ═══════════════════════════════════════════════════════════════════
+  PANEL DE DESPACHO (marca blanca) — contadores, abogados, RRHH
+  ═══════════════════════════════════════════════════════════════════
+  CÓMO DAR DE ALTA UN DESPACHO (lo hace el administrador de Clicklaboral):
+  Supabase → Authentication → Add user → correo y contraseña del despacho.
+  Luego, en ese usuario → editar "User Metadata" y pegar:
+
+  {
+    "tipo": "despacho",
+    "nombre_despacho": "Despacho Contable González",
+    "color": "#0f766e",
+    "despacho_clientes": [
+      { "rfc": "AAA010101AAA", "empresa": "Clínica Dental Sonrisa" },
+      { "rfc": "BBB020202BBB", "empresa": "Veterinaria Patitas" }
+    ]
+  }
+
+  · "color" es opcional (color de acento de su marca).
+  · Cada cliente de la lista debe existir ya como cliente normal (con sus
+    trabajadores dados de alta bajo su RFC).
+  · El despacho solo puede ver/gestionar los RFC de su lista. Los datos de
+    cada cliente permanecen separados: todas las consultas de la plataforma
+    filtran por un solo RFC a la vez.
+  ═══════════════════════════════════════════════════════════════════
+-->
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
+<style>
+:root{
+  --acento:#1e3a5f; --ink:#1a2332; --ink2:#4a5568; --ink3:#8a94a3;
+  --bg:#f4f6f9; --white:#fff; --border:#e3e8ef; --r:12px;
+  --green:#16a34a; --green-bg:#f0fdf4; --amber:#d97706; --red:#dc2626;
+}
+*{margin:0;padding:0;box-sizing:border-box;font-family:'Segoe UI',system-ui,-apple-system,sans-serif;}
+body{background:var(--bg);color:var(--ink);min-height:100vh;}
+.topbar{background:var(--acento);color:#fff;padding:16px 28px;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px;}
+.topbar h1{font-size:18px;font-weight:700;}
+.topbar .sub{font-size:11px;opacity:.75;}
+.topbar button{background:rgba(255,255,255,.15);border:1px solid rgba(255,255,255,.3);color:#fff;padding:7px 16px;border-radius:8px;cursor:pointer;font-size:12px;}
+.wrap{max-width:1100px;margin:26px auto;padding:0 20px;}
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(320px,1fr));gap:16px;margin-top:18px;}
+.card{background:var(--white);border:1px solid var(--border);border-radius:var(--r);padding:20px;}
+.card h3{font-size:15px;margin-bottom:2px;}
+.card .rfc{font-size:11px;color:var(--ink3);letter-spacing:.5px;margin-bottom:12px;}
+.stats{display:flex;gap:14px;margin:10px 0 16px;flex-wrap:wrap;}
+.stat{font-size:12px;color:var(--ink2);}
+.stat strong{display:block;font-size:19px;color:var(--ink);}
+.btn{display:inline-block;border:none;border-radius:8px;padding:9px 18px;font-size:13px;font-weight:600;cursor:pointer;text-decoration:none;}
+.btn-p{background:var(--acento);color:#fff;}
+.btn-o{background:#fff;color:var(--acento);border:1.5px solid var(--acento);}
+.login-box{max-width:380px;margin:12vh auto;background:#fff;border:1px solid var(--border);border-radius:var(--r);padding:34px;}
+.login-box h2{font-size:18px;margin-bottom:4px;}
+.login-box p{font-size:12px;color:var(--ink3);margin-bottom:18px;}
+.login-box input{width:100%;padding:11px 12px;border:1px solid var(--border);border-radius:8px;font-size:13px;margin-bottom:12px;}
+.msg{font-size:12px;color:var(--red);margin-bottom:10px;min-height:16px;}
+.vacio{background:#fff;border:1px dashed var(--border);border-radius:var(--r);padding:36px;text-align:center;color:var(--ink3);font-size:13px;margin-top:18px;}
+.badge{display:inline-block;font-size:10px;font-weight:700;padding:3px 9px;border-radius:20px;}
+.b-ok{background:var(--green-bg);color:var(--green);}
+.b-warn{background:#fffbeb;color:var(--amber);}
+.pie{color:var(--ink3);font-size:10px;text-align:center;margin:34px 0 20px;}
+</style>
+</head>
+<body>
+
+<!-- LOGIN -->
+<div id="pantalla-login">
+  <div class="login-box">
+    <h2 id="login-titulo">Panel de Despacho</h2>
+    <p>Acceso para despachos autorizados: contadores, abogados y consultores de RRHH.</p>
+    <div class="msg" id="login-msg"></div>
+    <input type="email" id="login-email" placeholder="Correo del despacho">
+    <input type="password" id="login-pass" placeholder="Contraseña">
+    <button class="btn btn-p" style="width:100%;" onclick="entrar()">Entrar</button>
+  </div>
+</div>
+
+<!-- PANEL -->
+<div id="pantalla-panel" style="display:none;">
+  <div class="topbar">
+    <div>
+      <h1 id="nombre-despacho">Mi Despacho</h1>
+      <div class="sub">Gestión de cartera · <span id="num-clientes">0</span> cliente(s)</div>
+    </div>
+    <button onclick="salir()">Cerrar sesión</button>
+  </div>
+  <div class="wrap">
+    <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:10px;">
+      <div style="font-size:13px;color:var(--ink2);">Seleccione un cliente para gestionar sus expedientes, asistencias y documentos. Los datos de cada cliente están completamente separados.</div>
+      <button class="btn btn-o" onclick="mostrarAltaCliente()">＋ Agregar cliente</button>
+    </div>
+    <div class="card" id="form-alta-cliente" style="display:none;margin-top:14px;">
+      <h3 style="margin-bottom:10px;">Nuevo cliente en su cartera</h3>
+      <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:10px;">
+        <input id="nc-empresa" placeholder="Nombre de la empresa *" style="padding:10px;border:1px solid var(--border);border-radius:8px;font-size:13px;">
+        <input id="nc-rfc" placeholder="RFC de la empresa *" maxlength="13" style="padding:10px;border:1px solid var(--border);border-radius:8px;font-size:13px;text-transform:uppercase;">
+      </div>
+      <div style="display:flex;gap:10px;align-items:center;margin-top:12px;flex-wrap:wrap;">
+        <button class="btn btn-p" onclick="altaCliente()">Agregar a mi cartera</button>
+        <button class="btn btn-o" onclick="document.getElementById('form-alta-cliente').style.display='none'">Cancelar</button>
+        <span id="nc-msg" style="font-size:12px;color:var(--red);"></span>
+      </div>
+      <div style="font-size:11px;color:var(--ink3);margin-top:10px;">Después de agregarlo, entre a "Gestionar cliente" para dar de alta a sus trabajadores. Si el RFC ya tiene información en la plataforma, la vinculación debe hacerla su asesor.</div>
+    </div>
+    <div id="area-herramientas" style="display:none;"></div>
+    <div class="grid" id="grid-clientes"></div>
+    <div class="vacio" id="sin-clientes" style="display:none;">
+      Su cuenta aún no tiene clientes asignados.<br>Contacte a su asesor para vincular su cartera.
+    </div>
+    <div class="pie" id="pie-marca">Plataforma de cumplimiento laboral</div>
+  </div>
+</div>
+
+<script>
+const sb = supabase.createClient('https://hpzgqaplrywwjuvrzhcp.supabase.co','sb_publishable_1g8US8iFJ8CxnSaF_4MHgA_gqyyAr3W');
+let despacho = null;
+
+async function init(){
+  const { data } = await sb.auth.getSession();
+  if (data?.session?.user) return cargarPanel(data.session.user);
+}
+
+
+// Rate limiting: bloqueo tras 5 intentos fallidos por 15 minutos
+const _rlState = {
+  intentos: parseInt(sessionStorage.getItem('_rl_int')||'0'),
+  bloqueadoHasta: parseInt(sessionStorage.getItem('_rl_hasta')||'0'),
+};
+function _rlBloqueado(){
+  if(_rlState.bloqueadoHasta > Date.now()) return true;
+  if(_rlState.bloqueadoHasta && _rlState.bloqueadoHasta <= Date.now()){
+    _rlState.intentos = 0; _rlState.bloqueadoHasta = 0;
+    sessionStorage.removeItem('_rl_int'); sessionStorage.removeItem('_rl_hasta');
+  }
+  return false;
+}
+function _rlFallo(){
+  _rlState.intentos++;
+  sessionStorage.setItem('_rl_int', _rlState.intentos);
+  if(_rlState.intentos >= 5){
+    _rlState.bloqueadoHasta = Date.now() + 15*60*1000;
+    sessionStorage.setItem('_rl_hasta', _rlState.bloqueadoHasta);
+  }
+}
+function _rlExito(){ _rlState.intentos=0; _rlState.bloqueadoHasta=0; sessionStorage.removeItem('_rl_int'); sessionStorage.removeItem('_rl_hasta'); }
+async function entrar(){
+  if(_rlBloqueado()){ const mins=Math.ceil((_rlState.bloqueadoHasta-Date.now())/60000); document.getElementById('login-msg').textContent=`Demasiados intentos. Espere ${mins} minuto(s).`; return; }
+  const email = document.getElementById('login-email').value.trim();
+  const pass  = document.getElementById('login-pass').value;
+  const msg   = document.getElementById('login-msg');
+  msg.textContent = '';
+  const { data, error } = await sb.auth.signInWithPassword({ email, password: pass });
+  if (error){ _rlFallo(); msg.textContent = 'Credenciales incorrectas.'; return; }
+  _rlExito(); cargarPanel(data.user);
+}
+
+async function cargarPanel(user){
+  const meta = user.user_metadata || {};
+  if (meta.tipo !== 'despacho'){
+    document.getElementById('login-msg').textContent =
+      'Esta cuenta no es de despacho. Si es cliente, entre por el portal de clientes.';
+    await sb.auth.signOut();
+    return;
+  }
+  despacho = {
+    nombre: meta.nombre_despacho || 'Mi Despacho',
+    color: meta.color || '#1e3a5f',
+    clientes: Array.isArray(meta.despacho_clientes) ? meta.despacho_clientes : [],
+  };
+
+  // Marca blanca: nombre y color del despacho
+  document.documentElement.style.setProperty('--acento', despacho.color);
+  document.getElementById('nombre-despacho').textContent = despacho.nombre;
+  document.title = despacho.nombre + ' · Panel';
+  document.getElementById('num-clientes').textContent = despacho.clientes.length;
+
+  document.getElementById('pantalla-login').style.display = 'none';
+  document.getElementById('pantalla-panel').style.display = 'block';
+
+  const grid = document.getElementById('grid-clientes');
+  if (!despacho.clientes.length){
+    document.getElementById('sin-clientes').style.display = 'block';
+    return;
+  }
+
+  grid.innerHTML = despacho.clientes.map((c,i)=>`
+    <div class="card" id="cli-${i}">
+      <h3>${esc(c.empresa || c.rfc)}</h3>
+      <div class="rfc">${esc(c.rfc)}</div>
+      <div class="stats" id="stats-${i}"><span class="stat" style="color:var(--ink3);">Cargando…</span></div>
+      <button class="btn btn-p" onclick="gestionar(${i})">Gestionar cliente →</button>
+    </div>`).join('');
+
+  // Estadísticas en paralelo, un cliente a la vez sin mezclar RFCs
+  despacho.clientes.forEach((c,i)=>cargarStats(c,i));
+}
+
+async function cargarStats(c,i){
+  try {
+    const inicioMes = new Date(); inicioMes.setDate(1);
+    const { data: sd } = await sb.auth.getSession();
+    const token = sd?.session?.access_token || '';
+    // Stats via proxy (el despacho no puede hacer SELECTs directos por RLS)
+    const proxyCount = async (tabla, filtros) => {
+      const resp = await fetch('/api/mutar-datos-cliente', {
+        method:'POST',
+        headers:{'Content-Type':'application/json','Authorization':'Bearer '+token},
+        body: JSON.stringify({ tabla, accion:'select', cliente_rfc:c.rfc, columnas:'id', filtros }),
+      });
+      if(!resp.ok) return 0;
+      const r = await resp.json();
+      return (r.data||[]).length;
+    };
+    const [trabCount, asisCount, docsCount] = await Promise.all([
+      proxyCount('trabajadores', { activo:true }),
+      proxyCount('asistencias',  { gte:{ fecha: inicioMes.toISOString().split('T')[0] } }),
+      proxyCount('documentos_identidad', {}),
+    ]);
+    const alDia = asisCount > 0;
+    document.getElementById('stats-'+i).innerHTML = `
+      <span class="stat"><strong>${trabCount}</strong>Trabajadores</span>
+      <span class="stat"><strong>${asisCount}</strong>Asistencias/mes</span>
+      <span class="stat"><strong>${docsCount}</strong>Documentos</span>
+      <span class="badge ${alDia?'b-ok':'b-warn'}" style="align-self:center;">${alDia?'Al día':'Sin registros este mes'}</span>`;
+  } catch(e){
+    document.getElementById('stats-'+i).innerHTML = '<span class="stat" style="color:var(--ink3);">Sin acceso a datos</span>';
+  }
+}
+
+const HERRAMIENTAS = [
+  // ── Gestión ──
+  { cat:'Gestión del personal', icon:'📋', nombre:'Expedientes y asistencias',      url:'asistencias-vacaciones.html' },
+  { cat:'Gestión del personal', icon:'🗂️', nombre:'Proceso de contratación',        url:'proceso-contratacion.html' },
+  { cat:'Gestión del personal', icon:'📤', nombre:'Permisos y ausencias',            url:'permisos-ausencias.html' },
+  { cat:'Gestión del personal', icon:'📊', nombre:'Recibos y nómina',               url:'recibos-pagos.html' },
+  { cat:'Gestión del personal', icon:'📦', nombre:'Asignación de recursos',          url:'asignacion-recursos.html' },
+  { cat:'Gestión del personal', icon:'📝', nombre:'Formatos de RH',                 url:'formatos-rh.html' },
+  // ── Contratos ──
+  { cat:'Contratos',            icon:'⏱️', nombre:'Contrato por tiempo determinado', url:'contrato-tiempo-determinado.html' },
+  { cat:'Contratos',            icon:'📋', nombre:'Contrato por tiempo indeterminado',url:'contrato-indeterminado.html' },
+  { cat:'Contratos',            icon:'🔬', nombre:'Contrato a prueba',               url:'contrato-prueba.html' },
+  { cat:'Contratos',            icon:'🎓', nombre:'Contrato de capacitación inicial', url:'contrato-capacitacion.html' },
+  { cat:'Contratos',            icon:'💼', nombre:'Contratos especiales/comisionista',url:'contratos-especiales.html' },
+  { cat:'Contratos',            icon:'🌐', nombre:'Contratos (otras modalidades)',    url:'contratos-nuevos.html' },
+  { cat:'Contratos',            icon:'🔒', nombre:'Confidencialidad y civiles',       url:'confidencialidad-civiles.html' },
+  // ── Normatividad ──
+  { cat:'Normatividad',         icon:'📜', nombre:'Reglamento interior de trabajo',   url:'reglamento-interior.html' },
+  { cat:'Normatividad',         icon:'🗓️', nombre:'Horario y anexos al contrato',    url:'horario-anexos.html' },
+  { cat:'Normatividad',         icon:'👥', nombre:'Comisiones mixtas (STPS)',         url:'comisiones-mixtas.html' },
+  { cat:'Normatividad',         icon:'📖', nombre:'Convenios económicos',             url:'convenios-economicos.html' },
+  // ── Documentos ──
+  { cat:'Documentos y cartas',  icon:'⚠️', nombre:'Actas administrativas',           url:'acta-administrativa.html' },
+  { cat:'Documentos y cartas',  icon:'✉️', nombre:'Cartas laborales',                url:'cartas-laborales.html' },
+];
+
+function gestionar(i){
+  const c = despacho.clientes[i];
+  sessionStorage.setItem('cl_gestion', JSON.stringify({
+    rfc: c.rfc, empresa: c.empresa || c.rfc, despacho: despacho.nombre, color: despacho.color,
+  }));
+  // Mostrar panel de herramientas en lugar de ir directamente
+  mostrarHerramientas(c);
+}
+
+function mostrarHerramientas(c){
+  const area = document.getElementById('area-herramientas');
+  area.innerHTML = `
+    <div style="background:${despacho.color};color:#fff;border-radius:10px;padding:14px 18px;margin-bottom:16px;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:10px;">
+      <div>
+        <div style="font-size:14px;font-weight:700;">Gestionando: ${esc(c.empresa||c.rfc)}</div>
+        <div style="font-size:11px;opacity:.75;">RFC: ${esc(c.rfc)} · Cualquier documento o registro se guarda en este expediente</div>
+      </div>
+      <button class="btn btn-o" style="font-size:12px;padding:6px 14px;background:#fff;color:var(--acento);border:2px solid #fff;font-weight:700;" onclick="document.getElementById('area-herramientas').innerHTML='';document.getElementById('grid-clientes').style.display='grid';">← Cambiar de cliente</button>
+    </div>
+    ${(() => {
+      const cats = [...new Set(HERRAMIENTAS.map(h=>h.cat))];
+      return cats.map(cat => {
+        const items = HERRAMIENTAS.filter(h=>h.cat===cat);
+        return `<div style="margin-bottom:18px;">
+          <div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.8px;color:#94a3b8;margin-bottom:8px;">${cat}</div>
+          <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(210px,1fr));gap:10px;">
+            ${items.map(h=>`
+              <a href="${h.url}" style="display:flex;align-items:center;gap:10px;background:#fff;border:1px solid var(--border);border-radius:10px;padding:13px 15px;text-decoration:none;color:var(--ink);font-size:13px;font-weight:500;" onmouseover="this.style.borderColor='${despacho.color}';this.style.background='#f8fafc'" onmouseout="this.style.borderColor='var(--border)';this.style.background='#fff'">
+                <span style="font-size:20px;">${h.icon}</span>
+                <span>${h.nombre}</span>
+              </a>`).join('')}
+          </div>
+        </div>`;
+      }).join('');
+    })()}
+    </div>`;
+  document.getElementById('grid-clientes').style.display = 'none';
+  area.style.display = 'block';
+}
+
+function mostrarAltaCliente(){
+  const f = document.getElementById('form-alta-cliente');
+  f.style.display = f.style.display === 'none' ? 'block' : 'none';
+}
+
+async function altaCliente(){
+  const msg = document.getElementById('nc-msg');
+  msg.textContent = '';
+  const empresa = document.getElementById('nc-empresa').value.trim();
+  const rfc = document.getElementById('nc-rfc').value.trim().toUpperCase();
+  if(!empresa || !rfc){ msg.textContent = 'Complete empresa y RFC.'; return; }
+  const rfcLimpio = rfc.replace(/[\s-]/g,'');
+  if(!/^[A-ZÑ&]{3,4}\d{6}[A-Z0-9]{3}$/.test(rfcLimpio)){
+    msg.textContent = 'El RFC "'+rfc+'" no tiene formato válido. Debe ser de 12 caracteres (persona moral, ej. ABC010101AB1) o 13 (persona física, ej. ABCD010101AB1).';
+    return;
+  }
+  if(despacho.clientes.some(c=>String(c.rfc).toUpperCase()===rfcLimpio)){ msg.textContent = 'Ese RFC ya está en su cartera.'; return; }
+
+  // Candado de seguridad: si el RFC ya tiene datos en la plataforma (es cliente
+  // de alguien más o cliente directo), la vinculación la hace el administrador.
+  msg.style.color = 'var(--ink3)'; msg.textContent = 'Verificando…';
+  try {
+    const { data: sd2 } = await sb.auth.getSession();
+    const _tok2 = sd2?.session?.access_token || '';
+    const _r2 = await fetch('/api/mutar-datos-cliente',{method:'POST',
+      headers:{'Content-Type':'application/json','Authorization':'Bearer '+_tok2},
+      body:JSON.stringify({tabla:'trabajadores',accion:'select',cliente_rfc:rfcLimpio,columnas:'id',filtros:{},limit:1})});
+    const _d2 = _r2.ok ? await _r2.json() : {data:[]};
+    if((_d2.data||[]).length > 0){
+      msg.style.color = 'var(--red)';
+      msg.textContent = 'Este RFC ya tiene información registrada en la plataforma. Para vincularlo a su cartera, solicítelo a su asesor.';
+      return;
+    }
+    const nuevaLista = [...despacho.clientes, { rfc: rfcLimpio, empresa }];
+    const { data: updData, error } = await sb.auth.updateUser({ data: { despacho_clientes: nuevaLista } });
+    if(error) throw error;
+    despacho.clientes = nuevaLista;
+    document.getElementById('nc-empresa').value = '';
+    document.getElementById('nc-rfc').value = '';
+    document.getElementById('form-alta-cliente').style.display = 'none';
+    // Repintar con los datos actualizados (updateUser devuelve el usuario fresco;
+    // la sesión en caché aún puede traer la metadata anterior)
+    cargarPanel(updData?.user || { user_metadata: {
+      tipo:'despacho', nombre_despacho: despacho.nombre, color: despacho.color, despacho_clientes: nuevaLista,
+    }});
+  } catch(e){
+    msg.style.color = 'var(--red)';
+    msg.textContent = 'No se pudo agregar: ' + (e.message||e);
+  }
+}
+
+async function salir(){
+  sessionStorage.removeItem('cl_gestion');
+  await sb.auth.signOut();
+  location.reload();
+}
+
+function esc(s){ return String(s??'').replace(/[&<>"']/g, m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m])); }
+document.getElementById('login-pass').addEventListener('keydown', e=>{ if(e.key==='Enter') entrar(); });
+init();
+</script>
+</body>
+</html>

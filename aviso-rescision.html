@@ -1,0 +1,296 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="robots" content="noindex,nofollow">
+<title>Generador · Aviso de Rescisión Art. 47 LFT</title>
+<style>
+  :root{--ink:#1a1a18;--ink2:#4a4a46;--ink3:#8a8a84;--surface:#f7f6f2;--white:#ffffff;--accent:#1a3a5c;--accent2:#e8f0f8;--border:#ddddd6;--danger:#c0392b;--green:#16a34a;--radius:6px;--font-ui:'Segoe UI',system-ui,sans-serif;--font-doc:'Times New Roman',Georgia,serif;}
+  *{box-sizing:border-box;margin:0;padding:0;}
+  body{font-family:var(--font-ui);background:var(--surface);color:var(--ink);min-height:100vh;font-size:14px;}
+  header{background:var(--accent);color:#fff;padding:14px 28px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:100;box-shadow:0 1px 4px rgba(0,0,0,.18);}
+  header h1{font-size:15px;font-weight:600;}
+  header span{font-size:12px;opacity:.7;}
+  .header-actions{display:flex;gap:10px;}
+  .btn{padding:7px 18px;border-radius:var(--radius);font-size:13px;font-weight:500;cursor:pointer;border:1px solid transparent;transition:background .15s,opacity .15s;}
+  .btn-outline{background:transparent;border-color:rgba(255,255,255,.45);color:#fff;}.btn-outline:hover{background:rgba(255,255,255,.12);}
+  .btn-primary{background:#fff;color:var(--accent);}.btn-primary:hover{opacity:.88;}
+  .workspace{display:grid;grid-template-columns:400px 1fr;height:calc(100vh - 52px);}
+  .form-panel{background:var(--white);border-right:1px solid var(--border);overflow-y:auto;padding:24px 24px 40px;}
+  .section-label{font-size:10px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:var(--accent);padding:20px 0 10px;border-bottom:1px solid var(--border);margin-bottom:14px;}
+  .section-label:first-child{padding-top:4px;}
+  .field{margin-bottom:13px;}
+  .field label{display:block;font-size:12px;font-weight:500;color:var(--ink2);margin-bottom:4px;}
+  .field label .req{color:var(--danger);margin-left:2px;}
+  .field input,.field select,.field textarea{width:100%;padding:8px 10px;border:1px solid var(--border);border-radius:var(--radius);font-size:13px;font-family:var(--font-ui);color:var(--ink);background:var(--white);transition:border-color .15s;}
+  .field input:focus,.field select:focus,.field textarea:focus{outline:none;border-color:var(--accent);box-shadow:0 0 0 3px var(--accent2);}
+  .field textarea{resize:vertical;min-height:80px;}
+  .field-row{display:grid;grid-template-columns:1fr 1fr;gap:10px;}
+  .hint{font-size:11px;color:var(--ink3);margin-top:3px;}
+  .alert-box{background:#fee2e2;border:1px solid #fca5a5;border-radius:var(--radius);padding:10px 14px;font-size:12px;color:#7f1d1d;margin-bottom:14px;line-height:1.5;}
+  .clause-check{display:flex;align-items:flex-start;gap:8px;margin-bottom:7px;}
+  .clause-check input[type=checkbox]{margin-top:2px;accent-color:var(--accent);flex-shrink:0;}
+  .clause-check label{font-size:11.5px;color:var(--ink2);cursor:pointer;line-height:1.4;}
+  .tipo-tabs{display:grid;grid-template-columns:1fr 1fr;gap:0;border:1px solid var(--border);border-radius:var(--radius);overflow:hidden;margin-bottom:16px;}
+  .tipo-tab{padding:10px 4px;text-align:center;font-size:12px;font-weight:500;cursor:pointer;background:var(--white);color:var(--ink2);border:none;transition:all .15s;line-height:1.3;}
+  .tipo-tab:not(:last-child){border-right:1px solid var(--border);}
+  .tipo-tab.active{background:var(--accent);color:#fff;}
+  .preview-panel{background:#e8e7e0;overflow-y:auto;padding:32px 40px;display:flex;flex-direction:column;align-items:center;gap:24px;}
+  .doc-sheet{background:var(--white);width:100%;max-width:760px;min-height:1000px;padding:64px 74px;box-shadow:0 2px 16px rgba(0,0,0,.12);font-family:var(--font-doc);font-size:12pt;line-height:1.75;color:#111;}
+  .doc-title{text-align:center;font-size:13pt;font-weight:bold;text-transform:uppercase;letter-spacing:.04em;margin-bottom:6px;}
+  .doc-subtitle{text-align:center;font-size:10pt;color:var(--ink3);font-family:var(--font-ui);margin-bottom:28px;}
+  .doc-p{margin-bottom:14px;text-align:justify;}
+  .doc-p .blank{font-weight:bold;color:var(--accent);border-bottom:1px solid var(--accent);padding:0 2px;}
+  .doc-p .blank.empty{color:#c0392b;border-bottom-color:#c0392b;font-style:italic;font-weight:normal;}
+  .doc-clause-title{font-weight:bold;text-transform:uppercase;font-size:10.5pt;margin:22px 0 8px;}
+  .doc-firma-grid{display:grid;grid-template-columns:1fr 1fr;gap:40px;margin-top:48px;}
+  .doc-firma-solo{max-width:320px;margin:48px auto 0;}
+  .firma-box{border-top:1px solid #888;padding-top:8px;font-size:10pt;text-align:center;line-height:1.5;}
+  .firma-box strong{display:block;font-size:9pt;color:var(--ink3);font-family:var(--font-ui);}
+  @media print{header,.form-panel{display:none!important;}.workspace{display:block;height:auto;}.preview-panel{padding:0;background:white;gap:0;}.doc-sheet{box-shadow:none;max-width:100%;page-break-after:always;}body{background:white;}}
+#auth-gate-loading{position:fixed;inset:0;background:#fff;z-index:9999;display:flex;align-items:center;justify-content:center;font-family:'Segoe UI',system-ui,sans-serif;color:#999;font-size:13px;}
+#auth-gate-blocked{position:fixed;inset:0;background:#0f2640;z-index:9999;display:none;align-items:center;justify-content:center;padding:24px;}
+#auth-gate-blocked .agb-box{background:#fff;border-radius:16px;padding:40px 36px;max-width:420px;text-align:center;font-family:'Segoe UI',system-ui,sans-serif;}
+#auth-gate-blocked .agb-box h2{font-size:18px;margin-bottom:10px;color:#0f2640;}
+#auth-gate-blocked .agb-box p{font-size:13px;color:#666;margin-bottom:20px;line-height:1.6;}
+#auth-gate-blocked .agb-btns{display:flex;gap:10px;justify-content:center;flex-wrap:wrap;}
+#auth-gate-blocked .agb-btns a{padding:10px 18px;border-radius:8px;font-size:13px;font-weight:600;text-decoration:none;}
+#auth-gate-blocked .agb-btns a.agb-primary{background:#1a3a5c;color:#fff;}
+#auth-gate-blocked .agb-btns a.agb-secondary{background:#f0f0ec;color:#1a3a5c;}
+body.modo-demo .doc-sheet{position:relative;user-select:none;-webkit-user-select:none;-moz-user-select:none;}
+body.modo-demo .doc-sheet::after{content:'MUESTRA — CUENTA DEMO, NO VÁLIDO PARA USO LEGAL';position:absolute;top:46%;left:-15%;right:-15%;text-align:center;font-size:26px;font-weight:900;color:rgba(220,38,38,.16);transform:rotate(-18deg);pointer-events:none;font-family:'Segoe UI',system-ui,sans-serif;z-index:50;}
+@media print{ body.modo-demo .doc-sheet::after{display:block!important;color:rgba(220,38,38,.35)!important;} }
+  .cl-nav-logo{display:flex;align-items:center;font-size:15px;font-weight:800;color:#fff;letter-spacing:-.01em;line-height:1;text-decoration:none;}
+  .cl-nav-logo .cl-laboral{color:#5eead4;font-weight:400;}
+</style>
+<script src="membrete.js?v=3.7"></script>
+</head>
+<body>
+<div id="auth-gate-loading">Verificando acceso…</div>
+<div id="auth-gate-blocked">
+  <div class="agb-box">
+    <h2>🔒 Esta herramienta requiere una suscripción activa</h2>
+    <p>Inicie sesión desde su portal de cliente para usar este generador, o conozca nuestros planes si todavía no es cliente de ClickLaboral.mx.</p>
+    <div class="agb-btns">
+      <a class="agb-primary" href="portal-cliente.html">Iniciar sesión →</a>
+      <a class="agb-secondary" href="index.html#precios">Ver planes</a>
+    </div>
+  </div>
+</div>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
+<script src="expediente-helper.js?v=3.7"></script>
+<script>
+(async()=>{
+  const _sb = supabase.createClient('https://hpzgqaplrywwjuvrzhcp.supabase.co','sb_publishable_1g8US8iFJ8CxnSaF_4MHgA_gqyyAr3W');
+  try {
+    const { data } = await _sb.auth.getSession();
+    document.getElementById('auth-gate-loading').style.display = 'none';
+    if (!data?.session?.user) document.getElementById('auth-gate-blocked').style.display = 'flex';
+  } catch(e) {
+    document.getElementById('auth-gate-loading').style.display = 'none';
+    document.getElementById('auth-gate-blocked').style.display = 'flex';
+  }
+})();
+</script>
+
+<header>
+  <div class="cl-nav-logo" style="flex-shrink:0;"><svg width="26" height="26" viewBox="0 0 100 100" style="vertical-align:-7px;margin-right:6px;flex-shrink:0;">
+        <defs><linearGradient id="clGrad" x1="10" y1="10" x2="90" y2="95" gradientUnits="userSpaceOnUse">
+          <stop offset="0%" stop-color="#1a3a5c"/><stop offset="55%" stop-color="#1e6f6c"/><stop offset="100%" stop-color="#2dd4bf"/>
+        </linearGradient></defs>
+        <path d="M50 7 L83 20 V51 C83 73 68 87 50 95 C32 87 17 73 17 51 V20 Z" fill="none" stroke="url(#clGrad)" stroke-width="6" stroke-linejoin="round"/>
+        <circle cx="40" cy="38" r="8.5" fill="#5eead4"/>
+        <path d="M25 63 C25 51 31 45 40 45 C49 45 55 51 55 63 Z" fill="#5eead4"/>
+        <circle cx="55" cy="33" r="9.5" fill="#14b8a6"/>
+        <path d="M38 61 C38 48 45.5 41 55 41 C64.5 41 72 48 72 61 Z" fill="#14b8a6"/>
+        <path d="M29 61 L45 77 L78 40" fill="none" stroke="#e8f2fc" stroke-width="9" stroke-linecap="round" stroke-linejoin="round"/>
+      </svg>Click<span class="cl-laboral">Laboral.mx</span></div>
+  <div>
+    <h1>Aviso de Rescisión (despido justificado) · ClickLaboral.mx</h1>
+    <span>Art. 47 LFT · Aviso al trabajador y comunicación al Tribunal Laboral</span>
+  </div>
+  <div class="header-actions">
+    <button class="btn btn-outline" onclick="location.reload()">Limpiar</button>
+    <button class="btn btn-primary" onclick="window.print()">Imprimir / PDF</button>
+  </div>
+</header>
+
+<div class="workspace">
+  <div class="form-panel">
+    <div class="tipo-tabs">
+      <button class="tipo-tab active" id="tab-aviso" onclick="setTipo('aviso')">📄 Aviso al trabajador</button>
+      <button class="tipo-tab" id="tab-tribunal" onclick="setTipo('tribunal')">🏛 Escrito al Tribunal</button>
+    </div>
+
+    <div class="alert-box">
+      ⚠️ <strong>Crítico:</strong> la falta de aviso de rescisión (o de su comunicación al Tribunal si el trabajador se niega a recibirlo, dentro de los <strong>5 días hábiles</strong> siguientes) hace presumir que el despido fue <strong>injustificado</strong> — Art. 47, último párrafo, LFT. Este documento decide juicios. Ante cualquier duda, consulte a su asesor ANTES de entregar.
+    </div>
+
+    <div class="section-label">Datos del patrón</div>
+    <div class="field"><label>Empresa / patrón <span class="req">*</span></label><input id="f-empresa" oninput="render()"></div>
+    <div class="field"><label>Representante que firma</label><input id="f-representante" oninput="render()" placeholder="Nombre del representante legal o de RH"></div>
+
+    <div class="section-label">Datos del trabajador</div>
+    <div class="field"><label>Nombre completo <span class="req">*</span></label><input id="f-trabajador" oninput="render()"></div>
+    <div class="field-row">
+      <div class="field"><label>Puesto</label><input id="f-puesto" oninput="render()"></div>
+      <div class="field"><label>Fecha de ingreso</label><input id="f-ingreso" type="date" oninput="render()"></div>
+    </div>
+    <div class="field"><label>Domicilio del trabajador</label><input id="f-domicilio" oninput="render()"><div class="hint">Indispensable para la notificación por conducto del Tribunal</div></div>
+
+    <div class="section-label">Rescisión</div>
+    <div class="field-row">
+      <div class="field"><label>Fecha de efectos <span class="req">*</span></label><input id="f-efectos" type="date" oninput="render()"></div>
+      <div class="field"><label>Lugar</label><input id="f-lugar" value="Guadalajara, Jalisco" oninput="render()"></div>
+    </div>
+
+    <div class="section-label">Causal(es) — Art. 47 LFT</div>
+    <div class="hint" style="margin-bottom:8px;">Marque las fracciones aplicables. Cada una debe sustentarse con hechos concretos, circunstanciados en tiempo, modo y lugar.</div>
+    <div id="causales"></div>
+
+    <div class="section-label">Hechos (conducta concreta)</div>
+    <div class="field">
+      <label>Descripción circunstanciada <span class="req">*</span></label>
+      <textarea id="f-hechos" oninput="render()" placeholder="Describa QUÉ hizo el trabajador, CUÁNDO (fecha y hora), DÓNDE, y cómo se acreditó (testigos, cámaras, acta administrativa). Ej.: El día 10 de julio de 2026, aproximadamente a las 14:30 hrs, en el área de almacén, el trabajador..."></textarea>
+      <div class="hint">Los hechos genéricos ("mal desempeño") pierden juicios. Sea específico.</div>
+    </div>
+    <div class="field"><label>Acta administrativa relacionada (folio/fecha, opcional)</label><input id="f-acta" oninput="render()" placeholder="Ej. Acta administrativa del 10/07/2026"></div>
+
+    <div id="campos-tribunal" style="display:none;">
+      <div class="section-label">Datos para el escrito al Tribunal</div>
+      <div class="field"><label>Fecha en que se intentó entregar el aviso</label><input id="f-fecha-intento" type="date" oninput="render()"></div>
+      <div class="field"><label>Ciudad sede del Tribunal</label><input id="f-sede" oninput="render()" placeholder="Ej. Guadalajara, Jalisco"></div>
+    </div>
+  </div>
+
+  <div class="preview-panel" id="preview"></div>
+</div>
+
+<script>
+const qs = new URLSearchParams(location.search);
+document.getElementById('f-empresa').value = qs.get('empresa') || '';
+document.getElementById('f-efectos').value = new Date().toISOString().slice(0,10);
+
+// Causales Art. 47 LFT (resumen fiel de las fracciones más utilizadas)
+const CAUSALES = [
+  {fr:'I',    t:'Engaño con certificados o referencias falsas al contratarlo (solo dentro de los primeros 30 días)'},
+  {fr:'II',   t:'Faltas de probidad u honradez, actos de violencia, amagos, injurias o malos tratos contra el patrón, sus familiares o personal directivo'},
+  {fr:'III',  t:'Actos de violencia, amagos o injurias contra compañeros, si altera la disciplina del centro de trabajo'},
+  {fr:'IV',   t:'Actos del tipo anterior fuera del servicio, contra el patrón, sus familiares o personal, tan graves que hagan imposible el cumplimiento de la relación'},
+  {fr:'V',    t:'Daños materiales intencionales a edificios, maquinaria, herramientas o materias primas'},
+  {fr:'VI',   t:'Daños graves causados por negligencia, siendo ésta la única causa del perjuicio'},
+  {fr:'VII',  t:'Comprometer por imprudencia o descuido inexcusable la seguridad del establecimiento o de las personas'},
+  {fr:'VIII', t:'Actos inmorales, hostigamiento y/o acoso sexual contra cualquier persona en el centro de trabajo'},
+  {fr:'IX',   t:'Revelar secretos de fabricación o asuntos reservados con perjuicio de la empresa'},
+  {fr:'X',    t:'Más de tres faltas de asistencia en 30 días sin permiso o causa justificada'},
+  {fr:'XI',   t:'Desobedecer al patrón o sus representantes, sin causa justificada, en el trabajo contratado'},
+  {fr:'XII',  t:'Negarse a adoptar las medidas preventivas o procedimientos para evitar accidentes o enfermedades'},
+  {fr:'XIII', t:'Concurrir en estado de embriaguez o bajo el influjo de narcóticos o drogas enervantes (salvo prescripción médica avisada)'},
+  {fr:'XIV',  t:'Sentencia ejecutoriada que imponga pena de prisión que impida el cumplimiento de la relación'},
+  {fr:'XIV Bis', t:'Falta de documentos que exijan las leyes para prestar el servicio, por causa imputable al trabajador (dentro de 60 días)'},
+  {fr:'XV',   t:'Causas análogas a las anteriores, de igual manera graves y de consecuencias semejantes'},
+];
+document.getElementById('causales').innerHTML = CAUSALES.map((c,i)=>`
+  <div class="clause-check">
+    <input type="checkbox" id="c-${i}" onchange="render()">
+    <label for="c-${i}"><strong>Fr. ${c.fr}.</strong> ${c.t}</label>
+  </div>`).join('');
+
+let tipoActual = 'aviso';
+function setTipo(t){
+  tipoActual = t;
+  document.querySelectorAll('.tipo-tab').forEach(x=>x.classList.remove('active'));
+  document.getElementById('tab-'+t).classList.add('active');
+  document.getElementById('campos-tribunal').style.display = t==='tribunal' ? 'block' : 'none';
+  render();
+}
+
+const B = (v, ph) => v ? `<span class="blank">${v}</span>` : `<span class="blank empty">[${ph}]</span>`;
+function v(id){ return (document.getElementById(id)?.value || '').trim(); }
+function fechaLarga(iso){
+  if(!iso) return '';
+  return new Date(iso+'T12:00:00').toLocaleDateString('es-MX',{day:'numeric',month:'long',year:'numeric'});
+}
+function causalesSeleccionadas(){
+  return CAUSALES.filter((c,i)=>document.getElementById('c-'+i)?.checked);
+}
+
+function render(){
+  const d = {
+    empresa:v('f-empresa'), rep:v('f-representante'), trabajador:v('f-trabajador'),
+    puesto:v('f-puesto'), ingreso:v('f-ingreso'), domicilio:v('f-domicilio'),
+    efectos:v('f-efectos'), lugar:v('f-lugar'), hechos:v('f-hechos'), acta:v('f-acta'),
+  };
+  const cs = causalesSeleccionadas();
+  const listaCausales = cs.length
+    ? cs.map(c=>`<div class="doc-p" style="margin-bottom:6px;"><strong>Artículo 47, fracción ${c.fr}, LFT:</strong> ${c.t}.</div>`).join('')
+    : '<div class="doc-p"><span class="blank empty">[Seleccione al menos una causal del Art. 47]</span></div>';
+
+  const avisoHTML = `
+  <div class="doc-sheet">
+    <div style="text-align:right;font-family:var(--font-ui);font-size:10pt;color:#666;margin-bottom:16px;">${B(d.lugar,'lugar')}, a ${B(fechaLarga(d.efectos),'fecha')}</div>
+    <div class="doc-p" style="margin-bottom:2px;"><strong>C. ${B(d.trabajador,'nombre del trabajador')}</strong></div>
+    <div class="doc-p" style="font-size:10.5pt;">${d.puesto ? 'Puesto: '+d.puesto : ''}${d.ingreso ? ' · Fecha de ingreso: '+fechaLarga(d.ingreso) : ''}</div>
+    <div class="doc-title" style="margin-top:20px;">Aviso de rescisión de la relación de trabajo</div>
+    <div class="doc-subtitle">Sin responsabilidad para el patrón — Artículo 47 de la Ley Federal del Trabajo</div>
+    <div class="doc-p">
+      Por este conducto, ${B(d.empresa,'empresa')} le comunica formalmente que, con fecha ${B(fechaLarga(d.efectos),'fecha de efectos')}, se <strong>rescinde la relación de trabajo</strong> que lo une con esta empresa, <strong>sin responsabilidad para el patrón</strong>, con fundamento en la(s) siguiente(s) causal(es):
+    </div>
+    ${listaCausales}
+    <div class="doc-clause-title">Conducta(s) en que incurrió — circunstancias de tiempo, modo y lugar</div>
+    <div class="doc-p" style="white-space:pre-wrap;">${d.hechos ? `<span class="blank" style="border:none;">${d.hechos}</span>` : '<span class="blank empty">[Describa los hechos concretos: qué, cuándo, dónde y cómo se acreditó]</span>'}</div>
+    ${d.acta ? `<div class="doc-p">Los hechos anteriores constan además en ${B(d.acta,'')}, cuyo contenido se tiene por reproducido para todos los efectos legales.</div>` : ''}
+    <div class="doc-p">
+      Las conductas descritas actualizan la(s) causal(es) de rescisión invocada(s), por lo que a partir de la fecha señalada quedan terminados los efectos de su nombramiento y contrato de trabajo. Sus partes proporcionales de aguinaldo, vacaciones y prima vacacional, así como las prestaciones devengadas, se encuentran a su disposición en las oficinas de la empresa.
+    </div>
+    <div class="doc-p">
+      El presente aviso se le entrega personalmente en cumplimiento a lo dispuesto por el artículo 47 de la Ley Federal del Trabajo.
+    </div>
+    <div class="doc-firma-solo">
+      <div class="firma-box">${B(d.empresa,'empresa')}${d.rep ? '<br>'+d.rep : ''}<strong>EL PATRÓN / REPRESENTANTE — firma</strong></div>
+    </div>
+    <div style="margin-top:30px;border-top:1px dashed #bbb;padding-top:12px;font-family:var(--font-ui);font-size:10pt;color:#555;">
+      <strong>Acuse de recibo del trabajador:</strong> nombre y firma ______________________________ fecha ____ / ____ / ______ hora ______
+    </div>
+    <div style="margin-top:16px;font-family:var(--font-ui);font-size:9.5pt;color:#555;">
+      <strong>Constancia de negativa a recibir</strong> (llenar solo si aplica): En este acto, el trabajador se negó a recibir y/o firmar el presente aviso, lo que se hace constar en presencia de los testigos que suscriben, quienes se cercioraron de la entrega intentada y del contenido íntegro del documento.
+      <div class="doc-firma-grid" style="margin-top:28px;">
+        <div class="firma-box">Nombre y firma<strong>TESTIGO 1</strong></div>
+        <div class="firma-box">Nombre y firma<strong>TESTIGO 2</strong></div>
+      </div>
+    </div>
+  </div>`;
+
+  const tribunalHTML = `
+  <div class="doc-sheet">
+    <div class="doc-p" style="font-weight:bold;">TRIBUNAL LABORAL COMPETENTE<br>EN ${(v('f-sede')||d.lugar||'[CIUDAD]').toUpperCase()}<br>P R E S E N T E.</div>
+    <div class="doc-p" style="margin-top:20px;">
+      ${B(d.rep || d.empresa,'promovente')}, en representación de ${B(d.empresa,'empresa')}, señalando como domicilio para oír y recibir notificaciones el de la fuente de trabajo, ante ese H. Tribunal comparezco para exponer:
+    </div>
+    <div class="doc-p">
+      Con fecha ${B(fechaLarga(d.efectos),'fecha de efectos')}, mi representada rescindió, sin responsabilidad para el patrón, la relación de trabajo con el C. ${B(d.trabajador,'trabajador')}, quien se desempeñaba como ${B(d.puesto,'puesto')}, con fundamento en el artículo 47 de la Ley Federal del Trabajo, fracción(es) ${cs.length ? `<span class="blank">${cs.map(c=>c.fr).join(', ')}</span>` : '<span class="blank empty">[fracciones]</span>'}.
+    </div>
+    <div class="doc-p">
+      Con fecha ${B(fechaLarga(v('f-fecha-intento')) || fechaLarga(d.efectos),'fecha del intento de entrega')} se intentó entregar personalmente al trabajador el aviso de rescisión correspondiente, negándose éste a recibirlo, según consta en la razón asentada en el propio documento ante dos testigos.
+    </div>
+    <div class="doc-p">
+      Por lo anterior, dentro del plazo de <strong>cinco días hábiles</strong> que establece el artículo 47, párrafos penúltimo y último, de la Ley Federal del Trabajo, vengo a <strong>comunicar a ese H. Tribunal la rescisión de referencia y a exhibir el aviso respectivo</strong>, solicitando se sirva ordenar su <strong>notificación personal al trabajador</strong> en su domicilio, ubicado en ${B(d.domicilio,'domicilio del trabajador')}.
+    </div>
+    <div class="doc-p">Por lo expuesto, a ese H. Tribunal atentamente pido se sirva:</div>
+    <div class="doc-p"><strong>PRIMERO.</strong> Tenerme por presentado en tiempo y forma comunicando la rescisión de la relación de trabajo y exhibiendo el aviso correspondiente.</div>
+    <div class="doc-p"><strong>SEGUNDO.</strong> Ordenar la notificación personal del aviso al trabajador en el domicilio señalado.</div>
+    <div class="doc-p"><strong>TERCERO.</strong> Expedir a mi costa copia certificada de las constancias de notificación, para los efectos legales conducentes.</div>
+    <div class="doc-p" style="text-align:center;margin-top:26px;">PROTESTO LO NECESARIO</div>
+    <div class="doc-firma-solo">
+      <div class="firma-box">${B(d.rep || d.empresa,'promovente')}<strong>NOMBRE Y FIRMA</strong></div>
+    </div>
+    <div class="doc-p" style="font-size:10pt;font-family:var(--font-ui);color:#666;margin-top:24px;"><strong>Anexo:</strong> original del aviso de rescisión de fecha ${fechaLarga(d.efectos)||'[fecha]'} con constancia de negativa.</div>
+  </div>`;
+
+  document.getElementById('preview').innerHTML = tipoActual==='aviso' ? avisoHTML : avisoHTML + tribunalHTML;
+}
+render();
+</script>
+</body>
+</html>

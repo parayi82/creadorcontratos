@@ -1,0 +1,447 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Programa de Referidos · ClickLaboral.mx</title>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
+:root{
+  --navy:#0f2640;--navy2:#1a3a5c;--navy3:#24507a;
+  --gold:#b8860b;--gold-bg:#fef3c7;
+  --white:#fff;--surface:#f5f4f0;--surface2:#eeede8;
+  --ink:#111110;--ink2:#444440;--ink3:#888880;
+  --border:rgba(0,0,0,.08);--border2:rgba(0,0,0,.14);
+  --green:#16a34a;--green-bg:#dcfce7;
+  --amber:#d97706;--amber-bg:#fef3c7;
+  --red:#dc2626;--red-bg:#fee2e2;
+  --r:12px;--r-sm:8px;--font:'Segoe UI',system-ui,sans-serif;
+}
+body{font-family:var(--font);background:var(--surface);color:var(--ink);min-height:100vh;font-size:14px;}
+
+/* ══ LANDING DE REGISTRO ══ */
+#landing-referidos{display:block;}
+.ref-hero{background:var(--navy);color:#fff;padding:64px 32px 56px;text-align:center;}
+.ref-eyebrow{display:inline-flex;align-items:center;gap:8px;background:rgba(184,134,11,.2);border:1px solid rgba(184,134,11,.4);border-radius:20px;padding:6px 16px;font-size:12px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:#fbbf24;margin-bottom:20px;}
+.ref-hero h1{font-size:clamp(26px,4vw,42px);font-weight:800;line-height:1.15;letter-spacing:-.02em;max-width:680px;margin:0 auto 16px;}
+.ref-hero h1 em{font-style:normal;color:#fbbf24;}
+.ref-hero p{font-size:15px;color:rgba(255,255,255,.6);max-width:480px;margin:0 auto 32px;line-height:1.6;}
+.ref-cta{background:#fbbf24;color:var(--navy);font-size:14px;font-weight:700;padding:13px 28px;border-radius:10px;border:none;cursor:pointer;font-family:var(--font);}
+.ref-cta:hover{background:#f59e0b;}
+
+.ref-stats{display:flex;justify-content:center;gap:40px;margin-top:40px;flex-wrap:wrap;}
+.ref-stat{text-align:center;}
+.ref-stat-num{font-size:28px;font-weight:800;color:#fbbf24;}
+.ref-stat-lbl{font-size:11px;color:rgba(255,255,255,.5);margin-top:2px;}
+
+.ref-how{max-width:900px;margin:0 auto;padding:56px 32px;}
+.ref-how-title{font-size:22px;font-weight:800;text-align:center;margin-bottom:8px;}
+.ref-how-sub{text-align:center;color:var(--ink3);font-size:13px;margin-bottom:36px;}
+.ref-steps{display:grid;grid-template-columns:repeat(3,1fr);gap:20px;}
+.ref-step{background:var(--white);border:1px solid var(--border);border-radius:var(--r);padding:22px;text-align:center;}
+.ref-step-num{width:36px;height:36px;border-radius:50%;background:var(--navy);color:#fbbf24;font-size:14px;font-weight:800;display:flex;align-items:center;justify-content:center;margin:0 auto 14px;}
+.ref-step-title{font-size:14px;font-weight:700;margin-bottom:6px;}
+.ref-step-desc{font-size:12px;color:var(--ink3);line-height:1.6;}
+
+.ref-comision{max-width:600px;margin:0 auto 56px;padding:0 32px;}
+.comision-card{background:var(--navy);color:#fff;border-radius:var(--r);padding:32px;text-align:center;}
+.comision-pct{font-size:48px;font-weight:900;color:#fbbf24;line-height:1;}
+.comision-lbl{font-size:13px;color:rgba(255,255,255,.6);margin-top:8px;}
+.comision-ejemplo{margin-top:24px;padding-top:20px;border-top:1px solid rgba(255,255,255,.15);font-size:12px;color:rgba(255,255,255,.5);}
+.comision-ejemplo strong{color:#fff;}
+
+.ref-form-section{max-width:480px;margin:0 auto;padding:0 32px 64px;}
+.ref-form-card{background:var(--white);border:1px solid var(--border);border-radius:var(--r);padding:28px;}
+.ref-form-title{font-size:16px;font-weight:700;margin-bottom:4px;}
+.ref-form-sub{font-size:12px;color:var(--ink3);margin-bottom:20px;}
+.rf{margin-bottom:14px;}
+.rf label{display:block;font-size:12px;font-weight:600;color:var(--ink2);margin-bottom:5px;}
+.rf input{width:100%;padding:10px 12px;border:1.5px solid var(--border2);border-radius:var(--r-sm);font-size:13px;font-family:var(--font);}
+.rf input:focus{outline:none;border-color:var(--navy2);}
+.rf-submit{width:100%;padding:13px;background:var(--navy);color:#fff;border:none;border-radius:var(--r-sm);font-size:14px;font-weight:700;cursor:pointer;font-family:var(--font);margin-top:6px;}
+.rf-submit:hover{background:var(--navy2);}
+.rf-login-link{text-align:center;font-size:12px;color:var(--ink3);margin-top:16px;}
+.rf-login-link a{color:var(--navy2);font-weight:600;cursor:pointer;}
+
+/* ══ ÉXITO DE REGISTRO ══ */
+#registro-exito{display:none;text-align:center;padding:60px 32px;max-width:520px;margin:0 auto;}
+.exito-icon{font-size:48px;margin-bottom:16px;}
+.exito-title{font-size:22px;font-weight:800;color:var(--green);margin-bottom:8px;}
+.exito-sub{font-size:13px;color:var(--ink3);margin-bottom:24px;line-height:1.6;}
+.codigo-box{background:var(--navy);color:#fff;border-radius:var(--r);padding:20px;margin-bottom:20px;}
+.codigo-lbl{font-size:11px;color:rgba(255,255,255,.5);text-transform:uppercase;letter-spacing:.08em;margin-bottom:8px;}
+.codigo-val{font-size:28px;font-weight:900;color:#fbbf24;letter-spacing:.05em;font-family:monospace;}
+.link-box{background:var(--surface);border:1px solid var(--border);border-radius:var(--r-sm);padding:12px 16px;font-size:12px;font-family:monospace;color:var(--navy2);word-break:break-all;margin-bottom:16px;}
+.copy-btn{background:var(--navy2);color:#fff;border:none;border-radius:var(--r-sm);padding:9px 18px;font-size:12px;font-weight:600;cursor:pointer;font-family:var(--font);}
+
+/* ══ LOGIN REFERIDOR ══ */
+#login-referidor{display:none;background:var(--navy);min-height:100vh;align-items:center;justify-content:center;padding:24px;}
+.login-ref-box{background:#1a3a5c;border-radius:20px;padding:44px 40px;max-width:420px;width:100%;}
+.login-ref-logo{font-size:11px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:rgba(255,255,255,.4);margin-bottom:24px;}
+.login-ref-title{font-size:22px;font-weight:800;color:#fff;margin-bottom:6px;}
+.login-ref-sub{font-size:13px;color:rgba(255,255,255,.5);margin-bottom:24px;}
+.lrf{margin-bottom:14px;}
+.lrf label{display:block;font-size:12px;font-weight:600;color:rgba(255,255,255,.55);margin-bottom:5px;}
+.lrf input{width:100%;padding:11px 13px;background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.12);border-radius:9px;font-size:13px;color:#fff;font-family:var(--font);}
+.lrf input:focus{outline:none;border-color:rgba(255,255,255,.4);}
+.login-ref-btn{width:100%;padding:12px;background:#fbbf24;color:var(--navy);font-size:14px;font-weight:700;border:none;border-radius:9px;cursor:pointer;font-family:var(--font);margin-top:6px;}
+.login-ref-error{background:rgba(220,38,38,.15);border:1px solid rgba(220,38,38,.3);border-radius:8px;padding:9px 13px;font-size:12px;color:#fca5a5;margin-bottom:14px;display:none;}
+.login-ref-back{text-align:center;font-size:12px;color:rgba(255,255,255,.4);margin-top:18px;cursor:pointer;}
+
+/* ══ PORTAL DEL REFERIDOR ══ */
+#portal-referidor{display:none;}
+.pref-header{background:var(--navy);color:#fff;padding:0 28px;height:56px;display:flex;align-items:center;justify-content:space-between;}
+.pref-logo{font-size:14px;font-weight:700;}
+.pref-logo span{opacity:.4;font-size:12px;margin-left:8px;}
+.pref-logout{font-size:12px;color:rgba(255,255,255,.5);cursor:pointer;}
+.pref-content{max-width:1000px;margin:0 auto;padding:32px 28px;}
+
+.pref-welcome{margin-bottom:24px;}
+.pref-welcome h2{font-size:20px;font-weight:800;}
+.pref-welcome p{font-size:13px;color:var(--ink3);margin-top:4px;}
+
+.pref-stats{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin-bottom:24px;}
+.pref-stat-card{background:var(--white);border:1px solid var(--border);border-radius:var(--r);padding:18px 20px;}
+.pref-stat-lbl{font-size:11px;color:var(--ink3);font-weight:600;text-transform:uppercase;letter-spacing:.06em;margin-bottom:6px;}
+.pref-stat-val{font-size:24px;font-weight:800;line-height:1;}
+
+.pref-link-card{background:var(--navy);color:#fff;border-radius:var(--r);padding:22px 26px;margin-bottom:24px;}
+.pref-link-title{font-size:13px;font-weight:700;margin-bottom:4px;}
+.pref-link-sub{font-size:12px;color:rgba(255,255,255,.5);margin-bottom:14px;}
+.pref-link-box{display:flex;gap:10px;align-items:center;background:rgba(255,255,255,.08);border-radius:9px;padding:11px 14px;font-size:12px;font-family:monospace;color:#fbbf24;}
+.pref-link-box button{margin-left:auto;background:#fbbf24;color:var(--navy);border:none;border-radius:6px;padding:6px 14px;font-size:11px;font-weight:700;cursor:pointer;font-family:var(--font);flex-shrink:0;}
+
+.pref-card{background:var(--white);border:1px solid var(--border);border-radius:var(--r);padding:20px 22px;margin-bottom:20px;}
+.pref-card-title{font-size:14px;font-weight:700;margin-bottom:14px;}
+
+.cliente-row{display:flex;align-items:center;gap:12px;padding:12px 0;border-bottom:1px solid var(--border);}
+.cliente-row:last-child{border:none;}
+.cliente-info{flex:1;}
+.cliente-name{font-size:13px;font-weight:600;}
+.cliente-meta{font-size:11px;color:var(--ink3);margin-top:1px;}
+.badge{display:inline-flex;align-items:center;padding:2px 9px;border-radius:20px;font-size:10px;font-weight:600;}
+.badge-green{background:var(--green-bg);color:var(--green);}
+.badge-red{background:var(--red-bg);color:var(--red);}
+.cliente-comision{font-size:13px;font-weight:700;color:var(--green);white-space:nowrap;}
+
+.empty-state{text-align:center;padding:32px;color:var(--ink3);font-size:13px;}
+
+::-webkit-scrollbar{width:4px;}::-webkit-scrollbar-track{background:transparent;}::-webkit-scrollbar-thumb{background:var(--border2);border-radius:2px;}
+</style>
+</head>
+<body>
+
+<!-- ══════════════════════════════════════════
+     LANDING DE REGISTRO
+══════════════════════════════════════════ -->
+<div id="landing-referidos">
+  <div class="ref-hero">
+    <div class="ref-eyebrow">💼 Programa de referidos para contadores</div>
+    <h1>Ofrezca compliance laboral a sus clientes y gane <em>25% recurrente</em> cada mes</h1>
+    <p>Usted ya tiene la relación de confianza con sus clientes PyME. Refiéralos a nuestra plataforma de compliance laboral y reciba una comisión mientras sigan activos — sin esfuerzo operativo de su parte.</p>
+    <button class="ref-cta" onclick="mostrarRegistro()">Registrarme como referidor →</button>
+    <div class="ref-stats">
+      <div class="ref-stat"><div class="ref-stat-num">25%</div><div class="ref-stat-lbl">Comisión recurrente</div></div>
+      <div class="ref-stat"><div class="ref-stat-num">$0</div><div class="ref-stat-lbl">Costo para usted</div></div>
+      <div class="ref-stat"><div class="ref-stat-num">Mensual</div><div class="ref-stat-lbl">Pago de comisiones</div></div>
+    </div>
+  </div>
+
+  <div class="ref-how">
+    <div class="ref-how-title">Cómo funciona</div>
+    <div class="ref-how-sub">Tres pasos, sin trabajo operativo de su parte</div>
+    <div class="ref-steps">
+      <div class="ref-step">
+        <div class="ref-step-num">1</div>
+        <div class="ref-step-title">Regístrese gratis</div>
+        <div class="ref-step-desc">Cree su cuenta de referidor en menos de un minuto y obtenga su link único.</div>
+      </div>
+      <div class="ref-step">
+        <div class="ref-step-num">2</div>
+        <div class="ref-step-title">Comparta su link</div>
+        <div class="ref-step-desc">Envíe su link a clientes que necesiten contratos, actas o compliance laboral.</div>
+      </div>
+      <div class="ref-step">
+        <div class="ref-step-num">3</div>
+        <div class="ref-step-title">Reciba su comisión</div>
+        <div class="ref-step-desc">Nosotros atendemos al cliente. Usted cobra 25% cada mes mientras esté activo.</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="ref-comision">
+    <div class="comision-card">
+      <div class="comision-pct">25%</div>
+      <div class="comision-lbl">de comisión recurrente, todos los meses</div>
+      <div class="comision-ejemplo">Ejemplo: si refiere un cliente al <strong>Plan Estándar ($799/mes)</strong>, usted recibe <strong>~$200 MXN cada mes</strong>; con un <strong>Plan Pro ($2,399/mes)</strong>, <strong>~$600 MXN cada mes</strong> — mientras el cliente continúe activo. La comisión es el 25% de la cuota que pague su referido, sin importar el plan que elija (Estándar o Pro) — sin límite de tiempo ni de clientes referidos.</div>
+    </div>
+  </div>
+
+  <div class="ref-form-section" id="form-registro">
+    <div class="ref-form-card">
+      <div class="ref-form-title">Crear cuenta de referidor</div>
+      <div class="ref-form-sub">Gratis. Sin compromiso. Active su link en segundos.</div>
+      <div class="rf"><label>Nombre completo *</label><input type="text" id="r-nombre" placeholder="C.P. Nombre Apellido"></div>
+      <div class="rf"><label>Despacho / firma contable</label><input type="text" id="r-despacho" placeholder="Nombre de su despacho (opcional)"></div>
+      <div class="rf"><label>Email *</label><input type="email" id="r-email" placeholder="correo@despacho.mx"></div>
+      <div class="rf"><label>Teléfono</label><input type="tel" id="r-tel" placeholder="+52 33 1234 5678"></div>
+      <div class="rf"><label>Contraseña *</label><input type="password" id="r-pass" placeholder="Mínimo 8 caracteres"></div>
+      <button class="rf-submit" onclick="registrarReferidor()">Crear mi cuenta de referidor →</button>
+      <div class="rf-login-link">¿Ya tiene cuenta? <a onclick="mostrarLogin()">Iniciar sesión</a></div>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════
+     ÉXITO DE REGISTRO
+══════════════════════════════════════════ -->
+<div id="registro-exito">
+  <div class="exito-icon">🎉</div>
+  <div class="exito-title">¡Cuenta creada!</div>
+  <div class="exito-sub">Su cuenta de referidor está activa. Comparta su link único con sus clientes — cuando se suscriban, usted comenzará a generar comisión automáticamente.</div>
+  <div class="codigo-box">
+    <div class="codigo-lbl">Su código de referidor</div>
+    <div class="codigo-val" id="codigo-generado">—</div>
+  </div>
+  <div class="link-box" id="link-generado">—</div>
+  <button class="copy-btn" onclick="copiarLink()">📋 Copiar mi link de referido</button>
+  <div style="margin-top:24px;">
+    <button class="rf-submit" style="width:auto;padding:12px 28px;" onclick="irAlPortal()">Ir a mi portal de comisiones →</button>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════
+     LOGIN REFERIDOR
+══════════════════════════════════════════ -->
+<div id="login-referidor">
+  <div class="login-ref-box">
+    <div class="login-ref-logo">ClickLaboral.mx · Referidos</div>
+    <div class="login-ref-title">Acceso de referidor</div>
+    <div class="login-ref-sub">Ingrese con su email y contraseña</div>
+    <div class="login-ref-error" id="login-ref-error">Email o contraseña incorrectos.</div>
+    <div class="lrf"><label>Email</label><input type="email" id="lr-email" placeholder="correo@despacho.mx" onkeydown="if(event.key==='Enter')loginReferidor()"></div>
+    <div class="lrf"><label>Contraseña</label><input type="password" id="lr-pass" placeholder="Su contraseña" onkeydown="if(event.key==='Enter')loginReferidor()"></div>
+    <button class="login-ref-btn" onclick="loginReferidor()">Ingresar →</button>
+    <div class="login-ref-back" onclick="mostrarLanding()">← Volver al inicio</div>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════
+     PORTAL DEL REFERIDOR
+══════════════════════════════════════════ -->
+<div id="portal-referidor">
+  <div class="pref-header">
+    <div class="pref-logo">ClickLaboral.mx <span>Portal de Referidos</span></div>
+    <div class="pref-logout" onclick="logoutReferidor()">Cerrar sesión ←</div>
+  </div>
+  <div class="pref-content">
+    <div class="pref-welcome">
+      <h2 id="pref-nombre">Bienvenido</h2>
+      <p id="pref-despacho">—</p>
+    </div>
+
+    <div class="pref-stats">
+      <div class="pref-stat-card"><div class="pref-stat-lbl">Clientes referidos</div><div class="pref-stat-val" id="stat-total">0</div></div>
+      <div class="pref-stat-card"><div class="pref-stat-lbl">Activos</div><div class="pref-stat-val" style="color:var(--green);" id="stat-activos">0</div></div>
+      <div class="pref-stat-card"><div class="pref-stat-lbl">Comisión este mes</div><div class="pref-stat-val" style="color:var(--green);" id="stat-mes">$0</div></div>
+      <div class="pref-stat-card"><div class="pref-stat-lbl">Comisión acumulada</div><div class="pref-stat-val" id="stat-total-comision">$0</div></div>
+    </div>
+
+    <div class="pref-link-card">
+      <div class="pref-link-title">Su link de referido</div>
+      <div class="pref-link-sub">Compártalo con sus clientes — el sistema detecta automáticamente quién los refirió</div>
+      <div class="pref-link-box">
+        <span id="mi-link">—</span>
+        <button onclick="copiarMiLink()">Copiar</button>
+      </div>
+    </div>
+
+    <div class="pref-card">
+      <div class="pref-card-title">Mis clientes referidos</div>
+      <div id="lista-clientes"></div>
+    </div>
+
+    <div class="pref-card">
+      <div class="pref-card-title">Historial de comisiones</div>
+      <div id="lista-comisiones"></div>
+    </div>
+  </div>
+</div>
+
+<script>
+const SUPABASE_URL = 'https://hpzgqaplrywwjuvrzhcp.supabase.co';
+const SUPABASE_ANON_KEY = 'sb_publishable_1g8US8iFJ8CxnSaF_4MHgA_gqyyAr3W';
+const sb = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+let referidorActual = null;
+
+function ocultarTodo(){
+  document.getElementById('landing-referidos').style.display = 'none';
+  document.getElementById('registro-exito').style.display = 'none';
+  document.getElementById('login-referidor').style.display = 'none';
+  document.getElementById('portal-referidor').style.display = 'none';
+}
+function mostrarLanding(){ ocultarTodo(); document.getElementById('landing-referidos').style.display = 'block'; }
+function mostrarRegistro(){ document.getElementById('form-registro').scrollIntoView({behavior:'smooth'}); }
+function mostrarLogin(){ ocultarTodo(); document.getElementById('login-referidor').style.display = 'flex'; }
+
+function generarCodigo(nombre){
+  const base = nombre.replace(/[^a-zA-Z]/g,'').substring(0,4).toUpperCase() || 'REF';
+  const num = Math.floor(Math.random()*900+100);
+  return base + num;
+}
+
+async function registrarReferidor(){
+  const nombre = document.getElementById('r-nombre').value.trim();
+  const despacho = document.getElementById('r-despacho').value.trim();
+  const email = document.getElementById('r-email').value.trim();
+  const tel = document.getElementById('r-tel').value.trim();
+  const pass = document.getElementById('r-pass').value;
+
+  if(!nombre || !email || !pass){ alert('Complete nombre, email y contraseña'); return; }
+  if(pass.length < 8){ alert('La contraseña debe tener al menos 8 caracteres'); return; }
+
+  const codigo = generarCodigo(nombre);
+  const btn = document.querySelector('.rf-submit');
+  btn.textContent = 'Creando cuenta...';
+  btn.disabled = true;
+
+  try {
+    // 1. Crear la cuenta del lado del servidor (evita el problema de RLS
+    // cuando la confirmación de email está activada en Supabase)
+    const resp = await fetch('/api/registrar-referidor', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ nombre, despacho, email, telefono: tel, password: pass, codigo }),
+    });
+    const data = await resp.json();
+    if (!resp.ok) throw new Error(data.error || 'Error al crear la cuenta');
+
+    // 2. Iniciar sesión de inmediato, para que "Ir a mi portal" funcione sin pedir login otra vez
+    await sb.auth.signInWithPassword({ email, password: pass });
+
+    // 3. Mostrar pantalla de éxito
+    const link = `${window.location.origin}/checkout.html?ref=${codigo}`;
+    document.getElementById('codigo-generado').textContent = codigo;
+    document.getElementById('link-generado').textContent = link;
+    ocultarTodo();
+    document.getElementById('registro-exito').style.display = 'block';
+
+  } catch (err) {
+    alert('Error al crear la cuenta: ' + (err.message || 'intente de nuevo'));
+    btn.textContent = 'Crear mi cuenta de referidor →';
+    btn.disabled = false;
+  }
+}
+
+function copiarLink(){
+  const link = document.getElementById('link-generado').textContent;
+  navigator.clipboard.writeText(link).then(()=>{
+    const btn = document.querySelector('.copy-btn');
+    btn.textContent = '✓ Copiado';
+    setTimeout(()=>btn.textContent='📋 Copiar mi link de referido', 2000);
+  });
+}
+
+function irAlPortal(){ loginReferidorDirecto(); }
+
+async function loginReferidor(){
+  const email = document.getElementById('lr-email').value.trim();
+  const pass = document.getElementById('lr-pass').value;
+  const err = document.getElementById('login-ref-error');
+  err.style.display = 'none';
+  if(!email || !pass){ err.textContent='Ingrese su email y contraseña'; err.style.display='block'; return; }
+
+  try {
+    const { error } = await sb.auth.signInWithPassword({ email, password: pass });
+    if (error) { err.textContent='Email o contraseña incorrectos.'; err.style.display='block'; return; }
+    await cargarPortalReferidor(email);
+  } catch(e){
+    err.textContent = 'Error de conexión. Intente de nuevo.';
+    err.style.display = 'block';
+  }
+}
+
+async function loginReferidorDirecto(){
+  const email = document.getElementById('r-email').value.trim();
+  await cargarPortalReferidor(email);
+}
+
+async function cargarPortalReferidor(email){
+  const { data: ref, error } = await sb.from('referidores').select('*').eq('email', email).single();
+  if (error || !ref) { alert('No se encontró su cuenta de referidor.'); return; }
+
+  referidorActual = ref;
+  ocultarTodo();
+  document.getElementById('portal-referidor').style.display = 'block';
+
+  document.getElementById('pref-nombre').textContent = `Hola, ${ref.nombre}`;
+  document.getElementById('pref-despacho').textContent = ref.despacho || 'Programa de referidos';
+
+  const link = `${window.location.origin}/checkout.html?ref=${ref.codigo}`;
+  document.getElementById('mi-link').textContent = link;
+
+  // Cargar clientes referidos (referido_por guarda el código, no el id)
+  const { data: clientes } = await sb.from('trabajadores') /* MIGRAR: tabla clientes eliminada, usar auth.users */.select('*').eq('referido_por', ref.codigo);
+  const listaClientes = clientes || [];
+
+  const activos = listaClientes.filter(c => c.suscripcion_activa).length;
+  document.getElementById('stat-total').textContent = listaClientes.length;
+  document.getElementById('stat-activos').textContent = activos;
+
+  document.getElementById('lista-clientes').innerHTML = listaClientes.length
+    ? listaClientes.map(c => `
+      <div class="cliente-row">
+        <div class="cliente-info">
+          <div class="cliente-name">${c.empresa}</div>
+          <div class="cliente-meta">Plan ${c.plan} · $${c.cuota.toLocaleString('es-MX')}/mes</div>
+        </div>
+        <span class="badge ${c.suscripcion_activa ? 'badge-green' : 'badge-red'}">${c.suscripcion_activa ? 'Activo' : 'Inactivo'}</span>
+        <div class="cliente-comision">${c.suscripcion_activa ? '+$'+Math.round(c.cuota * ref.porcentaje_comision/100).toLocaleString('es-MX')+'/mes' : '—'}</div>
+      </div>`).join('')
+    : `<div class="empty-state">Aún no tiene clientes referidos.<br>Comparta su link para empezar a generar comisiones.</div>`;
+
+  // Cargar historial de comisiones
+  const { data: comisiones } = await sb.from('comisiones').select('*').eq('referidor_id', ref.id).order('created_at', { ascending: false });
+  const listaComisiones = comisiones || [];
+
+  const mesActual = new Date().toLocaleDateString('es-MX', {month:'long', year:'numeric'});
+  const comisionEsteMes = listaComisiones
+    .filter(c => c.periodo === mesActual)
+    .reduce((sum, c) => sum + parseFloat(c.monto_comision), 0);
+  const comisionTotal = listaComisiones.reduce((sum, c) => sum + parseFloat(c.monto_comision), 0);
+
+  document.getElementById('stat-mes').textContent = '$' + Math.round(comisionEsteMes).toLocaleString('es-MX');
+  document.getElementById('stat-total-comision').textContent = '$' + Math.round(comisionTotal).toLocaleString('es-MX');
+
+  document.getElementById('lista-comisiones').innerHTML = listaComisiones.length
+    ? listaComisiones.map(c => `
+      <div class="cliente-row">
+        <div class="cliente-info">
+          <div class="cliente-name">${c.periodo || 'Sin periodo'}</div>
+          <div class="cliente-meta">${c.porcentaje}% de $${c.monto_pago.toLocaleString('es-MX')}</div>
+        </div>
+        <span class="badge ${c.status === 'pagada' ? 'badge-green' : 'badge-red'}">${c.status}</span>
+        <div class="cliente-comision">$${Math.round(c.monto_comision).toLocaleString('es-MX')}</div>
+      </div>`).join('')
+    : `<div class="empty-state">Sin comisiones generadas todavía.</div>`;
+}
+
+function copiarMiLink(){
+  const link = document.getElementById('mi-link').textContent;
+  navigator.clipboard.writeText(link).then(()=>{
+    const btn = document.querySelector('.pref-link-box button');
+    btn.textContent = '✓';
+    setTimeout(()=>btn.textContent='Copiar', 2000);
+  });
+}
+
+async function logoutReferidor(){
+  await sb.auth.signOut();
+  referidorActual = null;
+  mostrarLanding();
+}
+</script>
+</body>
+</html>

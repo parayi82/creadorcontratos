@@ -1,0 +1,601 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<script>
+(function(){
+  var params=new URLSearchParams(window.location.search);
+  var modo=params.get('editar')==='1'?'editar':params.get('recuperar')==='1'?'ver':null;
+  if(!modo) return;
+  var gen=window.location.pathname.split('/').pop();
+  var key=(modo==='editar'?'doc_editar_':'doc_recuperado_')+gen.replace('.html','');
+  var g=null; try{g=JSON.parse(localStorage.getItem(key)||'null');}catch(e){}
+  if(!g||!g.html) return;
+  // Bloquear render() para no sobreescribir el contenido
+  var _bloqueado=false,_orig=null;
+  function bloquear(){
+    if(typeof window.render==='function'&&!_bloqueado){
+      _orig=window.render; window.render=function(){}; _bloqueado=true;
+    }
+  }
+  bloquear(); var _iv=setInterval(bloquear,50);
+  function inyectar(){
+    var pr=document.getElementById('doc-preview');
+    if(!pr){setTimeout(inyectar,80);return;}
+    clearInterval(_iv); bloquear();
+    pr.innerHTML=g.html;
+    // En modo editar: activar contenteditable automáticamente
+    if(modo==='editar'){
+      pr.contentEditable='true';
+      pr.style.outline='2px dashed #0f766e';
+      pr.style.cursor='text';
+    }
+    // Banner
+    var b=document.createElement('div');
+    b.id='banner-doc';
+    b.style.cssText='position:sticky;top:0;z-index:200;background:'+(modo==='editar'?'#f0fdf4':'#eff6ff')+';border-bottom:2px solid '+(modo==='editar'?'#86efac':'#93c5fd')+';padding:10px 16px;font-size:12px;color:'+(modo==='editar'?'#166534':'#1e40af')+';display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap;';
+    var etiq=modo==='editar'?'✏️ Modo edición — edita el documento directamente':'📄 Documento guardado';
+    var sp=document.createElement('span');
+    sp.innerHTML='<strong>'+etiq+'</strong> — '+(g.nombre||'')+' · '+(g.fecha||'');
+    var bt=document.createElement('button');
+    bt.textContent=modo==='editar'?'🔄 Restaurar campos':'✏️ Editar';
+    bt.style.cssText='border:1px solid currentColor;background:transparent;color:inherit;padding:4px 12px;border-radius:6px;font-size:11px;cursor:pointer;white-space:nowrap;';
+    bt.onclick=function(){
+      _bloqueado=false;
+      pr.contentEditable='false';
+      pr.style.outline=''; pr.style.cursor='';
+      if(_orig) window.render=_orig;
+      var bel=document.getElementById('banner-doc');
+      if(bel) bel.remove();
+      localStorage.removeItem(key);
+      if(typeof window.render==='function') window.render();
+    };
+    b.appendChild(sp); b.appendChild(bt);
+    pr.insertBefore(b,pr.firstChild);
+    localStorage.removeItem(key);
+  }
+  document.readyState==='loading'?document.addEventListener('DOMContentLoaded',inyectar):inyectar();
+})();
+</script>
+
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Generador · Comisiones Mixtas</title>
+<style>
+:root{--ink:#1a1a18;--ink2:#4a4a46;--ink3:#8a8a84;--surface:#f7f6f2;--white:#ffffff;--accent:#1a3a5c;--accent2:#e8f0f8;--border:#ddddd6;--danger:#c0392b;--radius:6px;--font-ui:'Segoe UI',system-ui,sans-serif;--font-doc:'Times New Roman',Georgia,serif;}
+*{box-sizing:border-box;margin:0;padding:0;}
+body{font-family:var(--font-ui);background:var(--surface);color:var(--ink);font-size:14px;}
+header{background:var(--accent);color:#fff;padding:14px 28px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:100;box-shadow:0 1px 4px rgba(0,0,0,.18);}
+header h1{font-size:15px;font-weight:600;}
+.header-actions{display:flex;gap:10px;align-items:center;}
+.btn{padding:7px 18px;border-radius:var(--radius);font-size:13px;font-weight:500;cursor:pointer;border:1px solid transparent;transition:background .15s;}
+.btn-outline{background:transparent;border-color:rgba(255,255,255,.45);color:#fff;}.btn-outline:hover{background:rgba(255,255,255,.12);}
+.btn-primary{background:#fff;color:var(--accent);}.btn-primary:hover{opacity:.88;}
+.workspace{display:grid;grid-template-columns:420px 1fr;height:calc(100vh - 52px);}
+.form-panel{background:var(--white);border-right:1px solid var(--border);overflow-y:auto;padding:0 0 60px;}
+.form-section{padding:16px 20px 8px;}
+.section-label{font-size:10px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:var(--accent);padding:14px 20px 10px;border-bottom:1px solid var(--border);margin-bottom:14px;background:var(--surface);}
+.field{margin-bottom:12px;}
+.field label{display:block;font-size:12px;font-weight:500;color:var(--ink2);margin-bottom:4px;}
+.field input,.field select,.field textarea{width:100%;padding:8px 10px;border:1px solid var(--border);border-radius:var(--radius);font-size:13px;font-family:var(--font-ui);color:var(--ink);background:var(--white);}
+.field input:focus,.field select:focus,.field textarea:focus{outline:none;border-color:var(--accent);box-shadow:0 0 0 3px var(--accent2);}
+.field textarea{resize:vertical;min-height:64px;}
+.field-row{display:grid;grid-template-columns:1fr 1fr;gap:10px;}
+.hint{font-size:11px;color:var(--ink3);margin-top:3px;}
+
+/* Pestañas de tipo de documento */
+.doc-tabs{display:flex;flex-wrap:wrap;gap:0;border-bottom:2px solid var(--border);background:var(--white);padding:0 20px;}
+.doc-tab{padding:10px 14px;font-size:12px;font-weight:500;cursor:pointer;color:var(--ink3);border-bottom:2px solid transparent;margin-bottom:-2px;transition:all .15s;white-space:nowrap;}
+.doc-tab.active{color:var(--accent);border-bottom-color:var(--accent);font-weight:600;}
+.doc-tab:hover{color:var(--ink);}
+
+/* Pestañas de comisión */
+.com-tabs{display:flex;flex-wrap:wrap;gap:4px;padding:12px 20px;background:#f7f6f2;border-bottom:1px solid var(--border);}
+.com-tab{padding:5px 12px;font-size:11px;font-weight:500;cursor:pointer;border-radius:20px;border:1px solid var(--border);color:var(--ink3);background:var(--white);transition:all .15s;}
+.com-tab.active{background:var(--accent);color:#fff;border-color:var(--accent);}
+
+/* Integración de miembros */
+.miembro-row{display:grid;grid-template-columns:1fr 1fr auto;gap:6px;margin-bottom:6px;align-items:center;}
+.miembro-row input{padding:6px 8px;border:1px solid var(--border);border-radius:4px;font-size:12px;}
+.btn-remove{background:none;border:none;cursor:pointer;color:var(--ink3);font-size:16px;padding:0 4px;}
+.btn-add-miembro{background:none;border:1px dashed var(--border);border-radius:var(--radius);padding:6px 14px;font-size:12px;cursor:pointer;color:var(--ink3);width:100%;margin-top:4px;}
+.btn-add-miembro:hover{border-color:var(--accent);color:var(--accent);}
+
+/* Preview */
+.preview-panel{background:#e8e7e0;overflow-y:auto;padding:32px 40px;display:flex;flex-direction:column;align-items:center;}
+.doc-sheet{background:var(--white);width:100%;max-width:760px;min-height:1060px;padding:66px 76px;box-shadow:0 2px 16px rgba(0,0,0,.12);font-family:var(--font-doc);font-size:11.5pt;line-height:1.75;color:#111;}
+
+.doc-logo-empresa{font-size:13pt;font-weight:bold;font-family:var(--font-ui);color:#1a3a5c;}
+.doc-folio{font-size:9pt;color:var(--ink3);font-family:var(--font-ui);text-align:right;line-height:1.4;}
+.doc-title{text-align:center;font-size:13pt;font-weight:bold;text-transform:uppercase;letter-spacing:.04em;margin-bottom:4px;color:#1a3a5c;}
+.doc-subtitle{text-align:center;font-size:11pt;color:#444;margin-bottom:20px;}
+.doc-p{margin-bottom:14px;text-align:justify;}
+.blank{font-weight:bold;color:#1a3a5c;border-bottom:1px solid #1a3a5c;padding:0 3px;min-width:40px;display:inline-block;}
+.blank.empty{color:#c0392b;border-bottom-color:#c0392b;font-style:italic;font-weight:normal;}
+.doc-clause-title{font-weight:bold;text-transform:uppercase;font-size:10.5pt;margin:20px 0 8px;color:#1a3a5c;}
+.tabla-integrantes{width:100%;border-collapse:collapse;margin:14px 0;font-size:10.5pt;}
+.tabla-integrantes th{background:#1a3a5c;color:#fff;padding:6px 10px;text-align:left;font-size:9.5pt;}
+.tabla-integrantes td{padding:7px 10px;border-bottom:1px solid #ddd;}
+.tabla-integrantes tr:nth-child(even) td{background:#f7f6f2;}
+.tabla-asistentes{width:100%;border-collapse:collapse;margin:14px 0;font-size:10.5pt;}
+.tabla-asistentes th{background:#1a3a5c;color:#fff;padding:6px 10px;text-align:left;font-size:9.5pt;}
+.tabla-asistentes td{padding:8px 10px;border-bottom:1px solid #ddd;min-height:36px;}
+.firma-grid{display:grid;gap:24px;margin-top:48px;}
+.firma-grid-2{grid-template-columns:1fr 1fr;}
+.firma-grid-3{grid-template-columns:1fr 1fr 1fr;}
+.firma-box{border-top:1.5px solid #888;padding-top:8px;font-size:10pt;text-align:center;line-height:1.5;}
+.firma-box strong{display:block;font-size:9pt;color:var(--ink3);font-family:var(--font-ui);text-transform:uppercase;letter-spacing:.04em;}
+.watermark-empty{text-align:center;color:var(--ink3);font-family:var(--font-ui);font-size:13px;padding:80px 0;}
+.nota-legal{background:#f7f6f2;border:1px solid var(--border);border-left:3px solid #1a3a5c;padding:12px 16px;font-size:10.5pt;margin:20px 0;line-height:1.6;}
+@media print{header,.form-panel{display:none!important;}.workspace{display:block;height:auto;}.preview-panel{padding:0;background:white;}.doc-sheet{box-shadow:none;max-width:100%;padding:44px;}body{background:white;}}
+
+#auth-gate-loading{position:fixed;inset:0;background:#fff;z-index:9999;display:flex;align-items:center;justify-content:center;font-family:'Segoe UI',system-ui,sans-serif;color:#999;font-size:13px;}
+#auth-gate-blocked{position:fixed;inset:0;background:#0f2640;z-index:9999;display:none;align-items:center;justify-content:center;padding:24px;}
+#auth-gate-blocked .agb-box{background:#fff;border-radius:16px;padding:40px 36px;max-width:420px;text-align:center;font-family:'Segoe UI',system-ui,sans-serif;}
+  .cl-nav-logo{display:flex;align-items:center;font-size:15px;font-weight:800;color:#fff;letter-spacing:-.01em;line-height:1;text-decoration:none;}
+  .cl-nav-logo .cl-laboral{color:#5eead4;font-weight:400;}
+</style>
+<script src="membrete.js?v=3.7"></script>
+<script src="expediente-helper.js?v=3.7"></script>
+</head>
+<body>
+<div id="auth-gate-loading">Verificando acceso…</div>
+<div id="auth-gate-blocked">
+  <div class="agb-box">
+    <div style="font-size:40px;margin-bottom:16px;">🔒</div>
+    <div style="font-size:18px;font-weight:700;color:#0f2640;margin-bottom:8px;">Acceso restringido</div>
+    <div style="font-size:13px;color:#666;margin-bottom:24px;">Este generador requiere una suscripción activa a ClickLaboral.mx.</div>
+    <a href="portal-cliente.html" style="display:inline-block;background:#0f2640;color:#fff;padding:11px 28px;border-radius:8px;text-decoration:none;font-weight:600;">Ir al portal</a>
+  </div>
+</div>
+
+<header>
+  <div class="cl-nav-logo" style="flex-shrink:0;"><svg width="26" height="26" viewBox="0 0 100 100" style="vertical-align:-7px;margin-right:6px;flex-shrink:0;">
+        <defs><linearGradient id="clGrad" x1="10" y1="10" x2="90" y2="95" gradientUnits="userSpaceOnUse">
+          <stop offset="0%" stop-color="#1a3a5c"/><stop offset="55%" stop-color="#1e6f6c"/><stop offset="100%" stop-color="#2dd4bf"/>
+        </linearGradient></defs>
+        <path d="M50 7 L83 20 V51 C83 73 68 87 50 95 C32 87 17 73 17 51 V20 Z" fill="none" stroke="url(#clGrad)" stroke-width="6" stroke-linejoin="round"/>
+        <circle cx="40" cy="38" r="8.5" fill="#5eead4"/>
+        <path d="M25 63 C25 51 31 45 40 45 C49 45 55 51 55 63 Z" fill="#5eead4"/>
+        <circle cx="55" cy="33" r="9.5" fill="#14b8a6"/>
+        <path d="M38 61 C38 48 45.5 41 55 41 C64.5 41 72 48 72 61 Z" fill="#14b8a6"/>
+        <path d="M29 61 L45 77 L78 40" fill="none" stroke="#e8f2fc" stroke-width="9" stroke-linecap="round" stroke-linejoin="round"/>
+      </svg>Click<span class="cl-laboral">Laboral.mx</span></div>
+  <div>
+    <h1>⚖️ Generador · Comisiones Mixtas</h1>
+    <span style="font-size:11px;opacity:.65;">Actas de integración, sesión y recorridos — LFT y NOMs</span>
+  </div>
+  <div class="header-actions">
+    <button class="btn btn-outline" onclick="window.open('portal-cliente.html')">← Portal</button>
+    <button class="btn btn-primary" onclick="window.print()">🖨 Imprimir / PDF</button>
+  </div>
+</header>
+
+<div class="workspace">
+  <!-- PANEL FORMULARIO -->
+  <div class="form-panel">
+    <!-- ── MEMBRETE DEL CLIENTE ── -->
+    <div style="border-bottom:1px solid var(--border);margin-bottom:0;">
+      <div class="section-label" style="display:flex;align-items:center;justify-content:space-between;cursor:pointer;user-select:none;"
+           onclick="this.nextElementSibling.style.display=this.nextElementSibling.style.display==='none'?'block':'none'">
+        <span>🏢 Logo y pie de página</span>
+        <span style="font-size:10px;font-weight:400;color:var(--ink3);">▲ clic para colapsar</span>
+      </div>
+      <div id="mem-panel-wrap" style="display:block;padding:12px 0 14px;">
+        <div id="mem-logo-container"></div>
+      </div>
+    </div>
+    <!-- ── / MEMBRETE ── -->
+    <!-- Tipo de documento -->
+    <div class="section-label">Tipo de documento</div>
+    <div class="doc-tabs">
+      <div class="doc-tab active" id="tab-integracion" onclick="setDocTab('integracion')">📋 Acta de Integración</div>
+      <div class="doc-tab" id="tab-sesion" onclick="setDocTab('sesion')">📝 Acta de Sesión</div>
+      <div class="doc-tab" id="tab-recorrido" onclick="setDocTab('recorrido')">🔍 Acta de Recorrido</div>
+      <div class="doc-tab" id="tab-lista" onclick="setDocTab('lista')">✅ Lista de Asistencia</div>
+    </div>
+
+    <!-- Comisión -->
+    <div class="section-label" style="margin-top:0;">Comisión</div>
+    <div class="com-tabs">
+      <div class="com-tab active" id="ctab-sh" onclick="setComTab('sh')">🦺 S&H</div>
+      <div class="com-tab" id="ctab-cap" onclick="setComTab('cap')">🎓 Capacitación</div>
+      <div class="com-tab" id="ctab-ptu" onclick="setComTab('ptu')">💰 PTU</div>
+      <div class="com-tab" id="ctab-esc" onclick="setComTab('esc')">📈 Escalafón</div>
+      <div class="com-tab" id="ctab-rit" onclick="setComTab('rit')">📖 RIT</div>
+    </div>
+
+    <div class="form-section">
+
+      <!-- Datos generales -->
+      <div class="section-label" style="padding-left:0;margin-left:-0px;">Datos generales</div>
+      <div class="field"><label>Empresa / Razón social</label><input type="text" id="f-empresa" oninput="render()" placeholder="Empresa S.A. de C.V."></div>
+      <div class="field-row">
+        <div class="field"><label>RFC de la empresa</label><input type="text" id="f-rfc" oninput="render()" placeholder="EMP010101AAA"></div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;">
+        <div class="field"><label>Teléfono</label><input type="text" id="mem-tel" oninput="render()" placeholder="33 1234 5678"></div>
+        <div class="field"><label>Email</label><input type="text" id="mem-email" oninput="render()" placeholder="contacto@empresa.mx"></div>
+      </div>
+      <div class="field"><label>Domicilio fiscal</label><input type="text" id="mem-domicilio" oninput="render()" placeholder="Calle, No., Col., Ciudad, C.P."></div>
+      <div class="field">
+        <label>Logo de la empresa (opcional)</label>
+        <div id="mem-logo-preview" style="display:none;margin-bottom:6px;display:flex;align-items:center;gap:8px;">
+          <img id="mem-logo-img" style="max-height:56px;max-width:140px;object-fit:contain;border:1px solid var(--border);border-radius:4px;padding:3px;">
+          <button onclick="removerLogo()" style="font-size:11px;color:#c0392b;background:none;border:none;cursor:pointer;">✕ Quitar</button>
+        </div>
+        <input type="file" id="mem-logo-file" accept="image/png,image/jpeg,image/svg+xml,image/webp" style="font-size:12px;width:100%;" onchange="cargarLogoMembrete(this)">
+        <div style="font-size:10px;color:var(--ink3);margin-top:3px;">PNG o JPG · máx. 2MB · aparece en el encabezado del documento impreso</div>
+      </div>
+        <div class="field"><label>Ciudad de firma</label><input type="text" id="ciudad_firma" oninput="render()" placeholder="Zapopan, Jalisco"></div>
+        <div class="field"><label>Fecha de firma</label><input type="date" id="fecha_firma" oninput="render()"></div>
+      </div>
+      <div class="field-row">
+        <div class="field"><label>Fecha del documento</label><input type="date" id="f-fecha" oninput="render()"></div>
+        <div class="field"><label>No. de folio</label><input type="text" id="f-folio" oninput="render()" placeholder="CM-2025-001"></div>
+      </div>
+      <div class="field" id="wrap-ejercicio">
+        <label>Ejercicio / Año</label>
+        <input type="text" id="f-ejercicio" oninput="render()" placeholder="2025">
+      </div>
+
+      <!-- Integrantes de la comisión -->
+      <div class="section-label" style="padding-left:0;">Integrantes de la comisión</div>
+      <div style="font-size:11px;color:var(--ink3);margin-bottom:10px;line-height:1.5;">Capture al menos 1 representante del patrón y 1 del sindicato/trabajadores (propietario + suplente de cada parte cuando sea posible).</div>
+
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:4px;margin-bottom:4px;">
+        <div style="font-size:10px;font-weight:600;color:var(--ink3);text-transform:uppercase;letter-spacing:.06em;">Nombre completo</div>
+        <div style="font-size:10px;font-weight:600;color:var(--ink3);text-transform:uppercase;letter-spacing:.06em;">Cargo / Representación</div>
+      </div>
+      <div id="miembros-wrap"></div>
+      <button class="btn-add-miembro" onclick="addMiembro()">+ Agregar integrante</button>
+
+      <!-- Campos específicos por tipo de doc -->
+      <div id="campos-especificos"></div>
+
+    </div>
+  </div>
+
+  <!-- PANEL PREVIEW -->
+  <div class="preview-panel">
+    <div class="doc-sheet" id="doc-preview">
+      <div class="watermark-empty">Complete los datos del formulario para generar el documento</div>
+    </div>
+  </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
+<script>
+// ════════════════════════════════════════════════════
+// AUTH GATE
+// ════════════════════════════════════════════════════
+const sb = supabase.createClient('https://hpzgqaplrywwjuvrzhcp.supabase.co','sb_publishable_1g8US8iFJ8CxnSaF_4MHgA_gqyyAr3W');
+(async()=>{
+  const _sb = supabase.createClient('https://hpzgqaplrywwjuvrzhcp.supabase.co','sb_publishable_1g8US8iFJ8CxnSaF_4MHgA_gqyyAr3W');
+  try {
+    const { data } = await _sb.auth.getSession();
+    document.getElementById('auth-gate-loading').style.display = 'none';
+    if (!data?.session?.user) {
+      document.getElementById('auth-gate-blocked').style.display = 'flex';
+    }
+  } catch(e) {
+    document.getElementById('auth-gate-loading').style.display = 'none';
+    document.getElementById('auth-gate-blocked').style.display = 'flex';
+  }
+})();
+
+// ════════════════════════════════════════════════════
+// ESTADO
+// ════════════════════════════════════════════════════
+let docTab = 'integracion';
+let comTab = 'sh';
+
+const COM_DATA = {
+  sh:  { nombre:'Comisión Mixta de Seguridad e Higiene',             corto:'Seguridad e Higiene',      base:'Art. 509 LFT y NOM-019-STPS-2011', freq:'mensual',    cargo1:'Secretario de Seguridad e Higiene', cargo2:'Representante de Trabajadores' },
+  cap: { nombre:'Comisión Mixta de Capacitación y Adiestramiento',   corto:'Capacitación',             base:'Art. 153-E LFT',                   freq:'trimestral', cargo1:'Coordinador de Capacitación',       cargo2:'Representante de Trabajadores' },
+  ptu: { nombre:'Comisión Mixta para la Determinación de PTU',       corto:'PTU',                      base:'Art. 125 LFT',                     freq:'anual',      cargo1:'Representante del Patrón',          cargo2:'Representante de Trabajadores' },
+  esc: { nombre:'Comisión Mixta de Escalafón',                       corto:'Escalafón',                base:'Arts. 158-159 LFT',                freq:'según necesidad', cargo1:'Representante del Patrón',   cargo2:'Representante de Trabajadores' },
+  rit: { nombre:'Comisión Mixta de Revisión del Reglamento Interior', corto:'Reglamento Interior',     base:'Art. 424 LFT',                     freq:'cada 2 años', cargo1:'Representante del Patrón',        cargo2:'Representante de Trabajadores' },
+};
+
+// ════════════════════════════════════════════════════
+// HELPERS
+// ════════════════════════════════════════════════════
+function v(id){ return (document.getElementById(id)||{}).value||''; }
+function b(val, fallback){ return val && val.trim() ? `<span class="blank">${val}</span>` : `<span class="blank empty">${fallback||'___________'}</span>`; }
+function fmtFecha(f){ if(!f) return '_______________'; const d=new Date(f+'T12:00:00'); return d.toLocaleDateString('es-MX',{day:'numeric',month:'long',year:'numeric'}); }
+
+function getMiembros(){
+  const rows = document.querySelectorAll('.miembro-row');
+  const list = [];
+  rows.forEach(r=>{
+    const nombre = r.querySelector('.m-nombre')?.value?.trim();
+    const cargo  = r.querySelector('.m-cargo')?.value?.trim();
+    if(nombre) list.push({nombre, cargo:cargo||'—'});
+  });
+  return list;
+}
+
+function addMiembro(){
+  const com = COM_DATA[comTab];
+  const wrap = document.getElementById('miembros-wrap');
+  const idx = wrap.children.length;
+  const div = document.createElement('div');
+  div.className='miembro-row';
+  div.innerHTML=`<input type="text" class="m-nombre" placeholder="Nombre completo" oninput="render()"><input type="text" class="m-cargo" placeholder="${idx===0?'Rep. Patronal':idx===1?'Rep. Trabajadores':'Integrante'}" oninput="render()"><button class="btn-remove" onclick="this.parentElement.remove();render()">✕</button>`;
+  wrap.appendChild(div);
+  render();
+}
+
+// ════════════════════════════════════════════════════
+// TABS
+// ════════════════════════════════════════════════════
+function setDocTab(tab){
+  docTab = tab;
+  ['integracion','sesion','recorrido','lista'].forEach(t=>{
+    document.getElementById('tab-'+t).classList.toggle('active', t===tab);
+  });
+  actualizarCamposEspecificos();
+  render();
+}
+
+function setComTab(tab){
+  comTab = tab;
+  ['sh','cap','ptu','esc','rit'].forEach(t=>{
+    document.getElementById('ctab-'+t).classList.toggle('active', t===tab);
+  });
+  // El recorrido solo aplica para S&H
+  document.getElementById('tab-recorrido').style.display = tab==='sh' ? '' : 'none';
+  if(docTab==='recorrido' && tab!=='sh') setDocTab('integracion');
+  actualizarCamposEspecificos();
+  render();
+}
+
+function actualizarCamposEspecificos(){
+  const wrap = document.getElementById('campos-especificos');
+  let html = '';
+
+  if(docTab==='sesion'){
+    html += `
+      <div class="section-label" style="padding-left:0;margin-top:14px;">Datos de la sesión</div>
+      <div class="field"><label>Número de sesión</label><input type="text" id="ses-num" oninput="render()" placeholder="Sesión Ordinaria No. 3/2025"></div>
+      <div class="field"><label>Lugar de la sesión</label><input type="text" id="ses-lugar" oninput="render()" placeholder="Sala de juntas de la empresa"></div>
+      <div class="field"><label>Hora de inicio</label><input type="time" id="ses-hora" oninput="render()"></div>
+      <div class="field"><label>Orden del día / Puntos tratados</label><textarea id="ses-orden" oninput="render()" placeholder="1. Lista de asistencia&#10;2. Lectura y aprobación del acta anterior&#10;3. Revisión de actividades del período&#10;4. Acuerdos y compromisos&#10;5. Clausura"></textarea></div>
+      <div class="field"><label>Acuerdos alcanzados</label><textarea id="ses-acuerdos" oninput="render()" placeholder="Describe los acuerdos tomados en la sesión..."></textarea></div>`;
+  }
+
+  if(docTab==='recorrido'){
+    html += `
+      <div class="section-label" style="padding-left:0;margin-top:14px;">Datos del recorrido</div>
+      <div class="field"><label>Áreas inspeccionadas</label><textarea id="rec-areas" oninput="render()" placeholder="Área de producción, almacén, baños, comedor..."></textarea></div>
+      <div class="field"><label>Condiciones observadas</label><textarea id="rec-condiciones" oninput="render()" placeholder="Describe el estado general de las instalaciones revisadas..."></textarea></div>
+      <div class="field"><label>Riesgos detectados</label><textarea id="rec-riesgos" oninput="render()" placeholder="Lista los riesgos identificados (o escribe Ninguno)"></textarea></div>
+      <div class="field"><label>Medidas correctivas propuestas</label><textarea id="rec-medidas" oninput="render()" placeholder="1. Señalización en escaleras&#10;2. ..."></textarea></div>
+      <div class="field"><label>Fecha compromiso de corrección</label><input type="date" id="rec-fecha-correc" oninput="render()"></div>`;
+  }
+
+  if(docTab==='lista'){
+    html += `
+      <div class="section-label" style="padding-left:0;margin-top:14px;">Datos de la reunión</div>
+      <div class="field"><label>Tipo de reunión</label><input type="text" id="lis-tipo" oninput="render()" placeholder="Sesión mensual ordinaria"></div>
+      <div class="field"><label>Lugar</label><input type="text" id="lis-lugar" oninput="render()" placeholder="Sala de juntas"></div>
+      <div class="field"><label>Hora</label><input type="time" id="lis-hora" oninput="render()"></div>
+      <div class="field"><label>Asunto / Orden del día (breve)</label><input type="text" id="lis-asunto" oninput="render()" placeholder="Revisión de programa de seguridad e higiene"></div>`;
+  }
+
+  if(docTab==='integracion'){
+    html += `
+      <div class="section-label" style="padding-left:0;margin-top:14px;">Vigencia y observaciones</div>
+      <div class="field-row">
+        <div class="field"><label>Fecha de inicio de vigencia</label><input type="date" id="int-vigencia-ini" oninput="render()"></div>
+        <div class="field"><label>Fecha de término (si aplica)</label><input type="date" id="int-vigencia-fin" oninput="render()"></div>
+      </div>
+      <div class="field"><label>Observaciones</label><textarea id="int-obs" oninput="render()" placeholder="Observaciones adicionales (opcional)..."></textarea></div>`;
+  }
+
+  wrap.innerHTML = html;
+}
+
+// ════════════════════════════════════════════════════
+// RENDER PRINCIPAL
+// ════════════════════════════════════════════════════
+function render(){
+  const empresa = v('f-empresa');
+  const rfc     = v('f-rfc');
+  const ciudad  = v('ciudad_firma');
+  const fecha   = v('f-fecha');
+  const folio   = v('f-folio');
+  const ejer    = v('f-ejercicio') || new Date().getFullYear();
+  const com     = COM_DATA[comTab];
+  const miembros = getMiembros();
+
+  const logoBar = generarMembrete({
+    empresa:    v('f-empresa'),
+    rfc:        v('f-rfc'),
+    domicilio:  v('mem-domicilio'),
+    tel:        v('mem-tel'),
+    emailEmp:   v('mem-email'),
+    folio,
+    logoDataUrl: window._logoClienteDataUrl,
+  });
+
+  const tablaIntegrantes = `
+    <table class="tabla-integrantes">
+      <thead><tr><th>#</th><th>Nombre completo</th><th>Cargo / Representación</th><th>Firma</th></tr></thead>
+      <tbody>
+        ${miembros.length ? miembros.map((m,i)=>`<tr><td>${i+1}</td><td>${m.nombre}</td><td>${m.cargo}</td><td style="min-width:100px;"></td></tr>`).join('') :
+          '<tr><td colspan="4" style="text-align:center;color:#999;font-style:italic;font-family:sans-serif;font-size:10pt;">Agregue integrantes en el formulario</td></tr>'}
+      </tbody>
+    </table>`;
+
+  const firmaPatron = miembros.find(m=>m.cargo.toLowerCase().includes('patron')||m.cargo.toLowerCase().includes('patrón')) || miembros[0];
+  const firmaTrabajador = miembros.find(m=>m.cargo.toLowerCase().includes('trabajador')||m.cargo.toLowerCase().includes('sindicato')) || miembros[1];
+  const firmasBase = `
+    <div class="firma-grid ${miembros.length>2?'firma-grid-3':'firma-grid-2'}" style="grid-template-columns:${miembros.length>0?'repeat('+Math.min(miembros.length,3)+',1fr)':'1fr 1fr'};">
+      ${miembros.slice(0,3).map(m=>`
+        <div class="firma-box">
+          <br><br>
+          <strong>${m.nombre}</strong>
+          ${m.cargo}
+        </div>`).join('')}
+    </div>`;
+
+  let html = '';
+
+  // ── ACTA DE INTEGRACIÓN ──
+  if(docTab==='integracion'){
+    const vigIni = v('int-vigencia-ini');
+    const vigFin = v('int-vigencia-fin');
+    const obs    = v('int-obs');
+    html = `
+      ${logoBar}
+      <div class="doc-title">ACTA DE INTEGRACIÓN</div>
+      <div class="doc-subtitle">${com.nombre}</div>
+      <div class="doc-p">En ${b(ciudad,'la ciudad')}, siendo las _______ horas del día ${b(fecha?fmtFecha(fecha):'',' de _______ de _______ ')}, se reunieron los representantes de la empresa ${b(empresa,'[empresa]')} (RFC: ${b(rfc,'[RFC]')}) y los representantes de los trabajadores, con el propósito de integrar la <strong>${com.nombre}</strong>, de conformidad con lo establecido en el <strong>${com.base}</strong>.</div>
+      <div class="doc-clause-title">I. FUNDAMENTO LEGAL</div>
+      <div class="doc-p">La presente comisión se integra en cumplimiento de las disposiciones del <strong>${com.base}</strong>, mismas que obligan al patrón y a los trabajadores a conformar de manera conjunta este órgano interno de vigilancia y cooperación.</div>
+      <div class="doc-clause-title">II. INTEGRANTES DE LA COMISIÓN</div>
+      <div class="doc-p">Se designan como integrantes de la ${com.nombre} a las siguientes personas:</div>
+      ${tablaIntegrantes}
+      <div class="doc-clause-title">III. FUNCIONES Y ATRIBUCIONES</div>
+      <div class="doc-p">La comisión tendrá como funciones principales: (a) realizar sus actividades con la periodicidad que marca la ley (${com.freq}); (b) elaborar y dar seguimiento a los programas y compromisos acordados; (c) levantar acta de cada sesión o recorrido; y (d) dar cumplimiento a las disposiciones legales aplicables.</div>
+      <div class="doc-clause-title">IV. VIGENCIA</div>
+      <div class="doc-p">La presente integración tendrá vigencia a partir del ${b(vigIni?fmtFecha(vigIni):'',' de _______ de _______ ')}${vigFin?` y hasta el ${b(fmtFecha(vigFin))}`:`, de manera indefinida, hasta en tanto no se modifique o renueve por las partes`}. La empresa se compromete a registrar la presente comisión ante la autoridad competente en un plazo no mayor a 30 días naturales.</div>
+      ${obs ? `<div class="doc-clause-title">V. OBSERVACIONES</div><div class="doc-p">${obs}</div>` : ''}
+      <div class="doc-clause-title">${obs?'VI':'V'}. FIRMAS DE CONFORMIDAD</div>
+      <div class="doc-p">En señal de aceptación de los cargos conferidos y compromiso de cumplir con las funciones encomendadas, firman los integrantes de la comisión:</div>
+      ${firmasBase}
+      <div class="nota-legal" style="margin-top:40px;">Documento elaborado conforme a ${com.base}. Conservar original en el expediente de la empresa. Entregar copia a cada integrante y al representante sindical si lo hubiere.</div>`;
+  }
+
+  // ── ACTA DE SESIÓN ──
+  else if(docTab==='sesion'){
+    const sesNum    = v('ses-num') || 'No. ___/'+ejer;
+    const sesLugar  = v('ses-lugar');
+    const sesHora   = v('ses-hora');
+    const sesOrden  = v('ses-orden');
+    const sesAcuerdos = v('ses-acuerdos');
+    const ordenItems = sesOrden ? sesOrden.split('\n').filter(Boolean) : [];
+    const acuerdoItems = sesAcuerdos ? sesAcuerdos.split('\n').filter(Boolean) : [];
+    html = `
+      ${logoBar}
+      <div class="doc-title">ACTA DE SESIÓN</div>
+      <div class="doc-subtitle">${com.nombre} &nbsp;·&nbsp; ${sesNum}</div>
+      <div class="doc-clause-title">DATOS DE LA REUNIÓN</div>
+      <div class="doc-p"><strong>Empresa:</strong> ${b(empresa,'[empresa]')} &nbsp;|&nbsp; <strong>RFC:</strong> ${b(rfc,'[RFC]')}<br>
+      <strong>Fecha:</strong> ${b(fecha?fmtFecha(fecha):'',' _______ ')}&nbsp;|&nbsp; <strong>Hora de inicio:</strong> ${b(sesHora||'','_______')}&nbsp;|&nbsp; <strong>Lugar:</strong> ${b(sesLugar,'[lugar]')}</div>
+      <div class="doc-clause-title">I. ASISTENTES</div>
+      ${tablaIntegrantes}
+      <div class="doc-clause-title">II. ORDEN DEL DÍA</div>
+      ${ordenItems.length ? `<ol style="padding-left:20px;">${ordenItems.map(o=>`<li style="margin-bottom:6px;">${o}</li>`).join('')}</ol>` : '<div class="doc-p">_______________________________________________</div>'}
+      <div class="doc-clause-title">III. DESARROLLO DE LA SESIÓN</div>
+      <div class="doc-p">Reunidos los integrantes con el quórum necesario, el Presidente declaró formalmente abierta la sesión y se procedió al desahogo de los puntos del orden del día.</div>
+      <div class="doc-clause-title">IV. ACUERDOS Y COMPROMISOS</div>
+      ${acuerdoItems.length ? `<ol style="padding-left:20px;">${acuerdoItems.map(a=>`<li style="margin-bottom:8px;">${a}</li>`).join('')}</ol>` : '<div class="doc-p">Se registrarán los acuerdos conforme se desahogue la sesión.</div>'}
+      <div class="doc-clause-title">V. CLAUSURA</div>
+      <div class="doc-p">No habiendo más asuntos que tratar y habiéndose agotado el orden del día, el Presidente declaró clausurada la sesión a las _______ horas del día ${b(fecha?fmtFecha(fecha):'')}, firmando de conformidad todos los asistentes.</div>
+      ${firmasBase}`;
+  }
+
+  // ── ACTA DE RECORRIDO ──
+  else if(docTab==='recorrido'){
+    const recAreas     = v('rec-areas');
+    const recCond      = v('rec-condiciones');
+    const recRiesgos   = v('rec-riesgos');
+    const recMedidas   = v('rec-medidas');
+    const recFechaCorr = v('rec-fecha-correc');
+    html = `
+      ${logoBar}
+      <div class="doc-title">ACTA DE RECORRIDO DE VERIFICACIÓN</div>
+      <div class="doc-subtitle">Comisión Mixta de Seguridad e Higiene &nbsp;·&nbsp; NOM-019-STPS-2011</div>
+      <div class="doc-clause-title">I. DATOS GENERALES</div>
+      <div class="doc-p"><strong>Empresa:</strong> ${b(empresa,'[empresa]')} &nbsp;|&nbsp; <strong>RFC:</strong> ${b(rfc,'[RFC]')}<br>
+      <strong>Fecha del recorrido:</strong> ${b(fecha?fmtFecha(fecha):'','___________')}&nbsp;|&nbsp; <strong>Ciudad:</strong> ${b(ciudad,'___________')}</div>
+      <div class="doc-clause-title">II. INTEGRANTES QUE PARTICIPARON EN EL RECORRIDO</div>
+      ${tablaIntegrantes}
+      <div class="doc-clause-title">III. ÁREAS INSPECCIONADAS</div>
+      <div class="doc-p">${b(recAreas,'Especificar las áreas inspeccionadas')}</div>
+      <div class="doc-clause-title">IV. CONDICIONES OBSERVADAS</div>
+      <div class="doc-p">${b(recCond,'Describir el estado general de las instalaciones revisadas')}</div>
+      <div class="doc-clause-title">V. RIESGOS DETECTADOS</div>
+      <div class="doc-p">${b(recRiesgos||'Ninguno','___________')}</div>
+      <div class="doc-clause-title">VI. MEDIDAS CORRECTIVAS PROPUESTAS</div>
+      ${recMedidas ? `<ol style="padding-left:20px;">${recMedidas.split('\n').filter(Boolean).map(m=>`<li style="margin-bottom:6px;">${m}</li>`).join('')}</ol>` : '<div class="doc-p">Ninguna requerida en este recorrido.</div>'}
+      ${recFechaCorr ? `<div class="doc-p"><strong>Fecha compromiso de corrección:</strong> ${fmtFecha(recFechaCorr)}</div>` : ''}
+      <div class="doc-clause-title">VII. CONCLUSIÓN</div>
+      <div class="doc-p">Los integrantes de la Comisión Mixta de Seguridad e Higiene acuerdan dar seguimiento a las observaciones señaladas y verificar su atención en el siguiente recorrido programado. Firman de conformidad:</div>
+      ${firmasBase}
+      <div class="nota-legal" style="margin-top:32px;">Conservar este documento un mínimo de 12 meses, conforme a la NOM-019-STPS-2011. Folio: ${b(folio,'___________')}</div>`;
+  }
+
+  // ── LISTA DE ASISTENCIA ──
+  else if(docTab==='lista'){
+    const lisTipo   = v('lis-tipo') || 'Sesión ordinaria';
+    const lisLugar  = v('lis-lugar');
+    const lisHora   = v('lis-hora');
+    const lisAsunto = v('lis-asunto');
+    // Generar filas de asistentes (los integrantes + 5 filas en blanco)
+    const todos = [...miembros, ...Array(Math.max(0,8-miembros.length)).fill({nombre:'',cargo:''})];
+    html = `
+      ${logoBar}
+      <div class="doc-title">LISTA DE ASISTENCIA</div>
+      <div class="doc-subtitle">${com.nombre}</div>
+      <div class="doc-clause-title">DATOS DE LA REUNIÓN</div>
+      <div class="doc-p">
+        <strong>Tipo:</strong> ${b(lisTipo,'___________')}&nbsp;&nbsp;
+        <strong>Fecha:</strong> ${b(fecha?fmtFecha(fecha):'','___________')}<br>
+        <strong>Hora:</strong> ${b(lisHora,'_______')}&nbsp;&nbsp;
+        <strong>Lugar:</strong> ${b(lisLugar,'___________')}<br>
+        <strong>Asunto:</strong> ${b(lisAsunto,'___________')}
+      </div>
+      <table class="tabla-asistentes">
+        <thead><tr><th>#</th><th>Nombre completo</th><th>Cargo / Representación</th><th style="text-align:center;">Firma</th></tr></thead>
+        <tbody>
+          ${todos.map((m,i)=>`<tr>
+            <td style="color:#999;">${i+1}</td>
+            <td>${m.nombre||'&nbsp;'.repeat(30)}</td>
+            <td>${m.cargo||'&nbsp;'.repeat(20)}</td>
+            <td style="min-width:120px;">&nbsp;</td>
+          </tr>`).join('')}
+        </tbody>
+      </table>
+      <div class="doc-p" style="margin-top:20px;font-size:10.5pt;color:#555;">Los firmantes acreditan su asistencia a la reunión de la ${com.nombre} en la fecha y lugar indicados.</div>
+      <div class="firma-grid firma-grid-2" style="margin-top:36px;">
+        <div class="firma-box"><br><br><strong>Representante del Patrón</strong>Nombre y firma</div>
+        <div class="firma-box"><br><br><strong>Representante de los Trabajadores</strong>Nombre y firma</div>
+      </div>`;
+  }
+
+  html += generarFooterDoc({...getDatosMembrete(), folio});
+  document.getElementById('doc-preview').innerHTML = html || '<div class="watermark-empty">Complete los datos del formulario</div>';
+}
+
+// Init
+actualizarCamposEspecificos();
+// ── INIT ──
+renderPanelMembrete('mem-logo-container');
+(async()=>{
+  try{
+    const _sb = supabase.createClient(
+      'https://hpzgqaplrywwjuvrzhcp.supabase.co',
+      'sb_publishable_1g8US8iFJ8CxnSaF_4MHgA_gqyyAr3W'
+    );
+    await precargarMembreteDesdePortal(_sb);
+  }catch(e){}
+})();
+render();
+// ── Expediente del trabajador ──
+if (window.ExpedienteHelper) {
+  ExpedienteHelper.init({
+    inputNombreId: null,
+    tipoDocumento: 'comision_mixta',
+    nombreDocumentoFn: () => 'Comisión Mixta — ' + (v('empresa')||'empresa'),
+  });
+}
+</script>
+<script src="edicion-libre.js?v=4.6"></script>
+
+
+
+
+</body>
+</html>

@@ -1,0 +1,20 @@
+{
+  "name": "Checador Digital ClickLaboral",
+  "short_name": "Checador",
+  "description": "Registro de entrada y salida de trabajadores con sello de hora y ubicación",
+  "start_url": "/checador.html",
+  "scope": "/",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#f8f7f4",
+  "theme_color": "#0f2640",
+  "lang": "es-MX",
+  "icons": [
+    {
+      "src": "logo-clicklaboral-icon.png",
+      "sizes": "192x192 512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ]
+}

@@ -1,0 +1,1009 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Cláusulas IA + Escritos STPS · ClickLaboral.mx</title>
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
+:root{
+  --navy:#0f2640;--navy2:#1a3a5c;--navy3:#24507a;
+  --sky:#e8f2fc;--sky2:#c5dcf5;
+  --white:#fff;--surface:#f5f4f0;--surface2:#eeede8;
+  --ink:#111110;--ink2:#444440;--ink3:#888880;
+  --border:rgba(0,0,0,.08);--border2:rgba(0,0,0,.14);
+  --green:#16a34a;--green-bg:#dcfce7;
+  --amber:#d97706;--amber-bg:#fef3c7;
+  --red:#dc2626;--red-bg:#fee2e2;
+  --teal:#0d9488;--teal-bg:#ccfbf1;
+  --r:10px;--r-sm:6px;
+  --font:'Segoe UI',system-ui,sans-serif;
+  --font-mono:'SF Mono','Fira Code',monospace;
+}
+body{font-family:var(--font);background:var(--surface);color:var(--ink);min-height:100vh;font-size:14px;}
+
+header{background:var(--navy);color:#fff;padding:0 28px;height:54px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:50;}
+.logo{font-size:14px;font-weight:700;display:flex;align-items:center;gap:10px;}
+.logo-badge{background:var(--teal);font-size:10px;font-weight:700;padding:2px 8px;border-radius:20px;letter-spacing:.04em;}
+.hn{display:flex;gap:8px;}
+.btn{display:inline-flex;align-items:center;gap:6px;padding:6px 14px;border-radius:var(--r-sm);font-size:12px;font-weight:500;cursor:pointer;border:1px solid transparent;transition:all .15s;font-family:var(--font);}
+.btn-ghost{background:transparent;border-color:rgba(255,255,255,.25);color:rgba(255,255,255,.8);}.btn-ghost:hover{background:rgba(255,255,255,.1);color:#fff;}
+.btn-white{background:#fff;color:var(--navy);}.btn-white:hover{background:var(--sky);}
+.btn-teal{background:var(--teal);color:#fff;border-color:var(--teal);}.btn-teal:hover{background:#0f766e;}
+.btn-navy{background:var(--navy2);color:#fff;}.btn-navy:hover{background:var(--navy3);}
+.btn-sm{padding:5px 11px;font-size:11px;}
+.btn-lg{padding:10px 22px;font-size:13px;}
+
+/* TABS principales */
+.main-tabs{background:var(--white);border-bottom:1px solid var(--border);display:flex;padding:0 28px;}
+.main-tab{padding:14px 20px;font-size:13px;font-weight:500;color:var(--ink3);cursor:pointer;border-bottom:2px solid transparent;margin-bottom:-1px;transition:all .15s;display:flex;align-items:center;gap:8px;}
+.main-tab:hover{color:var(--ink);}
+.main-tab.active{color:var(--teal);border-bottom-color:var(--teal);}
+
+.content{max-width:1200px;margin:0 auto;padding:28px;}
+
+/* GRID de dos columnas */
+.two-col{display:grid;grid-template-columns:380px 1fr;gap:20px;align-items:start;}
+
+/* CARD */
+.card{background:var(--white);border:1px solid var(--border);border-radius:var(--r);padding:20px 22px;}
+.card-title{font-size:14px;font-weight:700;margin-bottom:4px;}
+.card-sub{font-size:12px;color:var(--ink3);margin-bottom:16px;}
+
+/* FORM */
+.field{margin-bottom:12px;}
+.field label{display:block;font-size:12px;font-weight:500;color:var(--ink2);margin-bottom:4px;}
+.field label .req{color:var(--red);}
+.field input,.field select,.field textarea{width:100%;padding:8px 10px;border:1px solid var(--border2);border-radius:var(--r-sm);font-size:13px;font-family:var(--font);color:var(--ink);background:var(--white);}
+.field input:focus,.field select:focus,.field textarea:focus{outline:none;border-color:var(--teal);box-shadow:0 0 0 3px var(--teal-bg);}
+.field textarea{resize:vertical;min-height:80px;}
+.field-row{display:grid;grid-template-columns:1fr 1fr;gap:10px;}
+.hint{font-size:11px;color:var(--ink3);margin-top:3px;}
+
+/* Toggle chips */
+.chip-group{display:flex;flex-wrap:wrap;gap:6px;margin-top:4px;}
+.chip{padding:4px 11px;border:1px solid var(--border2);border-radius:20px;font-size:12px;cursor:pointer;transition:all .15s;color:var(--ink2);}
+.chip:hover{border-color:var(--teal);color:var(--teal);}
+.chip.active{background:var(--teal);border-color:var(--teal);color:#fff;font-weight:500;}
+
+/* OUTPUT */
+.output-panel{position:relative;}
+.output-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;}
+.output-title{font-size:13px;font-weight:600;color:var(--ink);}
+.output-actions{display:flex;gap:8px;}
+.output-box{
+  background:var(--white);border:1px solid var(--border2);border-radius:var(--r);
+  padding:24px 28px;min-height:400px;font-size:13px;line-height:1.8;color:var(--ink);
+  font-family:'Times New Roman',Georgia,serif;white-space:pre-wrap;
+  position:relative;
+}
+.output-box.loading{display:flex;align-items:center;justify-content:center;min-height:400px;background:var(--surface);}
+.output-box h4{font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:.08em;color:var(--teal);margin-bottom:10px;font-family:var(--font);}
+.output-box .clausula-num{font-weight:700;font-family:var(--font);}
+.output-box .fundamento{font-size:11px;color:var(--ink3);font-family:var(--font);margin-top:6px;font-style:italic;}
+.output-placeholder{color:var(--ink3);font-family:var(--font);font-size:13px;text-align:center;padding:60px 20px;}
+.output-placeholder-icon{font-size:36px;margin-bottom:12px;}
+
+/* LOADING */
+.spinner{display:inline-block;width:32px;height:32px;border:3px solid var(--border);border-top-color:var(--teal);border-radius:50%;animation:spin .7s linear infinite;margin-bottom:12px;}
+@keyframes spin{to{transform:rotate(360deg)}}
+.loading-text{font-size:13px;color:var(--ink3);font-family:var(--font);}
+
+/* STPS específico */
+.notif-types{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:16px;}
+.notif-card{border:1px solid var(--border);border-radius:var(--r-sm);padding:12px;cursor:pointer;transition:all .15s;}
+.notif-card:hover{border-color:var(--teal);background:var(--teal-bg);}
+.notif-card.active{border-color:var(--teal);background:var(--teal-bg);}
+.notif-card-icon{font-size:18px;margin-bottom:4px;}
+.notif-card-name{font-size:12px;font-weight:600;}
+.notif-card-desc{font-size:10px;color:var(--ink3);margin-top:2px;line-height:1.3;}
+
+/* Liq calc */
+.liq-resultado{background:var(--navy);color:#fff;border-radius:var(--r);padding:20px;}
+.liq-titulo{font-size:11px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;opacity:.5;margin-bottom:14px;}
+.liq-row{display:flex;justify-content:space-between;align-items:center;padding:8px 0;border-bottom:1px solid rgba(255,255,255,.08);font-size:13px;}
+.liq-row:last-child{border:none;font-size:15px;font-weight:700;padding-top:12px;}
+.liq-valor{font-weight:600;color:var(--sky2);}
+.liq-total{color:#4ade80!important;}
+
+/* Badge */
+.badge{display:inline-flex;align-items:center;gap:3px;padding:2px 8px;border-radius:20px;font-size:10px;font-weight:600;}
+.badge-teal{background:var(--teal-bg);color:var(--teal);}
+.badge-green{background:var(--green-bg);color:var(--green);}
+.badge-amber{background:var(--amber-bg);color:var(--amber);}
+.badge-red{background:var(--red-bg);color:var(--red);}
+
+::-webkit-scrollbar{width:4px;height:4px;}
+::-webkit-scrollbar-track{background:transparent;}
+::-webkit-scrollbar-thumb{background:var(--border2);border-radius:2px;}
+</style>
+</head>
+<body>
+
+<header>
+  <div class="logo">✍️ Generador Avanzado IA <span class="logo-badge">✦ CLAUDE</span></div>
+  <div class="hn">
+    <button class="btn btn-ghost btn-sm" onclick="window.open('asistente-legal-ia.html')">⚖️ Asistente legal</button>
+    <button class="btn btn-ghost btn-sm" onclick="window.open('portal-cliente.html')">← Volver al portal</button>
+    <button class="btn btn-white btn-sm" onclick="imprimirOutput()">🖨 Imprimir</button>
+  </div>
+</header>
+
+<!-- TABS principales -->
+<div class="main-tabs">
+  <div class="main-tab active" id="tab-clausulas" onclick="setMainTab('clausulas',this)">📝 Generador de Cláusulas IA <span style="font-size:9px;color:#d97706;">⏳ pendiente</span></div>
+  <div class="main-tab" id="tab-stps" onclick="setMainTab('stps',this)">🏛️ Escritos STPS / IMSS <span style="font-size:9px;color:#d97706;">⏳ pendiente</span></div>
+  <div class="main-tab" id="tab-liquidacion" onclick="setMainTab('liquidacion',this)">🧮 Calculadora de Liquidación</div>
+  <div class="main-tab" id="tab-dictamen" onclick="setMainTab('dictamen',this)">📋 Dictamen de Compliance <span style="font-size:9px;color:#d97706;">⏳ pendiente</span></div>
+</div>
+
+<div class="content">
+
+  <!-- ══ CLÁUSULAS ══ -->
+  <div id="panel-clausulas">
+    <div class="two-col">
+      <div>
+        <div class="card">
+          <div class="card-title">Configuración de cláusula</div>
+          <div class="card-sub">La IA redacta la cláusula personalizada para su contrato</div>
+
+          <div class="field">
+            <label>Tipo de cláusula <span class="req">*</span></label>
+            <div class="chip-group" id="tipo-clausula-chips">
+              <div class="chip active" onclick="selChip(this,'tipo-clausula-chips')">Confidencialidad</div>
+              <div class="chip" onclick="selChip(this,'tipo-clausula-chips')">No competencia</div>
+              <div class="chip" onclick="selChip(this,'tipo-clausula-chips')">Exclusividad</div>
+              <div class="chip" onclick="selChip(this,'tipo-clausula-chips')">Herramientas y equipo</div>
+              <div class="chip" onclick="selChip(this,'tipo-clausula-chips')">Teletrabajo / NOM-037</div>
+              <div class="chip" onclick="selChip(this,'tipo-clausula-chips')">NOM-035 STPS</div>
+              <div class="chip" onclick="selChip(this,'tipo-clausula-chips')">Propiedad intelectual</div>
+              <div class="chip" onclick="selChip(this,'tipo-clausula-chips')">Datos personales</div>
+              <div class="chip" onclick="selChip(this,'tipo-clausula-chips')">Rescisión por causa específica</div>
+              <div class="chip" onclick="selChip(this,'tipo-clausula-chips')">Incentivos y bonos</div>
+              <div class="chip" onclick="selChip(this,'tipo-clausula-chips')">Otra (describir abajo)</div>
+            </div>
+          </div>
+
+          <div class="field">
+            <label>Modalidad del contrato</label>
+            <div class="chip-group" id="modalidad-chips">
+              <div class="chip active" onclick="selChip(this,'modalidad-chips')">Indeterminado</div>
+              <div class="chip" onclick="selChip(this,'modalidad-chips')">Determinado</div>
+              <div class="chip" onclick="selChip(this,'modalidad-chips')">A prueba</div>
+              <div class="chip" onclick="selChip(this,'modalidad-chips')">Comisionista</div>
+              <div class="chip" onclick="selChip(this,'modalidad-chips')">Asimilados</div>
+            </div>
+          </div>
+
+          <div class="field">
+            <label>Empresa / razón social</label>
+            <input type="text" id="cl-empresa" placeholder="Ej. Comercializadora Norte, S.A. de C.V.">
+          </div>
+          <div class="field-row">
+            <div class="field">
+              <label>Giro de la empresa</label>
+              <input type="text" id="cl-giro" placeholder="Ej. Manufactura, TI, Retail">
+            </div>
+            <div class="field">
+              <label>Número de cláusula</label>
+              <input type="number" id="cl-numero" value="5" min="1" max="30">
+            </div>
+          </div>
+
+          <div class="field">
+            <label>Instrucciones específicas (opcional)</label>
+            <textarea id="cl-instrucciones" placeholder="Ej. Que incluya plazo de confidencialidad de 2 años post-terminación, que mencione información financiera y de clientes, que sea especialmente estricta para trabajadores de confianza..."></textarea>
+          </div>
+
+          <div class="field">
+            <label>Nivel de rigor legal</label>
+            <div class="chip-group" id="rigor-chips">
+              <div class="chip" onclick="selChip(this,'rigor-chips')">Básico</div>
+              <div class="chip active" onclick="selChip(this,'rigor-chips')">Estándar</div>
+              <div class="chip" onclick="selChip(this,'rigor-chips')">Exhaustivo</div>
+            </div>
+          </div>
+
+          <button class="btn btn-teal btn-lg" style="width:100%;justify-content:center;margin-top:8px;" onclick="generarClausula()" id="btn-clausula">
+            ✦ Generar cláusula con IA
+          </button>
+        </div>
+
+        <!-- Biblioteca de cláusulas guardadas -->
+        <div class="card" style="margin-top:16px;">
+          <div class="card-title">Biblioteca de cláusulas</div>
+          <div class="card-sub">Cláusulas generadas en esta sesión</div>
+          <div id="biblioteca-clausulas">
+            <div style="font-size:12px;color:var(--ink3);text-align:center;padding:16px 0;">Las cláusulas generadas aparecerán aquí</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="output-panel">
+        <div class="output-header">
+          <div>
+            <div class="output-title">Cláusula generada</div>
+            <div style="font-size:11px;color:var(--ink3);margin-top:2px;" id="clausula-meta">Configure los parámetros y haga clic en "Generar"</div>
+          </div>
+          <div class="output-actions">
+            <button class="btn btn-ghost btn-sm" onclick="copiarOutput('cl-output')" style="border-color:var(--border2);color:var(--ink2);">📋 Copiar</button>
+            <button class="btn btn-navy btn-sm" onclick="guardarClausula()">💾 Guardar</button>
+            <button class="btn btn-teal btn-sm" onclick="agregarAContrato()">+ Al contrato</button>
+          </div>
+        </div>
+        <div class="output-box" id="cl-output">
+          <div class="output-placeholder">
+            <div class="output-placeholder-icon">📝</div>
+            Configure los parámetros en el panel izquierdo y haga clic en<br>
+            <strong>"Generar cláusula con IA"</strong><br><br>
+            <div style="font-size:11px;color:var(--ink3);">La IA redactará una cláusula conforme a la LFT vigente,<br>personalizada para su empresa y tipo de contrato.</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ══ STPS / IMSS ══ -->
+  <div id="panel-stps" style="display:none;">
+    <div class="two-col">
+      <div>
+        <div class="card">
+          <div class="card-title">Configuración del escrito</div>
+          <div class="card-sub">Seleccione el tipo de notificación recibida</div>
+
+          <div class="notif-types">
+            <div class="notif-card active" id="nt-inspeccion" onclick="selNotif('inspeccion',this)">
+              <div class="notif-card-icon">🔍</div>
+              <div class="notif-card-name">Acta de inspección STPS</div>
+              <div class="notif-card-desc">Respuesta a visita de inspectores</div>
+            </div>
+            <div class="notif-card" id="nt-determinacion" onclick="selNotif('determinacion',this)">
+              <div class="notif-card-icon">📊</div>
+              <div class="notif-card-name">Determinación de diferencias IMSS</div>
+              <div class="notif-card-desc">Impugnación de cuotas adicionales</div>
+            </div>
+            <div class="notif-card" id="nt-requerimiento" onclick="selNotif('requerimiento',this)">
+              <div class="notif-card-icon">📋</div>
+              <div class="notif-card-name">Requerimiento de documentos</div>
+              <div class="notif-card-desc">Atención a solicitudes de STPS/IMSS</div>
+            </div>
+            <div class="notif-card" id="nt-multa" onclick="selNotif('multa',this)">
+              <div class="notif-card-icon">💰</div>
+              <div class="notif-card-name">Impugnación de multa</div>
+              <div class="notif-card-desc">Recurso de inconformidad</div>
+            </div>
+            <div class="notif-card" id="nt-tribunal" onclick="selNotif('tribunal',this)">
+              <div class="notif-card-icon">⚖️</div>
+              <div class="notif-card-name">Escrito ante Tribunal Laboral</div>
+              <div class="notif-card-desc">Contestación de demanda, excepciones</div>
+            </div>
+            <div class="notif-card" id="nt-cfcrl" onclick="selNotif('cfcrl',this)">
+              <div class="notif-card-icon">🏛️</div>
+              <div class="notif-card-name">Trámite CFCRL</div>
+              <div class="notif-card-desc">Depósito reglamento, avisos, conciliación</div>
+            </div>
+          </div>
+
+          <div class="field">
+            <label>Empresa (patrón) <span class="req">*</span></label>
+            <input type="text" id="st-empresa" placeholder="Razón social completa">
+          </div>
+          <div class="field-row">
+            <div class="field">
+              <label>RFC</label>
+              <input type="text" id="st-rfc" placeholder="RFC del patrón" maxlength="13">
+            </div>
+            <div class="field">
+              <label>Ciudad de respuesta</label>
+              <input type="text" id="st-ciudad" placeholder="Ej. Guadalajara, Jal.">
+            </div>
+          </div>
+          <div class="field">
+            <label>No. de oficio / expediente</label>
+            <input type="text" id="st-oficio" placeholder="Número de referencia de la notificación recibida">
+          </div>
+          <div class="field">
+            <label>Autoridad emisora</label>
+            <input type="text" id="st-autoridad" placeholder="Ej. Delegación Federal del Trabajo en Jalisco, IMSS Delegación 13">
+          </div>
+          <div class="field">
+            <label>Descripción de los hechos / observaciones señaladas</label>
+            <textarea id="st-hechos" placeholder="Describa qué señaló la autoridad en la notificación, qué infracciones indicó o qué requirió..."></textarea>
+          </div>
+          <div class="field">
+            <label>Argumentos de defensa / contexto</label>
+            <textarea id="st-defensa" placeholder="¿Qué documentación tiene para defenderse? ¿Qué circunstancias explican la situación? ¿Hay error de la autoridad?..."></textarea>
+          </div>
+          <div class="field">
+            <label>Representante legal / apoderado</label>
+            <input type="text" id="st-rep" placeholder="Nombre y cargo del que firma">
+          </div>
+
+          <button class="btn btn-teal btn-lg" style="width:100%;justify-content:center;margin-top:8px;" onclick="generarEscrito()" id="btn-escrito">
+            ✦ Redactar escrito con IA
+          </button>
+        </div>
+      </div>
+
+      <div class="output-panel">
+        <div class="output-header">
+          <div>
+            <div class="output-title">Escrito / respuesta generada</div>
+            <div style="font-size:11px;color:var(--ink3);margin-top:2px;" id="stps-meta">Configure los datos y haga clic en "Redactar"</div>
+          </div>
+          <div class="output-actions">
+            <button class="btn btn-ghost btn-sm" onclick="copiarOutput('st-output')" style="border-color:var(--border2);color:var(--ink2);">📋 Copiar</button>
+            <button class="btn btn-teal btn-sm" onclick="window.print()">🖨 Imprimir</button>
+          </div>
+        </div>
+        <div class="output-box" id="st-output">
+          <div class="output-placeholder">
+            <div class="output-placeholder-icon">🏛️</div>
+            Seleccione el tipo de notificación, ingrese los datos<br>y haga clic en <strong>"Redactar escrito con IA"</strong><br><br>
+            <div style="font-size:11px;color:var(--ink3);">La IA redactará un escrito formal con estructura legal correcta:<br>ciudad, fecha, autoridad, hechos, fundamento y petitorios.</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ══ LIQUIDACIÓN ══ -->
+  <div id="panel-liquidacion" style="display:none;">
+    <div class="two-col">
+      <div>
+        <div class="card">
+          <div class="card-title">Datos para cálculo</div>
+          <div class="card-sub">Liquidación, finiquito e indemnización constitucional — LFT</div>
+
+          <div class="field">
+            <label>Tipo de separación <span class="req">*</span></label>
+            <div class="chip-group" id="sep-chips">
+              <div class="chip active" onclick="selChip(this,'sep-chips');calcLiq()">Despido injustificado</div>
+              <div class="chip" onclick="selChip(this,'sep-chips');calcLiq()">Renuncia voluntaria</div>
+              <div class="chip" onclick="selChip(this,'sep-chips');calcLiq()">Rescisión por patrón (art.47)</div>
+              <div class="chip" onclick="selChip(this,'sep-chips');calcLiq()">Mutuo acuerdo</div>
+              <div class="chip" onclick="selChip(this,'sep-chips');calcLiq()">Muerte del trabajador</div>
+              <div class="chip" onclick="selChip(this,'sep-chips');calcLiq()">Incapacidad permanente</div>
+            </div>
+          </div>
+
+          <div class="field-row">
+            <div class="field">
+              <label>Salario diario <span class="req">*</span></label>
+              <input type="number" id="liq-salario" placeholder="0.00" min="0" step="0.01" oninput="calcLiq()">
+              <div class="hint">Salario diario nominal (sin integrar)</div>
+            </div>
+            <div class="field">
+              <label>Factor de integración</label>
+              <input type="number" id="liq-factor" value="1.0452" step="0.0001" oninput="calcLiq()">
+              <div class="hint">SDI = Salario × Factor (mín. 1.0452)</div>
+            </div>
+          </div>
+
+          <div class="field-row">
+            <div class="field">
+              <label>Fecha de ingreso <span class="req">*</span></label>
+              <input type="date" id="liq-ingreso" oninput="calcLiq()">
+            </div>
+            <div class="field">
+              <label>Fecha de separación <span class="req">*</span></label>
+              <input type="date" id="liq-separacion" oninput="calcLiq()">
+            </div>
+          </div>
+
+          <div class="field">
+            <label>Días de vacaciones por año (en el primer año)</label>
+            <input type="number" id="liq-vac" value="12" min="12" oninput="calcLiq()">
+          </div>
+
+          <div class="field">
+            <label>Prima vacacional (%)</label>
+            <input type="number" id="liq-prima-vac" value="25" min="25" oninput="calcLiq()">
+          </div>
+
+          <div style="margin-top:16px;padding:12px;background:var(--sky);border-radius:var(--r-sm);font-size:12px;color:var(--navy2);">
+            <strong>SMG 2025:</strong> $278.80 MXN/día · <strong>UMA 2025:</strong> $113.14 MXN/día<br>
+            Tope prima antigüedad: 2 × SMG = $557.60 MXN/día
+          </div>
+
+          <button class="btn btn-teal btn-lg" style="width:100%;justify-content:center;margin-top:12px;" onclick="generarNarrativaLiq()">
+            ✦ Generar análisis detallado con IA <span style="font-size:10px;opacity:.8;">(⏳ pendiente)</span>
+          </button>
+        </div>
+      </div>
+
+      <div>
+        <div class="liq-resultado" id="liq-resultado" style="margin-bottom:16px;">
+          <div class="liq-titulo">DESGLOSE DE LIQUIDACIÓN</div>
+          <div id="liq-rows"><div style="text-align:center;padding:20px;opacity:.5;font-size:13px;">Ingrese los datos para calcular</div></div>
+        </div>
+
+        <div class="output-box" id="liq-output" style="min-height:200px;font-family:var(--font);font-size:13px;color:var(--ink2);">
+          <div class="output-placeholder">
+            <div class="output-placeholder-icon">🧮</div>
+            Ingrese los datos del trabajador para calcular<br>y haga clic en <strong>"Generar análisis con IA"</strong>
+            para obtener un análisis narrativo completo.
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ══ DICTAMEN ══ -->
+  <div id="panel-dictamen" style="display:none;">
+    <div class="two-col">
+      <div>
+        <div class="card">
+          <div class="card-title">Datos para el dictamen</div>
+          <div class="card-sub">Diagnóstico completo de compliance laboral para una empresa</div>
+
+          <div class="field">
+            <label>Empresa <span class="req">*</span></label>
+            <input type="text" id="di-empresa" placeholder="Razón social">
+          </div>
+          <div class="field-row">
+            <div class="field">
+              <label>RFC</label>
+              <input type="text" id="di-rfc" placeholder="RFC" maxlength="13">
+            </div>
+            <div class="field">
+              <label>No. trabajadores</label>
+              <input type="number" id="di-trab" placeholder="Ej. 45" min="1">
+            </div>
+          </div>
+          <div class="field-row">
+            <div class="field">
+              <label>Giro / industria</label>
+              <input type="text" id="di-giro" placeholder="Manufactura, Retail...">
+            </div>
+            <div class="field">
+              <label>Ciudad / estado</label>
+              <input type="text" id="di-ciudad" placeholder="Guadalajara, Jal.">
+            </div>
+          </div>
+          <div class="field">
+            <label>Fecha de constitución / inicio de operaciones</label>
+            <input type="date" id="di-inicio">
+          </div>
+
+          <div class="field">
+            <label>Estado actual del compliance (marque lo que SÍ tiene)</label>
+            <div style="display:flex;flex-direction:column;gap:6px;margin-top:6px;">
+              <label style="display:flex;align-items:center;gap:8px;font-size:12px;cursor:pointer;"><input type="checkbox" id="di-contratos" style="accent-color:var(--teal);"> Contratos individuales firmados</label>
+              <label style="display:flex;align-items:center;gap:8px;font-size:12px;cursor:pointer;"><input type="checkbox" id="di-reglamento" style="accent-color:var(--teal);"> Reglamento interior depositado en CFCRL</label>
+              <label style="display:flex;align-items:center;gap:8px;font-size:12px;cursor:pointer;"><input type="checkbox" id="di-nom035" style="accent-color:var(--teal);"> Evaluación NOM-035 aplicada</label>
+              <label style="display:flex;align-items:center;gap:8px;font-size:12px;cursor:pointer;"><input type="checkbox" id="di-nom019" style="accent-color:var(--teal);"> Comisión mixta S&H integrada (NOM-019)</label>
+              <label style="display:flex;align-items:center;gap:8px;font-size:12px;cursor:pointer;"><input type="checkbox" id="di-cap" style="accent-color:var(--teal);"> Comisión de capacitación activa</label>
+              <label style="display:flex;align-items:center;gap:8px;font-size:12px;cursor:pointer;"><input type="checkbox" id="di-ptu" style="accent-color:var(--teal);"> PTU calculada y pagada</label>
+              <label style="display:flex;align-items:center;gap:8px;font-size:12px;cursor:pointer;"><input type="checkbox" id="di-cfdi" style="accent-color:var(--teal);"> CFDI de nómina v4.0</label>
+              <label style="display:flex;align-items:center;gap:8px;font-size:12px;cursor:pointer;"><input type="checkbox" id="di-imss" style="accent-color:var(--teal);"> Todos los trabajadores inscritos al IMSS</label>
+            </div>
+          </div>
+
+          <div class="field">
+            <label>Situaciones de riesgo o antecedentes</label>
+            <textarea id="di-riesgos" placeholder="Ej. Demanda laboral previa, inspección STPS pendiente, trabajadores sin contrato firmado, sindicato en proceso de registro..."></textarea>
+          </div>
+
+          <button class="btn btn-teal btn-lg" style="width:100%;justify-content:center;margin-top:8px;" onclick="generarDictamen()" id="btn-dictamen">
+            ✦ Generar dictamen con IA
+          </button>
+        </div>
+      </div>
+
+      <div class="output-panel">
+        <div class="output-header">
+          <div>
+            <div class="output-title">Dictamen de compliance</div>
+            <div style="font-size:11px;color:var(--ink3);margin-top:2px;" id="dict-meta">Configure los datos y haga clic en "Generar dictamen"</div>
+          </div>
+          <div class="output-actions">
+            <button class="btn btn-ghost btn-sm" onclick="copiarOutput('di-output')" style="border-color:var(--border2);color:var(--ink2);">📋 Copiar</button>
+            <button class="btn btn-teal btn-sm" onclick="window.print()">🖨 Imprimir</button>
+          </div>
+        </div>
+        <div class="output-box" id="di-output" style="font-family:var(--font);">
+          <div class="output-placeholder">
+            <div class="output-placeholder-icon">📋</div>
+            Complete los datos de la empresa y haga clic en<br>
+            <strong>"Generar dictamen con IA"</strong><br><br>
+            <div style="font-size:11px;color:var(--ink3);">Recibirá un dictamen estructurado con hallazgos,<br>semáforo de riesgos y plan de acción priorizado.</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+</div><!-- /content -->
+
+<script>
+// ════════════════════════════════════════════════════════
+// NAVIGATION
+// ════════════════════════════════════════════════════════
+function setMainTab(tab, el){
+  ['clausulas','stps','liquidacion','dictamen'].forEach(t=>{
+    document.getElementById('panel-'+t).style.display=t===tab?'':'none';
+    document.getElementById('tab-'+t).classList.toggle('active',t===tab);
+  });
+}
+
+function selChip(el, groupId){
+  document.querySelectorAll(`#${groupId} .chip`).forEach(c=>c.classList.remove('active'));
+  el.classList.add('active');
+}
+
+function selNotif(tipo, el){
+  document.querySelectorAll('.notif-card').forEach(c=>c.classList.remove('active'));
+  el.classList.add('active');
+}
+
+function v(id){return(document.getElementById(id)||{}).value||'';}
+function chk(id){return document.getElementById(id)?.checked||false;}
+function getChip(gid){const g=document.getElementById(gid);if(!g)return'';const e=g.querySelector('.chip.active');return e?e.textContent:'';}
+function getNotif(){const e=document.querySelector('.notif-card.active');return e?e.querySelector('.notif-card-name')?.textContent||'':'Acta de inspección STPS';}
+
+// ════════════════════════════════════════════════════════
+// CLAUDE API — desactivado: llamar a api.anthropic.com directo desde el navegador
+// nunca funciona (sin clave + bloqueado por CORS). Esta función de generación a la
+// medida necesita un backend (Netlify Function) con ANTHROPIC_API_KEY del servidor.
+// Mientras no se conecte ese backend, avisamos con claridad en vez de fallar en silencio.
+// ════════════════════════════════════════════════════════
+async function llamarClaude(system, userMsg){
+  throw new Error('Esta función de generación con IA todavía no está conectada a un servicio en vivo. Por ahora, solicite este documento directamente a su asesor.');
+}
+
+function setLoading(outputId, btnId, texto){
+  document.getElementById(outputId).innerHTML=`<div style="display:flex;flex-direction:column;align-items:center;justify-content:center;min-height:300px;"><div class="spinner"></div><div class="loading-text">✦ ${texto}</div></div>`;
+  if(btnId){const b=document.getElementById(btnId);b.disabled=true;b.textContent='Generando...';}
+}
+function resetBtn(btnId, texto){
+  if(btnId){const b=document.getElementById(btnId);b.disabled=false;b.textContent=texto;}
+}
+
+// ════════════════════════════════════════════════════════
+// GENERADOR DE CLÁUSULAS
+// ════════════════════════════════════════════════════════
+let bibliotecaClausulas = [];
+
+async function generarClausula(){
+  const tipo = getChip('tipo-clausula-chips');
+  const modalidad = getChip('modalidad-chips');
+  const rigor = getChip('rigor-chips');
+  const empresa = v('cl-empresa');
+  const giro = v('cl-giro');
+  const numero = v('cl-numero')||'5';
+  const instrucciones = v('cl-instrucciones');
+
+  if(!tipo){alert('Seleccione el tipo de cláusula');return;}
+
+  setLoading('cl-output','btn-clausula','Redactando cláusula conforme a LFT...');
+  document.getElementById('clausula-meta').textContent = `Generando: ${tipo} · ${modalidad} · Rigor: ${rigor}`;
+
+  const system = `Eres un redactor jurídico especializado en contratos laborales mexicanos, con dominio absoluto de la LFT vigente y sus reformas más recientes.
+Tu tarea es redactar cláusulas contractuales precisas, válidas, completas y personalizadas.
+Nivel de rigor solicitado: ${rigor}.
+Formato de salida OBLIGATORIO:
+
+CLÁUSULA ${numero}. — [NOMBRE EN MAYÚSCULAS]
+
+[Texto completo de la cláusula, bien redactado, con todos los elementos jurídicos necesarios. Para nivel Exhaustivo incluye supuestos, consecuencias, excepciones y remisiones a otros artículos del contrato.]
+
+Fundamento legal: [artículo(s) de la LFT u otras leyes aplicables]
+
+[Opcional: Nota al margen con advertencias o variantes]
+
+No incluyas texto fuera de la cláusula. Redacta en lenguaje jurídico formal pero claro.`;
+
+  const userMsg = `Redacta una cláusula de ${tipo} para un contrato individual de trabajo ${modalidad}.
+${empresa?`Empresa: ${empresa}.`:''}
+${giro?`Giro de la empresa: ${giro}.`:''}
+Número de cláusula: ${numero}.
+${instrucciones?`Instrucciones específicas: ${instrucciones}`:''}
+
+Redacta la cláusula completa según el formato indicado.`;
+
+  try {
+    const resp = await llamarClaude(system, userMsg);
+    document.getElementById('cl-output').innerHTML = `<div style="white-space:pre-wrap;font-family:'Times New Roman',serif;font-size:13px;line-height:1.8;">${resp}</div>`;
+    document.getElementById('clausula-meta').textContent = `✓ ${tipo} · ${modalidad} · ${new Date().toLocaleTimeString('es-MX',{hour:'2-digit',minute:'2-digit'})}`;
+    document.getElementById('cl-output')._content = resp;
+    renderBiblioteca(tipo, resp);
+  } catch(e){
+    document.getElementById('cl-output').innerHTML = `<div style="color:var(--red);padding:20px;font-family:var(--font);">Error al generar: ${e.message}<br><br>Verifique su conexión e intente de nuevo.</div>`;
+  }
+  resetBtn('btn-clausula','✦ Generar cláusula con IA');
+}
+
+function renderBiblioteca(tipo, contenido){
+  bibliotecaClausulas.unshift({tipo, contenido, hora:new Date().toLocaleTimeString('es-MX',{hour:'2-digit',minute:'2-digit'})});
+  if(bibliotecaClausulas.length>8) bibliotecaClausulas.pop();
+  document.getElementById('biblioteca-clausulas').innerHTML = bibliotecaClausulas.map((c,i)=>`
+    <div style="display:flex;align-items:center;gap:8px;padding:8px 10px;border:1px solid var(--border);border-radius:var(--r-sm);margin-bottom:6px;cursor:pointer;transition:all .15s;" 
+         onmouseover="this.style.borderColor='var(--teal)'" onmouseout="this.style.borderColor='var(--border)'"
+         onclick="mostrarClausulaGuardada(${i})">
+      <div style="flex:1;">
+        <div style="font-size:12px;font-weight:500;">${c.tipo}</div>
+        <div style="font-size:10px;color:var(--ink3);">${c.hora}</div>
+      </div>
+      <span class="badge badge-teal">Ver</span>
+    </div>`).join('');
+}
+
+function mostrarClausulaGuardada(idx){
+  const c = bibliotecaClausulas[idx];
+  if(!c)return;
+  document.getElementById('cl-output').innerHTML = `<div style="white-space:pre-wrap;font-family:'Times New Roman',serif;font-size:13px;line-height:1.8;">${c.contenido}</div>`;
+  document.getElementById('cl-output')._content = c.contenido;
+}
+
+function guardarClausula(){
+  const content = document.getElementById('cl-output')._content || document.getElementById('cl-output').innerText;
+  if(!content||content.includes('Configure')){ alert('Primero genere una cláusula'); return; }
+  const blob = new Blob([content],{type:'text/plain;charset=utf-8'});
+  const a = document.createElement('a');
+  a.href=URL.createObjectURL(blob);
+  a.download=`clausula_${getChip('tipo-clausula-chips').replace(/\s+/g,'_')}_${Date.now()}.txt`;
+  a.click();
+}
+
+function agregarAContrato(){
+  const content = document.getElementById('cl-output')._content || document.getElementById('cl-output').innerText;
+  if(!content||content.includes('Configure')){ alert('Primero genere una cláusula'); return; }
+  navigator.clipboard.writeText(content).then(()=>{
+    alert('Cláusula copiada al portapapeles. Péguela en el generador de contratos correspondiente.');
+  });
+}
+
+// ════════════════════════════════════════════════════════
+// ESCRITOS STPS / IMSS
+// ════════════════════════════════════════════════════════
+async function generarEscrito(){
+  const tipoNotif = getNotif();
+  const empresa = v('st-empresa');
+  const rfc = v('st-rfc');
+  const ciudad = v('st-ciudad');
+  const oficio = v('st-oficio');
+  const autoridad = v('st-autoridad');
+  const hechos = v('st-hechos');
+  const defensa = v('st-defensa');
+  const rep = v('st-rep');
+
+  if(!empresa||!hechos){ alert('Ingrese al menos la empresa y la descripción de la notificación'); return; }
+
+  setLoading('st-output','btn-escrito','Redactando escrito con estructura legal correcta...');
+  document.getElementById('stps-meta').textContent = `Generando respuesta a: ${tipoNotif}`;
+
+  const hoy = new Date().toLocaleDateString('es-MX',{day:'numeric',month:'long',year:'numeric'});
+
+  const system = `Eres un abogado laboralista mexicano experto en procedimientos ante la STPS, IMSS, INFONAVIT, CFCRL y Tribunales Laborales.
+Redactas escritos formales con estructura legal perfecta.
+
+ESTRUCTURA OBLIGATORIA del escrito:
+${ciudad||'[Ciudad]'}, ${hoy}
+
+[AUTORIDAD DESTINATARIA]
+[Área específica]
+P R E S E N T E.
+
+A S U N T O: [resumen del asunto]
+
+[NOMBRE DEL REPRESENTANTE], en representación de [EMPRESA], RFC [RFC], comparezco respetuosamente y expongo:
+
+A N T E C E D E N T E S:
+[Describe la situación que origina el escrito]
+
+H E C H O S:
+1. ...
+2. ...
+
+F U N D A M E N T O  D E  D E R E C H O:
+[Artículos aplicables de la LFT, LSS, Reglamentos]
+
+P U N T O S  P E T I T O R I O S:
+PRIMERO. ...
+SEGUNDO. ...
+
+A T E N T A M E N T E,
+[Nombre del representante]
+[Cargo]
+[Empresa]
+
+Sé preciso, formal y estratégico. Cita artículos específicos.`;
+
+  const userMsg = `Redacta el escrito de respuesta para:
+TIPO: ${tipoNotif}
+EMPRESA: ${empresa} (RFC: ${rfc||'N/E'})
+CIUDAD: ${ciudad||'No especificada'}
+OFICIO/EXPEDIENTE: ${oficio||'No especificado'}
+AUTORIDAD EMISORA: ${autoridad||'No especificada'}
+
+HECHOS / OBSERVACIONES DE LA AUTORIDAD:
+${hechos}
+
+ARGUMENTOS DE DEFENSA / CONTEXTO:
+${defensa||'Sin información adicional de defensa proporcionada. Redacta de forma general.'}
+
+REPRESENTANTE QUE FIRMA: ${rep||'Representante Legal'}
+
+Redacta el escrito completo con la estructura formal indicada, citando los fundamentos legales aplicables y formulando puntos petitorios claros.`;
+
+  try {
+    const resp = await llamarClaude(system, userMsg);
+    document.getElementById('st-output').innerHTML = `<div style="white-space:pre-wrap;font-family:'Times New Roman',serif;font-size:13px;line-height:1.9;">${resp}</div>`;
+    document.getElementById('stps-meta').textContent = `✓ ${tipoNotif} · ${new Date().toLocaleTimeString('es-MX',{hour:'2-digit',minute:'2-digit'})}`;
+    document.getElementById('st-output')._content = resp;
+  } catch(e){
+    document.getElementById('st-output').innerHTML = `<div style="color:var(--red);padding:20px;font-family:var(--font);">Error: ${e.message}</div>`;
+  }
+  resetBtn('btn-escrito','✦ Redactar escrito con IA');
+}
+
+// ════════════════════════════════════════════════════════
+// CALCULADORA LIQUIDACIÓN
+// ════════════════════════════════════════════════════════
+function calcLiq(){
+  const salDiario = parseFloat(v('liq-salario'))||0;
+  const factor = parseFloat(v('liq-factor'))||1.0452;
+  const ingreso = v('liq-ingreso');
+  const sep = v('liq-separacion');
+  const tipoSep = getChip('sep-chips');
+  const vacAnio1 = parseFloat(v('liq-vac'))||12;
+  const primaPct = parseFloat(v('liq-prima-vac'))||25;
+
+  if(!salDiario||!ingreso||!sep){ document.getElementById('liq-rows').innerHTML='<div style="text-align:center;padding:16px;opacity:.5;font-size:13px;">Ingrese salario y fechas</div>'; return; }
+
+  const dIngreso = new Date(ingreso+'T12:00:00');
+  const dSep = new Date(sep+'T12:00:00');
+  const diffMs = dSep - dIngreso;
+  if(diffMs<0){ document.getElementById('liq-rows').innerHTML='<div style="color:#f87171;padding:12px;font-size:12px;">La fecha de separación debe ser posterior al ingreso</div>'; return; }
+
+  const diasTotales = Math.floor(diffMs/(1000*60*60*24));
+  const anios = diasTotales/365;
+  const aniosCompletos = Math.floor(anios);
+  const diasFraccion = diasTotales - (aniosCompletos*365);
+
+  const SMG = 278.80;
+  const topePrimaAntig = SMG * 2;
+  const salarioParaPrima = Math.min(salDiario, topePrimaAntig);
+  const SDI = salDiario * factor;
+
+  // Partes proporcionales
+  const diasPropAguinaldo = (diasFraccion/365)*15;
+  const vacPropDias = calcVacaciones(anios, vacAnio1);
+  const primaVacProp = vacPropDias * (primaPct/100);
+
+  let rows = [];
+  let total = 0;
+
+  if(tipoSep==='Despido injustificado'){
+    const ind90 = salDiario*90;
+    const dias20xAnio = SDI*20*anios;
+    const primaAntig = salarioParaPrima*12*anios;
+    rows.push({label:'Indemnización constitucional (90 días)', val:ind90, art:'Art. 50 fracc. I LFT'});
+    rows.push({label:`20 días × año trabajado (${anios.toFixed(2)} años)`, val:dias20xAnio, art:'Art. 50 fracc. II LFT'});
+    rows.push({label:`Prima de antigüedad (12 días × ${anios.toFixed(2)} años)`, val:primaAntig, art:'Art. 162 LFT'});
+    total += ind90 + dias20xAnio + primaAntig;
+  } else if(tipoSep==='Renuncia voluntaria'){
+    if(aniosCompletos>=15){
+      const primaAntig = salarioParaPrima*12*anios;
+      rows.push({label:`Prima de antigüedad (≥15 años, 12d/año)`, val:primaAntig, art:'Art. 162 LFT'});
+      total += primaAntig;
+    } else {
+      rows.push({label:'Prima de antigüedad', val:0, art:'Art. 162 LFT — No aplica (<15 años)'});
+    }
+  } else if(tipoSep==='Rescisión por patrón (art.47)'){
+    rows.push({label:'Sin indemnización', val:0, art:'Art. 47 LFT — Rescisión justificada'});
+    if(aniosCompletos>=15){
+      const primaAntig = salarioParaPrima*12*anios;
+      rows.push({label:'Prima de antigüedad (≥15 años)', val:primaAntig, art:'Art. 162 LFT'});
+      total += primaAntig;
+    }
+  } else {
+    const ind90 = salDiario*90;
+    rows.push({label:'Indemnización (por acuerdo)', val:ind90, art:'Art. 50 LFT — referencia'});
+    total += ind90;
+  }
+
+  // Siempre: partes proporcionales
+  const aguinaldo = salDiario*diasPropAguinaldo;
+  const vacPesos = salDiario*vacPropDias;
+  const primaVacPesos = salDiario*primaVacProp;
+
+  rows.push({label:`Aguinaldo proporcional (${diasFraccion} días)`, val:aguinaldo, art:'Art. 87 LFT'});
+  rows.push({label:`Vacaciones proporcionales (${vacPropDias.toFixed(1)} días)`, val:vacPesos, art:'Art. 76 LFT'});
+  rows.push({label:`Prima vacacional (${primaPct}%)`, val:primaVacPesos, art:'Art. 80 LFT'});
+  total += aguinaldo + vacPesos + primaVacPesos;
+
+  const rowsHTML = rows.map(r=>`
+    <div class="liq-row">
+      <div>
+        <div>${r.label}</div>
+        <div style="font-size:10px;opacity:.4;margin-top:1px;">${r.art}</div>
+      </div>
+      <div class="liq-valor">${r.val>0?'$'+r.val.toLocaleString('es-MX',{minimumFractionDigits:2}):'—'}</div>
+    </div>`).join('');
+
+  document.getElementById('liq-rows').innerHTML = rowsHTML + `
+    <div class="liq-row">
+      <div><strong>TOTAL ESTIMADO</strong><div style="font-size:10px;opacity:.4;">Antes de retenciones IMSS/ISR</div></div>
+      <div class="liq-total liq-valor">$${total.toLocaleString('es-MX',{minimumFractionDigits:2})}</div>
+    </div>`;
+}
+
+function calcVacaciones(anios, base){
+  if(anios<1) return base*(anios);
+  if(anios<2) return base;
+  if(anios<3) return base+2;
+  if(anios<4) return base+4;
+  if(anios<5) return base+6;
+  return base + 6 + Math.floor((anios-4))*2;
+}
+
+async function generarNarrativaLiq(){
+  const salDiario = v('liq-salario');
+  const ingreso = v('liq-ingreso');
+  const sep = v('liq-separacion');
+  const tipoSep = getChip('sep-chips');
+
+  if(!salDiario||!ingreso||!sep){ alert('Ingrese salario y fechas primero'); return; }
+
+  const resumen = document.getElementById('liq-rows').innerText;
+  setLoading('liq-output','','Analizando liquidación con IA...');
+
+  const system = `Eres un abogado laboralista mexicano experto en cálculo de prestaciones conforme a la LFT vigente.
+Generas análisis narrativos completos sobre liquidaciones laborales, explicando el cálculo, los fundamentos legales y las recomendaciones.`;
+
+  const userMsg = `Genera un análisis narrativo completo de esta liquidación:
+
+TIPO DE SEPARACIÓN: ${tipoSep}
+SALARIO DIARIO: $${salDiario} MXN
+FECHA DE INGRESO: ${ingreso}
+FECHA DE SEPARACIÓN: ${sep}
+
+CÁLCULO AUTOMÁTICO:
+${resumen}
+
+Explica:
+1. El fundamento legal de cada concepto
+2. Si el cálculo es favorable o cuestionable para el patrón
+3. Riesgos en caso de demanda laboral
+4. Recomendaciones para el patrón
+5. Qué documentación debe conservarse
+
+Formato: párrafos claros con referencias a artículos de la LFT.`;
+
+  try {
+    const resp = await llamarClaude(system, userMsg);
+    document.getElementById('liq-output').innerHTML = `<div style="white-space:pre-wrap;font-size:13px;line-height:1.7;">${resp}</div>`;
+  } catch(e){
+    document.getElementById('liq-output').innerHTML = `<div style="color:var(--red);padding:16px;">Error: ${e.message}</div>`;
+  }
+}
+
+// ════════════════════════════════════════════════════════
+// DICTAMEN DE COMPLIANCE
+// ════════════════════════════════════════════════════════
+async function generarDictamen(){
+  const empresa = v('di-empresa');
+  if(!empresa){ alert('Ingrese la razón social de la empresa'); return; }
+
+  const cumple = {
+    contratos: chk('di-contratos'),
+    reglamento: chk('di-reglamento'),
+    nom035: chk('di-nom035'),
+    nom019: chk('di-nom019'),
+    cap: chk('di-cap'),
+    ptu: chk('di-ptu'),
+    cfdi: chk('di-cfdi'),
+    imss: chk('di-imss'),
+  };
+  const pct = Math.round(Object.values(cumple).filter(Boolean).length/8*100);
+
+  setLoading('di-output','btn-dictamen','Generando dictamen de compliance...');
+  document.getElementById('dict-meta').textContent = `Analizando ${empresa} — ${pct}% compliance reportado`;
+
+  const system = `Eres un consultor senior de compliance laboral para empresas mexicanas, con 20 años de experiencia.
+Elaboras dictámenes detallados y planes de acción concretos.
+
+FORMATO OBLIGATORIO del dictamen:
+
+DICTAMEN DE COMPLIANCE LABORAL
+[Empresa] | [Fecha] | Confidencial
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+1. DATOS GENERALES
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+[datos]
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+2. RESUMEN EJECUTIVO
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Score de compliance: X/100
+[párrafo ejecutivo]
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+3. HALLAZGOS POR ÁREA
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+🔴 CRÍTICO / 🟡 ATENCIÓN / 🟢 CUMPLIDO
+
+[Para cada área analizada: estatus, riesgo, fundamento legal, recomendación]
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+4. ESTIMADO DE EXPOSICIÓN ECONÓMICA
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+[Monto estimado de riesgo económico si aplica]
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+5. PLAN DE ACCIÓN PRIORIZADO
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+PRIORIDAD 1 (0-15 días): ...
+PRIORIDAD 2 (15-30 días): ...
+PRIORIDAD 3 (30-90 días): ...
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+6. DOCUMENTOS A GENERAR
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+[Lista de documentos necesarios]`;
+
+  const userMsg = `Elabora un dictamen de compliance para:
+
+EMPRESA: ${empresa}
+RFC: ${v('di-rfc')||'No proporcionado'}
+TRABAJADORES: ${v('di-trab')||'No especificado'}
+GIRO: ${v('di-giro')||'No especificado'}
+CIUDAD: ${v('di-ciudad')||'No especificada'}
+INICIO OPERACIONES: ${v('di-inicio')||'No especificado'}
+
+ESTADO DE COMPLIANCE REPORTADO:
+- Contratos individuales firmados: ${cumple.contratos?'SÍ':'NO'}
+- Reglamento interior depositado en CFCRL: ${cumple.reglamento?'SÍ':'NO'}
+- NOM-035 evaluación aplicada: ${cumple.nom035?'SÍ':'NO'}
+- Comisión S&H integrada (NOM-019): ${cumple.nom019?'SÍ':'NO'}
+- Comisión de capacitación activa: ${cumple.cap?'SÍ':'NO'}
+- PTU calculada y pagada: ${cumple.ptu?'SÍ':'NO'}
+- CFDI nómina v4.0: ${cumple.cfdi?'SÍ':'NO'}
+- Todos trabajadores inscritos IMSS: ${cumple.imss?'SÍ':'NO'}
+Score inicial: ${pct}/100
+
+RIESGOS / ANTECEDENTES REPORTADOS:
+${v('di-riesgos')||'Sin antecedentes reportados'}
+
+Genera el dictamen completo con el formato indicado, siendo específico con los artículos de la LFT y NOMs aplicables.`;
+
+  try {
+    const resp = await llamarClaude(system, userMsg);
+    document.getElementById('di-output').innerHTML = `<div style="white-space:pre-wrap;font-size:12.5px;line-height:1.8;font-family:var(--font-mono,monospace);">${resp}</div>`;
+    document.getElementById('dict-meta').textContent = `✓ Dictamen generado · ${empresa} · ${new Date().toLocaleTimeString('es-MX',{hour:'2-digit',minute:'2-digit'})}`;
+    document.getElementById('di-output')._content = resp;
+  } catch(e){
+    document.getElementById('di-output').innerHTML = `<div style="color:var(--red);padding:20px;">Error: ${e.message}</div>`;
+  }
+  resetBtn('btn-dictamen','✦ Generar dictamen con IA');
+}
+
+// ════════════════════════════════════════════════════════
+// UTILS
+// ════════════════════════════════════════════════════════
+function copiarOutput(id){
+  const el = document.getElementById(id);
+  const txt = el._content || el.innerText || '';
+  if(!txt||txt.includes('Configure')){ alert('No hay contenido para copiar'); return; }
+  navigator.clipboard.writeText(txt).then(()=>{
+    const actions = el.previousElementSibling?.querySelector('.output-actions');
+    if(actions){
+      const btn = actions.querySelector('[onclick*="copiar"]');
+      if(btn){ const orig=btn.textContent; btn.textContent='✓ Copiado'; setTimeout(()=>btn.textContent=orig,2000); }
+    }
+  });
+}
+
+function imprimirOutput(){
+  window.print();
+}
+
+// Init
+calcLiq();
+</script>
+</body>
+</html>

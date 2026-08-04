@@ -1,0 +1,502 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="robots" content="noindex,nofollow">
+<title>Generador · Cobranza y Pagarés</title>
+<style>
+  :root{--ink:#1a1a18;--ink2:#4a4a46;--ink3:#8a8a84;--surface:#f7f6f2;--white:#ffffff;--accent:#1a3a5c;--accent2:#e8f0f8;--border:#ddddd6;--danger:#c0392b;--green:#16a34a;--radius:6px;--font-ui:'Segoe UI',system-ui,sans-serif;--font-doc:'Times New Roman',Georgia,serif;}
+  *{box-sizing:border-box;margin:0;padding:0;}
+  body{font-family:var(--font-ui);background:var(--surface);color:var(--ink);min-height:100vh;font-size:14px;}
+  header{background:var(--accent);color:#fff;padding:14px 28px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:100;box-shadow:0 1px 4px rgba(0,0,0,.18);}
+  header h1{font-size:15px;font-weight:600;}
+  header span{font-size:12px;opacity:.7;}
+  .header-actions{display:flex;gap:10px;}
+  .btn{padding:7px 18px;border-radius:var(--radius);font-size:13px;font-weight:500;cursor:pointer;border:1px solid transparent;transition:background .15s,opacity .15s;}
+  .btn-outline{background:transparent;border-color:rgba(255,255,255,.45);color:#fff;}.btn-outline:hover{background:rgba(255,255,255,.12);}
+  .btn-primary{background:#fff;color:var(--accent);}.btn-primary:hover{opacity:.88;}
+  .workspace{display:grid;grid-template-columns:380px 1fr;height:calc(100vh - 52px);}
+  .form-panel{background:var(--white);border-right:1px solid var(--border);overflow-y:auto;padding:24px 24px 40px;}
+  .section-label{font-size:10px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:var(--accent);padding:20px 0 10px;border-bottom:1px solid var(--border);margin-bottom:14px;}
+  .section-label:first-child{padding-top:4px;}
+  .field{margin-bottom:13px;}
+  .field label{display:block;font-size:12px;font-weight:500;color:var(--ink2);margin-bottom:4px;}
+  .field label .req{color:var(--danger);margin-left:2px;}
+  .field input,.field select,.field textarea{width:100%;padding:8px 10px;border:1px solid var(--border);border-radius:var(--radius);font-size:13px;font-family:var(--font-ui);color:var(--ink);background:var(--white);transition:border-color .15s;}
+  .field input:focus,.field select:focus,.field textarea:focus{outline:none;border-color:var(--accent);box-shadow:0 0 0 3px var(--accent2);}
+  .field textarea{resize:vertical;min-height:60px;}
+  .field-row{display:grid;grid-template-columns:1fr 1fr;gap:10px;}
+  .hint{font-size:11px;color:var(--ink3);margin-top:3px;}
+  .alert-box{background:#fff8e1;border:1px solid #f0c040;border-radius:var(--radius);padding:10px 14px;font-size:12px;color:#7a5f00;margin-bottom:14px;line-height:1.5;}
+  .clause-check{display:flex;align-items:flex-start;gap:8px;margin-bottom:8px;}
+  .clause-check input[type=checkbox]{margin-top:2px;accent-color:var(--accent);}
+  .clause-check label{font-size:12px;color:var(--ink2);cursor:pointer;line-height:1.4;}
+  .tipo-tabs{display:grid;grid-template-columns:1fr 1fr;gap:0;border:1px solid var(--border);border-radius:var(--radius);overflow:hidden;margin-bottom:16px;}
+  .tipo-tab{padding:10px 4px;text-align:center;font-size:12px;font-weight:500;cursor:pointer;background:var(--white);color:var(--ink2);border:none;transition:all .15s;line-height:1.3;}
+  .tipo-tab:nth-child(odd){border-right:1px solid var(--border);}
+  .tipo-tab:nth-child(-n+2){border-bottom:1px solid var(--border);}
+  .tipo-tab.active{background:var(--accent);color:#fff;}
+  .calc-box{background:#f0f6ff;border:1px solid #b8d0ee;border-radius:var(--radius);padding:12px 14px;margin:10px 0;font-size:12px;color:var(--accent);}
+  .calc-row{display:flex;justify-content:space-between;padding:3px 0;}
+  .calc-row.total{border-top:1px solid #b8d0ee;margin-top:6px;padding-top:8px;font-weight:700;font-size:13px;}
+  .preview-panel{background:#e8e7e0;overflow-y:auto;padding:32px 40px;display:flex;flex-direction:column;align-items:center;gap:24px;}
+  .doc-sheet{background:var(--white);width:100%;max-width:760px;padding:60px 70px;box-shadow:0 2px 16px rgba(0,0,0,.12);font-family:var(--font-doc);font-size:12pt;line-height:1.75;color:#111;}
+  .doc-sheet.pagare-sheet{min-height:auto;padding:44px 52px;border:2.5px double #333;}
+  .doc-title{text-align:center;font-size:13pt;font-weight:bold;text-transform:uppercase;letter-spacing:.04em;margin-bottom:6px;}
+  .doc-subtitle{text-align:center;font-size:10pt;color:var(--ink3);font-family:var(--font-ui);margin-bottom:28px;}
+  .doc-p{margin-bottom:14px;text-align:justify;}
+  .doc-p .blank{font-weight:bold;color:var(--accent);border-bottom:1px solid var(--accent);padding:0 2px;}
+  .doc-p .blank.empty{color:#c0392b;border-bottom-color:#c0392b;font-style:italic;font-weight:normal;}
+  .doc-clause-title{font-weight:bold;text-transform:uppercase;font-size:10.5pt;margin:22px 0 8px;}
+  .doc-table{width:100%;border-collapse:collapse;margin:14px 0;font-size:10.5pt;}
+  .doc-table td,.doc-table th{border:1px solid #999;padding:6px 10px;text-align:left;}
+  .doc-table th{background:#f0f0ec;font-family:var(--font-ui);font-size:9pt;text-transform:uppercase;}
+  .doc-firma-grid{display:grid;grid-template-columns:1fr 1fr;gap:40px;margin-top:48px;}
+  .doc-firma-solo{max-width:320px;margin:48px auto 0;}
+  .firma-box{border-top:1px solid #888;padding-top:8px;font-size:10pt;text-align:center;line-height:1.5;}
+  .firma-box strong{display:block;font-size:9pt;color:var(--ink3);font-family:var(--font-ui);}
+  .pg-head{display:flex;justify-content:space-between;font-family:var(--font-ui);font-size:10pt;margin-bottom:14px;}
+  .pg-bueno{border:1px solid #333;padding:4px 14px;font-weight:bold;font-size:12pt;}
+  .watermark-empty{text-align:center;color:var(--ink3);font-family:var(--font-ui);font-size:13px;padding:80px 0;}
+  @media print{header,.form-panel{display:none!important;}.workspace{display:block;height:auto;}.preview-panel{padding:0;background:white;gap:0;}.doc-sheet{box-shadow:none;max-width:100%;margin-bottom:0;page-break-after:always;}body{background:white;}}
+
+#auth-gate-loading{position:fixed;inset:0;background:#fff;z-index:9999;display:flex;align-items:center;justify-content:center;font-family:'Segoe UI',system-ui,sans-serif;color:#999;font-size:13px;}
+#auth-gate-blocked{position:fixed;inset:0;background:#0f2640;z-index:9999;display:none;align-items:center;justify-content:center;padding:24px;}
+#auth-gate-blocked .agb-box{background:#fff;border-radius:16px;padding:40px 36px;max-width:420px;text-align:center;font-family:'Segoe UI',system-ui,sans-serif;}
+#auth-gate-blocked .agb-box h2{font-size:18px;margin-bottom:10px;color:#0f2640;}
+#auth-gate-blocked .agb-box p{font-size:13px;color:#666;margin-bottom:20px;line-height:1.6;}
+#auth-gate-blocked .agb-btns{display:flex;gap:10px;justify-content:center;flex-wrap:wrap;}
+#auth-gate-blocked .agb-btns a{padding:10px 18px;border-radius:8px;font-size:13px;font-weight:600;text-decoration:none;}
+#auth-gate-blocked .agb-btns a.agb-primary{background:#1a3a5c;color:#fff;}
+#auth-gate-blocked .agb-btns a.agb-secondary{background:#f0f0ec;color:#1a3a5c;}
+body.modo-demo .doc-sheet{position:relative;user-select:none;-webkit-user-select:none;-moz-user-select:none;}
+body.modo-demo .doc-sheet::after{content:'MUESTRA — CUENTA DEMO, NO VÁLIDO PARA USO LEGAL';position:absolute;top:46%;left:-15%;right:-15%;text-align:center;font-size:26px;font-weight:900;color:rgba(220,38,38,.16);transform:rotate(-18deg);pointer-events:none;font-family:'Segoe UI',system-ui,sans-serif;z-index:50;}
+@media print{ body.modo-demo .doc-sheet::after{display:block!important;color:rgba(220,38,38,.35)!important;} }
+  .cl-nav-logo{display:flex;align-items:center;font-size:15px;font-weight:800;color:#fff;letter-spacing:-.01em;line-height:1;text-decoration:none;}
+  .cl-nav-logo .cl-laboral{color:#5eead4;font-weight:400;}
+</style>
+<script src="membrete.js?v=3.7"></script>
+</head>
+<body>
+<div id="auth-gate-loading">Verificando acceso…</div>
+<div id="auth-gate-blocked">
+  <div class="agb-box">
+    <h2>🔒 Esta herramienta requiere una suscripción activa</h2>
+    <p>Inicie sesión desde su portal de cliente para usar este generador, o conozca nuestros planes si todavía no es cliente de ClickLaboral.mx.</p>
+    <div class="agb-btns">
+      <a class="agb-primary" href="portal-cliente.html">Iniciar sesión →</a>
+      <a class="agb-secondary" href="index.html#precios">Ver planes</a>
+    </div>
+  </div>
+</div>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
+<script src="expediente-helper.js?v=3.7"></script>
+<script>
+(async()=>{
+  const _sb = supabase.createClient('https://hpzgqaplrywwjuvrzhcp.supabase.co','sb_publishable_1g8US8iFJ8CxnSaF_4MHgA_gqyyAr3W');
+  try {
+    const { data } = await _sb.auth.getSession();
+    document.getElementById('auth-gate-loading').style.display = 'none';
+    if (!data?.session?.user) {
+      document.getElementById('auth-gate-blocked').style.display = 'flex';
+    }
+  } catch(e) {
+    document.getElementById('auth-gate-loading').style.display = 'none';
+    document.getElementById('auth-gate-blocked').style.display = 'flex';
+  }
+})();
+</script>
+
+<header>
+  <div class="cl-nav-logo" style="flex-shrink:0;"><svg width="26" height="26" viewBox="0 0 100 100" style="vertical-align:-7px;margin-right:6px;flex-shrink:0;">
+        <defs><linearGradient id="clGrad" x1="10" y1="10" x2="90" y2="95" gradientUnits="userSpaceOnUse">
+          <stop offset="0%" stop-color="#1a3a5c"/><stop offset="55%" stop-color="#1e6f6c"/><stop offset="100%" stop-color="#2dd4bf"/>
+        </linearGradient></defs>
+        <path d="M50 7 L83 20 V51 C83 73 68 87 50 95 C32 87 17 73 17 51 V20 Z" fill="none" stroke="url(#clGrad)" stroke-width="6" stroke-linejoin="round"/>
+        <circle cx="40" cy="38" r="8.5" fill="#5eead4"/>
+        <path d="M25 63 C25 51 31 45 40 45 C49 45 55 51 55 63 Z" fill="#5eead4"/>
+        <circle cx="55" cy="33" r="9.5" fill="#14b8a6"/>
+        <path d="M38 61 C38 48 45.5 41 55 41 C64.5 41 72 48 72 61 Z" fill="#14b8a6"/>
+        <path d="M29 61 L45 77 L78 40" fill="none" stroke="#e8f2fc" stroke-width="9" stroke-linecap="round" stroke-linejoin="round"/>
+      </svg>Click<span class="cl-laboral">Laboral.mx</span></div>
+  <div>
+    <h1>Generador de Cobranza y Pagarés · ClickLaboral.mx</h1>
+    <span>Pagaré LGTOC · Requerimiento de pago · Convenio de adeudo · Recibo</span>
+  </div>
+  <div class="header-actions">
+    <button class="btn btn-outline" onclick="location.reload()">Limpiar</button>
+    <button class="btn btn-primary" onclick="window.print()">Imprimir / PDF</button>
+  </div>
+</header>
+
+<div class="workspace">
+  <div class="form-panel">
+    <div class="tipo-tabs">
+      <button class="tipo-tab active" id="tab-pagare" onclick="setTipo('pagare')">📜 Pagaré</button>
+      <button class="tipo-tab" id="tab-requerimiento" onclick="setTipo('requerimiento')">📮 Requerimiento de pago</button>
+      <button class="tipo-tab" id="tab-convenio" onclick="setTipo('convenio')">🤝 Reconocimiento de adeudo</button>
+      <button class="tipo-tab" id="tab-recibo" onclick="setTipo('recibo')">🧾 Recibo de pago</button>
+    </div>
+
+    <div class="alert-box" id="alerta-tipo">
+      📜 El pagaré es un título de crédito (Arts. 170–174 LGTOC): con él puede demandar en la <strong>vía ejecutiva mercantil</strong>, mucho más rápida que un juicio ordinario. Cuide que el suscriptor firme de puño y letra.
+    </div>
+
+    <div class="section-label">Acreedor / Beneficiario</div>
+    <div class="field"><label>Nombre o razón social <span class="req">*</span></label><input id="f-acreedor" oninput="render()" placeholder="Quien cobra (su empresa)"></div>
+    <div class="field"><label>Domicilio del acreedor</label><input id="f-acreedor-dom" oninput="render()" placeholder="Calle, número, colonia, ciudad"></div>
+
+    <div class="section-label">Deudor</div>
+    <div class="field"><label>Nombre o razón social <span class="req">*</span></label><input id="f-deudor" oninput="render()" placeholder="Quien debe"></div>
+    <div class="field"><label>Domicilio del deudor <span class="req">*</span></label><input id="f-deudor-dom" oninput="render()" placeholder="Domicilio completo (importante para requerimientos y juicio)"></div>
+
+    <div class="section-label">Adeudo</div>
+    <div class="field-row">
+      <div class="field"><label>Monto total <span class="req">*</span></label><input id="f-monto" type="number" min="0" step="0.01" oninput="render()" placeholder="0.00"></div>
+      <div class="field"><label>Interés moratorio (% mensual)</label><input id="f-interes" type="number" min="0" step="0.1" value="3" oninput="render()"></div>
+    </div>
+    <div class="field"><label>Origen / concepto del adeudo</label><input id="f-concepto" oninput="render()" placeholder="Ej. Servicios profesionales facturas A-101 y A-102"></div>
+    <div class="field-row">
+      <div class="field"><label>Lugar de suscripción / pago</label><input id="f-lugar" value="Guadalajara, Jalisco" oninput="render()"></div>
+      <div class="field"><label>Fecha del documento</label><input id="f-fecha" type="date" oninput="render()"></div>
+    </div>
+
+    <!-- ═══ CAMPOS PAGARÉ ═══ -->
+    <div id="campos-pagare">
+      <div class="section-label">Forma de pago</div>
+      <div class="field-row">
+        <div class="field"><label>Número de pagarés</label><input id="f-num-pagares" type="number" min="1" max="60" value="1" oninput="render()"><div class="hint">1 = pago único · 2+ = pagarés en serie (mensuales)</div></div>
+        <div class="field"><label>Primer vencimiento</label><input id="f-vencimiento" type="date" oninput="render()"></div>
+      </div>
+      <div class="calc-box" id="calc-pagare" style="display:none;"></div>
+      <div class="section-label">Aval (opcional)</div>
+      <div class="clause-check"><input type="checkbox" id="f-con-aval" onchange="render()"><label for="f-con-aval">Incluir aval (garantiza el pago con su patrimonio si el deudor no paga)</label></div>
+      <div id="campos-aval" style="display:none;">
+        <div class="field"><label>Nombre del aval</label><input id="f-aval" oninput="render()" placeholder="Nombre completo del aval"></div>
+        <div class="field"><label>Domicilio del aval</label><input id="f-aval-dom" oninput="render()" placeholder="Domicilio completo del aval"></div>
+      </div>
+    </div>
+
+    <!-- ═══ CAMPOS REQUERIMIENTO ═══ -->
+    <div id="campos-requerimiento" style="display:none;">
+      <div class="section-label">Términos del requerimiento</div>
+      <div class="field-row">
+        <div class="field"><label>Plazo para pagar (días hábiles)</label><input id="f-plazo" type="number" min="1" value="5" oninput="render()"></div>
+        <div class="field"><label>Fecha en que venció el adeudo</label><input id="f-fecha-venc-adeudo" type="date" oninput="render()"></div>
+      </div>
+      <div class="field"><label>Datos para pago (cuenta CLABE, banco)</label><input id="f-datos-pago" oninput="render()" placeholder="Ej. CLABE 0123 4567 8901 2345 67, Banco X, a nombre de..."></div>
+      <div class="clause-check"><input type="checkbox" id="f-apercibimiento" checked onchange="render()"><label for="f-apercibimiento">Incluir apercibimiento de acciones legales y reporte a burós de crédito</label></div>
+    </div>
+
+    <!-- ═══ CAMPOS CONVENIO ═══ -->
+    <div id="campos-convenio" style="display:none;">
+      <div class="section-label">Plan de pagos</div>
+      <div class="field-row">
+        <div class="field"><label>Número de parcialidades</label><input id="f-parcialidades" type="number" min="1" max="60" value="6" oninput="render()"></div>
+        <div class="field"><label>Fecha del primer pago</label><input id="f-primer-pago" type="date" oninput="render()"></div>
+      </div>
+      <div class="calc-box" id="calc-convenio" style="display:none;"></div>
+      <div class="clause-check"><input type="checkbox" id="f-venc-anticipado" checked onchange="render()"><label for="f-venc-anticipado">Cláusula de vencimiento anticipado (si falla un pago, se exige todo el saldo)</label></div>
+      <div class="clause-check"><input type="checkbox" id="f-con-pagares" checked onchange="render()"><label for="f-con-pagares">Documentar las parcialidades con pagarés anexos</label></div>
+    </div>
+
+    <!-- ═══ CAMPOS RECIBO ═══ -->
+    <div id="campos-recibo" style="display:none;">
+      <div class="section-label">Detalle del pago recibido</div>
+      <div class="field-row">
+        <div class="field"><label>Monto recibido <span class="req">*</span></label><input id="f-monto-recibido" type="number" min="0" step="0.01" oninput="render()" placeholder="0.00"></div>
+        <div class="field"><label>Forma de pago</label><select id="f-forma-pago" onchange="render()"><option>Transferencia electrónica</option><option>Efectivo</option><option>Cheque</option><option>Depósito bancario</option></select></div>
+      </div>
+      <div class="field"><label>Tipo de recibo</label><select id="f-tipo-recibo" onchange="render()">
+        <option value="abono">Abono a cuenta (pago parcial)</option>
+        <option value="finiquito">Pago total — finiquito del adeudo</option>
+      </select></div>
+      <div class="field" id="campo-saldo"><label>Saldo restante después de este pago</label><input id="f-saldo" type="number" min="0" step="0.01" oninput="render()" placeholder="0.00"></div>
+    </div>
+  </div>
+
+  <div class="preview-panel" id="preview"></div>
+</div>
+
+<script>
+// ════════════════════════════════════════════
+// PRE-CARGA desde el portal (?empresa=&rfc=)
+// ════════════════════════════════════════════
+const qs = new URLSearchParams(location.search);
+document.getElementById('f-acreedor').value = qs.get('empresa') || '';
+document.getElementById('f-fecha').value = new Date().toISOString().slice(0,10);
+
+let tipoActual = 'pagare';
+
+function setTipo(t){
+  tipoActual = t;
+  document.querySelectorAll('.tipo-tab').forEach(x=>x.classList.remove('active'));
+  document.getElementById('tab-'+t).classList.add('active');
+  ['pagare','requerimiento','convenio','recibo'].forEach(x=>{
+    document.getElementById('campos-'+x).style.display = x===t ? 'block' : 'none';
+  });
+  const alertas = {
+    pagare: '📜 El pagaré es un título de crédito (Arts. 170–174 LGTOC): con él puede demandar en la <strong>vía ejecutiva mercantil</strong>, mucho más rápida que un juicio ordinario. Cuide que el suscriptor firme de puño y letra.',
+    requerimiento: '📮 El requerimiento por escrito <strong>constituye en mora</strong> al deudor e interrumpe la prescripción. Entréguelo con acuse de recibo, por correo certificado o burofax; conserve la evidencia.',
+    convenio: '🤝 El reconocimiento de adeudo firmado es prueba plena del débito y <strong>reinicia el plazo de prescripción</strong>. Combínelo con pagarés por parcialidad para tener título ejecutivo.',
+    recibo: '🧾 Entregue siempre recibo al deudor y conserve copia firmada. En pagos parciales, precise el saldo restante para evitar que se alegue pago total.',
+  };
+  document.getElementById('alerta-tipo').innerHTML = alertas[t];
+  render();
+}
+
+document.getElementById('f-con-aval').addEventListener('change', function(){
+  document.getElementById('campos-aval').style.display = this.checked ? 'block' : 'none';
+});
+document.getElementById('f-tipo-recibo').addEventListener('change', function(){
+  document.getElementById('campo-saldo').style.display = this.value==='abono' ? 'block' : 'none';
+});
+
+// ════════════════════════════════════════════
+// NÚMERO A LETRAS (pesos mexicanos)
+// ════════════════════════════════════════════
+function numeroALetras(n){
+  if (isNaN(n) || n === null) return '';
+  const UNI = ['','UNO','DOS','TRES','CUATRO','CINCO','SEIS','SIETE','OCHO','NUEVE','DIEZ','ONCE','DOCE','TRECE','CATORCE','QUINCE','DIECISÉIS','DIECISIETE','DIECIOCHO','DIECINUEVE','VEINTE'];
+  const DEC = ['','','VEINTI','TREINTA','CUARENTA','CINCUENTA','SESENTA','SETENTA','OCHENTA','NOVENTA'];
+  const CEN = ['','CIENTO','DOSCIENTOS','TRESCIENTOS','CUATROCIENTOS','QUINIENTOS','SEISCIENTOS','SETECIENTOS','OCHOCIENTOS','NOVECIENTOS'];
+  function tresDigitos(x){
+    if (x === 0) return '';
+    if (x === 100) return 'CIEN';
+    let s = '';
+    const c = Math.floor(x/100), r = x%100;
+    if (c) s += CEN[c] + ' ';
+    if (r <= 20) s += UNI[r];
+    else {
+      const d = Math.floor(r/10), u = r%10;
+      if (d === 2) s += u ? 'VEINTI' + UNI[u] : 'VEINTE';
+      else { s += DEC[d]; if (u) s += ' Y ' + UNI[u]; }
+    }
+    return s.trim();
+  }
+  const entero = Math.floor(n);
+  const centavos = Math.round((n - entero) * 100);
+  let letras = '';
+  if (entero === 0) letras = 'CERO';
+  else {
+    const millones = Math.floor(entero/1000000);
+    const miles    = Math.floor((entero%1000000)/1000);
+    const resto    = entero%1000;
+    // Apócope ante MIL/MILLONES: veintiuno→veintiún, treinta y uno→treinta y un, uno→un
+    const apoc = s => s.replace(/VEINTIUNO$/,'VEINTIÚN').replace(/UNO$/,'UN');
+    if (millones) letras += (millones===1 ? 'UN MILLÓN' : apoc(tresDigitos(millones))+' MILLONES') + ' ';
+    if (miles)    letras += (miles===1 ? 'MIL' : apoc(tresDigitos(miles))+' MIL') + ' ';
+    if (resto)    letras += tresDigitos(resto);
+    letras = letras.trim();
+  }
+  return `${letras} PESOS ${String(centavos).padStart(2,'0')}/100 M.N.`;
+}
+
+const fmt = n => '$' + Number(n||0).toLocaleString('es-MX',{minimumFractionDigits:2,maximumFractionDigits:2});
+const B = (v, ph) => v ? `<span class="blank">${v}</span>` : `<span class="blank empty">[${ph}]</span>`;
+function fechaLarga(iso){
+  if(!iso) return '';
+  const d = new Date(iso+'T12:00:00');
+  return d.toLocaleDateString('es-MX',{day:'numeric',month:'long',year:'numeric'});
+}
+function sumarMeses(iso, m){
+  const d = new Date(iso+'T12:00:00');
+  d.setMonth(d.getMonth()+m);
+  return d.toISOString().slice(0,10);
+}
+
+// ════════════════════════════════════════════
+// RENDER
+// ════════════════════════════════════════════
+function v(id){ return (document.getElementById(id)?.value || '').trim(); }
+function num(id){ return parseFloat(document.getElementById(id)?.value) || 0; }
+
+function render(){
+  const acreedor = v('f-acreedor'), acreedorDom = v('f-acreedor-dom');
+  const deudor = v('f-deudor'), deudorDom = v('f-deudor-dom');
+  const monto = num('f-monto'), interes = num('f-interes');
+  const concepto = v('f-concepto'), lugar = v('f-lugar'), fecha = v('f-fecha');
+  const prev = document.getElementById('preview');
+
+  if (tipoActual === 'pagare') prev.innerHTML = renderPagares({acreedor,deudor,deudorDom,monto,interes,lugar,fecha});
+  else if (tipoActual === 'requerimiento') prev.innerHTML = renderRequerimiento({acreedor,acreedorDom,deudor,deudorDom,monto,interes,concepto,lugar,fecha});
+  else if (tipoActual === 'convenio') prev.innerHTML = renderConvenio({acreedor,deudor,deudorDom,monto,interes,concepto,lugar,fecha});
+  else prev.innerHTML = renderRecibo({acreedor,deudor,concepto,lugar,fecha});
+}
+
+// ─── PAGARÉ(S) ───
+function renderPagares(d){
+  const nPag = Math.max(1, Math.min(60, num('f-num-pagares')||1));
+  const venc = v('f-vencimiento');
+  const conAval = document.getElementById('f-con-aval').checked;
+  const aval = v('f-aval'), avalDom = v('f-aval-dom');
+  const montoPorPagare = d.monto ? d.monto / nPag : 0;
+
+  const calc = document.getElementById('calc-pagare');
+  if (nPag > 1 && d.monto) {
+    calc.style.display = 'block';
+    calc.innerHTML = `<div class="calc-row"><span>Monto total</span><strong>${fmt(d.monto)}</strong></div>
+      <div class="calc-row total"><span>${nPag} pagarés mensuales de</span><strong>${fmt(montoPorPagare)}</strong></div>`;
+  } else calc.style.display = 'none';
+
+  let hojas = '';
+  for (let i = 1; i <= nPag; i++) {
+    const vencI = venc ? sumarMeses(venc, i-1) : '';
+    hojas += `
+    <div class="doc-sheet pagare-sheet">
+      <div class="pg-head">
+        <div><strong>PAGARÉ</strong> ${nPag>1 ? `No. ${i} de ${nPag}` : ''}</div>
+        <div class="pg-bueno">BUENO POR: ${montoPorPagare ? fmt(montoPorPagare) : '$________'}</div>
+      </div>
+      <div class="doc-p">
+        Debo(emos) y pagaré(mos) incondicionalmente por este PAGARÉ a la orden de
+        ${B(d.acreedor,'nombre del beneficiario')} en ${B(d.lugar,'lugar de pago')},
+        el día ${B(fechaLarga(vencI),'fecha de vencimiento')},
+        la cantidad de ${montoPorPagare ? `<span class="blank">${fmt(montoPorPagare)} (${numeroALetras(montoPorPagare)})</span>` : '<span class="blank empty">[monto en número y letra]</span>'}.
+      </div>
+      <div class="doc-p">
+        Valor recibido a mi (nuestra) entera satisfacción. Este pagaré forma parte de una serie numerada del ${nPag>1 ? `1 al ${nPag}` : '1 al 1'} y todos están sujetos a la condición de que, al no pagarse cualquiera de ellos a su vencimiento, serán exigibles todos los que le sigan en número, además de los ya vencidos, desde la fecha de vencimiento de este documento.
+      </div>
+      <div class="doc-p">
+        De no verificarse el pago de la cantidad que este pagaré expresa el día de su vencimiento, causará intereses moratorios al tipo de ${d.interes ? `<span class="blank">${d.interes}% (${d.interes} por ciento)</span>` : B('','tasa')} mensual, pagaderos en esta ciudad juntamente con el principal, sin que por esto se entienda prorrogado el plazo.
+      </div>
+      <div class="doc-p" style="margin-top:24px;">
+        ${B(d.lugar,'lugar')}, a ${B(fechaLarga(v('f-fecha')),'fecha de suscripción')}.
+      </div>
+      <div class="${conAval ? 'doc-firma-grid' : 'doc-firma-solo'}">
+        <div class="firma-box">
+          ${B(d.deudor,'nombre del suscriptor')}<br>
+          <span style="font-size:9pt;">${d.deudorDom || '[domicilio del suscriptor]'}</span>
+          <strong>SUSCRIPTOR (deudor) — firma</strong>
+        </div>
+        ${conAval ? `<div class="firma-box">
+          Por aval: ${B(aval,'nombre del aval')}<br>
+          <span style="font-size:9pt;">${avalDom || '[domicilio del aval]'}</span>
+          <strong>AVAL — firma</strong>
+        </div>` : ''}
+      </div>
+    </div>`;
+  }
+  return hojas;
+}
+
+// ─── REQUERIMIENTO DE PAGO ───
+function renderRequerimiento(d){
+  const plazo = num('f-plazo') || 5;
+  const fVenc = v('f-fecha-venc-adeudo');
+  const datosPago = v('f-datos-pago');
+  const aperc = document.getElementById('f-apercibimiento').checked;
+  return `
+  <div class="doc-sheet">
+    <div style="text-align:right;font-family:var(--font-ui);font-size:10pt;color:#666;margin-bottom:20px;">${B(d.lugar,'lugar')}, a ${B(fechaLarga(d.fecha),'fecha')}</div>
+    <div class="doc-p" style="margin-bottom:4px;"><strong>${B(d.deudor,'nombre del deudor')}</strong></div>
+    <div class="doc-p" style="font-size:10.5pt;">${d.deudorDom || '[domicilio del deudor]'}</div>
+    <div class="doc-title" style="margin-top:24px;">Requerimiento formal de pago</div>
+    <div class="doc-p" style="margin-top:20px;">
+      Por medio del presente, y en representación de ${B(d.acreedor,'acreedor')}, me permito requerirle formalmente el pago de la cantidad de
+      ${d.monto ? `<span class="blank">${fmt(d.monto)} (${numeroALetras(d.monto)})</span>` : '<span class="blank empty">[monto]</span>'},
+      que adeuda con motivo de ${B(d.concepto,'origen del adeudo')}${fVenc ? `, obligación que resultó exigible desde el ${B(fechaLarga(fVenc),'')}` : ''}, sin que a la fecha haya sido cubierta.
+    </div>
+    <div class="doc-p">
+      En consecuencia, se le concede un plazo improrrogable de <span class="blank">${plazo} (${plazo==1?'un':plazo}) días hábiles</span> contados a partir de la recepción del presente, para que realice el pago íntegro del adeudo${d.interes ? `, más los intereses moratorios generados a razón del <span class="blank">${d.interes}% mensual</span>` : ''}.
+    </div>
+    ${datosPago ? `<div class="doc-p">El pago podrá realizarse mediante: <span class="blank">${datosPago}</span>. Una vez efectuado, le agradeceré remitir el comprobante para la emisión de su recibo correspondiente.</div>` : ''}
+    ${aperc ? `<div class="doc-p">En caso de no obtener el pago dentro del plazo señalado, mi representada procederá, sin necesidad de ulterior aviso, al ejercicio de las <strong>acciones legales</strong> que en derecho correspondan para la recuperación del adeudo, sus intereses, gastos y costas, así como al reporte de la cuenta ante las sociedades de información crediticia, con las consecuencias que ello implica para su historial.</div>` : ''}
+    <div class="doc-p">
+      El presente requerimiento constituye interpelación formal para todos los efectos legales a que haya lugar. Quedo a sus órdenes para cualquier aclaración.
+    </div>
+    <div class="doc-firma-solo">
+      <div class="firma-box">
+        ${B(d.acreedor,'acreedor')}<br>
+        <span style="font-size:9pt;">${d.acreedorDom || ''}</span>
+        <strong>ACREEDOR / REPRESENTANTE — firma</strong>
+      </div>
+    </div>
+    <div style="margin-top:36px;font-size:10pt;font-family:var(--font-ui);color:#555;border-top:1px dashed #bbb;padding-top:10px;">
+      Acuse de recibo: nombre ____________________________  firma ____________  fecha ____ / ____ / ______
+    </div>
+  </div>`;
+}
+
+// ─── RECONOCIMIENTO DE ADEUDO + CONVENIO ───
+function renderConvenio(d){
+  const nPar = Math.max(1, Math.min(60, num('f-parcialidades')||1));
+  const primerPago = v('f-primer-pago');
+  const vencAnt = document.getElementById('f-venc-anticipado').checked;
+  const conPagares = document.getElementById('f-con-pagares').checked;
+  const parcialidad = d.monto ? d.monto / nPar : 0;
+
+  const calc = document.getElementById('calc-convenio');
+  if (d.monto) {
+    calc.style.display = 'block';
+    calc.innerHTML = `<div class="calc-row"><span>Adeudo reconocido</span><strong>${fmt(d.monto)}</strong></div>
+      <div class="calc-row total"><span>${nPar} parcialidad(es) mensual(es) de</span><strong>${fmt(parcialidad)}</strong></div>`;
+  } else calc.style.display = 'none';
+
+  let filas = '';
+  for (let i=1; i<=nPar; i++){
+    const f = primerPago ? fechaLarga(sumarMeses(primerPago, i-1)) : '—';
+    filas += `<tr><td style="text-align:center;">${i}</td><td>${f}</td><td style="text-align:right;">${fmt(parcialidad)}</td></tr>`;
+  }
+
+  return `
+  <div class="doc-sheet">
+    <div class="doc-title">Reconocimiento de adeudo y convenio de pago</div>
+    <div class="doc-subtitle">Que celebran ${d.acreedor||'[acreedor]'} ("EL ACREEDOR") y ${d.deudor||'[deudor]'} ("EL DEUDOR")</div>
+    <div class="doc-clause-title">Declaraciones</div>
+    <div class="doc-p">
+      <strong>I.</strong> Declara EL DEUDOR, ${B(d.deudor,'nombre del deudor')}, con domicilio en ${B(d.deudorDom,'domicilio')}, que <strong>reconoce adeudar</strong> a EL ACREEDOR la cantidad de ${d.monto ? `<span class="blank">${fmt(d.monto)} (${numeroALetras(d.monto)})</span>` : '<span class="blank empty">[monto]</span>'}, derivada de ${B(d.concepto,'origen del adeudo')}, cantidad líquida y exigible que se obliga a pagar en los términos del presente convenio.
+    </div>
+    <div class="doc-p"><strong>II.</strong> Declara EL ACREEDOR que acepta recibir el pago del adeudo conforme al plan de pagos pactado, sin que ello implique novación, quita ni condonación de la obligación original.</div>
+    <div class="doc-clause-title">Cláusulas</div>
+    <div class="doc-p"><strong>PRIMERA — Plan de pagos.</strong> EL DEUDOR pagará el adeudo en ${nPar} parcialidad(es) mensual(es) y consecutiva(s), conforme al siguiente calendario:</div>
+    <table class="doc-table">
+      <thead><tr><th style="width:60px;">No.</th><th>Fecha límite de pago</th><th style="text-align:right;">Importe</th></tr></thead>
+      <tbody>${filas}</tbody>
+      <tfoot><tr><td colspan="2" style="text-align:right;font-weight:bold;">TOTAL</td><td style="text-align:right;font-weight:bold;">${fmt(d.monto)}</td></tr></tfoot>
+    </table>
+    ${d.interes ? `<div class="doc-p"><strong>SEGUNDA — Interés moratorio.</strong> La falta de pago puntual de cualquier parcialidad causará un interés moratorio del <span class="blank">${d.interes}% mensual</span> sobre el saldo insoluto, desde la fecha de incumplimiento y hasta su total liquidación.</div>` : ''}
+    ${vencAnt ? `<div class="doc-p"><strong>${d.interes?'TERCERA':'SEGUNDA'} — Vencimiento anticipado.</strong> El incumplimiento de una sola parcialidad dará derecho a EL ACREEDOR a dar por vencido anticipadamente el plazo y a exigir de inmediato el pago del saldo total insoluto, más intereses y accesorios, sin necesidad de declaración judicial previa.</div>` : ''}
+    ${conPagares ? `<div class="doc-p"><strong>Documentación.</strong> Las parcialidades se documentan mediante ${nPar} pagaré(s) suscritos en este acto por EL DEUDOR, que EL ACREEDOR devolverá conforme sean pagados. La suscripción de dichos títulos no extingue ni nova la obligación de origen.</div>` : ''}
+    <div class="doc-p"><strong>Jurisdicción.</strong> Para la interpretación y cumplimiento del presente, las partes se someten a los tribunales competentes de ${B(d.lugar,'ciudad')}, renunciando a cualquier otro fuero que pudiera corresponderles.</div>
+    <div class="doc-p" style="margin-top:20px;">Leído el presente y enteradas las partes de su contenido y alcance legal, lo firman por duplicado en ${B(d.lugar,'lugar')}, a ${B(fechaLarga(d.fecha),'fecha')}.</div>
+    <div class="doc-firma-grid">
+      <div class="firma-box">${B(d.acreedor,'acreedor')}<strong>EL ACREEDOR</strong></div>
+      <div class="firma-box">${B(d.deudor,'deudor')}<strong>EL DEUDOR</strong></div>
+    </div>
+    <div class="doc-firma-grid" style="margin-top:36px;">
+      <div class="firma-box">Nombre y firma<strong>TESTIGO 1</strong></div>
+      <div class="firma-box">Nombre y firma<strong>TESTIGO 2</strong></div>
+    </div>
+  </div>`;
+}
+
+// ─── RECIBO DE PAGO ───
+function renderRecibo(d){
+  const monto = num('f-monto-recibido');
+  const forma = v('f-forma-pago') || 'Transferencia electrónica';
+  const tipoR = document.getElementById('f-tipo-recibo').value;
+  const saldo = num('f-saldo');
+  return `
+  <div class="doc-sheet" style="min-height:auto;">
+    <div class="doc-title">Recibo de pago${tipoR==='finiquito' ? ' — finiquito de adeudo' : ' — abono a cuenta'}</div>
+    <div class="doc-subtitle">${B(d.lugar,'lugar')}, a ${fechaLarga(d.fecha)||'[fecha]'}</div>
+    <div class="doc-p">
+      Recibí de ${B(d.deudor,'nombre de quien paga')} la cantidad de
+      ${monto ? `<span class="blank">${fmt(monto)} (${numeroALetras(monto)})</span>` : '<span class="blank empty">[monto]</span>'},
+      mediante ${B(forma,'forma de pago')}, por concepto de ${tipoR==='finiquito' ? 'pago total y finiquito' : 'abono a cuenta'} del adeudo derivado de ${B(d.concepto,'origen del adeudo')}.
+    </div>
+    ${tipoR==='finiquito'
+      ? `<div class="doc-p">Con la recepción de la cantidad señalada, el suscrito otorga a favor del pagador el <strong>recibo y finiquito más amplio que en derecho proceda</strong> respecto del adeudo mencionado, manifestando que no se reserva acción ni derecho alguno que ejercitar en su contra por ese concepto.</div>`
+      : `<div class="doc-p">El presente pago se aplica como <strong>abono a cuenta</strong> del adeudo referido, quedando un <strong>saldo pendiente de ${saldo ? `<span class="blank">${fmt(saldo)} (${numeroALetras(saldo)})</span>` : '<span class="blank empty">[saldo]</span>'}</strong>, que continúa vigente y exigible en los términos originalmente pactados. Este recibo no implica quita, novación ni condonación del saldo restante.</div>`}
+    <div class="doc-firma-solo">
+      <div class="firma-box">${B(d.acreedor,'quien recibe el pago')}<strong>RECIBÍ — nombre y firma</strong></div>
+    </div>
+  </div>`;
+}
+
+setTipo('pagare');
+</script>
+</body>
+</html>

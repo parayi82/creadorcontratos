@@ -1,0 +1,134 @@
+[build]
+  publish = "."
+  functions = "netlify/functions"
+
+# Rutas limpias: el frontend llama a /api/... en vez de /.netlify/functions/...
+[[redirects]]
+  from = "/api/crear-suscripcion"
+  to = "/.netlify/functions/crear-suscripcion"
+  status = 200
+
+[[redirects]]
+  from = "/api/stripe-webhook"
+  to = "/.netlify/functions/stripe-webhook"
+  status = 200
+
+[[redirects]]
+  from = "/api/solicitudes-admin"
+  to = "/.netlify/functions/solicitudes-admin"
+  status = 200
+
+[[redirects]]
+  from = "/api/registrar-referidor"
+  to = "/.netlify/functions/registrar-referidor"
+  status = 200
+
+[[redirects]]
+  from = "/api/historial-pagos"
+  to = "/.netlify/functions/historial-pagos"
+  status = 200
+
+[[redirects]]
+  from = "/api/gestionar-despachos"
+  to = "/.netlify/functions/gestionar-despachos"
+  status = 200
+
+[[redirects]]
+  from = "/api/buscar-cliente-admin"
+  to = "/.netlify/functions/buscar-cliente-admin"
+  status = 200
+
+[[redirects]]
+  from = "/api/crear-cliente-admin"
+  to = "/.netlify/functions/crear-cliente-admin"
+  status = 200
+
+[[redirects]]
+  from = "/api/guardar-documento-expediente"
+  to = "/.netlify/functions/guardar-documento-expediente"
+  status = 200
+
+[[redirects]]
+  from = "/api/subir-archivo-expediente"
+  to = "/.netlify/functions/subir-archivo-expediente"
+  status = 200
+
+[[redirects]]
+  from = "/api/mutar-datos-cliente"
+  to = "/.netlify/functions/mutar-datos-cliente"
+  status = 200
+
+[[redirects]]
+  from = "/api/actualizar-config-cliente"
+  to = "/.netlify/functions/actualizar-config-cliente"
+  status = 200
+
+[[redirects]]
+  from = "/api/cancelar-suscripcion"
+  to = "/.netlify/functions/cancelar-suscripcion"
+  status = 200
+
+[[redirects]]
+  from = "/api/portal-facturacion"
+  to = "/.netlify/functions/portal-facturacion"
+  status = 200
+
+# ── Bloqueo de archivos internos ──────────────────────────────────────────────
+# publish = "." sirve TODO el directorio. Sin estas reglas, cualquiera podía
+# descargar el esquema completo de la base de datos abriendo, por ejemplo,
+# https://clicklaboral.mx/EJECUTAR-EN-SUPABASE.sql
+# robots.txt no sirve para esto: solo pide a los buscadores que no indexen,
+# no impide la descarga directa.
+# force = true es indispensable — sin él, el archivo existente gana sobre la regla.
+
+[[redirects]]
+  from = "/*.sql"
+  to = "/index.html"
+  status = 404
+  force = true
+
+[[redirects]]
+  from = "/_db/*"
+  to = "/index.html"
+  status = 404
+  force = true
+
+[[redirects]]
+  from = "/_interno/*"
+  to = "/index.html"
+  status = 404
+  force = true
+
+# ── Headers de seguridad ──────────────────────────────────────────────────────
+[[headers]]
+  for = "/*"
+  [headers.values]
+    X-Frame-Options = "SAMEORIGIN"
+    X-Content-Type-Options = "nosniff"
+    X-XSS-Protection = "1; mode=block"
+    Referrer-Policy = "strict-origin-when-cross-origin"
+    Permissions-Policy = "camera=(), microphone=(), geolocation=()"
+    Strict-Transport-Security = "max-age=31536000; includeSubDomains; preload"
+    Content-Security-Policy = "default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval' https://cdn.jsdelivr.net https://cdnjs.cloudflare.com https://js.stripe.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com https://cdnjs.cloudflare.com; font-src 'self' https://fonts.gstatic.com; img-src 'self' data: https: blob:; connect-src 'self' https://*.supabase.co https://api.stripe.com; frame-src https://js.stripe.com https://hooks.stripe.com; object-src 'none';"
+
+[[redirects]]
+  from = "/api/notificaciones-laborales"
+  to = "/.netlify/functions/notificaciones-laborales"
+  status = 200
+
+# Caché largo para assets estáticos con cache-busting en URL
+[[headers]]
+  for = "/*.js"
+  [headers.values]
+    Cache-Control = "public, max-age=31536000, immutable"
+
+[[headers]]
+  for = "/*.css"
+  [headers.values]
+    Cache-Control = "public, max-age=31536000, immutable"
+
+# HTML nunca en caché
+[[headers]]
+  for = "/*.html"
+  [headers.values]
+    Cache-Control = "no-cache, no-store, must-revalidate"

@@ -1,0 +1,393 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ClickLaboral.mx · Biblioteca de Documentos</title>
+<style>
+  :root{--ink:#1a1a18;--ink2:#4a4a46;--ink3:#8a8a84;--surface:#f4f3ef;--white:#ffffff;--accent:#1a3a5c;--accent-light:#e8f0f8;--border:#ddddd6;--radius:10px;--font:'Segoe UI',system-ui,sans-serif;}
+  *{box-sizing:border-box;margin:0;padding:0;}
+  body{font-family:var(--font);background:var(--surface);color:var(--ink);min-height:100vh;}
+
+  /* Header */
+  .top-bar{background:var(--accent);padding:0 40px;display:flex;align-items:center;justify-content:space-between;height:60px;}
+  .logo{color:#fff;font-size:16px;font-weight:700;letter-spacing:-.01em;}
+  .logo span{opacity:.55;font-weight:400;font-size:13px;margin-left:10px;}
+  .top-badge{background:rgba(255,255,255,.12);color:rgba(255,255,255,.9);font-size:11px;padding:4px 12px;border-radius:20px;border:1px solid rgba(255,255,255,.2);}
+
+  /* Hero */
+  .hero{background:var(--accent);padding:0 40px 48px;color:#fff;}
+  .hero-inner{max-width:900px;}
+  .hero h2{font-size:28px;font-weight:700;margin-bottom:8px;letter-spacing:-.02em;}
+  .hero p{font-size:15px;opacity:.7;max-width:520px;line-height:1.6;}
+  .hero-stats{display:flex;gap:32px;margin-top:28px;}
+  .stat{text-align:left;}
+  .stat-num{font-size:28px;font-weight:700;color:#fff;}
+  .stat-lbl{font-size:12px;opacity:.6;margin-top:2px;}
+
+  /* Main */
+  .main{max-width:1100px;margin:0 auto;padding:40px 40px 80px;}
+
+  /* Category */
+  .cat-label{font-size:11px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--ink3);margin:36px 0 16px;}
+  .cat-label:first-child{margin-top:0;}
+
+  .doc-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:14px;}
+
+  .doc-card{background:var(--white);border:1px solid var(--border);border-radius:var(--radius);padding:20px 22px;cursor:pointer;transition:box-shadow .18s,transform .18s,border-color .18s;text-decoration:none;display:block;color:inherit;}
+  .doc-card:hover{box-shadow:0 4px 20px rgba(0,0,0,.1);transform:translateY(-2px);border-color:#b8c8d8;}
+
+  .card-top{display:flex;align-items:flex-start;gap:14px;margin-bottom:14px;}
+  .card-icon{width:42px;height:42px;border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:20px;flex-shrink:0;}
+  .icon-blue{background:#e8f0f8;}
+  .icon-green{background:#e8f5ee;}
+  .icon-amber{background:#fef3e2;}
+  .icon-red{background:#fdecea;}
+  .icon-purple{background:#f0eeff;}
+  .card-info{flex:1;}
+  .card-title{font-size:14px;font-weight:600;color:var(--ink);margin-bottom:3px;line-height:1.3;}
+  .card-meta{font-size:12px;color:var(--ink3);}
+
+  .card-tags{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:14px;}
+  .tag{font-size:10px;padding:3px 9px;border-radius:20px;font-weight:500;}
+  .tag-lft{background:#e8f0f8;color:#1a3a5c;}
+  .tag-lisr{background:#fef3e2;color:#7a5c00;}
+  .tag-imss{background:#e8f5ee;color:#1a5c2a;}
+  .tag-stps{background:#f0eeff;color:#3a1a7a;}
+
+  .card-desc{font-size:12px;color:var(--ink2);line-height:1.5;margin-bottom:14px;}
+  .card-foot{display:flex;align-items:center;justify-content:space-between;}
+  .card-art{font-size:11px;color:var(--ink3);}
+  .open-btn{font-size:12px;font-weight:500;color:var(--accent);background:var(--accent-light);padding:5px 14px;border-radius:6px;border:none;cursor:pointer;transition:background .15s;}
+  .open-btn:hover{background:#d0e0f0;}
+
+  /* Status indicators */
+  .status-dot{width:7px;height:7px;border-radius:50%;display:inline-block;margin-right:5px;}
+  .dot-green{background:#22c55e;}
+
+  /* Checklist card */
+  .checklist-card{background:var(--white);border:1px solid var(--border);border-radius:var(--radius);padding:24px 28px;margin-top:36px;}
+  .checklist-card h3{font-size:15px;font-weight:600;margin-bottom:16px;color:var(--ink);}
+  .checklist-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px;}
+  .chk-item{display:flex;align-items:center;gap:10px;font-size:13px;color:var(--ink2);padding:8px 10px;border-radius:6px;background:var(--surface);}
+  .chk-item input[type=checkbox]{accent-color:var(--accent);width:15px;height:15px;}
+
+  footer{text-align:center;padding:20px;font-size:12px;color:var(--ink3);border-top:1px solid var(--border);}
+</style>
+</head>
+<body>
+
+<div class="top-bar">
+  <div class="logo">ClickLaboral.mx <span>Biblioteca de Documentos</span></div>
+  <div class="top-badge">✦ PyMEs · México</div>
+</div>
+
+<div class="hero">
+  <div class="hero-inner">
+    <h2>Biblioteca de compliance laboral</h2>
+    <p>Todos los documentos listos para generar, personalizados por empresa. Conforme a la LFT vigente, LISR y NOMs aplicables.</p>
+    <div class="hero-stats">
+      <div class="stat"><div class="stat-num">13</div><div class="stat-lbl">Generadores</div></div>
+      <div class="stat"><div class="stat-num">19+</div><div class="stat-lbl">Tipos de documento</div></div>
+      <div class="stat"><div class="stat-num">5</div><div class="stat-lbl">Modalidades contractuales</div></div>
+      <div class="stat"><div class="stat-num">∞</div><div class="stat-lbl">Documentos generables</div></div>
+    </div>
+  </div>
+</div>
+
+<div class="main">
+
+  <div class="cat-label">🗂 Proceso de contratación</div>
+  <div class="doc-grid">
+
+    <a class="doc-card" href="proceso-contratacion.html" target="_blank">
+      <div class="card-top">
+        <div class="card-icon icon-green">📋</div>
+        <div class="card-info">
+          <div class="card-title">Checklist de Entrevista + Expediente</div>
+          <div class="card-meta"><span class="status-dot dot-green"></span>Listo · 2 modalidades en 1</div>
+        </div>
+      </div>
+      <div class="card-tags"><span class="tag tag-lft">Art. 804 LFT</span><span class="tag tag-imss">IMSS</span></div>
+      <div class="card-desc">Checklist de verificación de candidato antes de contratar, y carátula de expediente con 15 documentos a integrar. Incluye barra de avance de integración documental.</div>
+      <div class="card-foot"><span class="card-art">Entrevista · Expediente</span><button class="open-btn">Abrir →</button></div>
+    </a>
+
+  </div>
+
+  <div class="cat-label">📄 Contratos individuales de trabajo</div>
+  <div class="doc-grid">
+
+    <a class="doc-card" href="contrato-tiempo-determinado.html" target="_blank">
+      <div class="card-top">
+        <div class="card-icon icon-blue">⏱</div>
+        <div class="card-info">
+          <div class="card-title">Contrato por Tiempo Determinado</div>
+          <div class="card-meta"><span class="status-dot dot-green"></span>Listo · Auto-generación</div>
+        </div>
+      </div>
+      <div class="card-tags"><span class="tag tag-lft">Arts. 35–36 LFT</span><span class="tag tag-imss">IMSS</span></div>
+      <div class="card-desc">Con causa objetiva justificada. Incluye 6 causas predefinidas, cláusulas opcionales (NOM-035, confidencialidad, REPSE) y conversión automática.</div>
+      <div class="card-foot"><span class="card-art">6 causas · Cláusulas opcionales</span><button class="open-btn">Abrir →</button></div>
+    </a>
+
+    <a class="doc-card" href="contrato-indeterminado.html" target="_blank">
+      <div class="card-top">
+        <div class="card-icon icon-green">📋</div>
+        <div class="card-info">
+          <div class="card-title">Contrato por Tiempo Indeterminado</div>
+          <div class="card-meta"><span class="status-dot dot-green"></span>Listo · Auto-generación</div>
+        </div>
+      </div>
+      <div class="card-tags"><span class="tag tag-lft">Art. 35 LFT</span><span class="tag tag-imss">IMSS</span></div>
+      <div class="card-desc">El contrato estándar para relaciones permanentes. Incluye prestaciones superiores opcionales: fondo de ahorro, vales, SGMM, bonos.</div>
+      <div class="card-foot"><span class="card-art">Prestaciones superiores · 7 cláusulas opt.</span><button class="open-btn">Abrir →</button></div>
+    </a>
+
+    <a class="doc-card" href="contrato-prueba.html" target="_blank">
+      <div class="card-top">
+        <div class="card-icon icon-amber">🔬</div>
+        <div class="card-info">
+          <div class="card-title">Contrato a Período de Prueba</div>
+          <div class="card-meta"><span class="status-dot dot-green"></span>Listo · Auto-generación</div>
+        </div>
+      </div>
+      <div class="card-tags"><span class="tag tag-lft">Art. 39-A LFT</span></div>
+      <div class="card-desc">30 días generales / 180 días dirección. Calcula automáticamente la fecha de término y valida el límite legal. Criterios de evaluación personalizables.</div>
+      <div class="card-foot"><span class="card-art">Cálculo automático de fechas</span><button class="open-btn">Abrir →</button></div>
+    </a>
+
+    <a class="doc-card" href="contrato-capacitacion.html" target="_blank">
+      <div class="card-top">
+        <div class="card-icon icon-purple">🎓</div>
+        <div class="card-info">
+          <div class="card-title">Contrato de Capacitación Inicial</div>
+          <div class="card-meta"><span class="status-dot dot-green"></span>Listo · Auto-generación</div>
+        </div>
+      </div>
+      <div class="card-tags"><span class="tag tag-lft">Art. 39-B LFT</span></div>
+      <div class="card-desc">3 meses generales / 6 meses especializados. Programa de capacitación, criterios de evaluación y cláusula de reembolso proporcional opcional.</div>
+      <div class="card-foot"><span class="card-art">Cálculo por meses · Plan de capacit.</span><button class="open-btn">Abrir →</button></div>
+    </a>
+
+    <a class="doc-card" href="contratos-especiales.html" target="_blank">
+      <div class="card-top">
+        <div class="card-icon icon-amber">💼</div>
+        <div class="card-info">
+          <div class="card-title">Comisionista + Asimilados a Salarios</div>
+          <div class="card-meta"><span class="status-dot dot-green"></span>Listo · 2 modalidades</div>
+        </div>
+      </div>
+      <div class="card-tags"><span class="tag tag-lft">Arts. 285–289 LFT</span><span class="tag tag-lisr">Art. 94 LISR</span></div>
+      <div class="card-desc">Comisionista laboral (con IMSS) y asimilados a salarios fiscales (directivos, consejeros). Alerta sobre diferencias de régimen incluida.</div>
+      <div class="card-foot"><span class="card-art">Comisión escalon. · Retención ISR</span><button class="open-btn">Abrir →</button></div>
+    </a>
+
+  </div>
+
+  <div class="cat-label">⚠️ Disciplina laboral</div>
+  <div class="doc-grid">
+
+    <a class="doc-card" href="acta-administrativa.html" target="_blank">
+      <div class="card-top">
+        <div class="card-icon icon-red">📝</div>
+        <div class="card-info">
+          <div class="card-title">Acta Administrativa</div>
+          <div class="card-meta"><span class="status-dot dot-green"></span>Listo · 3 modalidades en 1</div>
+        </div>
+      </div>
+      <div class="card-tags"><span class="tag tag-lft">Arts. 47 y 110 LFT</span></div>
+      <div class="card-desc">Un solo generador con tres tipos: Apercibimiento, Suspensión sin goce (máx. 8 días) y Rescisión. Incluye 12 tipos de falta, cálculo automático de días y 14 causales del art. 47 LFT.</div>
+      <div class="card-foot"><span class="card-art">Apercibimiento · Suspensión · Rescisión</span><button class="open-btn">Abrir →</button></div>
+    </a>
+
+  </div>
+
+  <div class="cat-label">📚 Normativa interna</div>
+  <div class="doc-grid">
+
+    <a class="doc-card" href="reglamento-interior.html" target="_blank">
+      <div class="card-top">
+        <div class="card-icon icon-purple">📖</div>
+        <div class="card-info">
+          <div class="card-title">Reglamento Interior de Trabajo</div>
+          <div class="card-meta"><span class="status-dot dot-green"></span>Listo · Auto-generación</div>
+        </div>
+      </div>
+      <div class="card-tags"><span class="tag tag-lft">Art. 423 LFT</span><span class="tag tag-stps">NOM-035</span></div>
+      <div class="card-desc">Reglamento completo con 12 capítulos: jornadas, vacaciones, salarios, disciplina, seguridad e higiene, acoso, NOM-035, teletrabajo y datos personales. Lista de verificación para depósito ante CFCRL.</div>
+      <div class="card-foot"><span class="card-art">12 capítulos · Depósito CFCRL</span><button class="open-btn">Abrir →</button></div>
+    </a>
+
+    <a class="doc-card" href="nom035-evaluacion.html" target="_blank">
+      <div class="card-top">
+        <div class="card-icon icon-purple">🧠</div>
+        <div class="card-info">
+          <div class="card-title">Evaluación NOM-035 STPS</div>
+          <div class="card-meta"><span class="status-dot dot-green"></span>Listo · Calificación automática</div>
+        </div>
+      </div>
+      <div class="card-tags"><span class="tag tag-stps">NOM-035</span></div>
+      <div class="card-desc">Aplicación de las Guías de Referencia I (acontecimientos traumáticos), II (hasta 50 trabajadores) y III (más de 50). Calcula automáticamente el nivel de riesgo por categoría y dominio conforme a las tablas oficiales, y genera el informe de resultados para el expediente.</div>
+      <div class="card-foot"><span class="card-art">Guías I · II · III · Nivel de riesgo</span><button class="open-btn">Abrir →</button></div>
+    </a>
+
+  </div>
+
+  <div class="cat-label">📤 Cartas y salida laboral</div>
+  <div class="doc-grid">
+
+    <a class="doc-card" href="cartas-laborales.html" target="_blank">
+      <div class="card-top">
+        <div class="card-icon icon-blue">📤</div>
+        <div class="card-info">
+          <div class="card-title">Cartas Laborales</div>
+          <div class="card-meta"><span class="status-dot dot-green"></span>Listo · 4 modalidades en 1</div>
+        </div>
+      </div>
+      <div class="card-tags"><span class="tag tag-lft">Salida y referencias</span></div>
+      <div class="card-desc">Renuncia voluntaria, recomendación laboral, constancia/comprobante de empleo y convenio de terminación con cálculo automático de finiquito (aguinaldo proporcional, vacaciones y prima vacacional).</div>
+      <div class="card-foot"><span class="card-art">Renuncia · Recomendación · Constancia · Finiquito</span><button class="open-btn">Abrir →</button></div>
+    </a>
+
+  </div>
+
+  <div class="cat-label">🗓 Permisos y ausencias</div>
+  <div class="doc-grid">
+
+    <a class="doc-card" href="permisos-ausencias.html" target="_blank">
+      <div class="card-top">
+        <div class="card-icon icon-green">🗓</div>
+        <div class="card-info">
+          <div class="card-title">Permisos y Ausencias</div>
+          <div class="card-meta"><span class="status-dot dot-green"></span>Listo · 4 modalidades en 1</div>
+        </div>
+      </div>
+      <div class="card-tags"><span class="tag tag-imss">IMSS</span></div>
+      <div class="card-desc">Solicitud y autorización de permiso, acuerdo sobre falta o inasistencia, aviso de incapacidad (enlace IMSS) y aviso de vacaciones con cálculo de días y fecha de reincorporación.</div>
+      <div class="card-foot"><span class="card-art">Permiso · Falta · Incapacidad · Vacaciones</span><button class="open-btn">Abrir →</button></div>
+    </a>
+
+  </div>
+
+  <div class="cat-label">🧰 Asignación de recursos</div>
+  <div class="doc-grid">
+
+    <a class="doc-card" href="asignacion-recursos.html" target="_blank">
+      <div class="card-top">
+        <div class="card-icon icon-amber">🧰</div>
+        <div class="card-info">
+          <div class="card-title">Resguardo de Activos</div>
+          <div class="card-meta"><span class="status-dot dot-green"></span>Listo · 3 modalidades en 1</div>
+        </div>
+      </div>
+      <div class="card-tags"><span class="tag tag-lft">Art. 110 LFT</span></div>
+      <div class="card-desc">Carta resguardo de herramientas/equipo, uniformes y vehículo de la empresa, con cláusulas de responsabilidad, devolución y condiciones de uso.</div>
+      <div class="card-foot"><span class="card-art">Herramientas · Uniformes · Vehículo</span><button class="open-btn">Abrir →</button></div>
+    </a>
+
+    <a class="doc-card" href="convenio-modificatorio.html" target="_blank">
+      <div class="card-top">
+        <div class="card-icon icon-amber">📝</div>
+        <div class="card-info">
+          <div class="card-title">Convenio Modificatorio</div>
+          <div class="card-meta"><span class="status-dot dot-green"></span>Listo · Prellenable desde el historial</div>
+        </div>
+      </div>
+      <div class="card-tags"><span class="tag tag-lft">Arts. 25 y 33 LFT</span></div>
+      <div class="card-desc">Documenta por escrito cambios de puesto, salario, jornada o turno con cláusulas de subsistencia del contrato, reconocimiento de antigüedad y no renuncia de derechos.</div>
+      <div class="card-foot"><span class="card-art">Puesto · Salario · Jornada · Turno</span><button class="open-btn">Abrir →</button></div>
+    </a>
+
+  </div>
+
+  <div class="cat-label">⏰ Horario y modificaciones contractuales</div>
+  <div class="doc-grid">
+
+    <a class="doc-card" href="horario-anexos.html" target="_blank">
+      <div class="card-top">
+        <div class="card-icon icon-purple">⏰</div>
+        <div class="card-info">
+          <div class="card-title">Horario y Anexos al Contrato</div>
+          <div class="card-meta"><span class="status-dot dot-green"></span>Listo · 2 modalidades en 1</div>
+        </div>
+      </div>
+      <div class="card-tags"><span class="tag tag-lft">Arts. 58–68 LFT</span></div>
+      <div class="card-desc">Asignación o cambio de horario laboral con comparativo automático, y anexo modificatorio al contrato para puesto, salario, horario o domicilio del centro de trabajo.</div>
+      <div class="card-foot"><span class="card-art">Cambio de horario · Anexo modificatorio</span><button class="open-btn">Abrir →</button></div>
+    </a>
+
+  </div>
+
+  <div class="cat-label">💰 Convenios económicos</div>
+  <div class="doc-grid">
+
+    <a class="doc-card" href="convenios-economicos.html" target="_blank">
+      <div class="card-top">
+        <div class="card-icon icon-green">💰</div>
+        <div class="card-info">
+          <div class="card-title">Préstamos y Bonos</div>
+          <div class="card-meta"><span class="status-dot dot-green"></span>Listo · 2 modalidades en 1</div>
+        </div>
+      </div>
+      <div class="card-tags"><span class="tag tag-lft">Art. 110 LFT</span></div>
+      <div class="card-desc">Convenio de préstamo con descuento vía nómina (cálculo automático de parcialidades) y convenio/carta de otorgamiento de bono con cláusula de no integración salarial.</div>
+      <div class="card-foot"><span class="card-art">Préstamo sobre nómina · Bono</span><button class="open-btn">Abrir →</button></div>
+    </a>
+
+  </div>
+
+  <div class="cat-label">🔒 Confidencialidad y contratos civiles</div>
+  <div class="doc-grid">
+
+    <a class="doc-card" href="confidencialidad-civiles.html" target="_blank">
+      <div class="card-top">
+        <div class="card-icon icon-red">🔒</div>
+        <div class="card-info">
+          <div class="card-title">Confidencialidad / Servicios / Consultoría</div>
+          <div class="card-meta"><span class="status-dot dot-green"></span>Listo · 4 modalidades en 1</div>
+        </div>
+      </div>
+      <div class="card-tags"><span class="tag tag-lisr">Civil/mercantil</span></div>
+      <div class="card-desc">Acuerdos de confidencialidad unilateral y bilateral (NDA), y contratos civiles de prestación de servicios y consultoría para freelancers, con cláusula expresa de no relación laboral.</div>
+      <div class="card-foot"><span class="card-art">NDA Unilateral · NDA Bilateral · Servicios · Consultoría</span><button class="open-btn">Abrir →</button></div>
+    </a>
+
+  </div>
+
+  <!-- Checklist de compliance -->
+  <div class="checklist-card">
+    <h3>✅ Checklist de compliance laboral para PyMEs — Obligaciones mínimas</h3>
+    <div class="checklist-grid">
+      <label class="chk-item"><input type="checkbox"> Contratos individuales firmados por cada trabajador</label>
+      <label class="chk-item"><input type="checkbox"> Reglamento Interior depositado ante CFCRL</label>
+      <label class="chk-item"><input type="checkbox"> Comisión Mixta de Seguridad e Higiene activa (NOM-019)</label>
+      <label class="chk-item"><input type="checkbox"> Comisión Mixta de Capacitación y Adiestramiento</label>
+      <label class="chk-item"><input type="checkbox"> Evaluación NOM-035-STPS-2018 aplicada</label>
+      <label class="chk-item"><input type="checkbox"> Plan anual de capacitación (DC-3 / DC-4)</label>
+      <label class="chk-item"><input type="checkbox"> Avisos de privacidad entregados a trabajadores</label>
+      <label class="chk-item"><input type="checkbox"> Recibos de nómina con CFDI (versión 4.0)</label>
+      <label class="chk-item"><input type="checkbox"> Registro REPSE vigente (si aplica art. 13 LFT)</label>
+      <label class="chk-item"><input type="checkbox"> Política de prevención de acoso documentada</label>
+      <label class="chk-item"><input type="checkbox"> Expedientes laborales completos por trabajador</label>
+      <label class="chk-item"><input type="checkbox"> Cálculo y pago de PTU (dentro del plazo legal)</label>
+    </div>
+  </div>
+
+</div>
+
+<footer>ClickLaboral.mx · Biblioteca documental conforme a LFT vigente · Todos los documentos se generan localmente en su navegador</footer>
+
+<script>
+// Políticas internas agregadas
+const politicasNuevas = [
+  { nombre:'Simulador de riesgo de demanda', url:'simulador-riesgo.html', cat:'Herramientas', desc:'Calcule su exposición económica' },
+  { nombre:'Política Home Office', url:'politica-home-office.html', cat:'Políticas internas', desc:'NOM-037 · Teletrabajo' },
+  { nombre:'Uso de dispositivos y redes sociales', url:'politica-uso-dispositivos.html', cat:'Políticas internas', desc:'Confidencialidad' },
+  { nombre:'Código de vestimenta', url:'politica-codigo-vestimenta.html', cat:'Políticas internas', desc:'Imagen institucional' },
+  { nombre:'Prevención de adicciones', url:'politica-prevencion-adicciones.html', cat:'Políticas internas', desc:'NOM-035' },
+  { nombre:'No discriminación e igualdad', url:'politica-nno-discriminacion.html', cat:'Políticas internas', desc:'Art. 3° LFT' },
+];
+</script>
+</body>
+</html>

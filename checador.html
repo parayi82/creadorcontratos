@@ -1,0 +1,440 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+<meta name="theme-color" content="#0f2640">
+<title>Checador Digital · ClickLaboral.mx</title>
+<link rel="manifest" href="manifest-checador.json">
+<link rel="apple-touch-icon" href="logo-clicklaboral-icon.png">
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
+:root{
+  --navy:#0f2640;--navy2:#1a3a5c;--teal:#0f766e;
+  --red:#dc2626;--amber:#d97706;--green:#16a34a;
+  --ink:#111;--ink2:#444;--ink3:#888;
+  --border:rgba(0,0,0,.09);--surface:#f8f7f4;--white:#fff;
+  --r:14px;--font:'Segoe UI',system-ui,-apple-system,sans-serif;
+}
+html,body{height:100%;}
+body{font-family:var(--font);background:var(--surface);color:var(--ink);display:flex;flex-direction:column;-webkit-tap-highlight-color:transparent;}
+
+.topbar{background:var(--navy);padding:14px 20px;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px;}
+.topbar-logo{font-size:15px;font-weight:800;color:#fff;}
+.topbar-logo span{color:#c5dcf5;font-weight:400;}
+.topbar-empresa{font-size:12px;color:#c5dcf5;}
+
+.reloj-wrap{text-align:center;padding:22px 16px 10px;}
+.reloj{font-size:52px;font-weight:800;color:var(--navy);letter-spacing:-.02em;font-variant-numeric:tabular-nums;line-height:1;}
+.fecha{font-size:14px;color:var(--ink3);margin-top:6px;text-transform:capitalize;}
+
+.main{flex:1;padding:16px;max-width:680px;margin:0 auto;width:100%;}
+.buscador{width:100%;padding:14px 16px;font-size:16px;border:1.5px solid var(--border);border-radius:var(--r);font-family:var(--font);margin-bottom:14px;background:var(--white);}
+.buscador:focus{outline:none;border-color:var(--navy2);}
+
+.lista{display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:10px;}
+.trab-card{background:var(--white);border:1.5px solid var(--border);border-radius:var(--r);padding:16px;cursor:pointer;transition:.12s;text-align:left;font-family:var(--font);}
+.trab-card:active{transform:scale(.97);}
+.trab-card.ya-completo{opacity:.55;}
+.trab-nombre{font-size:14px;font-weight:700;color:var(--navy);line-height:1.3;}
+.trab-puesto{font-size:11px;color:var(--ink3);margin-top:2px;}
+.trab-status{font-size:11px;font-weight:700;margin-top:8px;display:inline-block;padding:3px 10px;border-radius:12px;}
+.st-pendiente{background:#f1f5f9;color:#64748b;}
+.st-dentro{background:#dcfce7;color:#16a34a;}
+.st-retraso{background:#fef3c7;color:#d97706;}
+.st-completo{background:#e0e7ff;color:#4338ca;}
+
+.empty,.gate{text-align:center;padding:60px 24px;color:var(--ink3);}
+.gate h2{font-size:18px;color:var(--navy);margin:14px 0 8px;}
+.gate a{display:inline-block;margin-top:18px;padding:13px 26px;background:var(--navy2);color:#fff;border-radius:10px;font-weight:700;text-decoration:none;font-size:14px;}
+.spinner{width:34px;height:34px;border:3px solid var(--border);border-top-color:var(--navy2);border-radius:50%;animation:spin .8s linear infinite;margin:60px auto;}
+@keyframes spin{to{transform:rotate(360deg);}}
+
+/* Modal de confirmación / NIP */
+.overlay{position:fixed;inset:0;background:rgba(15,38,64,.55);display:none;align-items:center;justify-content:center;padding:20px;z-index:50;}
+.overlay.show{display:flex;}
+.modal{background:var(--white);border-radius:18px;padding:26px;width:100%;max-width:380px;text-align:center;}
+.modal h3{font-size:17px;color:var(--navy);margin-bottom:4px;}
+.modal .sub{font-size:13px;color:var(--ink3);margin-bottom:18px;}
+.nip-input{font-size:28px;letter-spacing:14px;text-align:center;width:100%;padding:12px;border:1.5px solid var(--border);border-radius:12px;font-family:var(--font);margin-bottom:16px;}
+.nip-input:focus{outline:none;border-color:var(--navy2);}
+.btn-row{display:flex;gap:10px;}
+.btn{flex:1;padding:15px;border-radius:12px;font-size:15px;font-weight:800;cursor:pointer;border:none;font-family:var(--font);}
+.btn-entrada{background:var(--green);color:#fff;}
+.btn-salida{background:var(--navy2);color:#fff;}
+.btn-cancel{background:#f1f5f9;color:var(--ink2);}
+.btn:disabled{opacity:.5;cursor:not-allowed;}
+
+/* Toast de resultado */
+.toast{position:fixed;left:50%;bottom:28px;transform:translateX(-50%) translateY(120%);background:var(--navy);color:#fff;padding:16px 24px;border-radius:14px;font-size:15px;font-weight:700;box-shadow:0 8px 30px rgba(0,0,0,.25);transition:transform .3s ease;z-index:60;text-align:center;max-width:90vw;}
+.toast.show{transform:translateX(-50%) translateY(0);}
+.toast.ok{background:var(--green);}
+.toast.warn{background:var(--amber);}
+.toast.err{background:var(--red);}
+
+.footer-nota{text-align:center;font-size:10px;color:var(--ink3);padding:12px 16px;line-height:1.5;}
+</style>
+</head>
+<body>
+
+<div class="topbar">
+  <div class="topbar-logo">Click<span>Laboral</span>.mx — Checador</div>
+  <div class="topbar-empresa" id="tb-empresa"></div>
+</div>
+
+<div class="reloj-wrap">
+  <div class="reloj" id="reloj">--:--</div>
+  <div class="fecha" id="fecha"></div>
+</div>
+
+<div class="main" id="main">
+  <div class="spinner" id="spinner"></div>
+</div>
+
+<div class="footer-nota">
+  Registro de asistencia con sello de fecha, hora y ubicación · Los registros alimentan el control de jornada y los reportes gerenciales · ClickLaboral.mx
+  · <a href="#" onclick="cerrarSesionKiosco();return false;" style="color:var(--ink3);text-decoration:underline;">Desactivar kiosco</a>
+</div>
+
+<!-- Modal acción -->
+<div class="overlay" id="overlay">
+  <div class="modal">
+    <div style="font-size:34px;" id="m-ico">👋</div>
+    <h3 id="m-nombre">—</h3>
+    <div class="sub" id="m-sub">—</div>
+    <input type="text" class="nip-input" id="m-nip" name="nip-checador" placeholder="••••" maxlength="4" inputmode="numeric" pattern="[0-9]*" autocomplete="one-time-code" autocapitalize="off" spellcheck="false" style="display:none;-webkit-text-security:disc;text-security:disc;">
+    <div class="btn-row" id="m-botones"></div>
+    <div class="btn-row" style="margin-top:10px;">
+      <button class="btn btn-cancel" onclick="cerrarModal()">Cancelar</button>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+const SUPABASE_URL = 'https://hpzgqaplrywwjuvrzhcp.supabase.co';
+const SUPABASE_ANON_KEY = 'sb_publishable_1g8US8iFJ8CxnSaF_4MHgA_gqyyAr3W';
+const sb = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+const TOLERANCIA_RETRASO_MIN = 10; // minutos de gracia sobre la hora habitual
+
+let clienteRFC = null, clienteEmpresa = null;
+let trabajadores = [];          // roster activo
+let registrosHoy = {};          // trabajador_id -> registro de asistencia de hoy
+let trabajadorSel = null;
+let accionSel = null;           // 'entrada' | 'salida'
+let geoActual = null;           // {lat, lng} — se pide una vez, en background
+
+// ── Reloj ─────────────────────────────────────────────────────────────────────
+function tick(){
+  const n = new Date();
+  document.getElementById('reloj').textContent =
+    n.toLocaleTimeString('es-MX', {hour:'2-digit', minute:'2-digit'});
+  document.getElementById('fecha').textContent =
+    n.toLocaleDateString('es-MX', {weekday:'long', day:'numeric', month:'long', year:'numeric'});
+}
+setInterval(tick, 5000); tick();
+
+// ── Utilidades ────────────────────────────────────────────────────────────────
+// Fecha LOCAL (no UTC). toISOString() devolvía el día siguiente después de las
+// 18:00 hora del centro de México — corrompía la fecha de turnos vespertinos.
+function fechaLocalISO(d){
+  d = d || new Date();
+  return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');
+}
+function hoyISO(){ return fechaLocalISO(); }
+function ayerISO(){ const d=new Date(); d.setDate(d.getDate()-1); return fechaLocalISO(d); }
+function horaAhora(){ const n=new Date(); return String(n.getHours()).padStart(2,'0')+':'+String(n.getMinutes()).padStart(2,'0')+':'+String(n.getSeconds()).padStart(2,'0'); }
+function toast(msg, tipo){
+  const t = document.getElementById('toast');
+  t.textContent = msg; t.className = 'toast show ' + (tipo||'');
+  clearTimeout(t._h); t._h = setTimeout(()=>t.classList.remove('show'), 3200);
+}
+function pedirGeo(){
+  if(!navigator.geolocation) return;
+  navigator.geolocation.getCurrentPosition(
+    p => { geoActual = { lat:+p.coords.latitude.toFixed(6), lng:+p.coords.longitude.toFixed(6) }; },
+    () => { geoActual = null; }, // sin geo no bloqueamos — se registra sin ubicación
+    { enableHighAccuracy:false, timeout:8000, maximumAge:300000 }
+  );
+}
+
+// ── Auth (patrón retry 0/400ms, igual que el resto del sitio) ────────────────
+async function init(){
+  async function intentar(){
+    const { data } = await sb.auth.getSession();
+    const session = data?.session;
+    if(!session) return false;
+    const meta = session.user?.user_metadata || {};
+    if(meta.tipo === 'despacho'){
+      let _g=null; try{ _g=JSON.parse(sessionStorage.getItem('cl_gestion')||'null'); }catch(_){}
+      if(!_g?.rfc){ mostrarGate('Modo despacho: primero elija el cliente a gestionar desde su panel.', 'panel-despacho.html', 'Ir al panel'); return true; }
+      clienteRFC = _g.rfc; clienteEmpresa = _g.empresa || _g.rfc;
+    } else if(meta.rfc){
+      clienteRFC = meta.rfc; clienteEmpresa = meta.empresa || meta.rfc;
+    } else return false;
+
+    document.getElementById('tb-empresa').textContent = clienteEmpresa;
+    pedirGeo();
+    await cargarDatos();
+    return true;
+  }
+  const ok = await intentar();
+  if(!ok){
+    setTimeout(async ()=>{
+      const ok2 = await intentar();
+      if(!ok2) mostrarLogin();
+    }, 400);
+  }
+}
+function mostrarGate(msg, href, cta){
+  document.getElementById('main').innerHTML =
+    `<div class="gate"><div style="font-size:40px;">⏱</div><h2>Checador Digital</h2><p style="font-size:13px;max-width:380px;margin:0 auto;line-height:1.6;">${msg}</p><a href="${href}">${cta} →</a></div>`;
+}
+
+// ── Login directo en el kiosco (la tablet no necesita pasar por el portal) ──
+function mostrarLogin(){
+  document.getElementById('main').innerHTML = `
+    <div class="gate" style="padding:30px 16px;">
+      <div style="font-size:40px;">⏱</div>
+      <h2>Activar este kiosco</h2>
+      <p style="font-size:13px;max-width:380px;margin:0 auto 22px;line-height:1.6;">
+        Inicie sesión una sola vez con las credenciales de su empresa.
+        La sesión queda guardada en este dispositivo para que sus trabajadores registren entrada y salida.
+      </p>
+      <div style="max-width:340px;margin:0 auto;text-align:left;">
+        <label style="font-size:11px;font-weight:700;color:var(--ink2);display:block;margin-bottom:5px;">RFC de la empresa</label>
+        <input type="text" id="kiosco-rfc" autocomplete="username" autocapitalize="characters" spellcheck="false" placeholder="ABC010101XY9"
+          style="width:100%;padding:13px 14px;font-size:15px;border:1.5px solid var(--border);border-radius:10px;font-family:var(--font);margin-bottom:12px;text-transform:uppercase;">
+        <label style="font-size:11px;font-weight:700;color:var(--ink2);display:block;margin-bottom:5px;">Contraseña</label>
+        <input type="password" id="kiosco-pass" autocomplete="current-password" placeholder="••••••••"
+          style="width:100%;padding:13px 14px;font-size:15px;border:1.5px solid var(--border);border-radius:10px;font-family:var(--font);margin-bottom:6px;"
+          onkeydown="if(event.key==='Enter')loginKiosco()">
+        <div id="kiosco-err" style="display:none;background:#fee2e2;color:#b91c1c;font-size:12px;font-weight:600;padding:9px 12px;border-radius:8px;margin-bottom:6px;"></div>
+        <button class="btn btn-entrada" id="kiosco-btn" style="width:100%;margin-top:8px;background:var(--navy2);" onclick="loginKiosco()">Activar kiosco →</button>
+      </div>
+      <p style="font-size:11px;color:var(--ink3);margin-top:18px;">¿Aún no es cliente? <a href="index.html" style="color:var(--navy2);font-weight:700;text-decoration:none;background:none;padding:0;margin:0;display:inline;">Conozca ClickLaboral.mx</a></p>
+    </div>`;
+  setTimeout(()=>document.getElementById('kiosco-rfc')?.focus(), 100);
+}
+
+async function loginKiosco(){
+  const rfc  = (document.getElementById('kiosco-rfc').value||'').trim().toUpperCase();
+  const pass = document.getElementById('kiosco-pass').value||'';
+  const err  = document.getElementById('kiosco-err');
+  const btn  = document.getElementById('kiosco-btn');
+  err.style.display='none';
+  if(!rfc || !pass){ err.textContent='Ingrese el RFC y la contraseña.'; err.style.display='block'; return; }
+
+  btn.disabled=true; btn.textContent='Verificando…';
+  try {
+    // Mismo mecanismo que el portal: el RFC se convierte al email interno de Supabase Auth
+    const { error } = await sb.auth.signInWithPassword({
+      email: `${rfc.toLowerCase()}@clicklaboral.mx`,
+      password: pass,
+    });
+    if(error){
+      err.textContent='RFC o contraseña incorrectos. Intente de nuevo.';
+      err.style.display='block';
+      document.getElementById('kiosco-pass').value='';
+      btn.disabled=false; btn.textContent='Activar kiosco →';
+      return;
+    }
+    await init(); // reintenta el flujo normal ya con sesión
+  } catch(e){
+    err.textContent='Error de conexión. Intente de nuevo en unos segundos.';
+    err.style.display='block';
+    btn.disabled=false; btn.textContent='Activar kiosco →';
+  }
+}
+
+// ── Desactivar kiosco (solo para el administrador) ──
+async function cerrarSesionKiosco(){
+  if(!confirm('¿Desactivar el checador en este dispositivo?\n\nLos trabajadores ya no podrán registrar entradas/salidas hasta que vuelva a iniciar sesión.')) return;
+  try { await sb.auth.signOut(); } catch(_){}
+  clienteRFC=null; clienteEmpresa=null; trabajadores=[]; registrosHoy={};
+  document.getElementById('tb-empresa').textContent='';
+  mostrarLogin();
+}
+
+// ── Datos ─────────────────────────────────────────────────────────────────────
+async function cargarDatos(){
+  // Roster con fallback si nip/salario aún no existen (migración pendiente)
+  let res = await sb.from('trabajadores')
+    .select('id,nombre,puesto,nip,hora_entrada_habitual')
+    .eq('cliente_rfc', clienteRFC).eq('activo', true).order('nombre');
+  if(res.error && /nip|42703/i.test(res.error.message||'')){
+    res = await sb.from('trabajadores')
+      .select('id,nombre,puesto,hora_entrada_habitual')
+      .eq('cliente_rfc', clienteRFC).eq('activo', true).order('nombre');
+  }
+  if(res.error){
+    document.getElementById('main').innerHTML = `<div class="empty">No se pudo cargar el roster: ${res.error.message}</div>`;
+    return;
+  }
+  trabajadores = res.data || [];
+
+  const { data: asisHoy } = await sb.from('asistencias')
+    .select('id,trabajador_id,status,hora_entrada,hora_salida,fecha')
+    .eq('cliente_rfc', clienteRFC).eq('fecha', hoyISO());
+  registrosHoy = {};
+  (asisHoy||[]).forEach(a => { registrosHoy[a.trabajador_id] = a; });
+
+  // Turno nocturno: entradas de AYER que siguen abiertas (sin salida) se muestran
+  // como "dentro" para poder registrar la salida después de medianoche.
+  const { data: asisAyer } = await sb.from('asistencias')
+    .select('id,trabajador_id,status,hora_entrada,hora_salida,fecha')
+    .eq('cliente_rfc', clienteRFC).eq('fecha', ayerISO())
+    .not('hora_entrada','is',null).is('hora_salida', null);
+  (asisAyer||[]).forEach(a => {
+    if(!registrosHoy[a.trabajador_id]) registrosHoy[a.trabajador_id] = a; // no pisar registro de hoy
+  });
+
+  render();
+}
+
+function estadoTrabajador(t){
+  const r = registrosHoy[t.id];
+  if(!r || !r.hora_entrada) return { clave:'pendiente', label:'Sin registrar', css:'st-pendiente' };
+  if(r.hora_entrada && !r.hora_salida){
+    const deAyer = r.fecha && r.fecha !== hoyISO();
+    return r.status==='retraso'
+      ? { clave:'dentro', label:'⏰ Dentro (retraso ' + r.hora_entrada.slice(0,5) + ')', css:'st-retraso' }
+      : { clave:'dentro', label:'✓ Dentro desde ' + (deAyer?'ayer ':'') + r.hora_entrada.slice(0,5), css:'st-dentro' };
+  }
+  return { clave:'completo', label:'✓ Jornada completa', css:'st-completo' };
+}
+
+function render(){
+  const filtro = (document.getElementById('buscar')?.value || '').toLowerCase();
+  const lista = trabajadores.filter(t => !filtro || t.nombre.toLowerCase().includes(filtro));
+  const dentro = trabajadores.filter(t => estadoTrabajador(t).clave==='dentro').length;
+
+  document.getElementById('main').innerHTML = `
+    <input type="text" class="buscador" id="buscar" name="filtro-roster" autocomplete="off" autocapitalize="off" spellcheck="false" placeholder="🔍 Busca tu nombre…" value="${filtro.replace(/"/g,'&quot;')}" oninput="render()">
+    <div style="font-size:12px;color:var(--ink3);margin-bottom:10px;">${trabajadores.length} trabajador(es) · ${dentro} dentro ahora</div>
+    ${lista.length ? `<div class="lista">${lista.map(t=>{
+      const e = estadoTrabajador(t);
+      return `<button class="trab-card ${e.clave==='completo'?'ya-completo':''}" onclick="abrirAccion('${t.id}')">
+        <div class="trab-nombre">${t.nombre}</div>
+        <div class="trab-puesto">${t.puesto||''}</div>
+        <span class="trab-status ${e.css}">${e.label}</span>
+      </button>`;
+    }).join('')}</div>` : `<div class="empty">Sin resultados para "${filtro}"</div>`}
+  `;
+  const b = document.getElementById('buscar');
+  if(filtro){ b.focus(); b.setSelectionRange(b.value.length, b.value.length); }
+}
+
+// ── Flujo de registro ────────────────────────────────────────────────────────
+function abrirAccion(id){
+  trabajadorSel = trabajadores.find(t=>t.id===id);
+  if(!trabajadorSel) return;
+  const e = estadoTrabajador(trabajadorSel);
+
+  document.getElementById('m-nombre').textContent = trabajadorSel.nombre;
+  const nipEl = document.getElementById('m-nip');
+  nipEl.value = '';
+  nipEl.style.display = trabajadorSel.nip ? 'block' : 'none';
+  document.getElementById('m-sub').textContent = trabajadorSel.nip ? 'Ingresa tu NIP de 4 dígitos' : (trabajadorSel.puesto||'');
+
+  const botones = document.getElementById('m-botones');
+  if(e.clave==='pendiente'){
+    document.getElementById('m-ico').textContent = '🌅';
+    botones.innerHTML = `<button class="btn btn-entrada" onclick="registrar('entrada')">Registrar ENTRADA</button>`;
+  } else if(e.clave==='dentro'){
+    document.getElementById('m-ico').textContent = '🌇';
+    botones.innerHTML = `<button class="btn btn-salida" onclick="registrar('salida')">Registrar SALIDA</button>`;
+  } else {
+    document.getElementById('m-ico').textContent = '✅';
+    document.getElementById('m-sub').textContent = 'Jornada de hoy ya registrada (entrada y salida).';
+    botones.innerHTML = '';
+    nipEl.style.display = 'none';
+  }
+  document.getElementById('overlay').classList.add('show');
+  if(trabajadorSel.nip) setTimeout(()=>nipEl.focus(), 150);
+}
+function cerrarModal(){ document.getElementById('overlay').classList.remove('show'); trabajadorSel=null; }
+
+async function registrar(accion){
+  if(!trabajadorSel) return;
+  // Validar NIP si el trabajador tiene uno configurado
+  if(trabajadorSel.nip){
+    const nip = document.getElementById('m-nip').value.trim();
+    if(nip !== String(trabajadorSel.nip)){ toast('NIP incorrecto', 'err'); return; }
+  }
+  const botones = document.getElementById('m-botones');
+  botones.querySelectorAll('.btn').forEach(b=>b.disabled=true);
+
+  const hora = horaAhora();
+  const existente = registrosHoy[trabajadorSel.id];
+
+  try {
+    if(accion==='entrada'){
+      // Detectar retraso vs hora habitual (+ tolerancia)
+      let status = 'presente';
+      if(trabajadorSel.hora_entrada_habitual){
+        const [hh,mm] = trabajadorSel.hora_entrada_habitual.split(':').map(Number);
+        const limite = hh*60 + mm + TOLERANCIA_RETRASO_MIN;
+        const ahora = new Date().getHours()*60 + new Date().getMinutes();
+        if(ahora > limite) status = 'retraso';
+      }
+      const payload = {
+        trabajador_id: trabajadorSel.id, cliente_rfc: clienteRFC,
+        fecha: hoyISO(), status, hora_entrada: hora,
+        fuente: 'checador', notas: 'Registrado vía checador digital',
+        geo_lat: geoActual?.lat ?? null, geo_lng: geoActual?.lng ?? null,
+      };
+      let error;
+      if(existente?.id){
+        // Ya hay registro del día (p.ej. marcado desde el calendario sin hora):
+        // actualizar en vez de insertar para no chocar con UNIQUE(trabajador_id, fecha)
+        ({ error } = await sb.from('asistencias').update({
+          status, hora_entrada: hora,
+          geo_lat: geoActual?.lat ?? null, geo_lng: geoActual?.lng ?? null,
+        }).eq('id', existente.id));
+        if(error && /geo_lat|retraso|check/i.test(error.message||'')){
+          ({ error } = await sb.from('asistencias').update({ status:'presente', hora_entrada: hora }).eq('id', existente.id));
+        }
+      } else {
+        ({ error } = await sb.from('asistencias').insert(payload));
+        if(error && /fuente|geo_lat|retraso|check/i.test(error.message||'')){
+          // Migración del checador pendiente: registrar con valores compatibles
+          ({ error } = await sb.from('asistencias').insert({
+            trabajador_id: trabajadorSel.id, cliente_rfc: clienteRFC,
+            fecha: hoyISO(), status:'presente', hora_entrada: hora,
+            fuente:'manual', notas:'Registrado vía checador digital'+(status==='retraso'?' (retraso)':''),
+          }));
+        }
+      }
+      if(error) throw error;
+      toast(`🌅 Entrada registrada — ${trabajadorSel.nombre.split(' ')[0]}, ${hora.slice(0,5)}${status==='retraso'?' (retraso)':''}`, status==='retraso'?'warn':'ok');
+    } else {
+      if(!existente?.id) throw new Error('No se encontró el registro de entrada de hoy.');
+      const { error } = await sb.from('asistencias')
+        .update({ hora_salida: hora }).eq('id', existente.id);
+      if(error) throw error;
+      toast(`🌇 Salida registrada — ${trabajadorSel.nombre.split(' ')[0]}, ${hora.slice(0,5)}. ¡Buen descanso!`, 'ok');
+    }
+    cerrarModal();
+    await cargarDatos();
+  } catch(e){
+    toast('Error: '+(e.message||e), 'err');
+    botones.querySelectorAll('.btn').forEach(b=>b.disabled=false);
+  }
+}
+
+// Refresco automático cada 5 min (kiosco encendido todo el día)
+setInterval(()=>{ if(clienteRFC) cargarDatos(); }, 300000);
+
+// PWA: registrar service worker (instalable en tablet/teléfono)
+if('serviceWorker' in navigator){
+  navigator.serviceWorker.register('sw-checador.js').catch(()=>{});
+}
+
+init();
+</script>
+</body>
+</html>

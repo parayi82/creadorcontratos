@@ -1,0 +1,600 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Paquete de Bienvenida · ClickLaboral.mx</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0;}
+:root{
+  --navy:#0f2640;--navy2:#1a3a5c;--navy3:#24507a;
+  --sky:#e8f2fc;--white:#fff;--surface:#f5f4f0;--surface2:#eeede8;
+  --ink:#111110;--ink2:#444440;--ink3:#888880;
+  --border:rgba(0,0,0,.08);--border2:rgba(0,0,0,.14);
+  --green:#16a34a;--green-bg:#dcfce7;
+  --amber:#d97706;--amber-bg:#fef3c7;
+  --red:#dc2626;--red-bg:#fee2e2;
+  --blue:#2563eb;--blue-bg:#dbeafe;
+  --r:10px;--r-sm:6px;
+  --font:'Segoe UI',system-ui,sans-serif;
+}
+body{font-family:var(--font);background:var(--surface);color:var(--ink);min-height:100vh;font-size:14px;}
+
+header{background:var(--navy);color:#fff;padding:0 32px;height:56px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:100;}
+.logo{font-size:14px;font-weight:700;}
+.logo span{opacity:.45;font-weight:400;font-size:12px;margin-left:8px;}
+.header-nav{display:flex;gap:8px;}
+.btn{display:inline-flex;align-items:center;gap:6px;padding:7px 16px;border-radius:var(--r-sm);font-size:13px;font-weight:500;cursor:pointer;border:1px solid transparent;transition:all .15s;font-family:var(--font);}
+.btn-primary{background:var(--white);color:var(--navy);}
+.btn-primary:hover{opacity:.88;}
+.btn-ghost{background:transparent;border-color:rgba(255,255,255,.3);color:#fff;}
+.btn-ghost:hover{background:rgba(255,255,255,.1);}
+.btn-green{background:var(--green);color:#fff;}
+.btn-green:hover{background:#15803d;}
+.btn-sm{padding:5px 12px;font-size:12px;}
+
+.workspace{display:grid;grid-template-columns:380px 1fr;min-height:calc(100vh - 56px);}
+
+/* Sidebar configurador */
+.config-panel{background:var(--white);border-right:1px solid var(--border);padding:24px;overflow-y:auto;}
+.sec-label{font-size:10px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:var(--navy2);padding:16px 0 8px;border-bottom:1px solid var(--border);margin-bottom:14px;}
+.sec-label:first-child{padding-top:0;}
+.field{margin-bottom:12px;}
+.field label{display:block;font-size:12px;font-weight:500;color:var(--ink2);margin-bottom:4px;}
+.field input,.field select,.field textarea{width:100%;padding:8px 10px;border:1px solid var(--border2);border-radius:var(--r-sm);font-size:13px;font-family:var(--font);color:var(--ink);background:var(--white);}
+.field input:focus,.field select:focus,.field textarea:focus{outline:none;border-color:var(--navy2);box-shadow:0 0 0 3px var(--sky);}
+.field textarea{resize:vertical;min-height:60px;}
+.field-row{display:grid;grid-template-columns:1fr 1fr;gap:10px;}
+.hint{font-size:11px;color:var(--ink3);margin-top:3px;}
+
+/* Doc checklist */
+.doc-check{display:flex;align-items:flex-start;gap:10px;padding:10px;border:1px solid var(--border);border-radius:var(--r-sm);margin-bottom:8px;cursor:pointer;transition:all .15s;}
+.doc-check:hover{border-color:var(--navy2);background:var(--sky);}
+.doc-check.selected{border-color:var(--navy2);background:var(--sky);}
+.doc-check input[type=checkbox]{accent-color:var(--navy2);margin-top:2px;flex-shrink:0;}
+.doc-check-info{flex:1;}
+.doc-check-name{font-size:13px;font-weight:500;line-height:1.3;}
+.doc-check-desc{font-size:11px;color:var(--ink3);margin-top:2px;}
+.doc-check-icon{font-size:20px;margin-top:1px;}
+
+/* Preview panel */
+.preview-panel{background:var(--surface);padding:32px;overflow-y:auto;}
+.preview-wrap{max-width:700px;margin:0 auto;}
+
+/* Carta */
+.carta{background:var(--white);border-radius:var(--r);box-shadow:0 2px 20px rgba(0,0,0,.1);overflow:hidden;margin-bottom:20px;}
+.carta-header{background:var(--navy);color:#fff;padding:32px 40px;}
+.carta-logo{font-size:11px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;opacity:.5;margin-bottom:16px;}
+.carta-title{font-size:22px;font-weight:800;line-height:1.2;margin-bottom:8px;}
+.carta-subtitle{font-size:13px;opacity:.65;line-height:1.5;}
+.carta-body{padding:36px 40px;font-size:13px;line-height:1.75;color:var(--ink);}
+.carta-body p{margin-bottom:14px;text-align:justify;}
+.carta-section{font-weight:700;font-size:11px;letter-spacing:.08em;text-transform:uppercase;color:var(--navy2);margin:24px 0 12px;padding-bottom:6px;border-bottom:1px solid var(--border);}
+.blank{font-weight:600;color:var(--navy2);}
+.blank.empty{color:var(--red);font-style:italic;font-weight:400;}
+
+/* Paquete docs */
+.pkg-doc{display:flex;align-items:center;gap:12px;padding:12px 16px;background:var(--surface);border-radius:var(--r-sm);margin-bottom:8px;border:1px solid var(--border);}
+.pkg-doc-icon{font-size:22px;}
+.pkg-doc-info{flex:1;}
+.pkg-doc-name{font-size:13px;font-weight:500;}
+.pkg-doc-meta{font-size:11px;color:var(--ink3);}
+.pkg-doc-badge{font-size:11px;font-weight:500;padding:2px 8px;border-radius:20px;background:var(--green-bg);color:var(--green);}
+.pkg-link{font-size:12px;color:var(--navy2);font-weight:500;cursor:pointer;padding:4px 10px;border-radius:var(--r-sm);background:var(--sky);}
+.pkg-link:hover{background:#c5dcf5;}
+
+/* Firma */
+.firma-box{background:var(--surface);border-radius:var(--r);padding:24px 40px;margin-bottom:20px;display:flex;justify-content:space-between;align-items:flex-start;}
+.firma-datos{font-size:12px;line-height:1.7;color:var(--ink2);}
+.firma-datos strong{color:var(--ink);}
+.qr-placeholder{width:80px;height:80px;background:var(--border);border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:28px;}
+
+/* Instrucciones envío */
+.envio-card{background:var(--white);border-radius:var(--r);padding:24px;box-shadow:0 2px 12px rgba(0,0,0,.06);margin-bottom:16px;}
+.envio-step{display:flex;gap:14px;margin-bottom:14px;align-items:flex-start;}
+.envio-num{width:28px;height:28px;border-radius:50%;background:var(--navy);color:#fff;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;flex-shrink:0;margin-top:2px;}
+.envio-txt{flex:1;}
+.envio-title{font-size:13px;font-weight:600;margin-bottom:3px;}
+.envio-desc{font-size:12px;color:var(--ink3);line-height:1.5;}
+
+/* progress */
+.prog-bar{height:4px;background:var(--border);border-radius:2px;margin-top:6px;}
+.prog-fill{height:100%;border-radius:2px;background:var(--green);transition:width .4s;}
+
+/* Email preview */
+.email-preview{background:var(--white);border:1px solid var(--border);border-radius:var(--r);overflow:hidden;margin-bottom:20px;}
+.email-header{background:var(--surface2);padding:12px 16px;border-bottom:1px solid var(--border);}
+.email-field{display:flex;gap:10px;font-size:12px;color:var(--ink2);padding:4px 0;}
+.email-field strong{color:var(--ink);min-width:50px;}
+.email-body{padding:20px;font-size:13px;line-height:1.7;color:var(--ink);}
+.email-attach{display:flex;gap:8px;padding:12px 16px;border-top:1px solid var(--border);background:var(--surface);flex-wrap:wrap;}
+.attach-chip{display:flex;align-items:center;gap:5px;background:var(--white);border:1px solid var(--border2);border-radius:6px;padding:4px 10px;font-size:11px;color:var(--ink2);}
+
+@media print{
+  header,.config-panel,.preview-panel > .envio-card,.preview-panel > .email-preview{display:none!important;}
+  .workspace{display:block;}
+  .carta{box-shadow:none;}
+}
+
+/* Modo cliente — oculta configurador y muestra todo en ancho completo */
+body.modo-cliente .config-panel{display:none;}
+body.modo-cliente .workspace{grid-template-columns:1fr;}
+body.modo-cliente .preview-panel{padding:32px 48px;}
+body.modo-cliente .preview-wrap{max-width:800px;}
+
+/* Banner de bienvenida para el cliente */
+.banner-cliente{background:var(--green);color:#fff;padding:14px 32px;font-size:14px;font-weight:600;text-align:center;display:none;}
+body.modo-cliente .banner-cliente{display:block;}
+</style>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
+</head>
+<body>
+
+<header>
+  <div class="logo">ClickLaboral.mx <span id="header-subtitle">Paquete de Bienvenida</span></div>
+  <div class="header-nav">
+    <button class="btn btn-ghost btn-sm" onclick="window.open('portal-cliente.html')">← Volver al portal</button>
+    <button class="btn btn-ghost btn-sm" onclick="window.print()">🖨 Imprimir carta</button>
+    <button class="btn btn-primary btn-sm modo-admin-only" onclick="generarPaquete()" style="display:none;">📦 Generar paquete</button>
+  </div>
+</header>
+
+<div class="banner-cliente">
+  🎉 ¡Bienvenido a ClickLaboral.mx! Su paquete de incorporación está listo. Revise su carta de bienvenida, sus documentos base y el acceso a su portal.
+</div>
+
+<div class="workspace">
+
+  <!-- CONFIGURADOR -->
+  <div class="config-panel">
+
+    <div class="sec-label">Datos del cliente</div>
+    <div class="field"><label>Razón social del patrón *</label><input type="text" id="p-empresa" oninput="render()" placeholder="Ej. Comercializadora Norte, S.A. de C.V."></div>
+    <div class="field"><label>Nombre del contacto *</label><input type="text" id="p-contacto" oninput="render()" placeholder="Lic. / Ing. / C. Nombre Apellido"></div>
+    <div class="field"><label>Email del cliente</label><input type="email" id="p-email" oninput="render()" placeholder="contacto@empresa.mx"></div>
+    <div class="field"><label>RFC</label><input type="text" id="p-rfc" oninput="render()" maxlength="13" placeholder="CNO800101AAA"></div>
+    <div class="field-row">
+      <div class="field"><label>No. trabajadores</label><input type="number" id="p-trabajadores" oninput="render()" placeholder="Ej. 45"></div>
+      <div class="field"><label>Plan contratado</label>
+        <select id="p-plan" onchange="render()">
+          <option value="Básico">Básico (legacy — ya no se ofrece)</option>
+          <option value="Estándar" selected>Estándar</option>
+          <option value="Pro">Pro</option>
+        </select>
+      </div>
+    </div>
+    <div class="field"><label>Fecha de inicio del servicio</label><input type="date" id="p-inicio" oninput="render()"></div>
+    <div class="field"><label>Cuota mensual ($MXN)</label><input type="number" id="p-cuota" oninput="render()" placeholder="3500"></div>
+
+    <div class="sec-label">Datos del despacho</div>
+    <div class="field"><label>Nombre del abogado / despacho</label><input type="text" id="d-nombre" oninput="render()" placeholder="Lic. Juan García López" value="Lic. Juan José Salas Llamas"></div>
+    <div class="field"><label>Cédula profesional</label><input type="text" id="d-cedula" oninput="render()" placeholder="1234567" value="SALJ820818Q64"></div>
+    <div class="field"><label>Teléfono</label><input type="text" id="d-tel" oninput="render()" placeholder="+52 33 1234 5678" value="+52 33 3926 3817"></div>
+    <div class="field"><label>Email del despacho</label><input type="text" id="d-email" oninput="render()" placeholder="contacto@despacho.mx" value="serjuemsa@gmail.com"></div>
+    <div class="field"><label>Web / LinkedIn</label><input type="text" id="d-web" oninput="render()" placeholder="www.despacho.mx" value="clicklaboral.mx"></div>
+
+    <div class="sec-label">Documentos a incluir</div>
+    <div id="doc-checklist"></div>
+
+    <div class="sec-label">Mensaje personalizado</div>
+    <div class="field">
+      <label>Párrafo adicional (opcional)</label>
+      <textarea id="p-mensaje" oninput="render()" placeholder="Ej. Adjunto encontrará el diagnóstico inicial realizado el día de nuestra reunión. Quedo a sus órdenes..."></textarea>
+    </div>
+
+    <div class="sec-label">Acceso al portal</div>
+    <div class="field"><label>URL del portal (si aplica)</label><input type="text" id="p-portal" oninput="render()" placeholder="https://compliance.mx/portal/cliente123"></div>
+    <div class="field"><label>Usuario / acceso</label><input type="text" id="p-usuario" oninput="render()" placeholder="RFC del cliente"></div>
+
+  </div>
+
+  <!-- PREVIEW -->
+  <div class="preview-panel">
+    <div class="preview-wrap">
+
+      <!-- Tabs de vista -->
+      <div style="display:flex;gap:8px;margin-bottom:20px;">
+        <button class="btn btn-primary btn-sm" id="tab-carta" onclick="setTab('carta')">📄 Carta de bienvenida</button>
+        <button class="btn btn-ghost btn-sm" id="tab-paquete" onclick="setTab('paquete')">📦 Paquete de documentos</button>
+        <button class="btn btn-ghost btn-sm" id="tab-email" onclick="setTab('email')">✉️ Email de envío</button>
+      </div>
+
+      <!-- CARTA -->
+      <div id="view-carta">
+        <div class="carta" id="carta-preview"></div>
+        <div class="firma-box" id="firma-preview"></div>
+      </div>
+
+      <!-- PAQUETE -->
+      <div id="view-paquete" style="display:none;">
+        <div class="envio-card">
+          <div style="font-size:15px;font-weight:700;margin-bottom:16px;">📦 Paquete de onboarding — <span id="pkg-empresa-title">cliente</span></div>
+          <div style="margin-bottom:16px;background:var(--surface);border-radius:var(--r-sm);padding:12px 14px;">
+            <div style="font-size:11px;color:var(--ink3);margin-bottom:6px;font-weight:600;text-transform:uppercase;letter-spacing:.06em;">Progreso del paquete</div>
+            <div style="display:flex;justify-content:space-between;font-size:12px;color:var(--ink2);margin-bottom:6px;">
+              <span id="pkg-count">0 documentos seleccionados</span>
+              <span id="pkg-pct">0%</span>
+            </div>
+            <div class="prog-bar"><div class="prog-fill" id="pkg-progress" style="width:0%"></div></div>
+          </div>
+          <div id="pkg-docs-list"></div>
+        </div>
+
+        <div class="envio-card" id="instrucciones-admin">
+          <div style="font-size:14px;font-weight:700;margin-bottom:16px;">🚀 Pasos para entregar el paquete</div>
+          <div class="envio-step">
+            <div class="envio-num">1</div>
+            <div class="envio-txt">
+              <div class="envio-title">Generar cada documento</div>
+              <div class="envio-desc">Haga clic en "Abrir generador" en cada documento de la lista. Los datos del cliente se pre-cargan automáticamente vía URL.</div>
+            </div>
+          </div>
+          <div class="envio-step">
+            <div class="envio-num">2</div>
+            <div class="envio-txt">
+              <div class="envio-title">Exportar a PDF</div>
+              <div class="envio-desc">Desde cada generador use el botón "Imprimir / PDF" → "Guardar como PDF" con el nombre de archivo sugerido.</div>
+            </div>
+          </div>
+          <div class="envio-step">
+            <div class="envio-num">3</div>
+            <div class="envio-txt">
+              <div class="envio-title">Comprimir y nombrar el archivo</div>
+              <div class="envio-desc">Cree una carpeta con el nombre del cliente y comprímalos en un ZIP: <code style="background:var(--surface);padding:1px 6px;border-radius:4px;font-size:11px;">Compliance_[RFC]_[AñoMes].zip</code></div>
+            </div>
+          </div>
+          <div class="envio-step" style="margin-bottom:0;">
+            <div class="envio-num">4</div>
+            <div class="envio-txt">
+              <div class="envio-title">Enviar con la carta de bienvenida</div>
+              <div class="envio-desc">Use la plantilla de email generada en la pestaña "Email de envío". Adjunte la carta + el ZIP de documentos.</div>
+            </div>
+          </div>
+        </div>
+
+        <div class="envio-card" id="instrucciones-cliente" style="display:none;">
+          <div style="font-size:14px;font-weight:700;margin-bottom:16px;">📋 ¿Cómo usar sus documentos?</div>
+          <div class="envio-step">
+            <div class="envio-num">1</div>
+            <div class="envio-txt">
+              <div class="envio-title">Genere sus documentos desde el portal</div>
+              <div class="envio-desc">En el menú lateral del portal, vaya a "Generar nuevo" para acceder a todos los generadores de contratos, actas y formatos incluidos en su plan.</div>
+            </div>
+          </div>
+          <div class="envio-step">
+            <div class="envio-num">2</div>
+            <div class="envio-txt">
+              <div class="envio-title">Llene los datos y descargue en PDF</div>
+              <div class="envio-desc">Cada generador tiene un formulario simple. Al completarlo, use "Imprimir / PDF" para guardar el documento firmado.</div>
+            </div>
+          </div>
+          <div class="envio-step">
+            <div class="envio-num">3</div>
+            <div class="envio-txt">
+              <div class="envio-title">Gestione su expediente de trabajadores</div>
+              <div class="envio-desc">En "Expedientes de trabajadores" puede registrar a su personal, adjuntar documentos de identidad y dar seguimiento a asistencias y vacaciones.</div>
+            </div>
+          </div>
+          <div class="envio-step" style="margin-bottom:0;">
+            <div class="envio-num">4</div>
+            <div class="envio-txt">
+              <div class="envio-title">Consulte a su asesor cuando lo necesite</div>
+              <div class="envio-desc">Desde el portal, en "Solicitar asesoría", puede enviar cualquier consulta directamente a su abogado. También puede contactarnos por WhatsApp al +52 33 3926 3817.</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- EMAIL -->
+      <div id="view-email" style="display:none;">
+        <div class="email-preview" id="email-preview"></div>
+        <div class="envio-card">
+          <div style="font-size:13px;font-weight:600;margin-bottom:12px;">💡 Instrucciones de uso</div>
+          <div style="font-size:12px;color:var(--ink2);line-height:1.7;">
+            <p>1. Copie el cuerpo del email de arriba y péguelo en su cliente de correo (Gmail, Outlook, etc.).<br>
+            2. Adjunte la carta de bienvenida en PDF (use el botón "Imprimir carta" en el header).<br>
+            3. Adjunte el ZIP con los documentos del paquete.<br>
+            4. Envíe desde su cuenta profesional para mayor formalidad.</p>
+          </div>
+          <div style="margin-top:16px;display:flex;gap:8px;">
+            <button class="btn btn-green" onclick="copiarEmail()">📋 Copiar email</button>
+            <button class="btn btn-ghost btn-sm" style="font-size:12px;" onclick="window.print()">🖨 Imprimir carta</button>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+<script>
+let tabActual = 'carta';
+
+const DOCS_DISPONIBLES = [
+  {id:'contrato-indeterminado', icon:'📋', nombre:'Contrato por Tiempo Indeterminado', desc:'Art. 35 LFT · Para trabajadores permanentes', archivo:'contrato-indeterminado.html', default:true},
+  {id:'contrato-determinado', icon:'⏱', nombre:'Contrato por Tiempo Determinado', desc:'Arts. 35-36 LFT · Con causa objetiva', archivo:'contrato-tiempo-determinado.html', default:false},
+  {id:'contrato-prueba', icon:'🔬', nombre:'Contrato a Período de Prueba', desc:'Art. 39-A LFT · Máx. 30/180 días', archivo:'contrato-prueba.html', default:false},
+  {id:'contrato-capacitacion', icon:'🎓', nombre:'Contrato de Capacitación Inicial', desc:'Art. 39-B LFT · Máx. 3/6 meses', archivo:'contrato-capacitacion.html', default:false},
+  {id:'contratos-especiales', icon:'💼', nombre:'Contratos Especiales (Comisionista / Asimilados)', desc:'Arts. 285-289 LFT · Art. 94 LISR', archivo:'contratos-especiales.html', default:false},
+  {id:'reglamento', icon:'📖', nombre:'Reglamento Interior de Trabajo', desc:'Art. 423 LFT · Depósito ante CFCRL', archivo:'reglamento-interior.html', default:true},
+  {id:'acta-aperc', icon:'⚠️', nombre:'Acta Administrativa (plantilla)', desc:'Apercibimiento / Suspensión / Rescisión', archivo:'acta-administrativa.html', default:true},
+  {id:'checklist-nom', icon:'⚖️', nombre:'Checklist NOMs y Comisiones Mixtas', desc:'NOM-035, NOM-019, PTU, Capacitación', archivo:'portal-cliente.html', default:true},
+];
+
+let docsSeleccionados = new Set(DOCS_DISPONIBLES.filter(d=>d.default).map(d=>d.id));
+
+function v(id){return(document.getElementById(id)||{}).value||'';}
+function fmtFecha(iso){if(!iso)return'';const[y,m,d]=iso.split('-');const M=['enero','febrero','marzo','abril','mayo','junio','julio','agosto','septiembre','octubre','noviembre','diciembre'];return`${parseInt(d)} de ${M[parseInt(m)-1]} de ${y}`;}
+function b(txt,fb){if(!txt||!txt.trim())return`<span class="blank empty">[${fb}]</span>`;return`<span class="blank">${txt}</span>`;}
+
+function setTab(t){
+  tabActual=t;
+  ['carta','paquete','email'].forEach(x=>{
+    document.getElementById('view-'+x).style.display=x===t?'':'none';
+    const btn=document.getElementById('tab-'+x);
+    if(btn){btn.className=x===t?'btn btn-primary btn-sm':'btn btn-ghost btn-sm';}
+  });
+  render();
+}
+
+function toggleDoc(id, el){
+  if(docsSeleccionados.has(id)) docsSeleccionados.delete(id);
+  else docsSeleccionados.add(id);
+  el.classList.toggle('selected', docsSeleccionados.has(id));
+  el.querySelector('input[type=checkbox]').checked = docsSeleccionados.has(id);
+  render();
+}
+
+function initChecklist(){
+  const cont = document.getElementById('doc-checklist');
+  cont.innerHTML = DOCS_DISPONIBLES.map(d=>`
+    <div class="doc-check ${docsSeleccionados.has(d.id)?'selected':''}" id="dc-${d.id}" onclick="toggleDoc('${d.id}',this)">
+      <input type="checkbox" ${docsSeleccionados.has(d.id)?'checked':''} onclick="event.stopPropagation()">
+      <div class="doc-check-icon">${d.icon}</div>
+      <div class="doc-check-info">
+        <div class="doc-check-name">${d.nombre}</div>
+        <div class="doc-check-desc">${d.desc}</div>
+      </div>
+    </div>
+  `).join('');
+}
+
+function render(){
+  const empresa=v('p-empresa'), contacto=v('p-contacto'), email=v('p-email'),
+        rfc=v('p-rfc'), trabajadores=v('p-trabajadores'), plan=v('p-plan'),
+        inicio=v('p-inicio'), cuota=v('p-cuota'), mensaje=v('p-mensaje'),
+        portal=v('p-portal'), usuario=v('p-usuario');
+  const dNombre=v('d-nombre'), dCedula=v('d-cedula'), dTel=v('d-tel'),
+        dEmail=v('d-email'), dWeb=v('d-web');
+
+  const hoy = new Date().toLocaleDateString('es-MX',{day:'numeric',month:'long',year:'numeric'});
+  const selDocs = DOCS_DISPONIBLES.filter(d=>docsSeleccionados.has(d.id));
+
+  if(tabActual==='carta'){
+    // CARTA DE BIENVENIDA
+    document.getElementById('carta-preview').innerHTML = `
+      <div class="carta-header">
+        <div class="carta-logo">${dNombre||'Despacho de Cumplimiento Laboral'}</div>
+        <div class="carta-title">Bienvenido a su servicio de<br>ClickLaboral.mx</div>
+        <div class="carta-subtitle">Protección jurídica laboral continua para su empresa · Plan ${plan}</div>
+      </div>
+      <div class="carta-body">
+        <p>${hoy}</p>
+        <p>Estimado(a) ${b(contacto,'nombre del contacto')},</p>
+        <p>Es un gusto darle la bienvenida como cliente de nuestro servicio de compliance laboral. A partir de esta fecha, ${b(empresa,'nombre de la empresa')} cuenta con respaldo jurídico permanente en materia laboral, lo que le permitirá operar con certeza y minimizar el riesgo de contingencias ante las autoridades del trabajo.</p>
+
+        ${mensaje?`<p>${mensaje}</p>`:''}
+
+        <div class="carta-section">Su plan contratado</div>
+        <p>Ha contratado el <strong>Plan ${plan}</strong>${cuota?`, con una cuota mensual de <strong>$${parseFloat(cuota).toLocaleString('es-MX')} MXN</strong>`:''}, con inicio de servicios el ${b(fmtFecha(inicio),'fecha de inicio')}. A continuación le detallamos el alcance y los pasos inmediatos a seguir.</p>
+
+        <div class="carta-section">Documentos incluidos en este paquete</div>
+        <p>Adjunto al presente encontrará los siguientes documentos base para el cumplimiento laboral de ${b(empresa,'su empresa')}:</p>
+        <ul style="margin:8px 0 14px 24px;line-height:2;">
+          ${selDocs.map(d=>`<li>${d.icon} <strong>${d.nombre}</strong> — ${d.desc}</li>`).join('')||'<li>Seleccione los documentos en el panel izquierdo</li>'}
+        </ul>
+
+        <div class="carta-section">Próximos pasos</div>
+        <p>Para comenzar de manera óptima, le solicitamos llevar a cabo las siguientes acciones en los próximos 15 días hábiles:</p>
+        <ol style="margin:8px 0 14px 24px;line-height:2.2;">
+          <li>Revisar y firmar los contratos individuales de trabajo adjuntos.</li>
+          <li>Publicar el Reglamento Interior de Trabajo en los tableros de avisos del centro de trabajo.</li>
+          <li>Integrar las comisiones mixtas requeridas por la LFT (Seguridad e Higiene, Capacitación).</li>
+          <li>Aplicar la evaluación inicial de la NOM-035-STPS-2018 a todos sus trabajadores.</li>
+        </ol>
+
+        ${portal?`<div class="carta-section">Acceso a su portal</div><p>Hemos creado su portal personalizado de compliance, donde podrá consultar el estado de sus obligaciones, descargar documentos y recibir alertas de vencimiento en tiempo real:</p><p>🔗 <strong>Portal:</strong> ${portal}<br>👤 <strong>Usuario:</strong> ${usuario||rfc||'[RFC de la empresa]'}</p>`:''}
+
+        <div class="carta-section">Nuestro compromiso</div>
+        <p>Nuestro equipo estará disponible para atender cualquier duda o contingencia laboral que se presente. Recibirá alertas oportunas antes de cada vencimiento de obligación legal, y actualizaciones automáticas ante cambios en la legislación laboral mexicana.</p>
+        <p>Quedo a sus órdenes y en espera de una larga y exitosa colaboración.</p>
+        <p>Atentamente,</p>
+        <p>&nbsp;</p>
+      </div>`;
+
+    document.getElementById('firma-preview').innerHTML = `
+      <div class="firma-datos">
+        <strong>${dNombre||'[Nombre del abogado]'}</strong><br>
+        Abogado en Derecho Laboral<br>
+        ${dCedula?'Cédula Profesional: '+dCedula+'<br>':''}
+        ${dTel?'Tel: '+dTel+'<br>':''}
+        ${dEmail?'Email: '+dEmail+'<br>':''}
+        ${dWeb?'Web: '+dWeb:''}
+      </div>
+      <div class="qr-placeholder">📇</div>`;
+  }
+
+  if(tabActual==='paquete'){
+    const total = DOCS_DISPONIBLES.length;
+    const sel = selDocs.length;
+    const pct = Math.round(sel/total*100);
+    document.getElementById('pkg-empresa-title').textContent = empresa||'cliente';
+    document.getElementById('pkg-count').textContent = `${sel} de ${total} documentos`;
+    document.getElementById('pkg-pct').textContent = pct+'%';
+    document.getElementById('pkg-progress').style.width = pct+'%';
+    document.getElementById('pkg-docs-list').innerHTML = DOCS_DISPONIBLES.map(d=>{
+      const sel2 = docsSeleccionados.has(d.id);
+      const params = new URLSearchParams();
+      if(empresa) params.set('empresa',empresa);
+      if(rfc) params.set('rfc',rfc);
+      if(contacto) params.set('contacto',contacto);
+      const url = d.archivo + (params.toString()?'?'+params.toString():'');
+      return `<div class="pkg-doc" style="opacity:${sel2?1:.4};">
+        <div class="pkg-doc-icon">${d.icon}</div>
+        <div class="pkg-doc-info">
+          <div class="pkg-doc-name">${d.nombre}</div>
+          <div class="pkg-doc-meta">${d.desc}</div>
+        </div>
+        ${sel2?`<span class="pkg-doc-badge">✓ Incluido</span>
+        <a class="pkg-link" href="${url}" target="_blank">Abrir →</a>`:'<span style="font-size:11px;color:var(--ink3);">No incluido</span>'}
+      </div>`;
+    }).join('');
+  }
+
+  if(tabActual==='email'){
+    const docNames = selDocs.map(d=>d.nombre).join(', ');
+    const attachChips = selDocs.map(d=>`<div class="attach-chip">${d.icon} ${d.nombre.substring(0,28)}${d.nombre.length>28?'…':''}.pdf</div>`).join('');
+    document.getElementById('email-preview').innerHTML = `
+      <div class="email-header">
+        <div class="email-field"><strong>Para:</strong> ${email||b('','email del cliente')}</div>
+        <div class="email-field"><strong>De:</strong> ${dEmail||'[su email]'}</div>
+        <div class="email-field"><strong>Asunto:</strong> Bienvenido a su servicio de ClickLaboral.mx — ${empresa||b('','nombre empresa')} — Plan ${plan}</div>
+        <div class="email-field"><strong>CC:</strong> [sus colaboradores si aplica]</div>
+      </div>
+      <div class="email-body" id="email-cuerpo">
+Estimado(a) ${contacto||b('','nombre contacto')},
+
+Espero que este mensaje lo encuentre bien. Me da mucho gusto darle la bienvenida como cliente de nuestro servicio de ClickLaboral.mx.
+
+A partir de hoy, ${empresa||b('','nombre empresa')} cuenta con respaldo jurídico laboral continuo bajo el Plan ${plan}${cuota?' con una cuota mensual de $'+parseFloat(cuota||0).toLocaleString('es-MX')+' MXN':''}.
+
+📎 DOCUMENTOS ADJUNTOS:
+${selDocs.map(d=>`   ${d.icon} ${d.nombre}`).join('\n')||'   [Seleccione documentos en el panel]'}
+
+📋 PRÓXIMOS PASOS (primeros 15 días hábiles):
+   1. Revisar y firmar los contratos individuales de trabajo.
+   2. Publicar el Reglamento Interior de Trabajo.
+   3. Integrar las comisiones mixtas obligatorias.
+   4. Aplicar evaluación NOM-035-STPS-2018.
+
+${portal?`🔗 ACCESO A SU PORTAL:
+   URL: ${portal}
+   Usuario: ${usuario||rfc||'RFC de la empresa'}
+
+`:''}Recibirá alertas automáticas antes de cada vencimiento. Estoy a sus órdenes para cualquier duda o contingencia que se presente.
+
+Atentamente,
+
+${dNombre||'[Su nombre]'}
+Abogado en Derecho Laboral${dCedula?'\nCédula: '+dCedula:''}
+${dTel||''}${dEmail?'\n'+dEmail:''}
+${dWeb||''}
+      </div>
+      <div class="email-attach">
+        <div style="font-size:11px;color:var(--ink3);width:100%;margin-bottom:4px;font-weight:600;">Archivos adjuntos:</div>
+        <div class="attach-chip">📄 Carta_Bienvenida_${(empresa||'cliente').replace(/[^a-zA-Z0-9]/g,'_')}.pdf</div>
+        ${attachChips}
+      </div>`;
+  }
+}
+
+function copiarEmail(){
+  const txt = document.getElementById('email-cuerpo')?.innerText||'';
+  navigator.clipboard.writeText(txt).then(()=>{
+    const btn = event.target;
+    btn.textContent='✓ Copiado';
+    setTimeout(()=>{btn.innerHTML='📋 Copiar email';},2000);
+  });
+}
+
+function generarPaquete(){
+  const empresa = v('p-empresa');
+  if(!empresa){alert('Ingrese la razón social del cliente primero');return;}
+  const selDocs = DOCS_DISPONIBLES.filter(d=>docsSeleccionados.has(d.id));
+  if(!selDocs.length){alert('Seleccione al menos un documento');return;}
+  setTab('paquete');
+  alert(`Paquete configurado para ${empresa}.\n\nDocumentos: ${selDocs.length}\n\nUse los botones "Abrir →" para generar cada documento y luego imprímalos como PDF.`);
+}
+
+initChecklist();
+render();
+
+// ════════════════════════════════════════════════════════
+// DETECCIÓN DE MODO: cliente (sesión Supabase) vs admin (manual)
+// ════════════════════════════════════════════════════════
+const SUPABASE_URL = 'https://hpzgqaplrywwjuvrzhcp.supabase.co';
+const SUPABASE_ANON_KEY = 'sb_publishable_1g8US8iFJ8CxnSaF_4MHgA_gqyyAr3W';
+const modoAdmin = new URLSearchParams(window.location.search).get('modo') === 'admin';
+
+(async function inicializarModo(){
+  if (modoAdmin) {
+    // Modo admin: mostrar panel de configuración completo (comportamiento original)
+    document.querySelectorAll('.modo-admin-only').forEach(el => el.style.display = '');
+    return;
+  }
+
+  // Modo cliente: intentar cargar sesión de Supabase
+  try {
+    const sb = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+    const { data } = await sb.auth.getSession();
+    const session = data?.session;
+    const rfc = session?.user?.user_metadata?.rfc;
+
+    if (!session || !rfc) {
+      // Sin sesión activa — mostrar en modo admin por defecto (el cliente debe entrar por el portal)
+      document.querySelectorAll('.modo-admin-only').forEach(el => el.style.display = '');
+      return;
+    }
+
+    // Sesión activa: cargar datos del cliente desde Supabase
+    const { data: clientes } = await sb.auth.admin.listUsers({ perPage: 1000 }); // Migrado: usar auth.users
+    const cliente = clientes?.[0];
+
+    if (!cliente) return;
+
+    // Autocompletar todos los campos con datos reales
+    const setVal = (id, val) => {
+      const el = document.getElementById(id);
+      if (el && val) { el.value = val; }
+    };
+
+    setVal('p-empresa', cliente.empresa);
+    setVal('p-contacto', cliente.contacto || '');
+    setVal('p-email', cliente.email || '');
+    setVal('p-rfc', cliente.rfc);
+    setVal('p-plan', cliente.plan ? cliente.plan.replace('Plan ','') : 'Estándar');
+    setVal('p-cuota', cliente.cuota || '');
+    setVal('p-portal', 'clicklaboral.mx/portal-cliente.html');
+    setVal('p-usuario', cliente.rfc);
+    if (cliente.created_at) {
+      setVal('p-inicio', cliente.created_at.split('T')[0]);
+    }
+    if (cliente.trabajadores) {
+      setVal('p-trabajadores', cliente.trabajadores);
+    }
+
+    // Seleccionar todos los documentos predeterminados
+    docsSeleccionados = new Set(DOCS_DISPONIBLES.filter(d => d.default).map(d => d.id));
+
+    // Activar modo cliente: ocultar panel de configuración
+    document.body.classList.add('modo-cliente');
+
+    // Instrucciones según modo
+    document.getElementById('instrucciones-admin').style.display = 'none';
+    document.getElementById('instrucciones-cliente').style.display = 'block';
+
+    // Ajustar tabs — en modo cliente se muestra carta primero, sin pestaña de email (es para el admin)
+    document.getElementById('tab-email').style.display = 'none';
+
+    // Re-renderizar con datos cargados
+    initChecklist();
+    render();
+
+  } catch(e) {
+    console.error('No se pudo cargar la sesión:', e.message || e);
+    document.querySelectorAll('.modo-admin-only').forEach(el => el.style.display = '');
+  }
+})();
+</script>
+</body>
+</html>

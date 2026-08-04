@@ -1,0 +1,64 @@
+CLICKLABORAL v15 — APARTADO / PROGRAMACIÓN DE VACACIONES
+=========================================================
+
+PASO 1 (obligatorio, una sola vez)
+----------------------------------
+Supabase → SQL Editor → pega y ejecuta el contenido de:
+
+    _db/sql-vacaciones-programadas.sql
+
+Debe terminar mostrando:
+    "migración v15 completa — ya puedes apartar vacaciones en el tablero"
+
+Si no lo ejecutas, el tablero sigue funcionando igual que antes,
+pero aparecerá un aviso amarillo y el botón de apartar dará error.
+
+PASO 2
+------
+Sube el sitio completo a Netlify (drag & drop, como siempre).
+La función netlify/functions/mutar-datos-cliente.js se actualizó
+para permitir escrituras en la tabla nueva (necesario para las
+sesiones de despacho). Espera 1-2 min tras el deploy.
+
+QUÉ CAMBIÓ
+----------
+Archivos modificados:
+  - asistencias-vacaciones.html
+  - netlify/functions/mutar-datos-cliente.js
+  - _db/EJECUTAR-EN-SUPABASE.sql  (constraint 'fuente')
+Archivos nuevos:
+  - _db/sql-vacaciones-programadas.sql
+  - _db/LEEME-v15-APARTADO-VACACIONES.txt
+
+CÓMO SE USA
+-----------
+Tablero anual de vacaciones:
+  A) Botón "🏖 Apartar vacaciones" → modal con trabajador y fechas.
+  B) Botón "🖱️ Modo apartar: OFF/ON" → actívalo, haz clic en el día
+     de INICIO y luego en el día de FIN sobre la fila del trabajador.
+     Se abre el modal ya con el rango cargado.
+
+En el expediente de cada trabajador, dentro del panel de saldo de
+vacaciones, hay un botón "🏖 Apartar periodo" y la lista de sus
+periodos apartados.
+
+FLUJO DE ESTADOS
+----------------
+  solicitada  → apartado, pendiente de autorizar (rayado naranja)
+  autorizada  → autorizado por el patrón (rayado verde)
+  gozada      → aplicado: se escriben los días en `asistencias`
+                con status='vacaciones' y descuentan del saldo
+  cancelada   → sin efecto, libera los días (queda el histórico)
+
+IMPORTANTE (criterio legal aplicado)
+------------------------------------
+El saldo del Art. 76 LFT SÓLO se descuenta cuando los días se GOZAN.
+Los días apartados se muestran aparte como "comprometidos", para que
+el patrón vea disponible vs. ya reservado sin alterar el cálculo legal.
+Cuando llegue la fecha, usa el botón "📌 Aplicar" del periodo: ahí se
+convierte en registro real de asistencia.
+
+Cada periodo tiene botón 🖨️ que genera el AVISO Y CONTROL DE
+VACACIONES imprimible (Arts. 76, 80 y 81 LFT), con días que
+corresponden, periodo concedido, fecha de reincorporación calculada,
+prima vacacional del 25% y líneas de firma.

@@ -1,0 +1,321 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Generador · Convenio Modificatorio</title>
+<style>
+  :root{--ink:#1a1a18;--ink2:#4a4a46;--ink3:#8a8a84;--surface:#f7f6f2;--white:#ffffff;--accent:#1a3a5c;--accent2:#e8f0f8;--border:#ddddd6;--danger:#c0392b;--green:#16a34a;--radius:6px;--font-ui:'Segoe UI',system-ui,sans-serif;--font-doc:'Times New Roman',Georgia,serif;}
+  *{box-sizing:border-box;margin:0;padding:0;}
+  body{font-family:var(--font-ui);background:var(--surface);color:var(--ink);min-height:100vh;font-size:14px;}
+  header{background:var(--accent);color:#fff;padding:14px 28px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:100;box-shadow:0 1px 4px rgba(0,0,0,.18);}
+  header h1{font-size:15px;font-weight:600;}
+  header span{font-size:12px;opacity:.7;}
+  .header-actions{display:flex;gap:10px;}
+  .btn{padding:7px 18px;border-radius:var(--radius);font-size:13px;font-weight:500;cursor:pointer;border:1px solid transparent;transition:background .15s,opacity .15s;}
+  .btn-outline{background:transparent;border-color:rgba(255,255,255,.45);color:#fff;}.btn-outline:hover{background:rgba(255,255,255,.12);}
+  .btn-primary{background:#fff;color:var(--accent);}.btn-primary:hover{opacity:.88;}
+  .workspace{display:grid;grid-template-columns:380px 1fr;height:calc(100vh - 52px);}
+  .form-panel{background:var(--white);border-right:1px solid var(--border);overflow-y:auto;padding:24px 24px 40px;}
+  .section-label{font-size:10px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:var(--accent);padding:20px 0 10px;border-bottom:1px solid var(--border);margin-bottom:14px;}
+  .section-label:first-child{padding-top:4px;}
+  .field{margin-bottom:13px;}
+  .field label{display:block;font-size:12px;font-weight:500;color:var(--ink2);margin-bottom:4px;}
+  .field label .req{color:var(--danger);margin-left:2px;}
+  .field input,.field select,.field textarea{width:100%;padding:8px 10px;border:1px solid var(--border);border-radius:var(--radius);font-size:13px;font-family:var(--font-ui);color:var(--ink);background:var(--white);transition:border-color .15s;}
+  .field input:focus,.field select:focus,.field textarea:focus{outline:none;border-color:var(--accent);box-shadow:0 0 0 3px var(--accent2);}
+  .field textarea{resize:vertical;min-height:60px;}
+  .field-row{display:grid;grid-template-columns:1fr 1fr;gap:10px;}
+  .hint{font-size:11px;color:var(--ink3);margin-top:3px;}
+  .clause-check{display:flex;align-items:flex-start;gap:8px;margin-bottom:10px;}
+  .clause-check input[type=checkbox]{margin-top:2px;accent-color:var(--accent);width:15px;height:15px;}
+  .clause-check label{font-size:12.5px;font-weight:600;color:var(--ink2);cursor:pointer;line-height:1.4;}
+  .bloque-cambio{border:1px solid var(--border);border-radius:8px;padding:12px;margin-bottom:12px;background:#fbfbf9;}
+  .preview-panel{background:#e8e7e0;overflow-y:auto;padding:32px 40px;display:flex;flex-direction:column;align-items:center;}
+  .doc-sheet{background:var(--white);width:100%;max-width:760px;min-height:1060px;padding:72px 80px;box-shadow:0 2px 16px rgba(0,0,0,.12);font-family:var(--font-doc);font-size:12pt;line-height:1.75;color:#111;}
+  .doc-folio{font-size:9pt;color:var(--ink3);font-family:var(--font-ui);text-align:right;line-height:1.4;}
+  .doc-title{text-align:center;font-size:13pt;font-weight:bold;text-transform:uppercase;letter-spacing:.04em;margin-bottom:6px;}
+  .doc-subtitle{text-align:center;font-size:10pt;color:var(--ink3);font-family:var(--font-ui);margin-bottom:28px;}
+  .doc-p{margin-bottom:14px;text-align:justify;}
+  .doc-p .blank{font-weight:bold;color:var(--accent);border-bottom:1px solid var(--accent);padding:0 2px;}
+  .doc-p .blank.empty{color:#c0392b;border-bottom-color:#c0392b;font-style:italic;font-weight:normal;}
+  .doc-clause-title{font-weight:bold;text-transform:uppercase;font-size:10.5pt;margin:22px 0 8px;}
+  .doc-table{width:100%;border-collapse:collapse;margin:14px 0;font-size:10.5pt;}
+  .doc-table td,.doc-table th{border:1px solid #999;padding:6px 10px;text-align:left;}
+  .doc-table th{background:#f0f0ec;font-family:var(--font-ui);font-size:9pt;text-transform:uppercase;}
+  .doc-firma-grid{display:grid;grid-template-columns:1fr 1fr;gap:40px;margin-top:48px;}
+  .firma-box{border-top:1px solid #888;padding-top:8px;font-size:10pt;text-align:center;line-height:1.5;}
+  .firma-box strong{display:block;font-size:9pt;color:var(--ink3);font-family:var(--font-ui);}
+  .watermark-empty{text-align:center;color:var(--ink3);font-family:var(--font-ui);font-size:13px;padding:80px 0;}
+  @media print{header,.form-panel{display:none!important;}.workspace{display:block;height:auto;}.preview-panel{padding:0;background:white;}.doc-sheet{box-shadow:none;max-width:100%;padding:40px;}body{background:white;}}
+
+#auth-gate-loading{position:fixed;inset:0;background:#fff;z-index:9999;display:flex;align-items:center;justify-content:center;font-family:'Segoe UI',system-ui,sans-serif;color:#999;font-size:13px;}
+#auth-gate-blocked{position:fixed;inset:0;background:#0f2640;z-index:9999;display:none;align-items:center;justify-content:center;padding:24px;}
+#auth-gate-blocked .agb-box{background:#fff;border-radius:16px;padding:40px 36px;max-width:420px;text-align:center;font-family:'Segoe UI',system-ui,sans-serif;}
+#auth-gate-blocked .agb-box h2{font-size:18px;margin-bottom:10px;color:#0f2640;}
+#auth-gate-blocked .agb-box p{font-size:13px;color:#666;margin-bottom:20px;line-height:1.6;}
+#auth-gate-blocked .agb-btns{display:flex;gap:10px;justify-content:center;flex-wrap:wrap;}
+#auth-gate-blocked .agb-btns a{padding:10px 18px;border-radius:8px;font-size:13px;font-weight:600;text-decoration:none;}
+#auth-gate-blocked .agb-btns a.agb-primary{background:#1a3a5c;color:#fff;}
+#auth-gate-blocked .agb-btns a.agb-secondary{background:#f0f0ec;color:#1a3a5c;}
+body.modo-demo .doc-sheet{position:relative;user-select:none;-webkit-user-select:none;-moz-user-select:none;}
+body.modo-demo .doc-sheet::after{content:'MUESTRA — CUENTA DEMO, NO VÁLIDO PARA USO LEGAL';position:absolute;top:46%;left:-15%;right:-15%;text-align:center;font-size:26px;font-weight:900;color:rgba(220,38,38,.16);transform:rotate(-18deg);pointer-events:none;font-family:'Segoe UI',system-ui,sans-serif;z-index:50;}
+@media print{ body.modo-demo .doc-sheet::after{display:block!important;color:rgba(220,38,38,.35)!important;} }
+</style>
+<script src="membrete.js?v=3.7"></script>
+</head>
+<body>
+<div id="auth-gate-loading">Verificando acceso…</div>
+<div id="auth-gate-blocked">
+  <div class="agb-box">
+    <h2>🔒 Esta herramienta requiere una suscripción activa</h2>
+    <p>Inicie sesión desde su portal de cliente para usar este generador, o conozca nuestros planes si todavía no es cliente de ClickLaboral.mx.</p>
+    <div class="agb-btns">
+      <a class="agb-primary" href="portal-cliente.html">Iniciar sesión →</a>
+      <a class="agb-secondary" href="index.html#precios">Ver planes</a>
+    </div>
+  </div>
+</div>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
+<script src="expediente-helper.js?v=3.7"></script>
+<script>
+(async()=>{
+  const _sb = supabase.createClient('https://hpzgqaplrywwjuvrzhcp.supabase.co','sb_publishable_1g8US8iFJ8CxnSaF_4MHgA_gqyyAr3W');
+  try {
+    const { data } = await _sb.auth.getSession();
+    document.getElementById('auth-gate-loading').style.display = 'none';
+    if (!data?.session?.user) {
+      document.getElementById('auth-gate-blocked').style.display = 'flex';
+    }
+  } catch(e) {
+    document.getElementById('auth-gate-loading').style.display = 'none';
+    document.getElementById('auth-gate-blocked').style.display = 'flex';
+  }
+})();
+</script>
+
+<header>
+  <div>
+    <h1>📝 Convenio Modificatorio al Contrato de Trabajo</h1>
+    <span>Cambios de puesto, salario, jornada o turno · Arts. 25 y 33 LFT</span>
+  </div>
+  <div class="header-actions">
+    <button class="btn btn-primary" onclick="window.print()">🖨 Imprimir / PDF</button>
+  </div>
+</header>
+
+<div class="workspace">
+  <div class="form-panel">
+
+    <div class="section-label">Membrete de la empresa</div>
+    <div id="mem-logo-container"></div>
+    <div class="field"><label>Razón social / empresa<span class="req">*</span></label><input id="empresa" oninput="render()"></div>
+    <div class="field-row">
+      <div class="field"><label>RFC</label><input id="rfc_emp" oninput="render()"></div>
+      <div class="field"><label>Teléfono</label><input id="mem-tel" oninput="render()"></div>
+    </div>
+    <div class="field"><label>Domicilio</label><input id="domicilio_emp" oninput="render()"></div>
+    <div class="field-row">
+      <div class="field"><label>Email</label><input id="mem-email" oninput="render()"></div>
+      <div class="field"><label>Sitio web</label><input id="mem-web" oninput="render()"></div>
+    </div>
+    <div class="field"><label>Representante legal / firma la empresa<span class="req">*</span></label><input id="representante" oninput="render()"></div>
+
+    <div class="section-label">Trabajador y contrato original</div>
+    <div class="field"><label>Nombre del trabajador<span class="req">*</span></label><input id="trabajador" oninput="render()"></div>
+    <div class="field-row">
+      <div class="field"><label>Fecha de ingreso</label><input type="date" id="fecha_ingreso" oninput="render()"></div>
+      <div class="field"><label>Fecha del contrato original</label><input type="date" id="fecha_contrato" oninput="render()"><div class="hint">Si se omite, se cita la fecha de ingreso</div></div>
+    </div>
+
+    <div class="section-label">¿Qué se modifica?</div>
+    <div class="clause-check"><input type="checkbox" id="mod-puesto" onchange="toggleBloque('puesto')"><label for="mod-puesto">🔀 Puesto / categoría</label></div>
+    <div class="bloque-cambio" id="bloque-puesto" style="display:none;">
+      <div class="field-row">
+        <div class="field"><label>Puesto anterior</label><input id="puesto_ant" oninput="render()"></div>
+        <div class="field"><label>Puesto nuevo<span class="req">*</span></label><input id="puesto_nvo" oninput="render()"></div>
+      </div>
+      <div class="field"><label>Nuevas funciones principales (opcional)</label><textarea id="funciones_nvas" oninput="render()" placeholder="Descripción breve de las funciones del nuevo puesto"></textarea></div>
+    </div>
+
+    <div class="clause-check"><input type="checkbox" id="mod-salario" onchange="toggleBloque('salario')"><label for="mod-salario">💰 Salario</label></div>
+    <div class="bloque-cambio" id="bloque-salario" style="display:none;">
+      <div class="field-row">
+        <div class="field"><label>Salario diario anterior (MXN)</label><input type="number" id="sal_ant" step="0.01" oninput="render()"></div>
+        <div class="field"><label>Salario diario nuevo (MXN)<span class="req">*</span></label><input type="number" id="sal_nvo" step="0.01" oninput="render()"></div>
+      </div>
+    </div>
+
+    <div class="clause-check"><input type="checkbox" id="mod-jornada" onchange="toggleBloque('jornada')"><label for="mod-jornada">⏱ Jornada / horario</label></div>
+    <div class="bloque-cambio" id="bloque-jornada" style="display:none;">
+      <div class="field-row">
+        <div class="field"><label>Jornada/horario anterior</label><input id="jor_ant" oninput="render()" placeholder="Lun–Vie 9:00 a 18:00"></div>
+        <div class="field"><label>Jornada/horario nuevo<span class="req">*</span></label><input id="jor_nvo" oninput="render()" placeholder="Lun–Vie 8:00 a 16:00"></div>
+      </div>
+    </div>
+
+    <div class="clause-check"><input type="checkbox" id="mod-turno" onchange="toggleBloque('turno')"><label for="mod-turno">🕑 Turno / área de adscripción</label></div>
+    <div class="bloque-cambio" id="bloque-turno" style="display:none;">
+      <div class="field-row">
+        <div class="field"><label>Turno/área anterior</label><input id="turno_ant" oninput="render()"></div>
+        <div class="field"><label>Turno/área nuevo<span class="req">*</span></label><input id="turno_nvo" oninput="render()"></div>
+      </div>
+    </div>
+
+    <div class="section-label">Vigencia y firma</div>
+    <div class="field-row">
+      <div class="field"><label>Fecha efectiva del cambio<span class="req">*</span></label><input type="date" id="fecha_efectiva" oninput="render()"></div>
+      <div class="field"><label>Fecha de firma</label><input type="date" id="fecha_firma" oninput="render()"></div>
+    </div>
+    <div class="field"><label>Ciudad de firma<span class="req">*</span></label><input id="ciudad_firma" oninput="render()" placeholder="Guadalajara, Jalisco"></div>
+    <div class="field"><label>Motivo / contexto (opcional)</label><textarea id="motivo" oninput="render()" placeholder="Ej. promoción por desempeño, reestructura de área, ajuste salarial anual"></textarea></div>
+
+    <button class="btn" style="width:100%;background:#f0f0ec;color:var(--ink2);margin-top:8px;" onclick="limpiar()">🧹 Limpiar campos</button>
+  </div>
+
+  <div class="preview-panel">
+    <div class="doc-sheet" id="doc-preview"></div>
+  </div>
+</div>
+
+<script>
+function v(id){return(document.getElementById(id)||{}).value||'';}
+function b(txt,fb){if(!txt||!txt.toString().trim())return`<span class="blank empty">[${fb}]</span>`;return`<span class="blank">${txt}</span>`;}
+function fmtFecha(iso){if(!iso)return'';const[y,m,d]=iso.split('-');const M=['enero','febrero','marzo','abril','mayo','junio','julio','agosto','septiembre','octubre','noviembre','diciembre'];return`${parseInt(d)} de ${M[parseInt(m)-1]} de ${y}`;}
+function fmtMoneda(num){if(!num)return'';return`$${parseFloat(num).toLocaleString('es-MX',{minimumFractionDigits:2})} MXN`;}
+function limpiar(){if(!confirm('¿Limpiar todos los campos?'))return;document.querySelectorAll('input:not([readonly]),select,textarea').forEach(el=>{if(el.type==='checkbox'){el.checked=false;}else{el.value='';}});['puesto','salario','jornada','turno'].forEach(k=>document.getElementById('bloque-'+k).style.display='none');render();}
+
+function toggleBloque(k){
+  const on = document.getElementById('mod-'+k).checked;
+  document.getElementById('bloque-'+k).style.display = on ? 'block' : 'none';
+  render();
+}
+
+function getDatosMembrete(){
+  return { empresa:v('empresa'), rfc:v('rfc_emp'), domicilio:v('domicilio_emp'),
+           tel:v('mem-tel'), emailEmp:v('mem-email'), web:v('mem-web') };
+}
+
+let _folio = null;
+function folioDoc(){
+  if(!_folio) _folio = `CONV-MOD-${new Date().getFullYear()}-${Math.floor(Math.random()*10000).toString().padStart(4,'0')}`;
+  return _folio;
+}
+
+function render(){
+  const empresa=v('empresa'), rep=v('representante'), trab=v('trabajador');
+  const modP=document.getElementById('mod-puesto').checked;
+  const modS=document.getElementById('mod-salario').checked;
+  const modJ=document.getElementById('mod-jornada').checked;
+  const modT=document.getElementById('mod-turno').checked;
+  const algo = modP||modS||modJ||modT;
+
+  if(!empresa&&!trab){document.getElementById('doc-preview').innerHTML='<div class="watermark-empty">Complete los datos y marque qué condiciones se modifican para generar el convenio.</div>';return;}
+
+  const folio = folioDoc();
+  const fIng=v('fecha_ingreso'), fCon=v('fecha_contrato')||fIng, fEf=v('fecha_efectiva'), fFir=v('fecha_firma'), cf=v('ciudad_firma'), motivo=v('motivo');
+
+  // Tabla de modificaciones (condición | dice | debe decir)
+  let filas='';
+  if(modP) filas += `<tr><td><strong>Puesto</strong></td><td>${v('puesto_ant')||'—'}</td><td><strong>${b(v('puesto_nvo'),'puesto nuevo')}</strong></td></tr>`;
+  if(modS) filas += `<tr><td><strong>Salario diario</strong></td><td>${v('sal_ant')?fmtMoneda(v('sal_ant')):'—'}</td><td><strong>${v('sal_nvo')?fmtMoneda(v('sal_nvo')):b('','salario nuevo')}</strong></td></tr>`;
+  if(modJ) filas += `<tr><td><strong>Jornada / horario</strong></td><td>${v('jor_ant')||'—'}</td><td><strong>${b(v('jor_nvo'),'jornada nueva')}</strong></td></tr>`;
+  if(modT) filas += `<tr><td><strong>Turno / área</strong></td><td>${v('turno_ant')||'—'}</td><td><strong>${b(v('turno_nvo'),'turno/área nueva')}</strong></td></tr>`;
+
+  const clausulaSegunda = [];
+  if(modP) clausulaSegunda.push(`el puesto de <strong>${v('puesto_nvo')||'[puesto nuevo]'}</strong>${v('funciones_nvas')?', cuyas funciones principales consisten en: '+v('funciones_nvas'):''}`);
+  if(modS) clausulaSegunda.push(`un salario diario de <strong>${v('sal_nvo')?fmtMoneda(v('sal_nvo')):'[salario nuevo]'}</strong>, más las prestaciones de ley`);
+  if(modJ) clausulaSegunda.push(`la jornada y horario siguientes: <strong>${v('jor_nvo')||'[jornada nueva]'}</strong>, con los descansos que ordena la ley`);
+  if(modT) clausulaSegunda.push(`el turno / área de adscripción: <strong>${v('turno_nvo')||'[turno nuevo]'}</strong>`);
+
+  const cuerpo = `
+    <div class="doc-p"><strong>CONVENIO MODIFICATORIO AL CONTRATO INDIVIDUAL DE TRABAJO</strong> que celebran, por una parte, ${b(empresa,'razón social')}, representada en este acto por ${b(rep,'representante legal')}, en adelante <strong>"LA EMPRESA"</strong>; y por la otra, el (la) trabajador(a) ${b(trab,'nombre del trabajador')}, en adelante <strong>"EL TRABAJADOR"</strong>, al tenor de los siguientes antecedentes y cláusulas:</div>
+
+    <div class="doc-clause-title">Antecedentes</div>
+    <div class="doc-p"><strong>I.</strong> Las partes celebraron contrato individual de trabajo${fCon?' con fecha '+fmtFecha(fCon):''}${fIng?', iniciando EL TRABAJADOR la prestación de sus servicios el '+fmtFecha(fIng):''}, el cual continúa vigente y surtiendo plenos efectos.</div>
+    <div class="doc-p"><strong>II.</strong> Es voluntad libre de ambas partes modificar únicamente las condiciones de trabajo que se precisan en este convenio${motivo?', con motivo de: '+motivo:''}, con fundamento en los artículos 25, 33 y 57 de la Ley Federal del Trabajo.</div>
+
+    <div class="doc-clause-title">Cláusulas</div>
+    <div class="doc-p"><strong>PRIMERA — Modificación.</strong> A partir del ${b(fmtFecha(fEf),'fecha efectiva')}, las condiciones de trabajo que a continuación se indican quedan modificadas en los términos siguientes:</div>
+    ${algo?`<table class="doc-table"><tr><th>Condición</th><th>Condición anterior</th><th>Condición nueva</th></tr>${filas}</table>`:'<div class="doc-p" style="color:#c0392b;">[Marque en el panel izquierdo qué condiciones se modifican]</div>'}
+    ${clausulaSegunda.length?`<div class="doc-p"><strong>SEGUNDA — Nuevas condiciones.</strong> En consecuencia, a partir de la fecha efectiva EL TRABAJADOR prestará sus servicios conforme a ${clausulaSegunda.join('; ')}.</div>`:''}
+    <div class="doc-p"><strong>${clausulaSegunda.length?'TERCERA':'SEGUNDA'} — Subsistencia.</strong> Todas las demás cláusulas y condiciones del contrato individual de trabajo que no fueron expresamente modificadas por este convenio permanecen vigentes en sus términos, incluyendo la antigüedad de EL TRABAJADOR, que se reconoce de manera íntegra e ininterrumpida desde su fecha de ingreso.</div>
+    <div class="doc-p"><strong>${clausulaSegunda.length?'CUARTA':'TERCERA'} — No renuncia de derechos.</strong> Este convenio no implica renuncia alguna a los derechos que la Ley Federal del Trabajo otorga a EL TRABAJADOR (Art. 33 LFT). Ambas partes manifiestan que lo celebran libres de error, dolo, violencia o mala fe.</div>
+    <div class="doc-p">Leído que fue el presente convenio y enteradas las partes de su contenido y alcance legal, lo firman por duplicado en ${b(cf,'ciudad')}, el ${b(fmtFecha(fFir||fEf),'fecha de firma')}, quedando un ejemplar en poder de cada parte.</div>
+
+    <div class="doc-firma-grid">
+      <div class="firma-box"><br><br>${rep||'__________________________'}<br><strong>LA EMPRESA — ${empresa||''}</strong></div>
+      <div class="firma-box"><br><br>${trab||'__________________________'}<br><strong>EL TRABAJADOR</strong></div>
+    </div>`;
+
+  document.getElementById('doc-preview').innerHTML = generarMembrete({
+    ...getDatosMembrete(), folio, logoDataUrl: window._logoClienteDataUrl,
+  }) + `
+    <div class="doc-folio">Folio: ${folio}</div>
+    <div class="doc-title">Convenio Modificatorio al Contrato Individual de Trabajo</div>
+    <div class="doc-subtitle">Arts. 25, 33 y 57 de la Ley Federal del Trabajo</div>
+    ${cuerpo}
+    <div style="margin-top:32px;font-size:9pt;color:#888;font-family:var(--font-ui);border-top:1px solid #ddd;padding-top:10px;">Documento generado mediante plataforma de compliance laboral · Folio ${folio}</div>
+    ${generarFooterDoc({...getDatosMembrete(), folio})}`;
+}
+
+// ── Prellenado desde el historial de movimientos (URL params) ──
+(function(){
+  const p = new URLSearchParams(location.search);
+  if(![...p.keys()].length) return;
+  const setV=(id,val)=>{const el=document.getElementById(id);if(el&&val!=null&&val!==''){el.value=val;}};
+  const marcar=(k)=>{const c=document.getElementById('mod-'+k);if(c&&!c.checked){c.checked=true;document.getElementById('bloque-'+k).style.display='block';}};
+
+  setV('trabajador', p.get('trabajador'));
+  setV('fecha_ingreso', p.get('ingreso'));
+  setV('fecha_efectiva', p.get('fecha'));
+  setV('motivo', p.get('motivo'));
+
+  if(p.get('puesto_ant')||p.get('puesto_nvo')){ marcar('puesto'); setV('puesto_ant',p.get('puesto_ant')); setV('puesto_nvo',p.get('puesto_nvo')); }
+  if(p.get('sal_ant')||p.get('sal_nvo')){ marcar('salario'); setV('sal_ant',p.get('sal_ant')); setV('sal_nvo',p.get('sal_nvo')); }
+  if(p.get('jor_ant')||p.get('jor_nvo')){ marcar('jornada'); setV('jor_ant',p.get('jor_ant')); setV('jor_nvo',p.get('jor_nvo')); }
+  if(p.get('turno_ant')||p.get('turno_nvo')){ marcar('turno'); setV('turno_ant',p.get('turno_ant')); setV('turno_nvo',p.get('turno_nvo')); }
+
+  setTimeout(()=>{
+    const banner=document.createElement('div');
+    banner.style.cssText='background:#f0fdf4;border:1px solid #86efac;border-radius:8px;padding:10px 14px;margin-bottom:14px;font-size:12px;color:#065f46;';
+    banner.innerHTML='✅ Datos precargados desde el historial de movimientos. Revise y complete antes de imprimir y firmar.';
+    const fp=document.querySelector('.form-panel');
+    if(fp) fp.insertBefore(banner, fp.firstChild);
+  }, 400);
+})();
+
+render();
+
+// ── Expediente del trabajador — vincular este documento al roster ──
+if (window.ExpedienteHelper) {
+  ExpedienteHelper.init({
+    inputNombreId: 'trabajador',
+    tipoDocumento: 'convenio_modificatorio',
+    nombreDocumentoFn: () => {
+      const partes=[];
+      if(document.getElementById('mod-puesto').checked) partes.push('puesto');
+      if(document.getElementById('mod-salario').checked) partes.push('salario');
+      if(document.getElementById('mod-jornada').checked) partes.push('jornada');
+      if(document.getElementById('mod-turno').checked) partes.push('turno');
+      return 'Convenio modificatorio' + (partes.length?' ('+partes.join(', ')+')':'');
+    },
+  });
+}
+
+// ── INIT ──
+renderPanelMembrete('mem-logo-container');
+(async()=>{
+  try{
+    const _sb = supabase.createClient(
+      'https://hpzgqaplrywwjuvrzhcp.supabase.co',
+      'sb_publishable_1g8US8iFJ8CxnSaF_4MHgA_gqyyAr3W'
+    );
+    await precargarMembreteDesdePortal(_sb);
+  }catch(e){}
+})();
+render();
+</script>
+<script src="edicion-libre.js?v=4.6"></script>
+</body>
+</html>

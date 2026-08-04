@@ -1,0 +1,555 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="robots" content="noindex,nofollow">
+<title>Pruebas psicométricas — ClickLaboral.mx</title>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
+<style>
+:root {
+  --navy:#0f2640; --navy2:#1a3a5c; --navy3:#24507a;
+  --sky:#e8f2fc; --sky2:#c5dcf5;
+  --white:#fff; --surface:#f5f4f0; --surface2:#eeede8;
+  --ink:#111110; --ink2:#444440; --ink3:#888880;
+  --border:rgba(0,0,0,.08); --border2:rgba(0,0,0,.14);
+  --green:#16a34a; --green-bg:#dcfce7;
+  --amber:#d97706; --amber-bg:#fef3c7;
+  --red:#dc2626; --red-bg:#fee2e2;
+  --r:12px; --r-sm:8px;
+  --font:'Segoe UI',system-ui,-apple-system,sans-serif;
+}
+*{margin:0;padding:0;box-sizing:border-box;}
+body{font-family:var(--font);background:var(--surface);color:var(--ink);font-size:14px;line-height:1.5;}
+a{color:var(--navy2);}
+.top{background:var(--navy);color:#fff;padding:14px 24px;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:10px;}
+.top-title{font-size:15px;font-weight:700;}
+.top a{color:#7dd3fc;font-size:12px;text-decoration:none;}
+.wrap{max-width:860px;margin:0 auto;padding:24px 16px 60px;}
+.card{background:var(--white);border:1px solid var(--border);border-radius:var(--r);padding:24px;margin-bottom:16px;}
+.card-title{font-size:16px;font-weight:800;color:var(--navy);margin-bottom:6px;}
+.card-sub{font-size:12px;color:var(--ink3);margin-bottom:16px;}
+.btn{display:inline-flex;align-items:center;gap:6px;padding:9px 18px;border-radius:var(--r-sm);font-size:13px;font-weight:600;cursor:pointer;border:1px solid transparent;font-family:var(--font);transition:all .15s;}
+.btn-primary{background:var(--navy2);color:#fff;}.btn-primary:hover{background:var(--navy3);}
+.btn-ghost{background:transparent;border-color:var(--border2);color:var(--ink2);}.btn-ghost:hover{background:var(--surface);}
+.btn:disabled{opacity:.5;cursor:not-allowed;}
+.field{margin-bottom:14px;}
+.field label{display:block;font-size:12px;font-weight:600;color:var(--ink2);margin-bottom:4px;}
+.field input,.field select{width:100%;padding:9px 12px;border:1.5px solid var(--border2);border-radius:var(--r-sm);font-size:13px;font-family:var(--font);}
+.badge{display:inline-block;font-size:10px;font-weight:700;padding:3px 10px;border-radius:20px;}
+.badge-green{background:var(--green-bg);color:var(--green);}
+.badge-amber{background:var(--amber-bg);color:var(--amber);}
+.badge-red{background:var(--red-bg);color:var(--red);}
+.progress-wrap{background:var(--surface2);border-radius:20px;height:8px;overflow:hidden;margin:14px 0 22px;}
+.progress-bar{height:100%;background:var(--navy2);border-radius:20px;transition:width .3s;}
+.q-card{background:var(--white);border:1px solid var(--border);border-radius:var(--r);padding:20px 24px;margin-bottom:12px;}
+.q-txt{font-size:14px;font-weight:600;color:var(--navy);margin-bottom:12px;}
+.likert{display:flex;gap:6px;flex-wrap:wrap;}
+.likert label{flex:1;min-width:88px;text-align:center;border:1.5px solid var(--border2);border-radius:var(--r-sm);padding:8px 4px;font-size:11px;cursor:pointer;color:var(--ink2);user-select:none;transition:all .15s;}
+.likert input{display:none;}
+.likert input:checked + span{font-weight:700;}
+.likert label:has(input:checked){background:var(--sky);border-color:var(--navy2);color:var(--navy2);}
+.opciones{display:flex;flex-direction:column;gap:8px;}
+.opciones label{border:1.5px solid var(--border2);border-radius:var(--r-sm);padding:10px 14px;font-size:13px;cursor:pointer;user-select:none;transition:all .15s;display:flex;gap:10px;align-items:flex-start;}
+.opciones input{margin-top:2px;}
+.opciones label:has(input:checked){background:var(--sky);border-color:var(--navy2);}
+.res-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:14px;margin-bottom:20px;}
+.res-card{border:1px solid var(--border);border-radius:var(--r);padding:18px;text-align:center;}
+.res-num{font-size:30px;font-weight:800;}
+.res-lbl{font-size:11px;color:var(--ink3);font-weight:600;text-transform:uppercase;letter-spacing:.05em;}
+.disc-row{display:flex;align-items:center;gap:12px;margin-bottom:10px;}
+.disc-letra{width:28px;height:28px;border-radius:8px;display:flex;align-items:center;justify-content:center;font-weight:800;color:#fff;font-size:13px;flex-shrink:0;}
+.disc-track{flex:1;height:10px;background:var(--surface2);border-radius:20px;overflow:hidden;}
+.disc-fill{height:100%;border-radius:20px;transition:width .5s;}
+.disc-pct{width:44px;text-align:right;font-size:12px;font-weight:700;font-variant-numeric:tabular-nums;}
+.veredicto{border-radius:var(--r);padding:22px 26px;margin-bottom:18px;display:flex;gap:16px;align-items:center;}
+.tabla{width:100%;border-collapse:collapse;font-size:13px;}
+.tabla th{text-align:left;font-size:11px;text-transform:uppercase;letter-spacing:.05em;color:var(--ink3);padding:8px 10px;border-bottom:1px solid var(--border2);}
+.tabla td{padding:10px;border-bottom:1px solid var(--border);}
+.tabla tr:hover td{background:var(--surface);}
+.disclaimer{background:var(--amber-bg);border:1px solid rgba(217,119,6,.25);border-radius:var(--r-sm);padding:12px 16px;font-size:12px;color:#92400e;line-height:1.6;margin-top:18px;}
+.hidden{display:none!important;}
+#auth-gate{min-height:60vh;display:flex;align-items:center;justify-content:center;flex-direction:column;gap:14px;color:var(--ink3);}
+@media print{
+  .top,.no-print{display:none!important;}
+  body{background:#fff;}
+  .card{border:none;padding:12px 0;}
+}
+</style>
+</head>
+<body>
+
+<div class="top no-print">
+  <div class="top-title">🧠 Pruebas psicométricas — Selección de personal</div>
+  <a href="portal-cliente.html" id="link-volver-portal">← Volver al portal</a>
+</div>
+
+<div id="auth-gate">
+  <div style="font-size:30px;">🔐</div>
+  <div>Verificando sesión…</div>
+  <a href="portal-cliente.html">Ir al portal para iniciar sesión</a>
+</div>
+
+<div id="app" class="wrap hidden">
+
+  <!-- ═════════ VISTA: HISTORIAL ═════════ -->
+  <div id="vista-lista">
+    <div class="card">
+      <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:12px;flex-wrap:wrap;">
+        <div>
+          <div class="card-title">Evaluación psicométrica de candidatos</div>
+          <div class="card-sub">Batería de 3 pruebas (≈20–25 min): perfil conductual, razonamiento e integridad laboral. Al finalizar obtiene calificación y dictamen de aptitud orientativo.</div>
+        </div>
+        <button class="btn btn-primary" onclick="nuevaEvaluacion()">+ Nueva evaluación</button>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-title" style="font-size:14px;">Evaluaciones realizadas</div>
+      <div id="lista-evaluaciones"><div style="color:var(--ink3);font-size:12px;padding:14px 0;">Cargando…</div></div>
+    </div>
+
+    <div class="disclaimer">
+      ⚖️ <strong>Uso responsable:</strong> estas pruebas son una herramienta <strong>orientativa</strong> de apoyo a la selección — no un diagnóstico psicológico ni un criterio único de contratación. La decisión final corresponde al empleador y debe basarse también en entrevista, referencias y requisitos objetivos del puesto. Su uso debe respetar el principio de no discriminación (Arts. 1o y 133 fr. I LFT): los resultados no pueden emplearse para excluir por origen, género, edad, condición de salud, embarazo, religión, opiniones o cualquier otra categoría protegida.
+    </div>
+  </div>
+
+  <!-- ═════════ VISTA: DATOS DEL CANDIDATO ═════════ -->
+  <div id="vista-candidato" class="hidden">
+    <div class="card">
+      <div class="card-title">Datos del candidato</div>
+      <div class="card-sub">Registre al candidato y entréguele el dispositivo para que responda. Los resultados se mostrarán al finalizar.</div>
+      <div class="field"><label>Nombre completo *</label><input type="text" id="cand-nombre" placeholder="Nombre del candidato"></div>
+      <div class="field"><label>Puesto al que aplica *</label><input type="text" id="cand-puesto" placeholder="Ej. Recepcionista, Auxiliar contable, Vendedor"></div>
+      <div class="field"><label>Email (opcional)</label><input type="email" id="cand-email" placeholder="correo@ejemplo.com"></div>
+      <div style="display:flex;gap:10px;margin-top:18px;">
+        <button class="btn btn-primary" onclick="iniciarBateria()">Iniciar evaluación →</button>
+        <button class="btn btn-ghost" onclick="volverLista()">Cancelar</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ═════════ VISTA: TEST ═════════ -->
+  <div id="vista-test" class="hidden">
+    <div class="card" style="padding:16px 24px;">
+      <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px;">
+        <div>
+          <div style="font-size:12px;color:var(--ink3);" id="test-candidato-lbl"></div>
+          <div style="font-size:15px;font-weight:800;color:var(--navy);" id="test-seccion-titulo"></div>
+        </div>
+        <div style="font-size:12px;color:var(--ink3);" id="test-progreso-lbl"></div>
+      </div>
+      <div class="progress-wrap"><div class="progress-bar" id="test-progreso-bar" style="width:0%"></div></div>
+      <div style="font-size:12px;color:var(--ink2);" id="test-instrucciones"></div>
+    </div>
+    <div id="test-preguntas"></div>
+    <div style="display:flex;justify-content:flex-end;gap:10px;">
+      <button class="btn btn-primary" id="btn-siguiente" onclick="siguienteSeccion()">Continuar →</button>
+    </div>
+  </div>
+
+  <!-- ═════════ VISTA: ENTREGA ═════════ -->
+  <div id="vista-entrega" class="hidden">
+    <div class="card" style="text-align:center;padding:50px 24px;">
+      <div style="font-size:40px;margin-bottom:12px;">✅</div>
+      <div class="card-title">Evaluación finalizada</div>
+      <div class="card-sub" style="margin-bottom:20px;">Gracias por completar las pruebas.<br>Por favor entregue el dispositivo a la persona que lo está evaluando.</div>
+      <button class="btn btn-primary" onclick="mostrarResultados()">🔓 Ver resultados (evaluador)</button>
+    </div>
+  </div>
+
+  <!-- ═════════ VISTA: RESULTADOS ═════════ -->
+  <div id="vista-resultados" class="hidden">
+    <div class="card">
+      <div style="display:flex;justify-content:space-between;align-items:flex-start;flex-wrap:wrap;gap:8px;">
+        <div>
+          <div class="card-title" id="res-nombre"></div>
+          <div class="card-sub" id="res-meta"></div>
+        </div>
+        <div class="no-print" style="display:flex;gap:8px;">
+          <button class="btn btn-ghost" onclick="window.print()">🖨 Imprimir</button>
+          <button class="btn btn-ghost" onclick="volverLista()">← Historial</button>
+        </div>
+      </div>
+
+      <div class="veredicto" id="res-veredicto"></div>
+
+      <div class="res-grid">
+        <div class="res-card"><div class="res-num" id="res-global">—</div><div class="res-lbl">Calificación global</div></div>
+        <div class="res-card"><div class="res-num" id="res-razonamiento">—</div><div class="res-lbl">Razonamiento</div></div>
+        <div class="res-card"><div class="res-num" id="res-integridad">—</div><div class="res-lbl">Integridad laboral</div></div>
+      </div>
+
+      <div class="card-title" style="font-size:14px;">Perfil conductual (estilo DISC)</div>
+      <div class="card-sub">Descriptivo — no tiene respuestas correctas ni incide en la calificación. Sirve para evaluar compatibilidad con el puesto.</div>
+      <div id="res-disc"></div>
+      <div id="res-disc-desc" style="background:var(--sky);border-radius:var(--r-sm);padding:14px 18px;font-size:13px;color:var(--navy2);line-height:1.6;margin-top:8px;"></div>
+
+      <div class="disclaimer">
+        ⚖️ Resultado <strong>orientativo</strong>, generado por cuestionarios originales de ClickLaboral.mx. No constituye diagnóstico psicológico ni sustituye la valoración profesional. La decisión de contratación corresponde al empleador conforme a criterios objetivos del puesto y al principio de no discriminación (Arts. 1o y 133 fr. I LFT).
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<script>
+// ════════════════════════════════════════════
+// SUPABASE — misma sesión que el portal de cliente
+// ════════════════════════════════════════════
+const SUPABASE_URL = 'https://hpzgqaplrywwjuvrzhcp.supabase.co';
+const SUPABASE_ANON_KEY = 'sb_publishable_1g8US8iFJ8CxnSaF_4MHgA_gqyyAr3W';
+const sb = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+let clienteRFC = null, clienteEmpresa = null, esDespacho = false;
+
+// IMPORTANTE: nunca ejecutar sb.from() antes de restaurar la sesión
+async function initAuth(){
+  const { data } = await sb.auth.getSession();
+  const session = data?.session;
+  const meta = session?.user?.user_metadata || {};
+  esDespacho = meta.tipo === 'despacho';
+  if (!session || (!meta.rfc && !esDespacho)) {
+    document.getElementById('auth-gate').innerHTML =
+      '<div style="font-size:30px;">🔐</div><div>Sesión no encontrada.</div><a href="portal-cliente.html">Inicie sesión en el portal →</a>';
+    return;
+  }
+  if (esDespacho) {
+    let g = null;
+    try { g = JSON.parse(sessionStorage.getItem('cl_gestion')||'null'); } catch(_){}
+    const aut = (meta.despacho_clientes||[]).map(c=>String(c.rfc||'').toUpperCase());
+    if (!g || !aut.includes(String(g.rfc||'').toUpperCase())) { location.href='panel-despacho.html'; return; }
+    clienteRFC = g.rfc;
+    const lnk = document.getElementById('link-volver-portal');
+    if(lnk){ lnk.href='panel-despacho.html'; lnk.textContent='← Volver a mi panel'; }
+  } else {
+    clienteRFC = meta.rfc;
+  }
+  clienteEmpresa = meta.empresa || clienteRFC;
+  document.getElementById('auth-gate').classList.add('hidden');
+  document.getElementById('app').classList.remove('hidden');
+  cargarHistorial();
+}
+initAuth();
+
+// ════════════════════════════════════════════
+// BANCO DE PREGUNTAS — contenido original ClickLaboral
+// ════════════════════════════════════════════
+
+// A) Perfil conductual: 20 ítems Likert (1–5), 5 por dimensión D/I/S/C
+const ITEMS_DISC = [
+  {dim:'D', t:'Me gusta tomar decisiones rápidamente, aunque haya presión.'},
+  {dim:'I', t:'Disfruto conocer personas nuevas en el trabajo.'},
+  {dim:'S', t:'Prefiero un ritmo de trabajo estable y predecible.'},
+  {dim:'C', t:'Reviso mi trabajo varias veces antes de entregarlo.'},
+  {dim:'D', t:'Prefiero dirigir un equipo que seguir instrucciones.'},
+  {dim:'I', t:'Me resulta fácil convencer a otros de mis ideas.'},
+  {dim:'S', t:'Soy paciente cuando enseño algo a un compañero.'},
+  {dim:'C', t:'Sigo los procedimientos establecidos aunque existan formas más rápidas.'},
+  {dim:'D', t:'Los retos difíciles me motivan más que las tareas rutinarias.'},
+  {dim:'I', t:'Prefiero trabajar en equipo que trabajar solo(a).'},
+  {dim:'S', t:'Me adapto mejor a los cambios cuando me los avisan con anticipación.'},
+  {dim:'C', t:'Me incomoda entregar un trabajo con errores, aunque sean pequeños.'},
+  {dim:'D', t:'Cuando algo no funciona, actúo de inmediato para corregirlo.'},
+  {dim:'I', t:'Suelo ser quien anima el ambiente en mi área de trabajo.'},
+  {dim:'S', t:'Valoro más la lealtad y la estabilidad que el reconocimiento público.'},
+  {dim:'C', t:'Prefiero recibir instrucciones claras y por escrito.'},
+  {dim:'D', t:'Me siento cómodo(a) compitiendo con otras personas.'},
+  {dim:'I', t:'Me gusta hablar en público o presentar ideas ante un grupo.'},
+  {dim:'S', t:'Escucho con atención la opinión de todos antes de dar la mía.'},
+  {dim:'C', t:'Organizo mis pendientes con listas, registros o calendarios.'},
+];
+
+// B) Razonamiento: 12 ítems de opción múltiple, respuesta única
+const ITEMS_RAZ = [
+  {t:'¿Qué número sigue en la serie? 3, 6, 12, 24, …', o:['36','42','48','30'], r:2},
+  {t:'¿Qué número sigue en la serie? 2, 5, 11, 23, …', o:['35','47','46','29'], r:1},
+  {t:'Martillo es a clavo como destornillador es a…', o:['madera','tornillo','tuerca','taladro'], r:1},
+  {t:'Médico es a hospital como maestro es a…', o:['alumno','libro','escuela','examen'], r:2},
+  {t:'Todos los supervisores llegaron temprano. Ana es supervisora. Por lo tanto…', o:['Ana llegó tarde','Ana llegó temprano','Ana no trabajó hoy','No se puede saber'], r:1},
+  {t:'Un producto cuesta $80 y tiene 25% de descuento. ¿Cuánto se paga?', o:['$55','$65','$60','$70'], r:2},
+  {t:'¿Cuál palabra NO corresponde al grupo?', o:['Manzana','Pera','Zanahoria','Uva'], r:2},
+  {t:'Si hoy es martes, ¿qué día será dentro de 9 días?', o:['Miércoles','Jueves','Viernes','Lunes'], r:1},
+  {t:'Un reloj marca las 3:15. ¿Cuántos minutos faltan para las 4:00?', o:['35','40','45','50'], r:2},
+  {t:'¿Qué número sigue en la serie? 81, 27, 9, 3, …', o:['0','1','2','6'], r:1},
+  {t:'Juan es más alto que Pedro. Pedro es más alto que Luis. ¿Quién es el más bajo?', o:['Juan','Pedro','Luis','No se puede saber'], r:2},
+  {t:'Si 4 trabajadores terminan una tarea en 8 horas, ¿cuánto tardarían 2 trabajadores al mismo ritmo?', o:['4 horas','8 horas','12 horas','16 horas'], r:3},
+];
+
+// C) Integridad laboral: 10 situaciones, opciones con puntaje 10 / 5 / 0
+const ITEMS_INT = [
+  {t:'Encuentra un billete de $500 en el piso del área de clientes. ¿Qué hace?',
+   o:[{t:'Lo entrego a mi supervisor para que se busque al dueño',p:10},{t:'Pregunto a los compañeros cercanos si es de alguien; si nadie responde, me lo quedo',p:5},{t:'Me lo quedo: quien lo perdió fue descuidado',p:0}]},
+  {t:'Se da cuenta de que cometió un error que aún nadie ha notado. ¿Qué hace?',
+   o:[{t:'Lo reporto de inmediato y propongo cómo corregirlo',p:10},{t:'Lo corrijo en silencio sin avisar a nadie',p:5},{t:'No hago nada; si nadie lo notó, no es grave',p:0}]},
+  {t:'Un compañero le pide que registre su entrada porque llegará 40 minutos tarde. ¿Qué hace?',
+   o:[{t:'Me niego: cada quien registra su propia asistencia',p:10},{t:'Le digo que solo por esta vez',p:5},{t:'Lo registro; entre compañeros hay que ayudarse',p:0}]},
+  {t:'Su jefe le pide algo que va contra un procedimiento de seguridad. ¿Qué hace?',
+   o:[{t:'Le expreso mi desacuerdo y pido que la instrucción quede por escrito',p:10},{t:'Lo hago, pero se lo comento después a otro superior',p:5},{t:'Lo hago sin cuestionar: él es el jefe',p:0}]},
+  {t:'Tiene acceso a información confidencial de clientes. Un amigo externo le pide "un pequeño dato". ¿Qué hace?',
+   o:[{t:'Me niego rotundamente: la información es confidencial',p:10},{t:'Le doy solo información que considero poco importante',p:5},{t:'Se lo doy si me asegura que no lo va a compartir',p:0}]},
+  {t:'Termina sus tareas 1 hora antes de su salida. ¿Qué hace?',
+   o:[{t:'Pregunto en qué más puedo apoyar o adelanto pendientes',p:10},{t:'Repaso mi trabajo del día lentamente hasta la hora de salida',p:5},{t:'Uso mi celular; ya cumplí con lo mío',p:0}]},
+  {t:'Detecta que un compañero toma mercancía / material de la empresa sin autorización. ¿Qué hace?',
+   o:[{t:'Lo reporto por el conducto adecuado',p:10},{t:'Hablo con él para que lo devuelva, sin reportarlo',p:5},{t:'No es mi problema; no me meto',p:0}]},
+  {t:'Le ofrecen un "bono" externo por dar preferencia a un proveedor. ¿Qué hace?',
+   o:[{t:'Lo rechazo y lo informo a mi superior',p:10},{t:'Lo rechazo pero no lo comento con nadie',p:5},{t:'Lo acepto si el proveedor de todas formas es bueno',p:0}]},
+  {t:'Va a llegar 20 minutos tarde por una emergencia. ¿Qué hace?',
+   o:[{t:'Aviso de inmediato a mi jefe explicando la situación',p:10},{t:'Llego y explico la situación en persona',p:5},{t:'Llego sin avisar y espero que nadie lo note',p:0}]},
+  {t:'En su solicitud de empleo, ¿cómo describe una experiencia laboral que terminó mal?',
+   o:[{t:'Con honestidad, explicando lo aprendido',p:10},{t:'La menciono superficialmente, sin detalles',p:5},{t:'La omito o la modifico para verme mejor',p:0}]},
+];
+
+// ════════════════════════════════════════════
+// FLUJO DE LA BATERÍA
+// ════════════════════════════════════════════
+let candidato = null;
+let seccionActual = 0; // 0=DISC 1=Razonamiento 2=Integridad
+let respuestas = { disc:{}, raz:{}, integ:{} };
+let resultadoActual = null;
+
+const SECCIONES = [
+  { titulo:'Sección 1 de 3 — Perfil conductual', inst:'Indique qué tanto lo describe cada frase. No hay respuestas correctas ni incorrectas; responda con sinceridad.' },
+  { titulo:'Sección 2 de 3 — Razonamiento', inst:'Seleccione la respuesta correcta para cada pregunta. Trabaje a buen ritmo pero sin apresurarse.' },
+  { titulo:'Sección 3 de 3 — Situaciones laborales', inst:'Para cada situación, elija la opción más parecida a lo que usted haría realmente.' },
+];
+
+function nuevaEvaluacion(){ cambiarVista('vista-candidato'); }
+function volverLista(){ cambiarVista('vista-lista'); cargarHistorial(); }
+function cambiarVista(id){
+  ['vista-lista','vista-candidato','vista-test','vista-entrega','vista-resultados'].forEach(v=>document.getElementById(v).classList.add('hidden'));
+  document.getElementById(id).classList.remove('hidden');
+  window.scrollTo(0,0);
+}
+
+function iniciarBateria(){
+  const nombre = document.getElementById('cand-nombre').value.trim();
+  const puesto = document.getElementById('cand-puesto').value.trim();
+  const email  = document.getElementById('cand-email').value.trim();
+  if(!nombre || !puesto){ alert('⚠️ Nombre y puesto son obligatorios.'); return; }
+  candidato = { nombre, puesto, email };
+  respuestas = { disc:{}, raz:{}, integ:{} };
+  seccionActual = 0;
+  renderSeccion();
+  cambiarVista('vista-test');
+}
+
+function renderSeccion(){
+  const s = SECCIONES[seccionActual];
+  document.getElementById('test-candidato-lbl').textContent = `Candidato: ${candidato.nombre} · Puesto: ${candidato.puesto}`;
+  document.getElementById('test-seccion-titulo').textContent = s.titulo;
+  document.getElementById('test-instrucciones').textContent = s.inst;
+  document.getElementById('test-progreso-lbl').textContent = `${seccionActual+1} / 3`;
+  document.getElementById('test-progreso-bar').style.width = ((seccionActual)/3*100)+'%';
+  document.getElementById('btn-siguiente').textContent = seccionActual===2 ? 'Finalizar evaluación ✓' : 'Continuar →';
+
+  const cont = document.getElementById('test-preguntas');
+  let html = '';
+
+  if(seccionActual===0){
+    const ESC = ['Nada','Poco','Regular','Bastante','Totalmente'];
+    ITEMS_DISC.forEach((it,i)=>{
+      html += `<div class="q-card"><div class="q-txt">${i+1}. ${it.t}</div><div class="likert">`;
+      ESC.forEach((e,v)=>{
+        html += `<label><input type="radio" name="disc-${i}" value="${v+1}" onchange="respuestas.disc[${i}]=${v+1}"><span>${e}</span></label>`;
+      });
+      html += `</div></div>`;
+    });
+  } else if(seccionActual===1){
+    ITEMS_RAZ.forEach((it,i)=>{
+      html += `<div class="q-card"><div class="q-txt">${i+1}. ${it.t}</div><div class="opciones">`;
+      it.o.forEach((op,v)=>{
+        html += `<label><input type="radio" name="raz-${i}" value="${v}" onchange="respuestas.raz[${i}]=${v}"><span>${op}</span></label>`;
+      });
+      html += `</div></div>`;
+    });
+  } else {
+    ITEMS_INT.forEach((it,i)=>{
+      html += `<div class="q-card"><div class="q-txt">${i+1}. ${it.t}</div><div class="opciones">`;
+      it.o.forEach((op,v)=>{
+        html += `<label><input type="radio" name="int-${i}" value="${v}" onchange="respuestas.integ[${i}]=${v}"><span>${op.t}</span></label>`;
+      });
+      html += `</div></div>`;
+    });
+  }
+  cont.innerHTML = html;
+}
+
+function siguienteSeccion(){
+  // Validar sección completa
+  const total = seccionActual===0 ? ITEMS_DISC.length : seccionActual===1 ? ITEMS_RAZ.length : ITEMS_INT.length;
+  const resp  = seccionActual===0 ? respuestas.disc : seccionActual===1 ? respuestas.raz : respuestas.integ;
+  const faltan = total - Object.keys(resp).length;
+  if(faltan > 0){ alert(`⚠️ Faltan ${faltan} pregunta(s) por responder en esta sección.`); return; }
+
+  if(seccionActual < 2){
+    seccionActual++;
+    renderSeccion();
+    window.scrollTo(0,0);
+  } else {
+    calcularResultados();
+    cambiarVista('vista-entrega');
+  }
+}
+
+// ════════════════════════════════════════════
+// CALIFICACIÓN
+// ════════════════════════════════════════════
+const DISC_INFO = {
+  D:{nombre:'Dominancia', color:'#dc2626', desc:'orientación a resultados, decisión y gusto por los retos'},
+  I:{nombre:'Influencia', color:'#d97706', desc:'sociabilidad, comunicación y capacidad de persuasión'},
+  S:{nombre:'Estabilidad', color:'#16a34a', desc:'paciencia, constancia y trabajo colaborativo'},
+  C:{nombre:'Cumplimiento', color:'#1a3a5c', desc:'apego a normas, precisión y organización'},
+};
+
+function calcularResultados(){
+  // DISC: promedio por dimensión → 0–100
+  const sumas = {D:0,I:0,S:0,C:0};
+  ITEMS_DISC.forEach((it,i)=>{ sumas[it.dim] += respuestas.disc[i]; });
+  const disc = {};
+  Object.keys(sumas).forEach(d=>{ disc[d] = Math.round((sumas[d]-5)/20*100); }); // 5–25 → 0–100
+
+  // Razonamiento: % de aciertos
+  let aciertos = 0;
+  ITEMS_RAZ.forEach((it,i)=>{ if(respuestas.raz[i]===it.r) aciertos++; });
+  const raz = Math.round(aciertos/ITEMS_RAZ.length*100);
+
+  // Integridad: suma de puntajes → 0–100
+  let pts = 0;
+  ITEMS_INT.forEach((it,i)=>{ pts += it.o[respuestas.integ[i]].p; });
+  const integ = Math.round(pts/(ITEMS_INT.length*10)*100);
+
+  const global = Math.round(raz*0.5 + integ*0.5);
+  const veredicto = global>=75 ? 'apto' : global>=55 ? 'apto_reservas' : 'no_apto';
+
+  const dominante = Object.keys(disc).sort((a,b)=>disc[b]-disc[a])[0];
+
+  resultadoActual = {
+    candidato_nombre: candidato.nombre,
+    puesto: candidato.puesto,
+    email: candidato.email || null,
+    score_razonamiento: raz,
+    score_integridad: integ,
+    score_global: global,
+    veredicto,
+    perfil_disc: dominante,
+    detalle: { disc, aciertos_razonamiento: aciertos, total_razonamiento: ITEMS_RAZ.length },
+  };
+}
+
+async function mostrarResultados(){
+  const r = resultadoActual;
+  if(!r) return;
+
+  document.getElementById('res-nombre').textContent = r.candidato_nombre;
+  document.getElementById('res-meta').textContent = `Puesto: ${r.puesto} · Evaluado: ${new Date().toLocaleDateString('es-MX',{day:'2-digit',month:'long',year:'numeric'})} · ${clienteEmpresa}`;
+
+  const V = {
+    apto:          {icono:'✅', titulo:'APTO',              cls:'badge-green', bg:'var(--green-bg)', bd:'rgba(22,163,74,.3)',  col:'var(--green)', txt:'El candidato obtuvo un desempeño satisfactorio en razonamiento e integridad. Se recomienda continuar el proceso (entrevista y verificación de referencias).'},
+    apto_reservas: {icono:'⚠️', titulo:'APTO CON RESERVAS', cls:'badge-amber', bg:'var(--amber-bg)', bd:'rgba(217,119,6,.3)',  col:'var(--amber)', txt:'El candidato muestra áreas aceptables y otras que requieren profundizarse. Se recomienda una entrevista adicional enfocada en las dimensiones con menor puntaje antes de decidir.'},
+    no_apto:       {icono:'❌', titulo:'NO APTO',           cls:'badge-red',   bg:'var(--red-bg)',   bd:'rgba(220,38,38,.3)',  col:'var(--red)',   txt:'El puntaje global se ubica por debajo del umbral recomendado para el puesto. Si desea continuar con el candidato, se sugiere una evaluación complementaria presencial.'},
+  }[r.veredicto];
+
+  document.getElementById('res-veredicto').style.background = V.bg;
+  document.getElementById('res-veredicto').style.border = '1px solid '+V.bd;
+  document.getElementById('res-veredicto').innerHTML = `
+    <div style="font-size:34px;">${V.icono}</div>
+    <div>
+      <div style="font-size:17px;font-weight:800;color:${V.col};">${V.titulo}</div>
+      <div style="font-size:13px;color:var(--ink2);line-height:1.6;">${V.txt}</div>
+    </div>`;
+
+  const sc = v => v>=75?'var(--green)':v>=55?'var(--amber)':'var(--red)';
+  document.getElementById('res-global').textContent = r.score_global;
+  document.getElementById('res-global').style.color = sc(r.score_global);
+  document.getElementById('res-razonamiento').textContent = r.score_razonamiento;
+  document.getElementById('res-razonamiento').style.color = sc(r.score_razonamiento);
+  document.getElementById('res-integridad').textContent = r.score_integridad;
+  document.getElementById('res-integridad').style.color = sc(r.score_integridad);
+
+  document.getElementById('res-disc').innerHTML = Object.keys(DISC_INFO).map(d=>`
+    <div class="disc-row">
+      <div class="disc-letra" style="background:${DISC_INFO[d].color};">${d}</div>
+      <div style="width:110px;font-size:12px;color:var(--ink2);">${DISC_INFO[d].nombre}</div>
+      <div class="disc-track"><div class="disc-fill" style="width:${r.detalle.disc[d]}%;background:${DISC_INFO[d].color};"></div></div>
+      <div class="disc-pct">${r.detalle.disc[d]}%</div>
+    </div>`).join('');
+
+  const dom = DISC_INFO[r.perfil_disc];
+  document.getElementById('res-disc-desc').innerHTML =
+    `<strong>Rasgo predominante: ${dom.nombre} (${r.perfil_disc})</strong> — el candidato tiende a mostrar ${dom.desc}. Contraste este perfil con las características que requiere el puesto de <strong>${r.puesto}</strong>.`;
+
+  cambiarVista('vista-resultados');
+  guardarEvaluacion(r);
+}
+
+// ════════════════════════════════════════════
+// PERSISTENCIA — vía función serverless (patrón mutar-datos-cliente)
+// ════════════════════════════════════════════
+async function guardarEvaluacion(r){
+  try {
+    const { data: sd } = await sb.auth.getSession();
+    const token = sd?.session?.access_token;
+    if(!token) return;
+    const resp = await fetch('/api/mutar-datos-cliente', {
+      method:'POST',
+      headers:{'Content-Type':'application/json','Authorization':'Bearer '+token},
+      body: JSON.stringify({
+        tabla:'evaluaciones_psicometricas', accion:'insert', cliente_rfc: clienteRFC,
+        payload: {
+          candidato_nombre: r.candidato_nombre, puesto: r.puesto, email: r.email,
+          score_razonamiento: r.score_razonamiento, score_integridad: r.score_integridad,
+          score_global: r.score_global, veredicto: r.veredicto,
+          perfil_disc: r.perfil_disc, detalle: r.detalle,
+        },
+      }),
+    });
+    if(!resp.ok){
+      const e = await resp.json().catch(()=>({}));
+      console.warn('No se pudo guardar la evaluación:', e.error||resp.status);
+    }
+  } catch(e){ console.warn('guardarEvaluacion:', e.message||e); }
+}
+
+async function cargarHistorial(){
+  const cont = document.getElementById('lista-evaluaciones');
+  try {
+    let data = [];
+    if (esDespacho) {
+      const { data: sd } = await sb.auth.getSession();
+      const token = sd?.session?.access_token;
+      const resp = await fetch('/api/mutar-datos-cliente', {
+        method:'POST',
+        headers:{'Content-Type':'application/json','Authorization':'Bearer '+token},
+        body: JSON.stringify({ tabla:'evaluaciones_psicometricas', accion:'select', cliente_rfc: clienteRFC,
+          columnas:'id,candidato_nombre,puesto,score_global,veredicto,perfil_disc,created_at',
+          order:{campo:'created_at',asc:false}, limit:50 }),
+      });
+      const rj = await resp.json();
+      data = rj.data || [];
+    } else {
+      const res = await sb.from('evaluaciones_psicometricas')
+        .select('id,candidato_nombre,puesto,score_global,veredicto,perfil_disc,created_at')
+        .eq('cliente_rfc', clienteRFC).order('created_at',{ascending:false}).limit(50);
+      if(res.error) throw res.error;
+      data = res.data || [];
+    }
+    if(!data.length){
+      cont.innerHTML = '<div style="color:var(--ink3);font-size:12px;padding:14px 0;">Aún no hay evaluaciones. Haga clic en "+ Nueva evaluación" para comenzar.</div>';
+      return;
+    }
+    const B = { apto:['badge-green','Apto'], apto_reservas:['badge-amber','Apto con reservas'], no_apto:['badge-red','No apto'] };
+    cont.innerHTML = `<table class="tabla"><thead><tr><th>Candidato</th><th>Puesto</th><th>Global</th><th>Perfil</th><th>Dictamen</th><th>Fecha</th></tr></thead><tbody>` +
+      data.map(e=>{
+        const b = B[e.veredicto] || ['badge-amber', e.veredicto];
+        const f = e.created_at ? new Date(e.created_at).toLocaleDateString('es-MX',{day:'2-digit',month:'short',year:'numeric'}) : '';
+        return `<tr><td style="font-weight:600;">${e.candidato_nombre}</td><td>${e.puesto||''}</td><td style="font-weight:700;">${e.score_global}</td><td>${e.perfil_disc||''}</td><td><span class="badge ${b[0]}">${b[1]}</span></td><td style="color:var(--ink3);">${f}</td></tr>`;
+      }).join('') + '</tbody></table>';
+  } catch(e){
+    console.error('cargarHistorial:', e.message||e);
+    cont.innerHTML = '<div style="color:var(--red);font-size:12px;padding:14px 0;">No se pudo cargar el historial. Verifique que la tabla <code>evaluaciones_psicometricas</code> exista en Supabase (ejecute el SQL incluido).</div>';
+  }
+}
+</script>
+</body>
+</html>

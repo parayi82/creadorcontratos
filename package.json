@@ -1,0 +1,10 @@
+{
+  "name": "clicklaboral",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Clicklaboral.mx — plataforma de cumplimiento legal laboral. Dependencias de las funciones Netlify.",
+  "dependencies": {
+    "stripe": "^17.0.0",
+    "@supabase/supabase-js": "^2.45.0"
+  }
+}

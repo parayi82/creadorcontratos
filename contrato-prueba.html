@@ -1,0 +1,436 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<script>
+(function(){
+  var params=new URLSearchParams(window.location.search);
+  var modo=params.get('editar')==='1'?'editar':params.get('recuperar')==='1'?'ver':null;
+  if(!modo) return;
+  var gen=window.location.pathname.split('/').pop();
+  var key=(modo==='editar'?'doc_editar_':'doc_recuperado_')+gen.replace('.html','');
+  var g=null; try{g=JSON.parse(localStorage.getItem(key)||'null');}catch(e){}
+  if(!g||!g.html) return;
+  // Bloquear render() para no sobreescribir el contenido
+  var _bloqueado=false,_orig=null;
+  function bloquear(){
+    if(typeof window.render==='function'&&!_bloqueado){
+      _orig=window.render; window.render=function(){}; _bloqueado=true;
+    }
+  }
+  bloquear(); var _iv=setInterval(bloquear,50);
+  function inyectar(){
+    var pr=document.getElementById('doc-preview');
+    if(!pr){setTimeout(inyectar,80);return;}
+    clearInterval(_iv); bloquear();
+    pr.innerHTML=g.html;
+    // En modo editar: activar contenteditable automáticamente
+    if(modo==='editar'){
+      pr.contentEditable='true';
+      pr.style.outline='2px dashed #0f766e';
+      pr.style.cursor='text';
+    }
+    // Banner
+    var b=document.createElement('div');
+    b.id='banner-doc';
+    b.style.cssText='position:sticky;top:0;z-index:200;background:'+(modo==='editar'?'#f0fdf4':'#eff6ff')+';border-bottom:2px solid '+(modo==='editar'?'#86efac':'#93c5fd')+';padding:10px 16px;font-size:12px;color:'+(modo==='editar'?'#166534':'#1e40af')+';display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap;';
+    var etiq=modo==='editar'?'✏️ Modo edición — edita el documento directamente':'📄 Documento guardado';
+    var sp=document.createElement('span');
+    sp.innerHTML='<strong>'+etiq+'</strong> — '+(g.nombre||'')+' · '+(g.fecha||'');
+    var bt=document.createElement('button');
+    bt.textContent=modo==='editar'?'🔄 Restaurar campos':'✏️ Editar';
+    bt.style.cssText='border:1px solid currentColor;background:transparent;color:inherit;padding:4px 12px;border-radius:6px;font-size:11px;cursor:pointer;white-space:nowrap;';
+    bt.onclick=function(){
+      _bloqueado=false;
+      pr.contentEditable='false';
+      pr.style.outline=''; pr.style.cursor='';
+      if(_orig) window.render=_orig;
+      var bel=document.getElementById('banner-doc');
+      if(bel) bel.remove();
+      localStorage.removeItem(key);
+      if(typeof window.render==='function') window.render();
+    };
+    b.appendChild(sp); b.appendChild(bt);
+    pr.insertBefore(b,pr.firstChild);
+    localStorage.removeItem(key);
+  }
+  document.readyState==='loading'?document.addEventListener('DOMContentLoaded',inyectar):inyectar();
+})();
+</script>
+
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Generador · Contrato a Prueba</title>
+<style>
+  :root{--ink:#1a1a18;--ink2:#4a4a46;--ink3:#8a8a84;--surface:#f7f6f2;--white:#ffffff;--accent:#1a3a5c;--accent2:#e8f0f8;--border:#ddddd6;--danger:#c0392b;--radius:6px;--font-ui:'Segoe UI',system-ui,sans-serif;--font-doc:'Times New Roman',Georgia,serif;}
+  *{box-sizing:border-box;margin:0;padding:0;}
+  body{font-family:var(--font-ui);background:var(--surface);color:var(--ink);min-height:100vh;font-size:14px;}
+  header{background:var(--accent);color:#fff;padding:14px 28px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:100;box-shadow:0 1px 4px rgba(0,0,0,.18);}
+  header h1{font-size:15px;font-weight:600;}
+  header span{font-size:12px;opacity:.7;}
+  .header-actions{display:flex;gap:10px;}
+  .btn{padding:7px 18px;border-radius:var(--radius);font-size:13px;font-weight:500;cursor:pointer;border:1px solid transparent;transition:background .15s,opacity .15s;}
+  .btn-outline{background:transparent;border-color:rgba(255,255,255,.45);color:#fff;}.btn-outline:hover{background:rgba(255,255,255,.12);}
+  .btn-primary{background:#fff;color:var(--accent);}.btn-primary:hover{opacity:.88;}
+  .workspace{display:grid;grid-template-columns:380px 1fr;height:calc(100vh - 52px);}
+  .form-panel{background:var(--white);border-right:1px solid var(--border);overflow-y:auto;padding:24px 24px 40px;}
+  .section-label{font-size:10px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:var(--accent);padding:20px 0 10px;border-bottom:1px solid var(--border);margin-bottom:14px;}
+  .section-label:first-child{padding-top:4px;}
+  .field{margin-bottom:13px;}
+  .field label{display:block;font-size:12px;font-weight:500;color:var(--ink2);margin-bottom:4px;}
+  .field label .req{color:var(--danger);margin-left:2px;}
+  .field input,.field select,.field textarea{width:100%;padding:8px 10px;border:1px solid var(--border);border-radius:var(--radius);font-size:13px;font-family:var(--font-ui);color:var(--ink);background:var(--white);transition:border-color .15s;}
+  .field input:focus,.field select:focus,.field textarea:focus{outline:none;border-color:var(--accent);box-shadow:0 0 0 3px var(--accent2);}
+  .field textarea{resize:vertical;min-height:68px;}
+  .field-row{display:grid;grid-template-columns:1fr 1fr;gap:10px;}
+  .hint{font-size:11px;color:var(--ink3);margin-top:3px;}
+  .alert-box{background:#fff8e1;border:1px solid #f0c040;border-radius:var(--radius);padding:10px 14px;font-size:12px;color:#7a5f00;margin-bottom:14px;line-height:1.5;}
+  .toggle-group{display:flex;gap:8px;flex-wrap:wrap;}
+  .toggle-opt{padding:5px 12px;border:1px solid var(--border);border-radius:20px;font-size:12px;cursor:pointer;transition:all .15s;user-select:none;color:var(--ink2);}
+  .toggle-opt.active{background:var(--accent);border-color:var(--accent);color:#fff;font-weight:500;}
+  .clause-check{display:flex;align-items:flex-start;gap:8px;margin-bottom:8px;}
+  .clause-check input[type=checkbox]{margin-top:2px;accent-color:var(--accent);}
+  .clause-check label{font-size:12px;color:var(--ink2);cursor:pointer;line-height:1.4;}
+  .preview-panel{background:#e8e7e0;overflow-y:auto;padding:32px 40px;display:flex;flex-direction:column;align-items:center;}
+  .doc-sheet{background:var(--white);width:100%;max-width:760px;min-height:1060px;padding:72px 80px;box-shadow:0 2px 16px rgba(0,0,0,.12);font-family:var(--font-doc);font-size:12pt;line-height:1.75;color:#111;}
+  
+  .doc-logo-empresa{font-size:14pt;font-weight:bold;color:var(--accent);font-family:var(--font-ui);max-width:340px;}
+  .doc-folio{font-size:9pt;color:var(--ink3);font-family:var(--font-ui);text-align:right;line-height:1.4;}
+  .doc-title{text-align:center;font-size:13pt;font-weight:bold;text-transform:uppercase;letter-spacing:.04em;margin-bottom:6px;}
+  .doc-subtitle{text-align:center;font-size:10pt;color:var(--ink3);font-family:var(--font-ui);margin-bottom:28px;}
+  .doc-p{margin-bottom:14px;text-align:justify;}
+  .doc-p .blank{font-weight:bold;color:var(--accent);border-bottom:1px solid var(--accent);padding:0 2px;}
+  .doc-p .blank.empty{color:#c0392b;border-bottom-color:#c0392b;font-style:italic;font-weight:normal;}
+  .doc-clause-title{font-weight:bold;text-transform:uppercase;font-size:10.5pt;margin:22px 0 8px;}
+  .doc-firma-grid{display:grid;grid-template-columns:1fr 1fr;gap:40px;margin-top:60px;}
+  .firma-box{border-top:1px solid #888;padding-top:8px;font-size:10pt;text-align:center;line-height:1.5;}
+  .firma-box strong{display:block;font-size:9pt;color:var(--ink3);font-family:var(--font-ui);}
+  .watermark-empty{text-align:center;color:var(--ink3);font-family:var(--font-ui);font-size:13px;padding:80px 0;}
+  @media print{header,.form-panel{display:none!important;}.workspace{display:block;height:auto;}.preview-panel{padding:0;background:white;}.doc-sheet{box-shadow:none;max-width:100%;padding:40px;}body{background:white;}}
+
+#auth-gate-loading{position:fixed;inset:0;background:#fff;z-index:9999;display:flex;align-items:center;justify-content:center;font-family:'Segoe UI',system-ui,sans-serif;color:#999;font-size:13px;}
+#auth-gate-blocked{position:fixed;inset:0;background:#0f2640;z-index:9999;display:none;align-items:center;justify-content:center;padding:24px;}
+#auth-gate-blocked .agb-box{background:#fff;border-radius:16px;padding:40px 36px;max-width:420px;text-align:center;font-family:'Segoe UI',system-ui,sans-serif;}
+#auth-gate-blocked .agb-box h2{font-size:18px;margin-bottom:10px;color:#0f2640;}
+#auth-gate-blocked .agb-box p{font-size:13px;color:#666;margin-bottom:20px;line-height:1.6;}
+#auth-gate-blocked .agb-btns{display:flex;gap:10px;justify-content:center;flex-wrap:wrap;}
+#auth-gate-blocked .agb-btns a{padding:10px 18px;border-radius:8px;font-size:13px;font-weight:600;text-decoration:none;}
+#auth-gate-blocked .agb-btns a.agb-primary{background:#1a3a5c;color:#fff;}
+#auth-gate-blocked .agb-btns a.agb-secondary{background:#f0f0ec;color:#1a3a5c;}
+body.modo-demo .doc-sheet{position:relative;user-select:none;-webkit-user-select:none;-moz-user-select:none;}
+body.modo-demo .doc-sheet::after{content:'MUESTRA — CUENTA DEMO, NO VÁLIDO PARA USO LEGAL';position:absolute;top:46%;left:-15%;right:-15%;text-align:center;font-size:26px;font-weight:900;color:rgba(220,38,38,.16);transform:rotate(-18deg);pointer-events:none;font-family:'Segoe UI',system-ui,sans-serif;z-index:50;}
+@media print{ body.modo-demo .doc-sheet::after{display:block!important;color:rgba(220,38,38,.35)!important;} }
+  .cl-nav-logo{display:flex;align-items:center;font-size:15px;font-weight:800;color:#fff;letter-spacing:-.01em;line-height:1;text-decoration:none;}
+  .cl-nav-logo .cl-laboral{color:#5eead4;font-weight:400;}
+</style>
+<script src="membrete.js?v=3.7"></script>
+</head>
+<body>
+<div id="auth-gate-loading">Verificando acceso…</div>
+<div id="auth-gate-blocked">
+  <div class="agb-box">
+    <h2>🔒 Esta herramienta requiere una suscripción activa</h2>
+    <p>Inicie sesión desde su portal de cliente para usar este generador, o conozca nuestros planes si todavía no es cliente de ClickLaboral.mx.</p>
+    <div class="agb-btns">
+      <a class="agb-primary" href="portal-cliente.html">Iniciar sesión →</a>
+      <a class="agb-secondary" href="index.html#precios">Ver planes</a>
+    </div>
+  </div>
+</div>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
+<script src="expediente-helper.js?v=3.7"></script>
+<script>
+(async()=>{
+  const _sb = supabase.createClient('https://hpzgqaplrywwjuvrzhcp.supabase.co','sb_publishable_1g8US8iFJ8CxnSaF_4MHgA_gqyyAr3W');
+  try {
+    const { data } = await _sb.auth.getSession();
+    document.getElementById('auth-gate-loading').style.display = 'none';
+    if (!data?.session?.user) {
+      document.getElementById('auth-gate-blocked').style.display = 'flex';
+    }
+  } catch(e) {
+    document.getElementById('auth-gate-loading').style.display = 'none';
+    document.getElementById('auth-gate-blocked').style.display = 'flex';
+  }
+})();
+
+</script>
+
+<header>
+  <div class="cl-nav-logo" style="flex-shrink:0;"><svg width="26" height="26" viewBox="0 0 100 100" style="vertical-align:-7px;margin-right:6px;flex-shrink:0;">
+        <defs><linearGradient id="clGrad" x1="10" y1="10" x2="90" y2="95" gradientUnits="userSpaceOnUse">
+          <stop offset="0%" stop-color="#1a3a5c"/><stop offset="55%" stop-color="#1e6f6c"/><stop offset="100%" stop-color="#2dd4bf"/>
+        </linearGradient></defs>
+        <path d="M50 7 L83 20 V51 C83 73 68 87 50 95 C32 87 17 73 17 51 V20 Z" fill="none" stroke="url(#clGrad)" stroke-width="6" stroke-linejoin="round"/>
+        <circle cx="40" cy="38" r="8.5" fill="#5eead4"/>
+        <path d="M25 63 C25 51 31 45 40 45 C49 45 55 51 55 63 Z" fill="#5eead4"/>
+        <circle cx="55" cy="33" r="9.5" fill="#14b8a6"/>
+        <path d="M38 61 C38 48 45.5 41 55 41 C64.5 41 72 48 72 61 Z" fill="#14b8a6"/>
+        <path d="M29 61 L45 77 L78 40" fill="none" stroke="#e8f2fc" stroke-width="9" stroke-linecap="round" stroke-linejoin="round"/>
+      </svg>Click<span class="cl-laboral">Laboral.mx</span></div>
+  <div>
+    <h1>Generador de Contratos · ClickLaboral.mx</h1>
+    <span>Contrato a Prueba — Artículo 39-A Ley Federal del Trabajo</span>
+  </div>
+  <div class="header-actions">
+    <button class="btn btn-outline" onclick="limpiar()">Limpiar</button>
+    <button class="btn btn-primary" onclick="window.print()">Imprimir / PDF</button>
+  </div>
+</header>
+<div class="workspace">
+  <div class="form-panel">
+    <!-- ── MEMBRETE DEL CLIENTE ── -->
+    <div style="border-bottom:1px solid var(--border);margin-bottom:0;">
+      <div class="section-label" style="display:flex;align-items:center;justify-content:space-between;cursor:pointer;user-select:none;"
+           onclick="this.nextElementSibling.style.display=this.nextElementSibling.style.display==='none'?'block':'none'">
+        <span>🏢 Logo y pie de página</span>
+        <span style="font-size:10px;font-weight:400;color:var(--ink3);">▲ clic para colapsar</span>
+      </div>
+      <div id="mem-panel-wrap" style="display:block;padding:12px 0 14px;">
+        <div id="mem-logo-container"></div>
+      </div>
+    </div>
+    <!-- ── / MEMBRETE ── -->
+    <div class="alert-box">⚠️ <strong>Límites legales (art. 39-A LFT):</strong> Máx. 30 días para trabajadores en general. Máx. 180 días para puestos de dirección, gerencia, o trabajos especializados. Solo se puede pactar <strong>una vez</strong> por trabajador con el mismo patrón. No se puede combinar con período de capacitación inicial.</div>
+
+    <div class="section-label">Datos de la empresa (patrón)</div>
+    <div class="field"><label>Razón social <span class="req">*</span></label><input type="text" id="empresa" placeholder="Ej. Comercializadora Norte, S.A. de C.V." oninput="render()"></div>
+    <div class="field-row">
+      <div class="field"><label>RFC del patrón</label><input type="text" id="rfc_patron" oninput="render()" maxlength="13" placeholder="CNO800101AAA"></div>
+      <div class="field"><label>Registro IMSS</label><input type="text" id="imss_patron" oninput="render()" placeholder="11 dígitos"></div>
+    </div>
+    <div class="field"><label>Domicilio del centro de trabajo <span class="req">*</span></label><input type="text" id="domicilio_empresa" oninput="render()" placeholder="Calle, No., Colonia, Ciudad, Estado, C.P."></div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;">
+        <div class="field"><label>Teléfono</label><input type="text" id="mem-tel" oninput="render()" placeholder="33 1234 5678"></div>
+        <div class="field"><label>Email</label><input type="text" id="mem-email" oninput="render()" placeholder="contacto@empresa.mx"></div>
+      </div>
+      <div class="field"><label>Sitio web</label><input type="text" id="mem-web" oninput="render()" placeholder="www.empresa.mx"></div>
+    <div class="field"><label>Representante legal</label><input type="text" id="rep_legal" oninput="render()" placeholder="Nombre completo"></div>
+
+    <div class="section-label">Datos del trabajador</div>
+    <div class="field"><label>Nombre completo <span class="req">*</span></label><input type="text" id="trabajador" oninput="render()" placeholder="Nombre(s) Apellido Paterno Apellido Materno"></div>
+    <div class="field-row">
+      <div class="field"><label>CURP <span class="req">*</span></label><input type="text" id="curp" oninput="render()" maxlength="18" placeholder="18 caracteres"></div>
+      <div class="field"><label>NSS</label><input type="text" id="nss" oninput="render()" placeholder="11 dígitos"></div>
+    </div>
+    <div class="field"><label>Domicilio del trabajador <span class="req">*</span></label><input type="text" id="domicilio_trab" oninput="render()" placeholder="Calle, No., Colonia, Ciudad, Estado, C.P."></div>
+
+    <div class="section-label">Configuración del período a prueba</div>
+
+    <div class="field">
+      <label>Tipo de puesto <span class="req">*</span></label>
+      <div class="toggle-group" id="tipo_puesto">
+        <div class="toggle-opt active" onclick="selToggle(this,'tipo_puesto');calcFin()">General (máx. 30 días)</div>
+        <div class="toggle-opt" onclick="selToggle(this,'tipo_puesto');calcFin()">Dirección / especializado (máx. 180 días)</div>
+      </div>
+    </div>
+    <div class="field"><label>Puesto / cargo <span class="req">*</span></label><input type="text" id="puesto" oninput="render()" placeholder="Ej. Ejecutivo de ventas, Gerente de operaciones"></div>
+    <div class="field"><label>Descripción de actividades a evaluar</label><textarea id="actividades" oninput="render()" placeholder="Liste las competencias, habilidades y desempeño que serán evaluados durante el período..."></textarea></div>
+    <div class="field-row">
+      <div class="field"><label>Fecha de inicio <span class="req">*</span></label><input type="date" id="fecha_inicio" oninput="calcFin()"></div>
+      <div class="field"><label>Días de prueba <span class="req">*</span></label><input type="number" id="dias_prueba" placeholder="Ej. 30" oninput="calcFin()" min="1"><div class="hint" id="hint_dias">Máx. 30 días para puestos generales</div></div>
+    </div>
+    <div class="field"><label>Fecha de término (calculada)</label><input type="date" id="fecha_fin" readonly style="background:#f5f5f0;color:var(--ink2)"></div>
+    <div class="field"><label>Criterios de evaluación del período a prueba</label><textarea id="criterios" oninput="render()" placeholder="Ej. Cumplimiento de metas de venta, dominio del sistema ERP, puntualidad, adaptación al equipo de trabajo..."></textarea></div>
+
+    <div class="section-label">Consecuencia al término</div>
+    <div class="field">
+      <label>Al concluir satisfactoriamente</label>
+      <div class="toggle-group" id="resultado">
+        <div class="toggle-opt active" onclick="selToggle(this,'resultado')">Convierte a indeterminado</div>
+        <div class="toggle-opt" onclick="selToggle(this,'resultado')">Convierte a determinado</div>
+      </div>
+    </div>
+
+    <div class="section-label">Jornada y salario</div>
+    <div class="field-row">
+      <div class="field"><label>Hora entrada</label><input type="time" id="hora_entrada" oninput="render()"></div>
+      <div class="field"><label>Hora salida</label><input type="time" id="hora_salida" oninput="render()"></div>
+    </div>
+    <div class="field"><label>Día de descanso</label><input type="text" id="dias_descanso" placeholder="Domingo" oninput="render()"></div>
+    <div class="field-row">
+      <div class="field"><label>Salario <span class="req">*</span></label><input type="number" id="salario" oninput="render()" min="0" step="0.01" placeholder="0.00"></div>
+      <div class="field"><label>Periodicidad</label><select id="periodicidad" onchange="render()"><option value="diario">Diario</option><option value="semanal">Semanal</option><option value="quincenal">Quincenal</option><option value="mensual">Mensual</option></select></div>
+    </div>
+
+    <div class="section-label">Cláusulas opcionales</div>
+    <div class="clause-check"><input type="checkbox" id="cl_confidencial" onchange="render()"><label for="cl_confidencial">Confidencialidad durante el período</label></div>
+    <div class="clause-check"><input type="checkbox" id="cl_nom035" onchange="render()"><label for="cl_nom035">NOM-035-STPS-2018</label></div>
+    <div class="clause-check"><input type="checkbox" id="cl_datos" onchange="render()"><label for="cl_datos">Tratamiento de datos personales (LFPDPPP)</label></div>
+
+    <div class="section-label">Cláusulas especiales (con detalle a la medida)</div>
+    <div class="alert-box" style="background:#eef7f0;border-color:rgba(22,163,74,.25);color:#14532d;margin-bottom:14px;">
+      💡 ¿Su empresa necesita una cláusula distinta a estas? Su suscripción incluye asesoría legal real con abogado — pídala desde "Solicitar asesoría" en su portal y se la redactamos a la medida de su caso.
+    </div>
+    <div class="clause-check"><input type="checkbox" id="cl_propiedad_intelectual" onchange="render()"><label for="cl_propiedad_intelectual">Propiedad intelectual de invenciones y desarrollos (art. 163 LFT)</label></div>
+    <div class="clause-check"><input type="checkbox" id="cl_comisiones" onchange="toggleCampo('campos_comisiones','cl_comisiones')"><label for="cl_comisiones">Comisiones o bonos por desempeño</label></div>
+    <div id="campos_comisiones" style="display:none;padding-left:18px;margin-bottom:12px;">
+      <div class="field"><label>Esquema (%, monto, periodicidad, metas)</label><textarea id="comisiones_detalle" oninput="render()" placeholder="Ej. 2% sobre ventas cerradas, pagadero mensualmente, sujeto a cuota mínima de $50,000 MXN"></textarea></div>
+    </div>
+    <div class="clause-check"><input type="checkbox" id="cl_redes_sociales" onchange="render()"><label for="cl_redes_sociales">Conducta en redes sociales y protección de reputación</label></div>
+
+    <div class="section-label">Lugar y fecha</div>
+    <div class="field-row">
+      <div class="field"><label>Ciudad de firma <span class="req">*</span></label><input type="text" id="ciudad_firma" oninput="render()" placeholder="Monterrey, N.L."></div>
+      <div class="field"><label>Fecha de firma <span class="req">*</span></label><input type="date" id="fecha_firma" oninput="render()"></div>
+    </div>
+    <div class="field-row">
+      <div class="field"><label>Testigo 1</label><input type="text" id="testigo1" oninput="render()" placeholder="Nombre completo"></div>
+      <div class="field"><label>Testigo 2</label><input type="text" id="testigo2" oninput="render()" placeholder="Nombre completo"></div>
+    </div>
+  </div>
+
+  <div class="preview-panel">
+    <div class="doc-sheet" id="doc-preview">
+      <div class="watermark-empty">Complete los datos para generar el contrato.</div>
+    </div>
+  </div>
+</div>
+
+<script>
+function v(id){return(document.getElementById(id)||{}).value||'';}
+function chk(id){return document.getElementById(id)?.checked||false;}
+function toggleCampo(divId,checkId){document.getElementById(divId).style.display=document.getElementById(checkId).checked?'block':'none';render();}
+function b(txt,fb){if(!txt||!txt.trim())return`<span class="blank empty">[${fb}]</span>`;return`<span class="blank">${txt}</span>`;}
+function fmtFecha(iso){if(!iso)return'';const[y,m,d]=iso.split('-');const M=['enero','febrero','marzo','abril','mayo','junio','julio','agosto','septiembre','octubre','noviembre','diciembre'];return`${parseInt(d)} de ${M[parseInt(m)-1]} de ${y}`;}
+function fmtMoneda(num,per){if(!num)return'';return`$${parseFloat(num).toLocaleString('es-MX',{minimumFractionDigits:2})} MXN ${per}`;}
+function getActive(gid){const g=document.getElementById(gid);if(!g)return'';const e=g.querySelector('.toggle-opt.active');return e?e.textContent:'';}
+function selToggle(el,gid){document.querySelectorAll(`#${gid} .toggle-opt`).forEach(e=>e.classList.remove('active'));el.classList.add('active');render();}
+function limpiar(){if(!confirm('¿Limpiar todos los campos?'))return;document.querySelectorAll('input:not([readonly]),select,textarea').forEach(el=>{if(el.type==='checkbox')el.checked=false;else el.value='';});render();}
+function numRomano(n){const r=['','I','II','III','IV','V','VI','VII','VIII','IX','X','XI','XII'];return r[n]||n;}
+
+function calcFin(){
+  const esDir=getActive('tipo_puesto').includes('180');
+  const maxDias=esDir?180:30;
+  document.getElementById('hint_dias').textContent=`Máx. ${maxDias} días para este tipo de puesto`;
+  const fi=v('fecha_inicio');
+  const dias=parseInt(v('dias_prueba'));
+  if(fi&&dias&&dias>0&&dias<=maxDias){
+    const d=new Date(fi+'T12:00:00');
+    d.setDate(d.getDate()+dias);
+    document.getElementById('fecha_fin').value=d.toISOString().split('T')[0];
+  } else {
+    document.getElementById('fecha_fin').value='';
+  }
+  render();
+}
+
+function render(){
+  const empresa=v('empresa'),rfc_p=v('rfc_patron'),imss_p=v('imss_patron'),dom_emp=v('domicilio_empresa'),rep=v('rep_legal');
+  const trab=v('trabajador'),curp=v('curp'),nss=v('nss'),dom_t=v('domicilio_trab');
+  const puesto=v('puesto'),act=v('actividades'),criterios=v('criterios');
+  const fi=v('fecha_inicio'),ff_calc=v('fecha_fin'),dias=v('dias_prueba');
+  const sal=v('salario'),per=v('periodicidad');
+  const he=v('hora_entrada'),hs=v('hora_salida'),dd=v('dias_descanso')||'domingo';
+  const cf=v('ciudad_firma'),ff=v('fecha_firma'),t1=v('testigo1'),t2=v('testigo2');
+  const tipoPuesto=getActive('tipo_puesto');
+  const resultado=getActive('resultado');
+  const esDir=tipoPuesto.includes('180');
+
+  if(!empresa&&!trab){document.getElementById('doc-preview').innerHTML='<div class="watermark-empty">Complete los datos para generar el contrato.</div>';return;}
+  const folio=`CAP-${new Date().getFullYear()}-${Math.floor(Math.random()*10000).toString().padStart(4,'0')}`;
+  const horario=(he&&hs)?`${he} a ${hs} horas`:'[horario]';
+
+  let html=generarMembrete({
+    empresa:   v('empresa'),
+    rfc:       v('rfc_patron'),
+    domicilio: v('domicilio_empresa'),
+    tel:       v('mem-tel'),
+    emailEmp:  v('mem-email'),
+    web:       v('mem-web'),
+    folio,
+    logoDataUrl: window._logoClienteDataUrl,
+  }) + `
+    <div class="doc-folio">Folio: ${folio}<br>RFC: ${rfc_p||'—'}${imss_p?'<br>IMSS: '+imss_p:''}</div>
+  </div>
+  <div class="doc-title">Contrato Individual de Trabajo<br>a Período de Prueba</div>
+  <div class="doc-subtitle">Artículo 39-A de la Ley Federal del Trabajo</div>
+
+  <div class="doc-p">En ${b(cf,'ciudad')}, el ${b(fmtFecha(ff),'fecha de firma')}, comparecen: ${b(empresa,'razón social')}, representada por ${b(rep,'representante legal')}, con domicilio en ${b(dom_emp,'domicilio empresa')}, en calidad de <strong>PATRÓN</strong>; y el (la) C. ${b(trab,'nombre')}, CURP ${b(curp,'CURP')}${nss?', NSS '+b(nss,'NSS'):''}, con domicilio en ${b(dom_t,'domicilio')}, en calidad de <strong>TRABAJADOR</strong>. Ambas partes celebran el presente contrato a período de prueba conforme al artículo 39-A de la Ley Federal del Trabajo, bajo las siguientes:</div>
+
+  <div class="doc-clause-title">Cláusulas</div>
+
+  <div class="doc-clause-title">Primera. — Naturaleza del contrato y fundamento legal</div>
+  <div class="doc-p">Conforme al artículo 39-A de la LFT, las partes acuerdan someter la relación laboral a un período de prueba con el objeto de verificar que el TRABAJADOR cumple con los requisitos y conocimientos necesarios para el desarrollo de las actividades del puesto de ${b(puesto,'puesto')}, así como que la plaza resulta adecuada para sus competencias. El presente período de prueba solo podrá pactarse una vez entre las mismas partes y no podrá combinarse con el período de capacitación inicial previsto en el artículo 39-B de la LFT.</div>
+
+  <div class="doc-clause-title">Segunda. — Puesto y actividades a evaluar</div>
+  <div class="doc-p">El TRABAJADOR prestará servicios en el puesto de ${b(puesto,'puesto')}${esDir?', el cual corresponde a un puesto de dirección, administración o trabajo especializados, motivo por el cual el período de prueba se fija conforme al segundo párrafo del artículo 39-A de la LFT':''}.${act?` Las principales actividades a desempeñar son: ${act}.`:''}</div>
+
+  <div class="doc-clause-title">Tercera. — Duración del período a prueba</div>
+  <div class="doc-p">El período de prueba tendrá una duración de ${b(dias?dias+' días':'','número de días')}, iniciando el ${b(fmtFecha(fi),'fecha de inicio')} y concluyendo el ${b(fmtFecha(ff_calc),'fecha de término')}. Dicho plazo no excede el máximo de ${esDir?'180':'30'} días permitido por la LFT para ${esDir?'puestos de dirección, administración o especializados':'puestos en general'}.</div>
+
+  <div class="doc-clause-title">Cuarta. — Criterios de evaluación</div>
+  <div class="doc-p">La idoneidad del TRABAJADOR se evaluará con base en los siguientes criterios objetivos: ${b(criterios,'criterios de evaluación')}. Dichos criterios se comunican al TRABAJADOR previamente al inicio del período, de modo que éste tenga pleno conocimiento de las condiciones que deberá cumplir.</div>
+
+  <div class="doc-clause-title">Quinta. — Consecuencias al término</div>
+  <div class="doc-p">Al concluir el período de prueba: a) Si el resultado de la evaluación es <strong>satisfactorio</strong>, la relación laboral se entenderá subsistente, convirtiéndose en ${resultado.includes('indeterminado')?'contrato por tiempo indeterminado, con plena vigencia de todos los derechos laborales':'contrato por tiempo determinado en los términos que las partes acuerden por escrito'}. b) Si el resultado fuere <strong>insatisfactorio</strong>, el PATRÓN podrá rescindir la relación laboral sin incurrir en responsabilidad alguna, debiendo cubrir las partes proporcionales de prestaciones generadas hasta esa fecha (aguinaldo, vacaciones, prima vacacional e IMSS).</div>
+
+  <div class="doc-clause-title">Sexta. — Jornada de trabajo</div>
+  <div class="doc-p">La jornada de trabajo durante el período a prueba será de ${horario}, con día de descanso los ${dd}, conforme a los artículos 58-68 de la LFT.</div>
+
+  <div class="doc-clause-title">Séptima. — Salario y prestaciones durante la prueba</div>
+  <div class="doc-p">Durante el período a prueba, el PATRÓN pagará al TRABAJADOR un salario de ${b(fmtMoneda(sal,per),'salario')}, con derecho a todas las prestaciones mínimas de ley en proporción al tiempo laborado, incluyendo inscripción al IMSS desde el primer día, de conformidad con los artículos 12 y 15 de la Ley del Seguro Social.</div>`;
+
+  let cn=8;
+  if(chk('cl_confidencial')){html+=`<div class="doc-clause-title">${numRomano(cn)}. — Confidencialidad</div><div class="doc-p">El TRABAJADOR se obliga a guardar confidencialidad sobre la información a la que tenga acceso durante el período a prueba, independientemente del resultado de la evaluación. Esta obligación subsistirá aun cuando la relación laboral no se formalice.</div>`;cn++;}
+  if(chk('cl_nom035')){html+=`<div class="doc-clause-title">${numRomano(cn)}. — NOM-035-STPS-2018</div><div class="doc-p">Las partes se comprometen a cumplir la NOM-035-STPS-2018 desde el inicio del período a prueba, incluyendo la identificación de factores de riesgo psicosocial.</div>`;cn++;}
+  if(chk('cl_datos')){html+=`<div class="doc-clause-title">${numRomano(cn)}. — Datos personales</div><div class="doc-p">El TRABAJADOR consiente el tratamiento de sus datos personales para los fines derivados del período de prueba, conforme a la LFPDPPP y al aviso de privacidad entregado.</div>`;cn++;}
+  if(chk('cl_propiedad_intelectual')){html+=`<div class="doc-clause-title">${numRomano(cn)}. — Propiedad intelectual</div><div class="doc-p">Las invenciones, desarrollos y mejoras que EL TRABAJADOR realice en ejercicio de sus funciones serán propiedad de EL PATRÓN, en los términos del artículo 163 de la LFT, sin perjuicio de la compensación adicional que en su caso corresponda conforme a dicho artículo.</div>`;cn++;}
+  if(chk('cl_comisiones')){const detalle=v('comisiones_detalle');html+=`<div class="doc-clause-title">${numRomano(cn)}. — Comisiones y bonos por desempeño</div><div class="doc-p">EL TRABAJADOR podrá percibir comisiones o bonos adicionales conforme al siguiente esquema: ${b(detalle,'esquema de comisiones/bonos')} Dichas percepciones tienen carácter variable y no formarán parte del salario fijo, salvo lo que en su caso determine la autoridad competente conforme a su periodicidad y generalidad.</div>`;cn++;}
+  if(chk('cl_redes_sociales')){html+=`<div class="doc-clause-title">${numRomano(cn)}. — Conducta en redes sociales</div><div class="doc-p">EL TRABAJADOR se obliga a hacer un uso responsable de redes sociales y medios digitales, evitando divulgar información confidencial del PATRÓN o realizar publicaciones que dañen su reputación o la de sus clientes y colaboradores.</div>`;cn++;}
+
+  html+=`
+  <div class="doc-clause-title">${numRomano(cn)}. — Declaración del trabajador</div>
+  <div class="doc-p">El TRABAJADOR declara que: (i) no ha prestado servicios previos al PATRÓN bajo ninguna modalidad contractual; (ii) no ha suscrito con anterioridad un período de prueba con el mismo PATRÓN para el mismo puesto; (iii) conoce plenamente los criterios de evaluación pactados en la cláusula cuarta.</div>`;cn++;
+
+  html+=`
+  <div class="doc-clause-title">${numRomano(cn)}. — Jurisdicción</div>
+  <div class="doc-p">Las controversias derivadas del presente contrato se someterán al Tribunal Laboral del domicilio del centro de trabajo.</div>
+
+  <div class="doc-p" style="margin-top:24px;">Las partes, en pleno conocimiento del contenido y alcance jurídico del presente instrumento, lo firman por duplicado en ${b(cf,'ciudad')}, el ${b(fmtFecha(ff),'fecha de firma')}.</div>
+
+  <div class="doc-firma-grid">
+    <div class="firma-box"><br><br>${empresa||'__________________________'}<br>${rep?rep+'<br>':''}<strong>EL PATRÓN</strong></div>
+    <div class="firma-box"><br><br>${trab||'__________________________'}<br><strong>EL TRABAJADOR</strong>${curp?'<span style="font-size:9pt;color:#666;"> CURP: '+curp+'</span>':''}</div>
+  </div>
+  <div class="doc-firma-grid" style="margin-top:32px;">
+    <div class="firma-box"><br><br>${t1||'__________________________'}<br><strong>TESTIGO 1</strong></div>
+    <div class="firma-box"><br><br>${t2||'__________________________'}<br><strong>TESTIGO 2</strong></div>
+  </div>
+  <div style="margin-top:32px;font-size:9pt;color:#888;font-family:var(--font-ui);border-top:1px solid #ddd;padding-top:10px;">Documento generado mediante plataforma de compliance laboral · Folio ${folio} · Art. 39-A LFT</div>`;
+
+  html += generarFooterDoc({...getDatosMembrete(), folio});
+  document.getElementById('doc-preview').innerHTML=html;
+}
+render();
+
+// Expediente del trabajador — vincular este documento al roster
+render();
+
+if (window.ExpedienteHelper) {
+  ExpedienteHelper.init({
+    inputNombreId: 'trabajador',
+    tipoDocumento: 'contrato_periodo_prueba',
+    nombreDocumentoFn: () => 'Contrato a prueba',
+  });
+}
+
+// ── INIT ──
+renderPanelMembrete('mem-logo-container');
+(async()=>{
+  try{
+    const _sb = supabase.createClient(
+      'https://hpzgqaplrywwjuvrzhcp.supabase.co',
+      'sb_publishable_1g8US8iFJ8CxnSaF_4MHgA_gqyyAr3W'
+    );
+    await precargarMembreteDesdePortal(_sb);
+  }catch(e){}
+})();
+render();
+</script>
+<script src="edicion-libre.js?v=4.6"></script>
+
+
+
+
+</body>
+</html>

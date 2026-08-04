@@ -1,0 +1,451 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<script>
+(function(){
+  var params=new URLSearchParams(window.location.search);
+  var modo=params.get('editar')==='1'?'editar':params.get('recuperar')==='1'?'ver':null;
+  if(!modo) return;
+  var gen=window.location.pathname.split('/').pop();
+  var key=(modo==='editar'?'doc_editar_':'doc_recuperado_')+gen.replace('.html','');
+  var g=null; try{g=JSON.parse(localStorage.getItem(key)||'null');}catch(e){}
+  if(!g||!g.html) return;
+  // Bloquear render() para no sobreescribir el contenido
+  var _bloqueado=false,_orig=null;
+  function bloquear(){
+    if(typeof window.render==='function'&&!_bloqueado){
+      _orig=window.render; window.render=function(){}; _bloqueado=true;
+    }
+  }
+  bloquear(); var _iv=setInterval(bloquear,50);
+  function inyectar(){
+    var pr=document.getElementById('doc-preview');
+    if(!pr){setTimeout(inyectar,80);return;}
+    clearInterval(_iv); bloquear();
+    pr.innerHTML=g.html;
+    // En modo editar: activar contenteditable automáticamente
+    if(modo==='editar'){
+      pr.contentEditable='true';
+      pr.style.outline='2px dashed #0f766e';
+      pr.style.cursor='text';
+    }
+    // Banner
+    var b=document.createElement('div');
+    b.id='banner-doc';
+    b.style.cssText='position:sticky;top:0;z-index:200;background:'+(modo==='editar'?'#f0fdf4':'#eff6ff')+';border-bottom:2px solid '+(modo==='editar'?'#86efac':'#93c5fd')+';padding:10px 16px;font-size:12px;color:'+(modo==='editar'?'#166534':'#1e40af')+';display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap;';
+    var etiq=modo==='editar'?'✏️ Modo edición — edita el documento directamente':'📄 Documento guardado';
+    var sp=document.createElement('span');
+    sp.innerHTML='<strong>'+etiq+'</strong> — '+(g.nombre||'')+' · '+(g.fecha||'');
+    var bt=document.createElement('button');
+    bt.textContent=modo==='editar'?'🔄 Restaurar campos':'✏️ Editar';
+    bt.style.cssText='border:1px solid currentColor;background:transparent;color:inherit;padding:4px 12px;border-radius:6px;font-size:11px;cursor:pointer;white-space:nowrap;';
+    bt.onclick=function(){
+      _bloqueado=false;
+      pr.contentEditable='false';
+      pr.style.outline=''; pr.style.cursor='';
+      if(_orig) window.render=_orig;
+      var bel=document.getElementById('banner-doc');
+      if(bel) bel.remove();
+      localStorage.removeItem(key);
+      if(typeof window.render==='function') window.render();
+    };
+    b.appendChild(sp); b.appendChild(bt);
+    pr.insertBefore(b,pr.firstChild);
+    localStorage.removeItem(key);
+  }
+  document.readyState==='loading'?document.addEventListener('DOMContentLoaded',inyectar):inyectar();
+})();
+</script>
+
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Generador · Reglamento Interior de Trabajo</title>
+<style>
+  :root{--ink:#1a1a18;--ink2:#4a4a46;--ink3:#8a8a84;--surface:#f7f6f2;--white:#ffffff;--accent:#1a3a5c;--accent2:#e8f0f8;--border:#ddddd6;--danger:#c0392b;--success:#1a6b3a;--radius:6px;--font-ui:'Segoe UI',system-ui,sans-serif;--font-doc:'Times New Roman',Georgia,serif;}
+  *{box-sizing:border-box;margin:0;padding:0;}
+  body{font-family:var(--font-ui);background:var(--surface);color:var(--ink);min-height:100vh;font-size:14px;}
+  header{background:var(--accent);color:#fff;padding:14px 28px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:100;box-shadow:0 1px 4px rgba(0,0,0,.18);}
+  header h1{font-size:15px;font-weight:600;}header span{font-size:12px;opacity:.7;}
+  .header-actions{display:flex;gap:10px;}
+  .btn{padding:7px 18px;border-radius:var(--radius);font-size:13px;font-weight:500;cursor:pointer;border:1px solid transparent;transition:background .15s;}
+  .btn-outline{background:transparent;border-color:rgba(255,255,255,.45);color:#fff;}.btn-outline:hover{background:rgba(255,255,255,.12);}
+  .btn-primary{background:#fff;color:var(--accent);}.btn-primary:hover{opacity:.88;}
+  .workspace{display:grid;grid-template-columns:420px 1fr;height:calc(100vh - 52px);}
+  .form-panel{background:var(--white);border-right:1px solid var(--border);overflow-y:auto;padding:24px 24px 40px;}
+  .section-label{font-size:10px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:var(--accent);padding:20px 0 10px;border-bottom:1px solid var(--border);margin-bottom:14px;}
+  .section-label:first-child{padding-top:4px;}
+  .field{margin-bottom:13px;}
+  .field label{display:block;font-size:12px;font-weight:500;color:var(--ink2);margin-bottom:4px;}
+  .field label .req{color:var(--danger);margin-left:2px;}
+  .field input,.field select,.field textarea{width:100%;padding:8px 10px;border:1px solid var(--border);border-radius:var(--radius);font-size:13px;font-family:var(--font-ui);color:var(--ink);background:var(--white);}
+  .field input:focus,.field select:focus,.field textarea:focus{outline:none;border-color:var(--accent);box-shadow:0 0 0 3px var(--accent2);}
+  .field textarea{resize:vertical;min-height:68px;}
+  .field-row{display:grid;grid-template-columns:1fr 1fr;gap:10px;}
+  .hint{font-size:11px;color:var(--ink3);margin-top:3px;}
+  .toggle-group{display:flex;gap:8px;flex-wrap:wrap;}
+  .toggle-opt{padding:5px 12px;border:1px solid var(--border);border-radius:20px;font-size:12px;cursor:pointer;transition:all .15s;user-select:none;color:var(--ink2);}
+  .toggle-opt.active{background:var(--accent);border-color:var(--accent);color:#fff;font-weight:500;}
+  .clause-check{display:flex;align-items:flex-start;gap:8px;margin-bottom:7px;}
+  .clause-check input[type=checkbox]{margin-top:2px;accent-color:var(--accent);}
+  .clause-check label{font-size:12px;color:var(--ink2);cursor:pointer;line-height:1.4;}
+  .progress-bar{height:6px;background:var(--border);border-radius:3px;margin-bottom:4px;}
+  .progress-fill{height:100%;border-radius:3px;background:var(--accent);transition:width .3s;}
+  .progress-txt{font-size:11px;color:var(--ink3);margin-bottom:14px;}
+
+  .preview-panel{background:#e8e7e0;overflow-y:auto;padding:32px 40px;display:flex;flex-direction:column;align-items:center;}
+  .doc-sheet{background:var(--white);width:100%;max-width:760px;min-height:1060px;padding:72px 80px;box-shadow:0 2px 16px rgba(0,0,0,.12);font-family:var(--font-doc);font-size:11.5pt;line-height:1.75;color:#111;}
+  
+  .doc-logo-empresa{font-size:13pt;font-weight:bold;color:var(--accent);font-family:var(--font-ui);max-width:340px;}
+  .doc-folio{font-size:9pt;color:var(--ink3);font-family:var(--font-ui);text-align:right;line-height:1.4;}
+  .doc-title{text-align:center;font-size:14pt;font-weight:bold;text-transform:uppercase;letter-spacing:.05em;margin-bottom:6px;color:var(--ink);}
+  .doc-subtitle{text-align:center;font-size:10pt;color:var(--ink3);font-family:var(--font-ui);margin-bottom:28px;}
+  .doc-cap{font-weight:bold;text-transform:uppercase;font-size:10.5pt;margin:28px 0 4px;color:var(--accent);border-left:3px solid var(--accent);padding-left:10px;}
+  .doc-art{font-weight:bold;font-size:10.5pt;margin:16px 0 4px;}
+  .doc-p{margin-bottom:12px;text-align:justify;}
+  .doc-p .blank{font-weight:bold;color:var(--accent);border-bottom:1px solid var(--accent);padding:0 2px;}
+  .doc-p .blank.empty{color:#c0392b;border-bottom-color:#c0392b;font-style:italic;font-weight:normal;}
+  .doc-list{margin:6px 0 12px 24px;}
+  .doc-list li{margin-bottom:4px;}
+  .firma-grid{display:grid;grid-template-columns:1fr 1fr;gap:40px;margin-top:60px;}
+  .firma-box{border-top:1px solid #888;padding-top:8px;font-size:10pt;text-align:center;line-height:1.5;}
+  .firma-box strong{display:block;font-size:9pt;color:var(--ink3);font-family:var(--font-ui);}
+  .watermark-empty{text-align:center;color:var(--ink3);font-family:var(--font-ui);font-size:13px;padding:80px 0;}
+  @media print{header,.form-panel{display:none!important;}.workspace{display:block;height:auto;}.preview-panel{padding:0;background:white;}.doc-sheet{box-shadow:none;max-width:100%;padding:40px;}body{background:white;}}
+
+#auth-gate-loading{position:fixed;inset:0;background:#fff;z-index:9999;display:flex;align-items:center;justify-content:center;font-family:'Segoe UI',system-ui,sans-serif;color:#999;font-size:13px;}
+#auth-gate-blocked{position:fixed;inset:0;background:#0f2640;z-index:9999;display:none;align-items:center;justify-content:center;padding:24px;}
+#auth-gate-blocked .agb-box{background:#fff;border-radius:16px;padding:40px 36px;max-width:420px;text-align:center;font-family:'Segoe UI',system-ui,sans-serif;}
+#auth-gate-blocked .agb-box h2{font-size:18px;margin-bottom:10px;color:#0f2640;}
+#auth-gate-blocked .agb-box p{font-size:13px;color:#666;margin-bottom:20px;line-height:1.6;}
+#auth-gate-blocked .agb-btns{display:flex;gap:10px;justify-content:center;flex-wrap:wrap;}
+#auth-gate-blocked .agb-btns a{padding:10px 18px;border-radius:8px;font-size:13px;font-weight:600;text-decoration:none;}
+#auth-gate-blocked .agb-btns a.agb-primary{background:#1a3a5c;color:#fff;}
+#auth-gate-blocked .agb-btns a.agb-secondary{background:#f0f0ec;color:#1a3a5c;}
+body.modo-demo .doc-sheet{position:relative;user-select:none;-webkit-user-select:none;-moz-user-select:none;}
+body.modo-demo .doc-sheet::after{content:'MUESTRA — CUENTA DEMO, NO VÁLIDO PARA USO LEGAL';position:absolute;top:46%;left:-15%;right:-15%;text-align:center;font-size:26px;font-weight:900;color:rgba(220,38,38,.16);transform:rotate(-18deg);pointer-events:none;font-family:'Segoe UI',system-ui,sans-serif;z-index:50;}
+@media print{ body.modo-demo .doc-sheet::after{display:block!important;color:rgba(220,38,38,.35)!important;} }
+  .cl-nav-logo{display:flex;align-items:center;font-size:15px;font-weight:800;color:#fff;letter-spacing:-.01em;line-height:1;text-decoration:none;}
+  .cl-nav-logo .cl-laboral{color:#5eead4;font-weight:400;}
+</style>
+<script src="membrete.js?v=3.7"></script>
+<script src="expediente-helper.js?v=3.7"></script>
+</head>
+<body>
+<div id="auth-gate-loading">Verificando acceso…</div>
+<div id="auth-gate-blocked">
+  <div class="agb-box">
+    <h2>🔒 Esta herramienta requiere una suscripción activa</h2>
+    <p>Inicie sesión desde su portal de cliente para usar este generador, o conozca nuestros planes si todavía no es cliente de ClickLaboral.mx.</p>
+    <div class="agb-btns">
+      <a class="agb-primary" href="portal-cliente.html">Iniciar sesión →</a>
+      <a class="agb-secondary" href="index.html#precios">Ver planes</a>
+    </div>
+  </div>
+</div>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
+<script>
+(async()=>{
+  const _sb = supabase.createClient('https://hpzgqaplrywwjuvrzhcp.supabase.co','sb_publishable_1g8US8iFJ8CxnSaF_4MHgA_gqyyAr3W');
+  try {
+    const { data } = await _sb.auth.getSession();
+    document.getElementById('auth-gate-loading').style.display = 'none';
+    if (!data?.session?.user) {
+      document.getElementById('auth-gate-blocked').style.display = 'flex';
+    }
+  } catch(e) {
+    document.getElementById('auth-gate-loading').style.display = 'none';
+    document.getElementById('auth-gate-blocked').style.display = 'flex';
+  }
+})();
+
+</script>
+
+<header>
+  <div class="cl-nav-logo" style="flex-shrink:0;"><svg width="26" height="26" viewBox="0 0 100 100" style="vertical-align:-7px;margin-right:6px;flex-shrink:0;">
+        <defs><linearGradient id="clGrad" x1="10" y1="10" x2="90" y2="95" gradientUnits="userSpaceOnUse">
+          <stop offset="0%" stop-color="#1a3a5c"/><stop offset="55%" stop-color="#1e6f6c"/><stop offset="100%" stop-color="#2dd4bf"/>
+        </linearGradient></defs>
+        <path d="M50 7 L83 20 V51 C83 73 68 87 50 95 C32 87 17 73 17 51 V20 Z" fill="none" stroke="url(#clGrad)" stroke-width="6" stroke-linejoin="round"/>
+        <circle cx="40" cy="38" r="8.5" fill="#5eead4"/>
+        <path d="M25 63 C25 51 31 45 40 45 C49 45 55 51 55 63 Z" fill="#5eead4"/>
+        <circle cx="55" cy="33" r="9.5" fill="#14b8a6"/>
+        <path d="M38 61 C38 48 45.5 41 55 41 C64.5 41 72 48 72 61 Z" fill="#14b8a6"/>
+        <path d="M29 61 L45 77 L78 40" fill="none" stroke="#e8f2fc" stroke-width="9" stroke-linecap="round" stroke-linejoin="round"/>
+      </svg>Click<span class="cl-laboral">Laboral.mx</span></div>
+  <div>
+    <h1>Generador · Reglamento Interior de Trabajo</h1>
+    <span>Conforme al artículo 423 de la Ley Federal del Trabajo</span>
+  </div>
+  <div class="header-actions">
+    <button class="btn btn-outline" onclick="limpiar()">Limpiar</button>
+    <button class="btn btn-primary" onclick="window.print()">Imprimir / PDF</button>
+  </div>
+</header>
+<div class="workspace">
+  <div class="form-panel">
+    <!-- ── MEMBRETE DEL CLIENTE ── -->
+    <div style="border-bottom:1px solid var(--border);margin-bottom:0;">
+      <div class="section-label" style="display:flex;align-items:center;justify-content:space-between;cursor:pointer;user-select:none;"
+           onclick="this.nextElementSibling.style.display=this.nextElementSibling.style.display==='none'?'block':'none'">
+        <span>🏢 Logo y pie de página</span>
+        <span style="font-size:10px;font-weight:400;color:var(--ink3);">▲ clic para colapsar</span>
+      </div>
+      <div id="mem-panel-wrap" style="display:block;padding:12px 0 14px;">
+        <div id="mem-logo-container"></div>
+      </div>
+    </div>
+    <!-- ── / MEMBRETE ── -->
+    <div class="section-label">Datos generales de la empresa</div>
+    <div class="field"><label>Razón social <span class="req">*</span></label><input type="text" id="empresa" oninput="render()" placeholder="Ej. Comercializadora Norte, S.A. de C.V."></div>
+    <div class="field-row">
+      <div class="field"><label>RFC</label><input type="text" id="rfc" oninput="render()" maxlength="13" placeholder="CNO800101AAA"></div>
+      <div class="field"><label>Giro / actividad principal</label><input type="text" id="giro" oninput="render()" placeholder="Ej. Comercio al mayoreo"></div>
+    </div>
+    <div class="field"><label>Domicilio del centro de trabajo <span class="req">*</span></label><input type="text" id="domicilio" oninput="render()" placeholder="Calle, No., Colonia, Ciudad, Estado, C.P."></div>
+    <div class="field"><label>Representante legal <span class="req">*</span></label><input type="text" id="rep_legal" oninput="render()" placeholder="Nombre completo"></div>
+    <div class="field"><label>No. aproximado de trabajadores</label><input type="number" id="num_trabajadores" oninput="render()" placeholder="Ej. 45" min="1"></div>
+
+    <div class="section-label">Capítulo I — Jornadas y horarios</div>
+    <div class="field">
+      <label>Tipos de jornada que opera la empresa</label>
+      <div class="toggle-group" id="jornadas">
+        <div class="toggle-opt active" onclick="togMulti(this)">Diurna</div>
+        <div class="toggle-opt" onclick="togMulti(this)">Nocturna</div>
+        <div class="toggle-opt" onclick="togMulti(this)">Mixta</div>
+        <div class="toggle-opt" onclick="togMulti(this)">Reducida</div>
+        <div class="toggle-opt" onclick="togMulti(this)">Turnos</div>
+      </div>
+    </div>
+    <div class="field"><label>Horario general (describir turnos si aplica)</label><textarea id="horario_general" oninput="render()" placeholder="Ej. Turno matutino: Lunes a viernes 08:00 a 17:00 hrs, sábado 08:00 a 13:00 hrs. Turno vespertino: 14:00 a 22:00 hrs."></textarea></div>
+    <div class="field-row">
+      <div class="field"><label>Día(s) de descanso semanal</label><input type="text" id="descanso" oninput="render()" placeholder="Ej. Domingo y un día entre semana"></div>
+      <div class="field"><label>Tolerancia de llegada (minutos)</label><input type="number" id="tolerancia" oninput="render()" placeholder="Ej. 10" min="0" max="30"></div>
+    </div>
+    <div class="field"><label>Días de descanso obligatorio adicionales a la ley</label><input type="text" id="descansos_extra" oninput="render()" placeholder="Ej. 10 de mayo, aniversario de la empresa..."></div>
+
+    <div class="section-label">Capítulo II — Lugar y condiciones de trabajo</div>
+    <div class="field"><label>Áreas / departamentos de la empresa</label><textarea id="areas" oninput="render()" placeholder="Ej. Administración, Ventas, Almacén, Producción, Recursos Humanos..."></textarea></div>
+    <div class="field"><label>Equipo de protección personal requerido</label><input type="text" id="epp" oninput="render()" placeholder="Ej. Casco, guantes, botas de seguridad — área de producción"></div>
+    <div class="clause-check"><input type="checkbox" id="usa_uniforme" onchange="render()"><label for="usa_uniforme">La empresa proporciona uniforme / vestimenta de trabajo</label></div>
+    <div class="field" id="campo_uniforme" style="display:none"><label>Descripción del uniforme y política de uso</label><textarea id="uniforme" oninput="render()" placeholder="Describa el uniforme, a quién aplica y las condiciones de uso y reposición..."></textarea></div>
+
+    <div class="section-label">Capítulo III — Días de descanso, vacaciones y permisos</div>
+    <div class="field-row">
+      <div class="field"><label>Días de vacaciones 1er año</label><input type="number" id="vac_1" value="12" min="12" oninput="render()"><div class="hint">Mín. 12 — art. 76 LFT</div></div>
+      <div class="field"><label>Incremento por año adicional</label><input type="number" id="vac_inc" value="2" min="2" oninput="render()"><div class="hint">Mín. 2 días más por año</div></div>
+    </div>
+    <div class="field"><label>Política de solicitud de vacaciones</label><textarea id="pol_vacaciones" oninput="render()" placeholder="Ej. El trabajador solicitará vacaciones con al menos 15 días naturales de anticipación mediante formato RH-VAC-01..."></textarea></div>
+    <div class="field"><label>Permisos con goce de salario (además de los de ley)</label><textarea id="permisos_goce" oninput="render()" placeholder="Ej. 1 día por nacimiento de hijo, 3 días por fallecimiento de familiar directo, 1 día de cumpleaños..."></textarea></div>
+    <div class="field"><label>Procedimiento para solicitar permisos</label><textarea id="proc_permisos" oninput="render()" placeholder="Describa cómo y con cuánto tiempo de anticipación se solicitan los permisos..."></textarea></div>
+
+    <div class="section-label">Capítulo IV — Salarios y forma de pago</div>
+    <div class="field">
+      <label>Periodicidad de pago</label>
+      <div class="toggle-group" id="periodicidad">
+        <div class="toggle-opt" onclick="selToggle(this,'periodicidad')">Diario</div>
+        <div class="toggle-opt" onclick="selToggle(this,'periodicidad')">Semanal</div>
+        <div class="toggle-opt active" onclick="selToggle(this,'periodicidad')">Quincenal</div>
+        <div class="toggle-opt" onclick="selToggle(this,'periodicidad')">Mensual</div>
+      </div>
+    </div>
+    <div class="field">
+      <label>Forma de pago</label>
+      <div class="toggle-group" id="forma_pago">
+        <div class="toggle-opt active" onclick="selToggle(this,'forma_pago')">Transferencia</div>
+        <div class="toggle-opt" onclick="selToggle(this,'forma_pago')">Efectivo</div>
+        <div class="toggle-opt" onclick="selToggle(this,'forma_pago')">Cheque</div>
+      </div>
+    </div>
+    <div class="field"><label>Día(s) de pago</label><input type="text" id="dia_pago" oninput="render()" placeholder="Ej. Día 15 y último día hábil de cada mes"></div>
+
+    <div class="section-label">Capítulo V — Medidas disciplinarias</div>
+    <div class="field">
+      <label>Escala de sanciones (seleccione las que aplican)</label>
+      <div class="clause-check"><input type="checkbox" id="san_aperc" checked onchange="render()"><label for="san_aperc">Apercibimiento verbal</label></div>
+      <div class="clause-check"><input type="checkbox" id="san_aperc_esc" checked onchange="render()"><label for="san_aperc_esc">Apercibimiento escrito (acta administrativa)</label></div>
+      <div class="clause-check"><input type="checkbox" id="san_susp1" checked onchange="render()"><label for="san_susp1">Suspensión 1 a 3 días sin goce de salario</label></div>
+      <div class="clause-check"><input type="checkbox" id="san_susp2" checked onchange="render()"><label for="san_susp2">Suspensión 4 a 8 días sin goce de salario</label></div>
+      <div class="clause-check"><input type="checkbox" id="san_resc" checked onchange="render()"><label for="san_resc">Rescisión sin responsabilidad para el patrón (art. 47 LFT)</label></div>
+    </div>
+    <div class="field"><label>Faltas que ameritan rescisión inmediata</label><textarea id="faltas_graves" oninput="render()" placeholder="Ej. Robo, fraude, violencia física, acoso sexual, revelar secretos industriales, presentarse intoxicado reiteradamente..."></textarea></div>
+
+    <div class="section-label">Capítulo VI — Seguridad e higiene</div>
+    <div class="clause-check"><input type="checkbox" id="tiene_comision_sh" checked onchange="render()"><label for="tiene_comision_sh">La empresa cuenta con Comisión Mixta de Seguridad e Higiene (NOM-019)</label></div>
+    <div class="clause-check"><input type="checkbox" id="tiene_comision_cap" checked onchange="render()"><label for="tiene_comision_cap">Comisión Mixta de Capacitación y Adiestramiento</label></div>
+    <div class="clause-check"><input type="checkbox" id="tiene_comision_ptu" checked onchange="render()"><label for="tiene_comision_ptu">Comisión Mixta para la determinación de PTU</label></div>
+    <div class="clause-check"><input type="checkbox" id="tiene_plan_emergencia" onchange="render()"><label for="tiene_plan_emergencia">Plan de emergencia y evacuación documentado</label></div>
+    <div class="field"><label>Equipos de seguridad disponibles</label><input type="text" id="equipos_seg" oninput="render()" placeholder="Ej. Extintores, botiquín de primeros auxilios, señalética de evacuación..."></div>
+
+    <div class="section-label">Capítulo VII — Disposiciones especiales</div>
+    <div class="clause-check"><input type="checkbox" id="cl_acoso" checked onchange="render()"><label for="cl_acoso">Política de prevención y atención al hostigamiento y acoso sexual</label></div>
+    <div class="clause-check"><input type="checkbox" id="cl_nom035" checked onchange="render()"><label for="cl_nom035">Programa NOM-035-STPS-2018 (factores de riesgo psicosocial)</label></div>
+    <div class="clause-check"><input type="checkbox" id="cl_telefono" checked onchange="render()"><label for="cl_telefono">Uso de dispositivos electrónicos y redes sociales en horario laboral</label></div>
+    <div class="clause-check"><input type="checkbox" id="cl_alcohol" checked onchange="render()"><label for="cl_alcohol">Prohibición de alcohol, enervantes y sustancias psicotrópicas</label></div>
+    <div class="clause-check"><input type="checkbox" id="cl_confidencialidad" checked onchange="render()"><label for="cl_confidencialidad">Obligación de confidencialidad y manejo de información</label></div>
+    <div class="clause-check"><input type="checkbox" id="cl_datos" checked onchange="render()"><label for="cl_datos">Tratamiento de datos personales (LFPDPPP)</label></div>
+    <div class="clause-check"><input type="checkbox" id="cl_home_office" onchange="render()"><label for="cl_home_office">Teletrabajo / Home Office (NOM-037-STPS-2023)</label></div>
+
+    <div class="section-label">Publicación y vigencia</div>
+    <div class="field-row">
+      <div class="field"><label>Ciudad <span class="req">*</span></label><input type="text" id="ciudad_firma" oninput="render()" placeholder="Ciudad, Estado"></div>
+      <div class="field"><label>Fecha de elaboración <span class="req">*</span></label><input type="date" id="fecha" oninput="render()"></div>
+    </div>
+    <div class="field"><label>Lugar(es) de publicación en el centro de trabajo</label><input type="text" id="lugar_publicacion" oninput="render()" placeholder="Ej. Tablero de avisos de la entrada principal y comedor"></div>
+  </div>
+
+  <div class="preview-panel">
+    <div class="doc-sheet" id="doc-preview">
+      <div class="watermark-empty">Complete los datos para generar el Reglamento Interior de Trabajo.</div>
+    </div>
+  </div>
+</div>
+
+<script>
+function v(id){return(document.getElementById(id)||{}).value||'';}
+function chk(id){return document.getElementById(id)?.checked||false;}
+function b(txt,fb){if(!txt||!txt.trim())return`<span class="blank empty">[${fb}]</span>`;return`<span class="blank">${txt}</span>`;}
+function fmtFecha(iso){if(!iso)return'';const[y,m,d]=iso.split('-');const M=['enero','febrero','marzo','abril','mayo','junio','julio','agosto','septiembre','octubre','noviembre','diciembre'];return`${parseInt(d)} de ${M[parseInt(m)-1]} de ${y}`;}
+function getActive(gid){const g=document.getElementById(gid);if(!g)return'';const e=g.querySelector('.toggle-opt.active');return e?e.textContent:'';}
+function getActivos(gid){return[...document.querySelectorAll(`#${gid} .toggle-opt.active`)].map(e=>e.textContent);}
+function selToggle(el,gid){document.querySelectorAll(`#${gid} .toggle-opt`).forEach(e=>e.classList.remove('active'));el.classList.add('active');render();}
+function togMulti(el){el.classList.toggle('active');render();}
+function limpiar(){if(!confirm('¿Limpiar?'))return;document.querySelectorAll('input:not([readonly]),select,textarea').forEach(el=>{if(el.type==='checkbox')el.checked=el.defaultChecked;else el.value=el.defaultValue||'';});render();}
+
+document.getElementById('usa_uniforme').addEventListener('change',function(){document.getElementById('campo_uniforme').style.display=this.checked?'':'none';});
+
+let artN=0;
+function art(titulo,contenido){artN++;return`<div class="doc-art">Artículo ${artN}. — ${titulo}</div><div class="doc-p">${contenido}</div>`;}
+
+function render(){
+  const empresa=v('empresa'),rfc=v('rfc'),giro=v('giro'),domicilio=v('domicilio'),rep=v('rep_legal'),numTrab=v('num_trabajadores');
+  const horario=v('horario_general'),descanso=v('descanso'),tolerancia=v('tolerancia'),descExtra=v('descansos_extra');
+  const areas=v('areas'),epp=v('epp');
+  const vac1=v('vac_1')||'12',vacInc=v('vac_inc')||'2',polVac=v('pol_vacaciones'),permGoce=v('permisos_goce'),procPermisos=v('proc_permisos');
+  const perioc=getActive('periodicidad')||'Quincenal',formaPago=getActive('forma_pago')||'Transferencia',diaPago=v('dia_pago');
+  const faltasGraves=v('faltas_graves'),equiposSeg=v('equipos_seg'),lugarPub=v('lugar_publicacion');
+  const ciudad=v('ciudad_firma'),fecha=v('fecha');
+  const jornadas=getActivos('jornadas');
+
+  const folio=`RIT-${new Date().getFullYear()}-${Math.floor(Math.random()*9000)+1000}`;
+  if(!empresa&&!rep){document.getElementById('doc-preview').innerHTML='<div class="watermark-empty">Complete los datos para generar el Reglamento Interior de Trabajo.</div>';return;}
+  artN=0;
+
+  let html=generarMembrete({
+    empresa:   v('empresa'),
+    rfc:       v('rfc'),
+    domicilio: v('domicilio'),
+    tel:       v('mem-tel'),
+    emailEmp:  v('mem-email'),
+    web:       v('mem-web'),
+    folio,
+    logoDataUrl: window._logoClienteDataUrl,
+  }) + `
+    <div class="doc-folio">${rfc?'RFC: '+rfc+'<br>':''}${giro?'Giro: '+giro+'<br>':''}${numTrab?numTrab+' trabajadores':''}Elaboración: ${fmtFecha(fecha)||'—'}</div>
+  </div>
+  <div class="doc-title">Reglamento Interior de Trabajo</div>
+  <div class="doc-subtitle">Artículo 423 de la Ley Federal del Trabajo · Versión vigente</div>
+
+  <div class="doc-cap">Capítulo I — Disposiciones generales</div>
+  ${art('Ámbito de aplicación',`El presente Reglamento Interior de Trabajo es de observancia obligatoria para todos los trabajadores que presten sus servicios en ${b(empresa,'razón social')}, con domicilio en ${b(domicilio,'domicilio')}, así como para el personal eventual, de confianza y subcontratado que realice actividades en las instalaciones de la empresa.`)}
+  ${art('Objeto',`El presente Reglamento tiene por objeto establecer las condiciones de trabajo, las obligaciones y prohibiciones de trabajadores y patrones, y las normas de disciplina y conducta aplicables en el centro de trabajo, conforme a los artículos 422 a 425 de la LFT.`)}
+  ${art('Definiciones',`Para efectos del presente Reglamento se entiende por: <em>Empresa</em>: ${b(empresa,'razón social')}; <em>Trabajador</em>: toda persona física que presta un trabajo personal subordinado a la empresa; <em>Jefe inmediato</em>: el superior jerárquico directo de cada trabajador; <em>Área de Recursos Humanos</em>: el área responsable de la administración del personal.`)}
+
+  <div class="doc-cap">Capítulo II — Jornada de trabajo</div>
+  ${art('Tipos de jornada',`La empresa opera las siguientes jornadas de trabajo: ${jornadas.length>0?jornadas.join(', '):b('','tipos de jornada')}. Ninguna jornada podrá exceder los límites establecidos en los artículos 60 y 61 de la LFT.`)}
+  ${art('Horarios',`${b(horario,'describa los horarios de trabajo de la empresa')}. El TRABAJADOR deberá estar en su lugar de trabajo listo para iniciar actividades a la hora señalada.${tolerancia?' Se establece una tolerancia de llegada de '+tolerancia+' minutos, pasada la cual se registrará retardo. La acumulación de 3 retardos en un mes equivaldrá a una inasistencia injustificada.':''}`)}
+  ${art('Tiempo para tomar alimentos',`El trabajador dispondrá de al menos 30 minutos para tomar sus alimentos durante la jornada, conforme al artículo 63 de la LFT. Este tiempo no se computa como parte de la jornada salvo acuerdo en contrario.`)}
+  ${art('Días de descanso semanal',`Los trabajadores disfrutarán de descanso semanal los ${b(descanso,'día(s) de descanso')}, con goce de salario íntegro. Quienes laboren en día de descanso tendrán derecho al pago doble más el salario ordinario (art. 73 LFT).${descExtra?' Adicionalmente la empresa otorgará descanso en: '+descExtra+'.':''}`)}
+  ${art('Días de descanso obligatorio',`Serán días de descanso obligatorio los señalados en el artículo 74 de la LFT: 1 de enero, primer lunes de febrero, tercer lunes de marzo, 1 de mayo, 16 de septiembre, tercer lunes de noviembre, 1 de diciembre (cada 6 años), 25 de diciembre y las elecciones ordinarias.`)}
+  ${art('Tiempo extraordinario',`El trabajo extraordinario será el excedente de la jornada ordinaria. Se compensará con salario doble por las primeras 9 horas semanales y triple a partir de la décima hora (art. 67 LFT). El tiempo extraordinario deberá ser autorizado previamente por escrito por el jefe inmediato.`)}
+
+  <div class="doc-cap">Capítulo III — Vacaciones y permisos</div>
+  ${art('Período vacacional',`Los trabajadores disfrutarán de un período anual de vacaciones pagadas no inferior a ${vac1} días laborables en el primer año de servicios, incrementándose en ${vacInc} días por cada año subsecuente, conforme al artículo 76 de la LFT. La prima vacacional será del 25% sobre el salario de los días de vacaciones (art. 80 LFT).${polVac?' '+polVac:''}`)}
+  ${art('Solicitud de vacaciones',`El trabajador deberá solicitar sus vacaciones con al menos 15 días de anticipación a través del formato correspondiente, con aprobación de su jefe inmediato y del área de Recursos Humanos. Las vacaciones deberán disfrutarse dentro de los 6 meses siguientes al cumplimiento del año de servicios.${procPermisos?' '+procPermisos:''}`)}
+  ${art('Permisos con goce de salario',`Los trabajadores tendrán derecho a permisos con goce de salario en los siguientes casos: matrimonio (3 días), fallecimiento de familiar en primer grado (3 días), nacimiento de hijo (el establecido por la ley para paternidad)${permGoce?'; adicionalmente: '+permGoce:''}. Los permisos deberán solicitarse con anticipación salvo caso fortuito o fuerza mayor.`)}
+  ${art('Permisos sin goce de salario',`La empresa podrá otorgar permisos sin goce de salario atendiendo a las necesidades del trabajador y sin afectar las operaciones, a juicio del área de Recursos Humanos. Dichos permisos no interrumpen la antigüedad del trabajador.`)}
+
+  <div class="doc-cap">Capítulo IV — Salarios y prestaciones</div>
+  ${art('Periodicidad y forma de pago',`Los salarios se pagarán de forma ${perioc.toLowerCase()} mediante ${formaPago.toLowerCase()}${diaPago?', los días '+diaPago:''}. El pago se realizará dentro del centro de trabajo o mediante depósito en cuenta bancaria del trabajador, conforme al artículo 108 de la LFT.`)}
+  ${art('Descuentos autorizados',`Solo podrán realizarse descuentos al salario en los casos previstos por el artículo 110 de la LFT: deudas con la empresa por anticipo de salario, renta de habitación, reparación de daños y perjuicios causados por el trabajador, pensión alimenticia y cuotas del IMSS e INFONAVIT.`)}
+  ${art('Aguinaldo',`Los trabajadores tendrán derecho a un aguinaldo anual equivalente a 15 días de salario, que deberá pagarse antes del 20 de diciembre de cada año (art. 87 LFT). Los trabajadores con menos de un año de servicios recibirán la parte proporcional.`)}
+
+  <div class="doc-cap">Capítulo V — Lugar y condiciones de trabajo</div>
+  ${art('Áreas de trabajo',`La empresa opera las siguientes áreas: ${b(areas,'describa las áreas o departamentos')}. El trabajador desarrollará sus actividades en el área que le sea asignada, sin perjuicio de atender instrucciones temporales en otras áreas.`)}
+  ${chk('usa_uniforme')?art('Uniforme y presentación personal',`La empresa proporcionará al trabajador el siguiente uniforme de trabajo: ${b(v('uniforme'),'describa el uniforme')}. El trabajador deberá presentarse con uniforme limpio y en buen estado durante toda la jornada laboral.`):''}
+  ${epp?art('Equipo de protección personal',`La empresa proporcionará sin costo el siguiente equipo de protección personal: ${epp}. El trabajador está obligado a utilizarlo en las áreas y actividades que lo requieran, so pena de sanción disciplinaria.`):''}
+
+  <div class="doc-cap">Capítulo VI — Obligaciones y prohibiciones</div>
+  ${art('Obligaciones de los trabajadores',`Son obligaciones de los trabajadores, además de las señaladas en el artículo 134 de la LFT: <ul class="doc-list"><li>Desempeñar el trabajo con la intensidad, cuidado y esmero apropiados.</li><li>Reportar al jefe inmediato cualquier anomalía, defecto o situación de riesgo.</li><li>Tratar con respeto y cordialidad a compañeros, superiores, clientes y proveedores.</li><li>Conservar en buen estado los instrumentos, herramientas y bienes asignados.</li><li>Observar las medidas preventivas de higiene exigidas por la empresa.</li><li>Registrar puntualmente su entrada y salida conforme al control establecido.</li></ul>`)}
+  ${art('Prohibiciones a los trabajadores',`Queda prohibido a los trabajadores, además de lo señalado en el artículo 135 de la LFT: <ul class="doc-list">${chk('cl_alcohol')?'<li>Introducir o consumir bebidas alcohólicas, enervantes o sustancias psicotrópicas en el centro de trabajo.</li>':''}<li>Sacar de las instalaciones bienes, materiales o equipos de la empresa sin autorización escrita.</li><li>Realizar actividades ajenas al trabajo durante la jornada laboral.</li>${chk('cl_telefono')?'<li>Usar dispositivos electrónicos personales o acceder a redes sociales durante la jornada, salvo autorización expresa.</li>':''}<li>Difamar, calumniar o injuriar a compañeros, superiores o a la empresa.</li><li>Realizar actividades de carácter político, religioso o de índole personal dentro de las instalaciones.</li>${chk('cl_confidencialidad')?'<li>Revelar información confidencial, datos de clientes, procesos o estrategias de la empresa a terceros.</li>':''}</ul>`)}
+
+  <div class="doc-cap">Capítulo VII — Medidas disciplinarias</div>
+  ${art('Escala de sanciones',`Las infracciones al presente Reglamento se sancionarán de manera progresiva y proporcional a la gravedad de la falta, conforme a la siguiente escala: <ul class="doc-list">${chk('san_aperc')?'<li>Apercibimiento verbal, con nota en el expediente del trabajador.</li>':''}${chk('san_aperc_esc')?'<li>Apercibimiento por escrito mediante acta administrativa.</li>':''}${chk('san_susp1')?'<li>Suspensión sin goce de salario de 1 a 3 días.</li>':''}${chk('san_susp2')?'<li>Suspensión sin goce de salario de 4 a 8 días (máximo legal).</li>':''}${chk('san_resc')?'<li>Rescisión de la relación laboral sin responsabilidad para el patrón, conforme al artículo 47 de la LFT.</li>':''}</ul>`)}
+  ${art('Faltas que ameritan rescisión inmediata',`Las siguientes conductas se consideran causas de rescisión sin responsabilidad para el patrón, de conformidad con el artículo 47 de la LFT, y no requieren agotar la escala disciplinaria previa: ${b(faltasGraves,'liste las faltas que ameritan rescisión inmediata')}.`)}
+  ${art('Procedimiento disciplinario',`Antes de aplicar cualquier sanción, el área de Recursos Humanos levantará acta administrativa citando al trabajador para que manifieste lo que a su derecho convenga. El trabajador podrá ser acompañado por un testigo de su elección. La negativa del trabajador a participar no impedirá la aplicación de la sanción correspondiente.`)}
+
+  <div class="doc-cap">Capítulo VIII — Seguridad e higiene</div>
+  ${art('Comisiones de seguridad e higiene',`${chk('tiene_comision_sh')?'La empresa cuenta con una Comisión Mixta de Seguridad e Higiene integrada de manera paritaria, conforme a la NOM-019-STPS-2011, la cual se reunirá mensualmente para verificar las condiciones de seguridad.':''} ${chk('tiene_comision_cap')?'Asimismo funciona la Comisión Mixta de Capacitación y Adiestramiento conforme al artículo 153-E de la LFT.':''} ${chk('tiene_comision_ptu')?'La empresa también cuenta con la Comisión Mixta para la determinación y reparto de la Participación de los Trabajadores en las Utilidades (PTU).':''}`)}
+  ${chk('tiene_plan_emergencia')?art('Plan de emergencia y evacuación',`La empresa cuenta con un Plan de Emergencia y Evacuación que incluye rutas de evacuación señalizadas, puntos de reunión y brigadas de emergencia. Todo el personal deberá conocer y participar en los simulacros de evacuación que se realicen al menos dos veces al año.`):''}
+  ${equiposSeg?art('Equipos de seguridad',`La empresa dispone de los siguientes equipos de seguridad: ${equiposSeg}. Queda prohibido obstruir, dañar o hacer uso indebido de dichos equipos.`):''}
+
+  ${chk('cl_acoso')?`<div class="doc-cap">Capítulo IX — Prevención del hostigamiento y acoso</div>${art('Política de cero tolerancia',`La empresa tiene una política de cero tolerancia al hostigamiento sexual, acoso sexual y laboral (mobbing) en todas sus modalidades. Cualquier trabajador que sea víctima o testigo de estas conductas podrá reportarlo de manera confidencial al área de Recursos Humanos o directamente a la Comisión correspondiente. Las conductas de hostigamiento o acoso constituyen causal de rescisión conforme al artículo 47, fracción IV, de la LFT.`)}${art('Procedimiento de denuncia',`La denuncia podrá presentarse verbalmente o por escrito. El área de Recursos Humanos iniciará una investigación interna en un plazo máximo de 5 días hábiles, garantizando la confidencialidad y la no represalia contra el denunciante. En caso de acreditarse la conducta, se aplicarán las sanciones previstas en la ley y en el presente Reglamento.`)}`:'' }
+
+  ${chk('cl_nom035')?`<div class="doc-cap">Capítulo X — NOM-035-STPS-2018</div>${art('Factores de riesgo psicosocial',`La empresa implementa el programa para la identificación, análisis y prevención de factores de riesgo psicosocial conforme a la NOM-035-STPS-2018. Los trabajadores participarán en las evaluaciones periódicas y en los programas de intervención que se determinen, cubriendo las tres etapas establecidas en la norma.`)}`:''  }
+
+  ${chk('cl_home_office')?`<div class="doc-cap">Capítulo XI — Teletrabajo</div>${art('Modalidad de teletrabajo',`Los trabajadores que desempeñen sus labores bajo la modalidad de teletrabajo se regirán por las disposiciones del artículo 330-A y siguientes de la LFT y la NOM-037-STPS-2023. El patrón proporcionará los equipos, herramientas y conectividad necesarios, o en su caso compensará dichos gastos. El trabajador bajo esta modalidad tendrá los mismos derechos que los trabajadores presenciales.`)}`:'' }
+
+  ${chk('cl_datos')?`<div class="doc-cap">Capítulo XII — Datos personales</div>${art('Tratamiento de datos personales',`Los datos personales del trabajador serán tratados conforme a la Ley Federal de Protección de Datos Personales en Posesión de los Particulares y su Reglamento. El aviso de privacidad está disponible en el área de Recursos Humanos y en el tablero de avisos de la empresa.`)}`:'' }
+
+  <div class="doc-cap">Capítulo Final — Publicación, vigencia y reforma</div>
+  ${art('Publicación',`El presente Reglamento será depositado ante el Centro Federal de Conciliación y Registro Laboral (CFCRL) y publicado en ${b(lugarPub,'lugar(es) de publicación en el centro de trabajo')}, de conformidad con los artículos 424 y 424-A de la LFT.`)}
+  ${art('Vigencia',`El presente Reglamento entrará en vigor a los 8 días de su depósito ante el CFCRL y permanecerá en vigor hasta en tanto no sea modificado conforme al procedimiento establecido en el artículo 426 de la LFT.`)}
+  ${art('Reforma',`Las modificaciones al presente Reglamento requerirán el acuerdo entre el patrón y la mayoría de los trabajadores, o la intervención del sindicato en su caso, y deberán depositarse ante el CFCRL para surtir efectos.`)}
+
+  <div class="doc-p" style="margin-top:28px;">El presente Reglamento fue elaborado y acordado en ${b(ciudad,'ciudad')}, el día ${b(fmtFecha(fecha),'fecha de elaboración')}.</div>
+
+  <div class="firma-grid">
+    <div class="firma-box"><br><br>${empresa||'__________________________'}<br>${rep?rep+'<br>':''}<strong>EL PATRÓN</strong></div>
+    <div class="firma-box"><br><br>__________________________<br><strong>REPRESENTANTE DE LOS TRABAJADORES</strong></div>
+  </div>
+
+  <div style="margin-top:32px;padding:12px;background:#f0f7ff;border:1px solid #b8d4f0;border-radius:4px;font-size:9pt;font-family:var(--font-ui);color:#1a3a5c;line-height:1.6;">
+    <strong>Lista de verificación para el depósito:</strong><br>
+    ☐ Depositar ante el Centro Federal de Conciliación y Registro Laboral (CFCRL)<br>
+    ☐ Publicar en tableros de avisos del centro de trabajo<br>
+    ☐ Entregar copia a cada trabajador (recomendable con acuse de recibo)<br>
+    ☐ Integrar al expediente laboral de cada trabajador<br>
+    ☐ Revisión anual o ante cambios legislativos relevantes
+  </div>`;
+
+  html += generarFooterDoc({...getDatosMembrete(), folio});
+  document.getElementById('doc-preview').innerHTML=html;
+}
+render();
+// ── INIT ──
+renderPanelMembrete('mem-logo-container');
+(async()=>{
+  try{
+    const _sb = supabase.createClient(
+      'https://hpzgqaplrywwjuvrzhcp.supabase.co',
+      'sb_publishable_1g8US8iFJ8CxnSaF_4MHgA_gqyyAr3W'
+    );
+    await precargarMembreteDesdePortal(_sb);
+  }catch(e){}
+})();
+render();
+// ── Expediente del trabajador ──
+if (window.ExpedienteHelper) {
+  ExpedienteHelper.init({
+    inputNombreId: 'empresa',
+    tipoDocumento: 'reglamento_interior',
+    nombreDocumentoFn: () => 'Reglamento Interior de Trabajo — ' + (v('empresa')||'empresa'),
+  });
+}
+</script>
+<script src="edicion-libre.js?v=4.6"></script>
+
+
+
+
+</body>
+</html>

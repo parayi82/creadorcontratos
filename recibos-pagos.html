@@ -1,0 +1,551 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<script>
+(function(){
+  var params=new URLSearchParams(window.location.search);
+  var modo=params.get('editar')==='1'?'editar':params.get('recuperar')==='1'?'ver':null;
+  if(!modo) return;
+  var gen=window.location.pathname.split('/').pop();
+  var key=(modo==='editar'?'doc_editar_':'doc_recuperado_')+gen.replace('.html','');
+  var g=null; try{g=JSON.parse(localStorage.getItem(key)||'null');}catch(e){}
+  if(!g||!g.html) return;
+  // Bloquear render() para no sobreescribir el contenido
+  var _bloqueado=false,_orig=null;
+  function bloquear(){
+    if(typeof window.render==='function'&&!_bloqueado){
+      _orig=window.render; window.render=function(){}; _bloqueado=true;
+    }
+  }
+  bloquear(); var _iv=setInterval(bloquear,50);
+  function inyectar(){
+    var pr=document.getElementById('doc-preview');
+    if(!pr){setTimeout(inyectar,80);return;}
+    clearInterval(_iv); bloquear();
+    pr.innerHTML=g.html;
+    // En modo editar: activar contenteditable automáticamente
+    if(modo==='editar'){
+      pr.contentEditable='true';
+      pr.style.outline='2px dashed #0f766e';
+      pr.style.cursor='text';
+    }
+    // Banner
+    var b=document.createElement('div');
+    b.id='banner-doc';
+    b.style.cssText='position:sticky;top:0;z-index:200;background:'+(modo==='editar'?'#f0fdf4':'#eff6ff')+';border-bottom:2px solid '+(modo==='editar'?'#86efac':'#93c5fd')+';padding:10px 16px;font-size:12px;color:'+(modo==='editar'?'#166534':'#1e40af')+';display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap;';
+    var etiq=modo==='editar'?'✏️ Modo edición — edita el documento directamente':'📄 Documento guardado';
+    var sp=document.createElement('span');
+    sp.innerHTML='<strong>'+etiq+'</strong> — '+(g.nombre||'')+' · '+(g.fecha||'');
+    var bt=document.createElement('button');
+    bt.textContent=modo==='editar'?'🔄 Restaurar campos':'✏️ Editar';
+    bt.style.cssText='border:1px solid currentColor;background:transparent;color:inherit;padding:4px 12px;border-radius:6px;font-size:11px;cursor:pointer;white-space:nowrap;';
+    bt.onclick=function(){
+      _bloqueado=false;
+      pr.contentEditable='false';
+      pr.style.outline=''; pr.style.cursor='';
+      if(_orig) window.render=_orig;
+      var bel=document.getElementById('banner-doc');
+      if(bel) bel.remove();
+      localStorage.removeItem(key);
+      if(typeof window.render==='function') window.render();
+    };
+    b.appendChild(sp); b.appendChild(bt);
+    pr.insertBefore(b,pr.firstChild);
+    localStorage.removeItem(key);
+  }
+  document.readyState==='loading'?document.addEventListener('DOMContentLoaded',inyectar):inyectar();
+})();
+</script>
+
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Generador · Recibos y Nómina</title>
+<style>
+:root{--ink:#1a1a18;--ink2:#4a4a46;--ink3:#8a8a84;--surface:#f7f6f2;--white:#ffffff;--accent:#1a3a5c;--accent2:#e8f0f8;--border:#ddddd6;--danger:#c0392b;--green:#16a34a;--amber:#c8830a;--radius:6px;--font-ui:'Segoe UI',system-ui,sans-serif;--font-doc:'Times New Roman',Georgia,serif;}
+*{box-sizing:border-box;margin:0;padding:0;}
+body{font-family:var(--font-ui);background:var(--surface);color:var(--ink);font-size:14px;}
+header{background:var(--accent);color:#fff;padding:14px 28px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:100;box-shadow:0 1px 4px rgba(0,0,0,.18);}
+header h1{font-size:15px;font-weight:600;}
+.header-actions{display:flex;gap:10px;align-items:center;}
+.btn{padding:7px 18px;border-radius:var(--radius);font-size:13px;font-weight:500;cursor:pointer;border:1px solid transparent;transition:background .15s;}
+.btn-outline{background:transparent;border-color:rgba(255,255,255,.45);color:#fff;}.btn-outline:hover{background:rgba(255,255,255,.12);}
+.btn-primary{background:#fff;color:var(--accent);}.btn-primary:hover{opacity:.88;}
+.workspace{display:grid;grid-template-columns:420px 1fr;height:calc(100vh - 52px);}
+.form-panel{background:var(--white);border-right:1px solid var(--border);overflow-y:auto;padding:0 0 60px;}
+.section-label{font-size:10px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:var(--accent);padding:14px 20px 10px;border-bottom:1px solid var(--border);margin-bottom:14px;background:var(--surface);}
+.form-inner{padding:0 20px;}
+.field{margin-bottom:12px;}
+.field label{display:block;font-size:12px;font-weight:500;color:var(--ink2);margin-bottom:4px;}
+.field input,.field select,.field textarea{width:100%;padding:8px 10px;border:1px solid var(--border);border-radius:var(--radius);font-size:13px;font-family:var(--font-ui);color:var(--ink);background:var(--white);}
+.field input:focus,.field select:focus,.field textarea:focus{outline:none;border-color:var(--accent);box-shadow:0 0 0 3px var(--accent2);}
+.field textarea{resize:vertical;min-height:60px;}
+.field-row{display:grid;grid-template-columns:1fr 1fr;gap:10px;}
+.field-row3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;}
+.hint{font-size:11px;color:var(--ink3);margin-top:3px;}
+.doc-tabs{display:flex;flex-wrap:wrap;gap:0;border-bottom:2px solid var(--border);padding:0 20px;background:var(--white);}
+.doc-tab{padding:10px 14px;font-size:12px;font-weight:500;cursor:pointer;color:var(--ink3);border-bottom:2px solid transparent;margin-bottom:-2px;transition:all .15s;white-space:nowrap;}
+.doc-tab.active{color:var(--accent);border-bottom-color:var(--accent);font-weight:600;}
+.concepto-row{display:grid;grid-template-columns:1fr auto auto;gap:6px;margin-bottom:6px;align-items:center;}
+.concepto-row input{padding:6px 8px;border:1px solid var(--border);border-radius:4px;font-size:12px;}
+.btn-remove{background:none;border:none;cursor:pointer;color:var(--ink3);font-size:16px;padding:0 4px;}
+.btn-add{background:none;border:1px dashed var(--border);border-radius:var(--radius);padding:6px 14px;font-size:12px;cursor:pointer;color:var(--ink3);width:100%;margin-top:4px;font-family:var(--font-ui);}
+.btn-add:hover{border-color:var(--accent);color:var(--accent);}
+.preview-panel{background:#e8e7e0;overflow-y:auto;padding:32px 40px;display:flex;flex-direction:column;align-items:center;}
+.doc-sheet{background:var(--white);width:100%;max-width:760px;padding:48px 64px;box-shadow:0 2px 16px rgba(0,0,0,.12);font-family:var(--font-doc);font-size:11.5pt;line-height:1.65;color:#111;min-height:900px;}
+.doc-header-recibo{display:flex;justify-content:space-between;align-items:flex-start;border-bottom:2px solid #1a3a5c;padding-bottom:12px;margin-bottom:18px;}
+.doc-empresa{font-size:13pt;font-weight:bold;color:#1a3a5c;font-family:var(--font-ui);}
+.doc-folio{font-size:9pt;color:#666;font-family:var(--font-ui);text-align:right;line-height:1.5;}
+.doc-title{text-align:center;font-size:13pt;font-weight:bold;text-transform:uppercase;letter-spacing:.04em;margin:0 0 18px;color:#1a3a5c;}
+.recibo-datos{display:grid;grid-template-columns:1fr 1fr;gap:6px 24px;margin-bottom:16px;font-size:10.5pt;}
+.recibo-datos .lbl{color:#666;font-family:var(--font-ui);font-size:9.5pt;font-weight:600;text-transform:uppercase;letter-spacing:.04em;}
+.recibo-datos .val{font-weight:bold;}
+.concepto-table{width:100%;border-collapse:collapse;margin:14px 0;font-size:10.5pt;}
+.concepto-table th{background:#1a3a5c;color:#fff;padding:7px 10px;text-align:left;font-size:9.5pt;}
+.concepto-table th.num{text-align:right;}
+.concepto-table td{padding:7px 10px;border-bottom:1px solid #eee;}
+.concepto-table td.num{text-align:right;font-family:monospace;}
+.concepto-table tr.subtotal td{border-top:1px solid #ccc;background:#f9f9f7;}
+.concepto-table tr.deduccion td{color:#c0392b;}
+.concepto-table tr.total-row td{border-top:2px solid #1a3a5c;font-weight:bold;font-size:11.5pt;background:#e8f0f8;}
+.importe-letras{background:#f7f6f2;border:1px solid #ddd;padding:10px 14px;font-size:10.5pt;margin:12px 0;line-height:1.5;}
+.firma-grid-2{display:grid;grid-template-columns:1fr 1fr;gap:40px;margin-top:40px;}
+.firma-box{border-top:1.5px solid #888;padding-top:8px;font-size:10pt;text-align:center;line-height:1.5;}
+.firma-box strong{display:block;font-size:9pt;color:#666;font-family:var(--font-ui);text-transform:uppercase;}
+.blank{font-weight:bold;color:#1a3a5c;border-bottom:1px solid #1a3a5c;padding:0 3px;min-width:30px;display:inline-block;}
+.blank.empty{color:#c0392b;border-bottom-color:#c0392b;font-style:italic;font-weight:normal;}
+.tabla-nomina{width:100%;border-collapse:collapse;font-size:9.5pt;}
+.tabla-nomina th{background:#1a3a5c;color:#fff;padding:6px 8px;font-size:8.5pt;text-transform:uppercase;}
+.tabla-nomina td{padding:6px 8px;border-bottom:1px solid #eee;}
+.tabla-nomina tr:nth-child(even) td{background:#f9f9f7;}
+.watermark-empty{text-align:center;color:var(--ink3);font-family:var(--font-ui);font-size:13px;padding:80px 0;}
+@media print{header,.form-panel{display:none!important;}.workspace{display:block;height:auto;}.preview-panel{padding:0;background:white;}.doc-sheet{box-shadow:none;max-width:100%;padding:32px;}body{background:white;}}
+#auth-gate-loading{position:fixed;inset:0;background:#fff;z-index:9999;display:flex;align-items:center;justify-content:center;font-family:var(--font-ui);color:#999;font-size:13px;}
+#auth-gate-blocked{position:fixed;inset:0;background:#0f2640;z-index:9999;display:none;align-items:center;justify-content:center;padding:24px;}
+#auth-gate-blocked .agb-box{background:#fff;border-radius:16px;padding:40px 36px;max-width:420px;text-align:center;font-family:var(--font-ui);}
+  .cl-nav-logo{display:flex;align-items:center;font-size:15px;font-weight:800;color:#fff;letter-spacing:-.01em;line-height:1;text-decoration:none;}
+  .cl-nav-logo .cl-laboral{color:#5eead4;font-weight:400;}
+</style>
+<script src="membrete.js?v=3.7"></script>
+<script src="expediente-helper.js?v=3.7"></script>
+</head>
+<body>
+<div id="auth-gate-loading">Verificando acceso…</div>
+<div id="auth-gate-blocked">
+  <div class="agb-box">
+    <div style="font-size:40px;margin-bottom:16px;">🔒</div>
+    <div style="font-size:18px;font-weight:700;color:#0f2640;margin-bottom:8px;">Acceso restringido</div>
+    <div style="font-size:13px;color:#666;margin-bottom:24px;">Este generador requiere una suscripción activa a ClickLaboral.mx.</div>
+    <a href="portal-cliente.html" style="display:inline-block;background:#0f2640;color:#fff;padding:11px 28px;border-radius:8px;text-decoration:none;font-weight:600;">Ir al portal</a>
+  </div>
+</div>
+
+<header>
+  <div class="cl-nav-logo" style="flex-shrink:0;"><svg width="26" height="26" viewBox="0 0 100 100" style="vertical-align:-7px;margin-right:6px;flex-shrink:0;">
+        <defs><linearGradient id="clGrad" x1="10" y1="10" x2="90" y2="95" gradientUnits="userSpaceOnUse">
+          <stop offset="0%" stop-color="#1a3a5c"/><stop offset="55%" stop-color="#1e6f6c"/><stop offset="100%" stop-color="#2dd4bf"/>
+        </linearGradient></defs>
+        <path d="M50 7 L83 20 V51 C83 73 68 87 50 95 C32 87 17 73 17 51 V20 Z" fill="none" stroke="url(#clGrad)" stroke-width="6" stroke-linejoin="round"/>
+        <circle cx="40" cy="38" r="8.5" fill="#5eead4"/>
+        <path d="M25 63 C25 51 31 45 40 45 C49 45 55 51 55 63 Z" fill="#5eead4"/>
+        <circle cx="55" cy="33" r="9.5" fill="#14b8a6"/>
+        <path d="M38 61 C38 48 45.5 41 55 41 C64.5 41 72 48 72 61 Z" fill="#14b8a6"/>
+        <path d="M29 61 L45 77 L78 40" fill="none" stroke="#e8f2fc" stroke-width="9" stroke-linecap="round" stroke-linejoin="round"/>
+      </svg>Click<span class="cl-laboral">Laboral.mx</span></div>
+  <div>
+    <h1>💵 Generador · Recibos de Pago y Nómina</h1>
+    <span style="font-size:11px;opacity:.65;">Nómina · Aguinaldo · PTU · Vacaciones</span>
+  </div>
+  <div class="header-actions">
+    <button class="btn btn-outline" onclick="window.open('portal-cliente.html')">← Portal</button>
+    <button class="btn btn-primary" onclick="window.print()">🖨 Imprimir / PDF</button>
+  </div>
+</header>
+
+<div class="workspace">
+  <div class="form-panel">
+    <!-- ── MEMBRETE DEL CLIENTE ── -->
+    <div style="border-bottom:1px solid var(--border);margin-bottom:0;">
+      <div class="section-label" style="display:flex;align-items:center;justify-content:space-between;cursor:pointer;user-select:none;"
+           onclick="this.nextElementSibling.style.display=this.nextElementSibling.style.display==='none'?'block':'none'">
+        <span>🏢 Logo y pie de página</span>
+        <span style="font-size:10px;font-weight:400;color:var(--ink3);">▲ clic para colapsar</span>
+      </div>
+      <div id="mem-panel-wrap" style="display:block;padding:12px 0 14px;">
+        <div id="mem-logo-container"></div>
+      </div>
+    </div>
+    <!-- ── / MEMBRETE ── -->
+    <div class="doc-tabs">
+      <div class="doc-tab active" id="tab-nomina"    onclick="setTab('nomina')">📋 Lista de nómina</div>
+      <div class="doc-tab" id="tab-aguinaldo"        onclick="setTab('aguinaldo')">🎄 Aguinaldo</div>
+      <div class="doc-tab" id="tab-ptu"              onclick="setTab('ptu')">💰 PTU</div>
+      <div class="doc-tab" id="tab-vacaciones"       onclick="setTab('vacaciones')">🏖 Vacaciones</div>
+    </div>
+
+    <div class="section-label">Datos del patrón</div>
+    <div class="form-inner">
+      <div class="field"><label>Empresa / Razón social</label><input type="text" id="f-empresa" oninput="render()" placeholder="Empresa S.A. de C.V."></div>
+      <div class="field-row">
+        <div class="field"><label>RFC</label><input type="text" id="f-rfc" oninput="render()" placeholder="EMP010101AAA"></div>
+        <div class="field"><label>Registro IMSS</label><input type="text" id="f-imss" oninput="render()" placeholder="00 00000 00 0"></div>
+      </div>
+      <div class="field"><label>Domicilio fiscal</label><input type="text" id="f-domicilio" oninput="render()" placeholder="Calle, No., Col., Ciudad, Estado, C.P."></div>
+      <div class="field-row">
+        <div class="field"><label>Teléfono</label><input type="text" id="mem-tel" oninput="render()" placeholder="33 1234 5678"></div>
+        <div class="field"><label>Email</label><input type="text" id="mem-email" oninput="render()" placeholder="contacto@empresa.mx"></div>
+      </div>
+      <div class="field"><label>Sitio web (opcional)</label><input type="text" id="mem-web" oninput="render()" placeholder="www.empresa.mx"></div>
+      <!-- Campo de logo con zona de arrastre -->
+    </div>
+
+    <div id="campos-doc"></div>
+
+  </div>
+
+  <div class="preview-panel">
+    <div class="doc-sheet" id="doc-preview">
+      <div class="watermark-empty">Complete los datos del formulario para generar el documento</div>
+    </div>
+  </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
+<script>
+const sb = supabase.createClient('https://hpzgqaplrywwjuvrzhcp.supabase.co','sb_publishable_1g8US8iFJ8CxnSaF_4MHgA_gqyyAr3W');
+(async()=>{
+  const _sb = supabase.createClient('https://hpzgqaplrywwjuvrzhcp.supabase.co','sb_publishable_1g8US8iFJ8CxnSaF_4MHgA_gqyyAr3W');
+  try {
+    const { data } = await _sb.auth.getSession();
+    document.getElementById('auth-gate-loading').style.display = 'none';
+    if (!data?.session?.user) {
+      document.getElementById('auth-gate-blocked').style.display = 'flex';
+    }
+  } catch(e) {
+    document.getElementById('auth-gate-loading').style.display = 'none';
+    document.getElementById('auth-gate-blocked').style.display = 'flex';
+  }
+})();
+
+let docTab = 'nomina';
+let empleados = []; // para nómina
+let conceptos = []; // para recibos individuales
+
+function v(id){ return (document.getElementById(id)||{}).value||''; }
+function b(val,fb){ return val&&val.trim()?`<span class="blank">${val}</span>`:`<span class="blank empty">${fb||'_________'}</span>`; }
+function mxn(n){ const num=parseFloat(n)||0; return '$'+num.toLocaleString('es-MX',{minimumFractionDigits:2,maximumFractionDigits:2}); }
+function fmtFecha(f){ if(!f)return'___________'; const d=new Date(f+'T12:00:00'); return d.toLocaleDateString('es-MX',{day:'numeric',month:'long',year:'numeric'}); }
+
+function numALetras(num){
+  const n=Math.round(parseFloat(num)||0);
+  const unidades=['','UN','DOS','TRES','CUATRO','CINCO','SEIS','SIETE','OCHO','NUEVE'];
+  const decenas=['','DIEZ','VEINTE','TREINTA','CUARENTA','CINCUENTA','SESENTA','SETENTA','OCHENTA','NOVENTA'];
+  const especiales=['','ONCE','DOCE','TRECE','CATORCE','QUINCE','DIECISÉIS','DIECISIETE','DIECIOCHO','DIECINUEVE'];
+  const centenas=['','CIENTO','DOSCIENTOS','TRESCIENTOS','CUATROCIENTOS','QUINIENTOS','SEISCIENTOS','SETECIENTOS','OCHOCIENTOS','NOVECIENTOS'];
+  if(n===0)return'CERO PESOS 00/100 M.N.';
+  if(n===100)return'CIEN PESOS 00/100 M.N.';
+  function c3(n){
+    if(n===0)return''; let r='';
+    const c=Math.floor(n/100),d=Math.floor((n%100)/10),u=n%10;
+    r+=centenas[c];
+    if((n%100)>=11&&(n%100)<=19)r+=(r?' ':'')+especiales[u];
+    else{r+=(r&&d?' ':'')+decenas[d]; r+=(r&&u?' ':'')+unidades[u];}
+    return r;
+  }
+  let r='',miles=Math.floor(n/1000),resto=n%1000;
+  if(miles===1)r='MIL';
+  else if(miles>1)r=c3(miles)+' MIL';
+  if(resto>0)r+=(r?' ':'')+c3(resto);
+  return r+' PESOS 00/100 M.N.';
+}
+
+// ══════════════════════════════════════════════
+// NÓMINA — lista con múltiples empleados
+// ══════════════════════════════════════════════
+function getEmpleados(){
+  return Array.from(document.querySelectorAll('.emp-row')).map(r=>({
+    nombre: r.querySelector('.e-nombre')?.value?.trim()||'',
+    puesto: r.querySelector('.e-puesto')?.value?.trim()||'',
+    sdi:    parseFloat(r.querySelector('.e-sdi')?.value)||0,
+    dias:   parseFloat(r.querySelector('.e-dias')?.value)||0,
+    deduc:  parseFloat(r.querySelector('.e-deduc')?.value)||0,
+  })).filter(e=>e.nombre);
+}
+
+function addEmpleado(){
+  const wrap=document.getElementById('emp-wrap');
+  const div=document.createElement('div');
+  div.className='emp-row';
+  div.style.cssText='display:grid;grid-template-columns:2fr 1.5fr .8fr .6fr .8fr auto;gap:5px;margin-bottom:5px;align-items:center;';
+  div.innerHTML=`<input class="e-nombre" type="text" placeholder="Nombre del trabajador" style="padding:6px 8px;border:1px solid var(--border);border-radius:4px;font-size:11px;" oninput="render()">
+<input class="e-puesto" type="text" placeholder="Puesto" style="padding:6px 8px;border:1px solid var(--border);border-radius:4px;font-size:11px;" oninput="render()">
+<input class="e-sdi" type="number" placeholder="SDI" style="padding:6px 8px;border:1px solid var(--border);border-radius:4px;font-size:11px;" oninput="render()">
+<input class="e-dias" type="number" placeholder="Días" value="15" style="padding:6px 8px;border:1px solid var(--border);border-radius:4px;font-size:11px;" oninput="render()">
+<input class="e-deduc" type="number" placeholder="Deduc." value="0" style="padding:6px 8px;border:1px solid var(--border);border-radius:4px;font-size:11px;" oninput="render()">
+<button class="btn-remove" onclick="this.parentElement.remove();render()">✕</button>`;
+  wrap.appendChild(div);
+  render();
+}
+
+// ══════════════════════════════════════════════
+// CONCEPTOS individuales
+// ══════════════════════════════════════════════
+function getConceptos(tipo){
+  return Array.from(document.querySelectorAll(`.con-row-${tipo}`)).map(r=>({
+    desc:   r.querySelector('.c-desc')?.value?.trim()||'',
+    monto:  parseFloat(r.querySelector('.c-monto')?.value)||0,
+    es_ded: r.querySelector('.c-esDed')?.checked||false,
+  })).filter(c=>c.desc);
+}
+
+function addConcepto(tipo){
+  const wrap=document.getElementById(`con-wrap-${tipo}`);
+  const div=document.createElement('div');
+  div.className=`con-row-${tipo} concepto-row`;
+  div.innerHTML=`<input class="c-desc" type="text" placeholder="Concepto" style="padding:6px 8px;border:1px solid var(--border);border-radius:4px;font-size:12px;" oninput="render()">
+<input class="c-monto" type="number" placeholder="Monto" style="padding:6px 8px;border:1px solid var(--border);border-radius:4px;font-size:12px;width:110px;" oninput="render()">
+<div style="display:flex;align-items:center;gap:4px;"><input class="c-esDed" type="checkbox" title="Deducción" onchange="render()"><span style="font-size:11px;color:var(--ink3);">Ded.</span></div>
+<button class="btn-remove" onclick="this.parentElement.remove();render()">✕</button>`;
+  wrap.appendChild(div);
+  render();
+}
+
+// ══════════════════════════════════════════════
+// TABS
+// ══════════════════════════════════════════════
+function setTab(tab){
+  docTab=tab;
+  ['nomina','aguinaldo','ptu','vacaciones'].forEach(t=>{
+    document.getElementById('tab-'+t).classList.toggle('active',t===tab);
+  });
+  renderCampos();
+  render();
+}
+
+function renderCampos(){
+  const w=document.getElementById('campos-doc');
+  if(docTab==='nomina'){
+    w.innerHTML=`
+      <div class="section-label">Período de nómina</div>
+      <div class="form-inner">
+        <div class="field-row">
+          <div class="field"><label>Período</label><select id="nom-periodo" oninput="render()"><option value="semanal">Semanal</option><option value="quincenal" selected>Quincenal</option><option value="mensual">Mensual</option></select></div>
+          <div class="field"><label>No. de nómina</label><input type="text" id="nom-num" oninput="render()" placeholder="NOM-2025-15"></div>
+        </div>
+        <div class="field-row">
+          <div class="field"><label>Fecha de inicio</label><input type="date" id="nom-ini" oninput="render()"></div>
+          <div class="field"><label>Fecha de fin</label><input type="date" id="nom-fin" oninput="render()"></div>
+        </div>
+        <div class="field"><label>Fecha de pago</label><input type="date" id="nom-pago" oninput="render()"></div>
+      </div>
+      <div class="section-label">Trabajadores</div>
+      <div class="form-inner">
+        <div style="display:grid;grid-template-columns:2fr 1.5fr .8fr .6fr .8fr auto;gap:5px;margin-bottom:6px;">
+          <div style="font-size:10px;font-weight:600;color:var(--ink3);text-transform:uppercase;">Nombre</div>
+          <div style="font-size:10px;font-weight:600;color:var(--ink3);text-transform:uppercase;">Puesto</div>
+          <div style="font-size:10px;font-weight:600;color:var(--ink3);text-transform:uppercase;">SDI</div>
+          <div style="font-size:10px;font-weight:600;color:var(--ink3);text-transform:uppercase;">Días</div>
+          <div style="font-size:10px;font-weight:600;color:var(--ink3);text-transform:uppercase;">Deduc.</div>
+          <div></div>
+        </div>
+        <div id="emp-wrap"></div>
+        <button class="btn-add" onclick="addEmpleado()">+ Agregar trabajador</button>
+        <div class="hint" style="margin-top:8px;">SDI = Salario Diario Integrado · Días trabajados en el período · Deducciones (IMSS, ISR, otros)</div>
+      </div>`;
+    addEmpleado();
+  } else {
+    const configs={
+      aguinaldo:{titulo:'Recibo de Aguinaldo',icon:'🎄',art:'Art. 87 LFT',labels:['Nombre del trabajador','Puesto','Salario diario','Días de aguinaldo','Período',null,'RFC trabajador'],fields:['wk-nombre','wk-puesto','wk-salario','wk-dias','wk-periodo','','wk-rfc-trab'],placeholders:['Nombre completo','Puesto que desempeña','500.00','15','2025','','ABCD810101XYZ']},
+      ptu:{titulo:'Recibo de PTU',icon:'💰',art:'Art. 117-131 LFT',labels:['Nombre del trabajador','Puesto','Días trabajados en el ejercicio','Factor de PTU (monto por día)','Ejercicio fiscal',null,'RFC trabajador'],fields:['wk-nombre','wk-puesto','wk-dias','wk-factor','wk-ejercicio','','wk-rfc-trab'],placeholders:['Nombre completo','Puesto','365','250.00','2024','','ABCD810101XYZ']},
+      vacaciones:{titulo:'Recibo de Pago de Vacaciones',icon:'🏖',art:'Arts. 76-81 LFT',labels:['Nombre del trabajador','Puesto','Salario diario','Días de vacaciones','Prima vacacional (%)','Período de vacaciones','RFC trabajador'],fields:['wk-nombre','wk-puesto','wk-salario','wk-dias','wk-prima','wk-periodo','wk-rfc-trab'],placeholders:['Nombre completo','Puesto','500.00','12','25','Del 1 al 12 de enero 2025','ABCD810101XYZ']},
+    };
+    const cfg=configs[docTab];
+    const fieldsHtml=cfg.labels.map((lbl,i)=>{
+      if(!lbl)return'';
+      return `<div class="field"><label>${lbl}</label><input type="${cfg.fields[i].includes('dias')||cfg.fields[i].includes('salario')||cfg.fields[i].includes('factor')||cfg.fields[i].includes('prima')&&cfg.fields[i]!='wk-periodo'?'number':'text'}" id="${cfg.fields[i]}" oninput="render()" placeholder="${cfg.placeholders[i]}"></div>`;
+    }).join('');
+
+    w.innerHTML=`
+      <div class="section-label">Datos del trabajador</div>
+      <div class="form-inner">
+        <div class="field-row">
+          <div class="field"><label>NSS (IMSS)</label><input type="text" id="wk-nss" oninput="render()" placeholder="00000000000"></div>
+          <div class="field"><label>Fecha de pago</label><input type="date" id="wk-fecha-pago" oninput="render()"></div>
+        </div>
+        ${fieldsHtml}
+      </div>
+      <div class="section-label">Conceptos adicionales</div>
+      <div class="form-inner">
+        <div style="display:grid;grid-template-columns:1fr auto auto auto;gap:5px;margin-bottom:6px;">
+          <div style="font-size:10px;font-weight:600;color:var(--ink3);text-transform:uppercase;">Concepto</div>
+          <div style="font-size:10px;font-weight:600;color:var(--ink3);text-transform:uppercase;">Monto</div>
+          <div style="font-size:10px;font-weight:600;color:var(--ink3);text-transform:uppercase;">¿Ded?</div>
+          <div></div>
+        </div>
+        <div id="con-wrap-${docTab}"></div>
+        <button class="btn-add" onclick="addConcepto('${docTab}')">+ Agregar concepto</button>
+      </div>`;
+  }
+}
+
+// ══════════════════════════════════════════════
+// RENDER
+// ══════════════════════════════════════════════
+function render(){
+  const empresa=v('f-empresa'), rfc=v('f-rfc'), imss=v('f-imss'), dom=v('f-domicilio');
+  const tel=v('mem-tel'), email=v('mem-email'), web=v('mem-web');
+  const folio = docTab==='nomina' ? v('nom-num') : '';
+  const logoBar = generarMembrete({
+    empresa, rfc, domicilio:dom, tel, emailEmp:email, web, folio,
+    logoDataUrl: window._logoClienteDataUrl,
+  });
+  const footerCliente = generarFooterDoc({...getDatosMembrete(), folio});
+
+  if(docTab==='nomina'){
+    const periodo=v('nom-periodo')||'quincenal';
+    const nomNum=v('nom-num')||'___________';
+    const ini=v('nom-ini'), fin=v('nom-fin'), pago=v('nom-pago');
+    const emps=getEmpleados();
+    const totalNomina=emps.reduce((a,e)=>{const bruto=e.sdi*e.dias; return a+(bruto-e.deduc);},0);
+    const totalBruto=emps.reduce((a,e)=>a+e.sdi*e.dias,0);
+    const totalDeduc=emps.reduce((a,e)=>a+e.deduc,0);
+
+    document.getElementById('doc-preview').innerHTML=`
+      ${logoBar}
+      <div class="doc-title">LISTA DE NÓMINA ${periodo.toUpperCase()}</div>
+      <div style="display:flex;justify-content:space-between;font-family:var(--font-ui);font-size:10pt;color:#444;margin-bottom:14px;">
+        <div><strong>Nómina:</strong> ${nomNum}</div>
+        <div><strong>Período:</strong> ${ini?fmtFecha(ini):' ___'} al ${fin?fmtFecha(fin):'___'}</div>
+        <div><strong>Fecha de pago:</strong> ${pago?fmtFecha(pago):'___________'}</div>
+      </div>
+      <table class="tabla-nomina">
+        <thead><tr>
+          <th>#</th><th>Nombre del Trabajador</th><th>Puesto</th>
+          <th class="num">SDI</th><th class="num">Días</th>
+          <th class="num">Percepción bruta</th><th class="num">Deducciones</th>
+          <th class="num">Neto a pagar</th><th>Firma / Recibí</th>
+        </tr></thead>
+        <tbody>
+          ${emps.length?emps.map((e,i)=>{
+            const bruto=e.sdi*e.dias,neto=bruto-e.deduc;
+            return `<tr><td>${i+1}</td><td style="font-weight:500;">${e.nombre}</td><td>${e.puesto}</td>
+              <td class="num">${mxn(e.sdi)}</td><td class="num">${e.dias}</td>
+              <td class="num">${mxn(bruto)}</td><td class="num" style="color:#c0392b;">${mxn(e.deduc)}</td>
+              <td class="num" style="font-weight:bold;">${mxn(neto)}</td>
+              <td style="min-width:120px;"></td></tr>`;
+          }).join(''):
+          '<tr><td colspan="9" style="text-align:center;color:#999;font-style:italic;font-size:10pt;padding:20px;">Agregue trabajadores en el formulario</td></tr>'}
+          <tr style="background:#1a3a5c;color:#fff;">
+            <td colspan="5" style="padding:8px 10px;font-weight:bold;font-size:10.5pt;">TOTALES</td>
+            <td class="num" style="color:#fff;">${mxn(totalBruto)}</td>
+            <td class="num" style="color:#ffcccc;">${mxn(totalDeduc)}</td>
+            <td class="num" style="color:#fff;font-weight:bold;">${mxn(totalNomina)}</td>
+            <td></td>
+          </tr>
+        </tbody>
+      </table>
+      <div class="importe-letras"><strong>Son:</strong> ${numALetras(totalNomina)} — Total neto: ${mxn(totalNomina)}</div>
+      <div class="firma-grid-2" style="margin-top:32px;">
+        <div class="firma-box"><br><br><strong>Elaboró</strong>Nombre y firma</div>
+        <div class="firma-box"><br><br><strong>Autorizó</strong>Representante legal / Patrón</div>
+      </div>
+      ${footerCliente}`;
+    return;
+  }
+
+  // Recibos individuales
+  const configs={
+    aguinaldo:{titulo:'RECIBO DE AGUINALDO',art:'Art. 87 LFT',folio:'AG'},
+    ptu:{titulo:'RECIBO DE PARTICIPACIÓN DE UTILIDADES (PTU)',art:'Arts. 117-131 LFT',folio:'PTU'},
+    vacaciones:{titulo:'RECIBO DE PAGO DE VACACIONES',art:'Arts. 76-81 LFT',folio:'VAC'},
+  };
+  const cfg=configs[docTab];
+  const nombre=v('wk-nombre'), puesto=v('wk-puesto'), nss=v('wk-nss');
+  const salario=parseFloat(v('wk-salario'))||0;
+  const dias=parseFloat(v('wk-dias'))||0;
+  const fechaPago=v('wk-fecha-pago');
+
+  let percepcionBase=0, detalleBase='';
+  if(docTab==='aguinaldo'){
+    percepcionBase=salario*dias;
+    detalleBase=`Salario diario: ${mxn(salario)} × ${dias} días de aguinaldo`;
+  } else if(docTab==='ptu'){
+    const factor=parseFloat(v('wk-factor'))||0;
+    percepcionBase=dias*factor;
+    detalleBase=`${dias} días trabajados × factor ${mxn(factor)}/día`;
+  } else if(docTab==='vacaciones'){
+    const prima=parseFloat(v('wk-prima'))||25;
+    const pagoVac=salario*dias;
+    const primaMonto=pagoVac*(prima/100);
+    percepcionBase=pagoVac+primaMonto;
+    detalleBase=`${dias} días × ${mxn(salario)}/día = ${mxn(pagoVac)} + Prima vacacional ${prima}% = ${mxn(primaMonto)}`;
+  }
+
+  const conceptosExtra=getConceptos(docTab);
+  const percepciones=conceptosExtra.filter(c=>!c.es_ded);
+  const deducciones=conceptosExtra.filter(c=>c.es_ded);
+  const totalPerc=percepcionBase+percepciones.reduce((a,c)=>a+c.monto,0);
+  const totalDed=deducciones.reduce((a,c)=>a+c.monto,0);
+  const totalNeto=totalPerc-totalDed;
+
+  document.getElementById('doc-preview').innerHTML=`
+    ${logoBar}
+    <div class="doc-title">${cfg.titulo}</div>
+    <div style="text-align:center;font-size:10pt;font-family:var(--font-ui);color:#666;margin-bottom:18px;">${cfg.art}</div>
+    <div class="recibo-datos">
+      <div><div class="lbl">Trabajador</div><div class="val">${nombre||b('','_______________')}</div></div>
+      <div><div class="lbl">NSS (IMSS)</div><div class="val">${nss||b('','_______________')}</div></div>
+      <div><div class="lbl">Puesto</div><div class="val">${puesto||b('','_______________')}</div></div>
+      <div><div class="lbl">Fecha de pago</div><div class="val">${fechaPago?fmtFecha(fechaPago):b('','_______________')}</div></div>
+    </div>
+    <table class="concepto-table">
+      <thead><tr><th>Concepto</th><th class="num">Monto</th></tr></thead>
+      <tbody>
+        <tr><td>${detalleBase||'Concepto base'}</td><td class="num">${mxn(percepcionBase)}</td></tr>
+        ${percepciones.map(c=>`<tr><td>${c.desc}</td><td class="num">${mxn(c.monto)}</td></tr>`).join('')}
+        <tr class="subtotal"><td style="font-weight:600;">TOTAL PERCEPCIONES</td><td class="num" style="font-weight:600;">${mxn(totalPerc)}</td></tr>
+        ${deducciones.map(c=>`<tr class="deduccion"><td>${c.desc}</td><td class="num">-${mxn(c.monto)}</td></tr>`).join('')}
+        ${deducciones.length?`<tr class="subtotal deduccion"><td style="font-weight:600;">TOTAL DEDUCCIONES</td><td class="num" style="font-weight:600;">-${mxn(totalDed)}</td></tr>`:''}
+        <tr class="total-row"><td>NETO A PAGAR</td><td class="num">${mxn(totalNeto)}</td></tr>
+      </tbody>
+    </table>
+    <div class="importe-letras"><strong>Son:</strong> ${numALetras(totalNeto)}</div>
+    <div style="font-size:10pt;font-family:var(--font-ui);color:#444;margin:16px 0;line-height:1.6;">
+      El trabajador firma de conformidad al haber recibido la cantidad indicada, correspondiente al concepto descrito, en cumplimiento de la ${cfg.art} de la Ley Federal del Trabajo.
+    </div>
+    <div class="firma-grid-2">
+      <div class="firma-box"><br><br><strong>${nombre||'Trabajador'}</strong>Firma de recibido conforme</div>
+      <div class="firma-box"><br><br><strong>Representante del Patrón</strong>${empresa||'[Empresa]'}</div>
+    </div>
+    ${footerCliente}`;
+}
+
+// ── INIT ──
+setTab('nomina');
+// ── INIT ──
+renderPanelMembrete('mem-logo-container');
+(async()=>{
+  try{
+    const _sb = supabase.createClient(
+      'https://hpzgqaplrywwjuvrzhcp.supabase.co',
+      'sb_publishable_1g8US8iFJ8CxnSaF_4MHgA_gqyyAr3W'
+    );
+    await precargarMembreteDesdePortal(_sb);
+  }catch(e){}
+})();
+setTab('nomina');
+// ── Expediente del trabajador ──
+if (window.ExpedienteHelper) {
+  ExpedienteHelper.init({
+    inputNombreId: 'wk-nombre',
+    tipoDocumento: 'recibo_pago',
+    nombreDocumentoFn: () => ({ nomina:'Lista de nómina', aguinaldo:'Recibo de aguinaldo', ptu:'Reparto de PTU', vacaciones:'Constancia de vacaciones' }[docTab] || 'Recibo de pago'),
+  });
+}
+</script>
+<script src="edicion-libre.js?v=4.6"></script>
+
+
+
+
+</body>
+</html>

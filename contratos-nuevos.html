@@ -1,0 +1,567 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<script>
+
+// ── Módulo por sector ─────────────────────────────────────────────────────────
+(function(){
+  const params = new URLSearchParams(window.location.search);
+  if (!params.get('sector')) return;
+  let config = null;
+  try { config = JSON.parse(localStorage.getItem('sector_config')||'null'); } catch(_){}
+  if (!config) return;
+  function aplicar(){
+    // Activar tab de obra si corresponde
+    const tab = params.get('tab');
+    if(tab){
+      const tabEl = document.querySelector('[data-tab="'+tab+'"]') || document.getElementById('tab-'+tab);
+      if(tabEl) tabEl.click();
+    }
+    // Pre-llenar campos
+    const set = (id, val) => { const el=document.getElementById(id); if(el && val) el.value=val; };
+    set('actividades', config.actividades);
+    set('hora_entrada', config.hora_entrada);
+    set('hora_salida', config.hora_salida);
+    // Mostrar banner
+    if(config.nota_sector){
+      const b = document.createElement('div');
+      b.style.cssText = 'background:#f0fdf4;border:1.5px solid #86efac;border-radius:10px;padding:12px 16px;font-size:12px;color:#166534;margin-bottom:16px;';
+      b.textContent = config.nota_sector;
+      const panel = document.querySelector('.fields-panel') || document.querySelector('.panel-izq');
+      if(panel) panel.insertBefore(b, panel.firstChild);
+    }
+    if(typeof render === 'function') render();
+    localStorage.removeItem('sector_config');
+  }
+  document.readyState==='loading' ? document.addEventListener('DOMContentLoaded',aplicar) : setTimeout(aplicar,200);
+})();
+
+(function(){
+  var params=new URLSearchParams(window.location.search);
+  var modo=params.get('editar')==='1'?'editar':params.get('recuperar')==='1'?'ver':null;
+  if(!modo) return;
+  var gen=window.location.pathname.split('/').pop();
+  var key=(modo==='editar'?'doc_editar_':'doc_recuperado_')+gen.replace('.html','');
+  var g=null; try{g=JSON.parse(localStorage.getItem(key)||'null');}catch(e){}
+  if(!g||!g.html) return;
+  // Bloquear render() para no sobreescribir el contenido
+  var _bloqueado=false,_orig=null;
+  function bloquear(){
+    if(typeof window.render==='function'&&!_bloqueado){
+      _orig=window.render; window.render=function(){}; _bloqueado=true;
+    }
+  }
+  bloquear(); var _iv=setInterval(bloquear,50);
+  function inyectar(){
+    var pr=document.getElementById('doc-preview');
+    if(!pr){setTimeout(inyectar,80);return;}
+    clearInterval(_iv); bloquear();
+    pr.innerHTML=g.html;
+    // En modo editar: activar contenteditable automáticamente
+    if(modo==='editar'){
+      pr.contentEditable='true';
+      pr.style.outline='2px dashed #0f766e';
+      pr.style.cursor='text';
+    }
+    // Banner
+    var b=document.createElement('div');
+    b.id='banner-doc';
+    b.style.cssText='position:sticky;top:0;z-index:200;background:'+(modo==='editar'?'#f0fdf4':'#eff6ff')+';border-bottom:2px solid '+(modo==='editar'?'#86efac':'#93c5fd')+';padding:10px 16px;font-size:12px;color:'+(modo==='editar'?'#166534':'#1e40af')+';display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap;';
+    var etiq=modo==='editar'?'✏️ Modo edición — edita el documento directamente':'📄 Documento guardado';
+    var sp=document.createElement('span');
+    sp.innerHTML='<strong>'+etiq+'</strong> — '+(g.nombre||'')+' · '+(g.fecha||'');
+    var bt=document.createElement('button');
+    bt.textContent=modo==='editar'?'🔄 Restaurar campos':'✏️ Editar';
+    bt.style.cssText='border:1px solid currentColor;background:transparent;color:inherit;padding:4px 12px;border-radius:6px;font-size:11px;cursor:pointer;white-space:nowrap;';
+    bt.onclick=function(){
+      _bloqueado=false;
+      pr.contentEditable='false';
+      pr.style.outline=''; pr.style.cursor='';
+      if(_orig) window.render=_orig;
+      var bel=document.getElementById('banner-doc');
+      if(bel) bel.remove();
+      localStorage.removeItem(key);
+      if(typeof window.render==='function') window.render();
+    };
+    b.appendChild(sp); b.appendChild(bt);
+    pr.insertBefore(b,pr.firstChild);
+    localStorage.removeItem(key);
+  }
+  document.readyState==='loading'?document.addEventListener('DOMContentLoaded',inyectar):inyectar();
+})();
+</script>
+
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Generador · Contratos Especiales</title>
+<style>
+:root{--ink:#1a1a18;--ink2:#4a4a46;--ink3:#8a8a84;--surface:#f7f6f2;--white:#ffffff;--accent:#1a3a5c;--accent2:#e8f0f8;--border:#ddddd6;--danger:#c0392b;--green:#16a34a;--radius:6px;--font-ui:'Segoe UI',system-ui,sans-serif;--font-doc:'Times New Roman',Georgia,serif;}
+*{box-sizing:border-box;margin:0;padding:0;}
+body{font-family:var(--font-ui);background:var(--surface);color:var(--ink);font-size:14px;}
+header{background:var(--accent);color:#fff;padding:14px 28px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:100;box-shadow:0 1px 4px rgba(0,0,0,.18);}
+header h1{font-size:15px;font-weight:600;}
+.header-actions{display:flex;gap:10px;align-items:center;}
+.btn{padding:7px 18px;border-radius:var(--radius);font-size:13px;font-weight:500;cursor:pointer;border:1px solid transparent;transition:background .15s;}
+.btn-outline{background:transparent;border-color:rgba(255,255,255,.45);color:#fff;}.btn-outline:hover{background:rgba(255,255,255,.12);}
+.btn-primary{background:#fff;color:var(--accent);}.btn-primary:hover{opacity:.88;}
+.workspace{display:grid;grid-template-columns:420px 1fr;height:calc(100vh - 52px);}
+.form-panel{background:var(--white);border-right:1px solid var(--border);overflow-y:auto;padding:0 0 60px;}
+.section-label{font-size:10px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:var(--accent);padding:14px 20px 10px;border-bottom:1px solid var(--border);margin-bottom:14px;background:var(--surface);}
+.form-inner{padding:0 20px;}
+.field{margin-bottom:12px;}
+.field label{display:block;font-size:12px;font-weight:500;color:var(--ink2);margin-bottom:4px;}
+.field input,.field select,.field textarea{width:100%;padding:8px 10px;border:1px solid var(--border);border-radius:var(--radius);font-size:13px;font-family:var(--font-ui);color:var(--ink);background:var(--white);}
+.field input:focus,.field select:focus,.field textarea:focus{outline:none;border-color:var(--accent);box-shadow:0 0 0 3px var(--accent2);}
+.field textarea{resize:vertical;min-height:64px;}
+.field-row{display:grid;grid-template-columns:1fr 1fr;gap:10px;}
+.hint{font-size:11px;color:var(--ink3);margin-top:3px;}
+.doc-tabs{display:flex;flex-wrap:wrap;gap:0;border-bottom:2px solid var(--border);padding:0 20px;background:var(--white);}
+.doc-tab{padding:10px 14px;font-size:12px;font-weight:500;cursor:pointer;color:var(--ink3);border-bottom:2px solid transparent;margin-bottom:-2px;transition:all .15s;white-space:nowrap;}
+.doc-tab.active{color:var(--accent);border-bottom-color:var(--accent);font-weight:600;}
+.preview-panel{background:#e8e7e0;overflow-y:auto;padding:32px 40px;display:flex;flex-direction:column;align-items:center;}
+.doc-sheet{background:var(--white);width:100%;max-width:760px;min-height:1060px;padding:66px 76px;box-shadow:0 2px 16px rgba(0,0,0,.12);font-family:var(--font-doc);font-size:11.5pt;line-height:1.75;color:#111;}
+
+.doc-logo-empresa{font-size:13pt;font-weight:bold;color:#1a3a5c;font-family:var(--font-ui);}
+.doc-folio{font-size:9pt;color:#666;font-family:var(--font-ui);text-align:right;line-height:1.4;}
+.doc-title{text-align:center;font-size:13pt;font-weight:bold;text-transform:uppercase;letter-spacing:.04em;margin:0 0 6px;color:#1a3a5c;}
+.doc-subtitle{text-align:center;font-size:10.5pt;color:#444;margin-bottom:20px;}
+.doc-p{margin-bottom:14px;text-align:justify;}
+.blank{font-weight:bold;color:#1a3a5c;border-bottom:1px solid #1a3a5c;padding:0 3px;min-width:30px;display:inline-block;}
+.blank.empty{color:#c0392b;border-bottom-color:#c0392b;font-style:italic;font-weight:normal;}
+.doc-clause-title{font-weight:bold;text-transform:uppercase;font-size:10.5pt;margin:20px 0 8px;color:#1a3a5c;}
+.firma-grid-2{display:grid;grid-template-columns:1fr 1fr;gap:40px;margin-top:48px;}
+.firma-box{border-top:1.5px solid #888;padding-top:8px;font-size:10pt;text-align:center;line-height:1.5;}
+.firma-box strong{display:block;font-size:9pt;color:#666;font-family:var(--font-ui);text-transform:uppercase;}
+.nota-legal{background:#f7f6f2;border:1px solid var(--border);border-left:3px solid #1a3a5c;padding:12px 16px;font-size:10.5pt;margin:16px 0;line-height:1.6;}
+.watermark-empty{text-align:center;color:var(--ink3);font-family:var(--font-ui);font-size:13px;padding:80px 0;}
+@media print{header,.form-panel{display:none!important;}.workspace{display:block;height:auto;}.preview-panel{padding:0;background:white;}.doc-sheet{box-shadow:none;max-width:100%;padding:40px;}body{background:white;}}
+#auth-gate-loading{position:fixed;inset:0;background:#fff;z-index:9999;display:flex;align-items:center;justify-content:center;font-family:var(--font-ui);color:#999;font-size:13px;}
+#auth-gate-blocked{position:fixed;inset:0;background:#0f2640;z-index:9999;display:none;align-items:center;justify-content:center;padding:24px;}
+#auth-gate-blocked .agb-box{background:#fff;border-radius:16px;padding:40px 36px;max-width:420px;text-align:center;font-family:var(--font-ui);}
+  .cl-nav-logo{display:flex;align-items:center;font-size:15px;font-weight:800;color:#fff;letter-spacing:-.01em;line-height:1;text-decoration:none;}
+  .cl-nav-logo .cl-laboral{color:#5eead4;font-weight:400;}
+</style>
+<script src="membrete.js?v=3.7"></script>
+<script src="expediente-helper.js?v=3.7"></script>
+</head>
+<body>
+<div id="auth-gate-loading">Verificando acceso…</div>
+<div id="auth-gate-blocked">
+  <div class="agb-box"><div style="font-size:40px;margin-bottom:16px;">🔒</div><div style="font-size:18px;font-weight:700;color:#0f2640;margin-bottom:8px;">Acceso restringido</div><div style="font-size:13px;color:#666;margin-bottom:24px;">Requiere suscripción activa a ClickLaboral.mx.</div><a href="portal-cliente.html" style="display:inline-block;background:#0f2640;color:#fff;padding:11px 28px;border-radius:8px;text-decoration:none;font-weight:600;">Ir al portal</a></div>
+</div>
+
+<header>
+  <div class="cl-nav-logo" style="flex-shrink:0;"><svg width="26" height="26" viewBox="0 0 100 100" style="vertical-align:-7px;margin-right:6px;flex-shrink:0;">
+        <defs><linearGradient id="clGrad" x1="10" y1="10" x2="90" y2="95" gradientUnits="userSpaceOnUse">
+          <stop offset="0%" stop-color="#1a3a5c"/><stop offset="55%" stop-color="#1e6f6c"/><stop offset="100%" stop-color="#2dd4bf"/>
+        </linearGradient></defs>
+        <path d="M50 7 L83 20 V51 C83 73 68 87 50 95 C32 87 17 73 17 51 V20 Z" fill="none" stroke="url(#clGrad)" stroke-width="6" stroke-linejoin="round"/>
+        <circle cx="40" cy="38" r="8.5" fill="#5eead4"/>
+        <path d="M25 63 C25 51 31 45 40 45 C49 45 55 51 55 63 Z" fill="#5eead4"/>
+        <circle cx="55" cy="33" r="9.5" fill="#14b8a6"/>
+        <path d="M38 61 C38 48 45.5 41 55 41 C64.5 41 72 48 72 61 Z" fill="#14b8a6"/>
+        <path d="M29 61 L45 77 L78 40" fill="none" stroke="#e8f2fc" stroke-width="9" stroke-linecap="round" stroke-linejoin="round"/>
+      </svg>Click<span class="cl-laboral">Laboral.mx</span></div>
+  <div>
+    <h1>📜 Generador · Contratos Especiales</h1>
+    <span style="font-size:11px;opacity:.65;">Colectivo · Obra · Teletrabajo · Domicilio</span>
+  </div>
+  <div class="header-actions">
+    <button class="btn btn-outline" onclick="window.open('portal-cliente.html')">← Portal</button>
+    <button class="btn btn-primary" onclick="window.print()">🖨 Imprimir / PDF</button>
+  </div>
+</header>
+
+<div class="workspace">
+  <div class="form-panel">
+    <!-- ── MEMBRETE DEL CLIENTE ── -->
+    <div style="border-bottom:1px solid var(--border);margin-bottom:0;">
+      <div class="section-label" style="display:flex;align-items:center;justify-content:space-between;cursor:pointer;user-select:none;"
+           onclick="this.nextElementSibling.style.display=this.nextElementSibling.style.display==='none'?'block':'none'">
+        <span>🏢 Logo y pie de página</span>
+        <span style="font-size:10px;font-weight:400;color:var(--ink3);">▲ clic para colapsar</span>
+      </div>
+      <div id="mem-panel-wrap" style="display:block;padding:12px 0 14px;">
+        <div id="mem-logo-container"></div>
+      </div>
+    </div>
+    <!-- ── / MEMBRETE ── -->
+    <div class="doc-tabs">
+      <div class="doc-tab active" id="tab-colectivo"   onclick="setTab('colectivo')">🤝 Colectivo (CCT)</div>
+      <div class="doc-tab" id="tab-obra"               onclick="setTab('obra')">🏗 Obra determinada</div>
+      <div class="doc-tab" id="tab-teletrabajo"        onclick="setTab('teletrabajo')">🏠 Teletrabajo</div>
+      <div class="doc-tab" id="tab-domicilio"          onclick="setTab('domicilio')">🧵 Trabajo a domicilio</div>
+    </div>
+
+    <div class="section-label">Datos del patrón</div>
+    <div class="form-inner">
+      <div class="field"><label>Empresa / Razón social</label><input type="text" id="f-empresa" oninput="render()" placeholder="Empresa S.A. de C.V."></div>
+      <div class="field-row">
+        <div class="field"><label>RFC</label><input type="text" id="f-rfc" oninput="render()" placeholder="EMP010101AAA"></div>
+        <div class="field"><label>Ciudad</label><input type="text" id="f-ciudad" oninput="render()" placeholder="Zapopan, Jal."></div>
+      </div>
+      <div class="field"><label>Representante legal</label><input type="text" id="rep_legal" oninput="render()" placeholder="Lic. Nombre Apellidos"></div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;">
+        <div class="field"><label>Teléfono</label><input type="text" id="mem-tel" oninput="render()" placeholder="33 1234 5678"></div>
+        <div class="field"><label>Email</label><input type="text" id="mem-email" oninput="render()" placeholder="contacto@empresa.mx"></div>
+      </div>
+      <div class="field"><label>Domicilio fiscal</label><input type="text" id="mem-domicilio" oninput="render()" placeholder="Calle, No., Col., Ciudad, C.P."></div>
+      <div class="field">
+        <label>Logo de la empresa (opcional)</label>
+        <div id="mem-logo-preview" style="display:none;margin-bottom:6px;display:flex;align-items:center;gap:8px;">
+          <img id="mem-logo-img" style="max-height:56px;max-width:140px;object-fit:contain;border:1px solid var(--border);border-radius:4px;padding:3px;">
+          <button onclick="removerLogo()" style="font-size:11px;color:#c0392b;background:none;border:none;cursor:pointer;">✕ Quitar</button>
+        </div>
+        <input type="file" id="mem-logo-file" accept="image/png,image/jpeg,image/svg+xml,image/webp" style="font-size:12px;width:100%;" onchange="cargarLogoMembrete(this)">
+        <div style="font-size:10px;color:var(--ink3);margin-top:3px;">PNG o JPG · máx. 2MB · aparece en el encabezado del documento impreso</div>
+      </div>
+    </div>
+
+    <div id="campos-doc"></div>
+  </div>
+
+  <div class="preview-panel">
+    <div class="doc-sheet" id="doc-preview">
+      <div class="watermark-empty">Complete los datos del formulario para generar el documento</div>
+    </div>
+  </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
+<script>
+const sb=supabase.createClient('https://hpzgqaplrywwjuvrzhcp.supabase.co','sb_publishable_1g8US8iFJ8CxnSaF_4MHgA_gqyyAr3W');
+(async()=>{
+  const _sb = supabase.createClient('https://hpzgqaplrywwjuvrzhcp.supabase.co','sb_publishable_1g8US8iFJ8CxnSaF_4MHgA_gqyyAr3W');
+  try {
+    const { data } = await _sb.auth.getSession();
+    document.getElementById('auth-gate-loading').style.display = 'none';
+    if (!data?.session?.user) {
+      document.getElementById('auth-gate-blocked').style.display = 'flex';
+    }
+  } catch(e) {
+    document.getElementById('auth-gate-loading').style.display = 'none';
+    document.getElementById('auth-gate-blocked').style.display = 'flex';
+  }
+})();
+
+let docTab='colectivo';
+function v(id){return(document.getElementById(id)||{}).value||'';}
+function b(val,fb){return val&&val.trim()?`<span class="blank">${val}</span>`:`<span class="blank empty">${fb||'___________'}</span>`;}
+function fmtFecha(f){if(!f)return'___________';const d=new Date(f+'T12:00:00');return d.toLocaleDateString('es-MX',{day:'numeric',month:'long',year:'numeric'});}
+function fmtMxn(n){return '$'+(parseFloat(n)||0).toLocaleString('es-MX',{minimumFractionDigits:2,maximumFractionDigits:2});}
+
+function setTab(tab){
+  docTab=tab;
+  ['colectivo','obra','teletrabajo','domicilio'].forEach(t=>document.getElementById('tab-'+t).classList.toggle('active',t===tab));
+  renderCampos();render();
+}
+
+function render(){
+  const preview = document.getElementById('doc-preview');
+  if (!preview) return;
+  const d = getDatosMembrete();
+  const empresa  = v('empresa')  || d.empresa;
+  const rfc      = v('rfc')      || d.rfc;
+  const dom      = v('domicilio_empresa') || d.domicilio;
+  const rep      = v('rep_legal');
+  const ciudad   = v('ciudad_firma');
+  const folio    = docTab.toUpperCase().slice(0,3)+'-'+new Date().getFullYear()+'-'+String(Math.floor(Math.random()*9000)+1000);
+  const membrete = generarMembrete({...d, empresa, rfc, domicilio:dom, folio});
+  const footer   = generarFooterDoc({...d, empresa, rfc});
+
+  if (!empresa && !rep) {
+    preview.innerHTML = '<div class="watermark-empty">Complete los datos del formulario para generar el documento</div>';
+    return;
+  }
+
+  let cuerpo = '';
+
+  if (docTab === 'colectivo') {
+    const sindicato  = v('c-sindicato');
+    const repSind    = v('c-rep-sind');
+    const regSind    = v('c-reg-sind');
+    const salario    = v('c-salario');
+    const jornada    = v('c-jornada');
+    const descanso   = v('c-descanso');
+    const vigencia   = v('c-vigencia');
+    const fecha      = v('c-fecha');
+    const revision   = v('c-revision');
+    const prestaciones = v('c-prestaciones');
+    const clausulas  = v('c-clausulas');
+
+    cuerpo = `
+      <div class="doc-title">CONTRATO COLECTIVO DE TRABAJO</div>
+      <div class="doc-subtitle">Art. 386-403 LFT${revision?' · Revisión '+revision:''}</div>
+      <p class="doc-p">En ${b(ciudad,'___________')}, siendo el ${b(fecha?fmtFecha(fecha):'','____ de ________ de ____')}, comparecen:</p>
+      <p class="doc-p"><strong>PARTE PATRONAL:</strong> ${b(empresa,'[Empresa]')}${rfc?', RFC '+rfc:''}, representada por ${b(rep,'[Representante legal]')}.</p>
+      <p class="doc-p"><strong>PARTE TRABAJADORA:</strong> Sindicato <strong>${b(sindicato,'[Nombre del sindicato]')}</strong>, con número de registro ${b(regSind,'___________')}, representado por ${b(repSind,'[Representante sindical]')}.</p>
+      <div class="doc-clause-title">CONDICIONES GENERALES DE TRABAJO</div>
+      <table class="tabla-form">
+        <tr><td class="lbl">Salario mínimo pactado</td><td class="val">${salario?fmtMxn(salario)+' diarios':'___________'}</td></tr>
+        <tr><td class="lbl">Jornada de trabajo</td><td class="val">${b(jornada,'___________')}</td></tr>
+        <tr><td class="lbl">Día de descanso</td><td class="val">${b(descanso,'___________')}</td></tr>
+        <tr><td class="lbl">Período de vigencia</td><td class="val">${b(vigencia,'___________')}</td></tr>
+      </table>
+      ${prestaciones?`<div class="doc-clause-title">PRESTACIONES ADICIONALES PACTADAS</div><p class="doc-p">${prestaciones}</p>`:''}
+      ${clausulas?`<div class="doc-clause-title">CLÁUSULAS ESPECIALES</div><p class="doc-p">${clausulas}</p>`:''}
+      <div class="doc-firma-grid" style="margin-top:36px;">
+        <div class="firma-box"><br><br><strong>${b(rep,'Representante legal')}</strong><br>${empresa}</div>
+        <div class="firma-box"><br><br><strong>${b(repSind,'Representante sindical')}</strong><br>${b(sindicato,'Sindicato')}</div>
+      </div>`;
+
+  } else if (docTab === 'obra') {
+    const nombre   = v('o-nombre');
+    const curp     = v('o-curp');
+    const nss      = v('o-nss');
+    const puesto   = v('o-puesto');
+    const obra     = v('o-obra');
+    const ubic     = v('o-ubicacion');
+    const salario  = v('o-salario');
+    const pago     = v('o-pago');
+    const inicio   = v('o-inicio');
+    const fin      = v('o-fin');
+    const activ    = v('o-actividades');
+
+    cuerpo = `
+      <div class="doc-title">CONTRATO POR OBRA DETERMINADA</div>
+      <div class="doc-subtitle">Art. 36 LFT · Vigente hasta conclusión de la obra</div>
+      <p class="doc-p">En ${b(ciudad,'___________')}, a ${b(inicio?fmtFecha(inicio):'','____ de ________ de ____')}, celebran contrato individual de trabajo:</p>
+      <p class="doc-p"><strong>PATRÓN:</strong> ${b(empresa,'[Empresa]')}${rfc?', RFC '+rfc:''}, representada por ${b(rep,'[Representante legal]')}.</p>
+      <p class="doc-p"><strong>TRABAJADOR:</strong> ${b(nombre,'[Nombre del trabajador]')}${curp?', CURP '+curp:''}${nss?', NSS '+nss:''}.</p>
+      <div class="doc-clause-title">OBJETO DEL CONTRATO</div>
+      <p class="doc-p">El trabajador prestará sus servicios como <strong>${b(puesto,'[Puesto/Categoría]')}</strong> en la obra denominada <strong>${b(obra,'[Nombre de la obra]')}</strong>, ubicada en ${b(ubic,'[Dirección de la obra]')}.</p>
+      ${activ?`<p class="doc-p"><strong>Actividades específicas:</strong> ${activ}</p>`:''}
+      <table class="tabla-form">
+        <tr><td class="lbl">Salario diario</td><td class="val">${salario?fmtMxn(salario):b('','___________')}</td></tr>
+        <tr><td class="lbl">Forma de pago</td><td class="val">${b(pago,'Semanal')}</td></tr>
+        <tr><td class="lbl">Inicio</td><td class="val">${inicio?fmtFecha(inicio):'___________'}</td></tr>
+        <tr><td class="lbl">Conclusión estimada</td><td class="val">${fin?fmtFecha(fin):'Al término de la obra'}</td></tr>
+      </table>
+      <p class="doc-p" style="margin-top:14px;">Este contrato concluirá automáticamente al término de la obra sin responsabilidad para el patrón, conforme al Art. 36 LFT.</p>
+      <div class="doc-firma-grid" style="margin-top:36px;">
+        <div class="firma-box"><br><br><strong>${b(rep,'Representante legal')}</strong><br>${empresa}</div>
+        <div class="firma-box"><br><br><strong>${b(nombre,'Trabajador')}</strong></div>
+      </div>`;
+
+  } else if (docTab === 'teletrabajo') {
+    const nombre   = v('t-nombre');
+    const puesto   = v('t-puesto');
+    const area     = v('t-area');
+    const domTrab  = v('t-domicilio');
+    const salario  = v('t-salario');
+    const jornada  = v('t-jornada');
+    const horario  = v('t-horario');
+    const pct      = v('t-pct');
+    const equipos  = v('t-equipos');
+    const inicio   = v('t-inicio');
+    const fecha    = v('t-fecha');
+
+    cuerpo = `
+      <div class="doc-title">CONTRATO DE TELETRABAJO</div>
+      <div class="doc-subtitle">Art. 330-A al 330-K LFT · NOM-037-STPS-2023</div>
+      <p class="doc-p">En ${b(ciudad,'___________')}, a ${b(fecha?fmtFecha(fecha):'','____ de ________ de ____')}, celebran contrato de teletrabajo:</p>
+      <p class="doc-p"><strong>PATRÓN:</strong> ${b(empresa,'[Empresa]')}${rfc?', RFC '+rfc:''}, representada por ${b(rep,'[Representante legal]')}.</p>
+      <p class="doc-p"><strong>TELETRABAJADOR:</strong> ${b(nombre,'[Nombre del trabajador]')}, puesto: <strong>${b(puesto,'[Puesto]')}</strong>${area?', área: '+area:''}.</p>
+      <p class="doc-p"><strong>Lugar de teletrabajo:</strong> ${b(domTrab,'[Domicilio del trabajador]')}.</p>
+      <table class="tabla-form">
+        <tr><td class="lbl">Salario mensual</td><td class="val">${salario?fmtMxn(salario):b('','___________')}</td></tr>
+        <tr><td class="lbl">Jornada</td><td class="val">${b(jornada,'Diurna 8 hrs')}</td></tr>
+        <tr><td class="lbl">Horario</td><td class="val">${b(horario,'___________')}</td></tr>
+        <tr><td class="lbl">% en domicilio</td><td class="val">${pct?pct+'%':'___________'}</td></tr>
+        <tr><td class="lbl">Inicio</td><td class="val">${inicio?fmtFecha(inicio):'___________'}</td></tr>
+      </table>
+      ${equipos?`<div class="doc-clause-title">EQUIPOS Y HERRAMIENTAS PROPORCIONADOS POR EL PATRÓN</div><p class="doc-p">${equipos}</p>`:''}
+      <div class="doc-clause-title">OBLIGACIONES DEL PATRÓN (NOM-037)</div>
+      <p class="doc-p">El patrón se obliga a: proporcionar, instalar y encargarse del mantenimiento de los equipos; pagar los costos derivados del teletrabajo (internet, electricidad proporcional); garantizar la desconexión digital fuera del horario pactado; y preservar la privacidad del teletrabajador.</p>
+      <div class="doc-firma-grid" style="margin-top:36px;">
+        <div class="firma-box"><br><br><strong>${b(rep,'Representante legal')}</strong><br>${empresa}</div>
+        <div class="firma-box"><br><br><strong>${b(nombre,'Teletrabajador')}</strong></div>
+      </div>`;
+
+  } else { // domicilio
+    const nombre   = v('d-nombre');
+    const curp     = v('d-curp');
+    const nss      = v('d-nss');
+    const domTrab  = v('d-domicilio-trab');
+    const trabajo  = v('d-trabajo');
+    const precio   = v('d-precio');
+    const minimo   = v('d-minimo');
+    const pago     = v('d-pago');
+    const inicio   = v('d-inicio');
+    const mats     = v('d-materiales');
+    const fecha    = v('d-fecha');
+
+    cuerpo = `
+      <div class="doc-title">CONTRATO DE TRABAJO A DOMICILIO</div>
+      <div class="doc-subtitle">Art. 311-330 LFT</div>
+      <p class="doc-p">En ${b(ciudad,'___________')}, a ${b(fecha?fmtFecha(fecha):'','____ de ________ de ____')}, celebran contrato:</p>
+      <p class="doc-p"><strong>PATRÓN:</strong> ${b(empresa,'[Empresa]')}${rfc?', RFC '+rfc:''}, representada por ${b(rep,'[Representante legal]')}.</p>
+      <p class="doc-p"><strong>TRABAJADOR A DOMICILIO:</strong> ${b(nombre,'[Nombre del trabajador]')}${curp?', CURP '+curp:''}${nss?', NSS '+nss:''}, domicilio: ${b(domTrab,'[Domicilio]')}.</p>
+      <div class="doc-clause-title">OBJETO Y CONDICIONES</div>
+      <table class="tabla-form">
+        <tr><td class="lbl">Trabajo a realizar</td><td class="val">${b(trabajo,'[Tipo de trabajo/producto]')}</td></tr>
+        <tr><td class="lbl">Precio por pieza</td><td class="val">${precio?fmtMxn(precio):'___________'}</td></tr>
+        <tr><td class="lbl">Producción mínima semanal</td><td class="val">${minimo?minimo+' piezas/unidades':'___________'}</td></tr>
+        <tr><td class="lbl">Forma de pago</td><td class="val">${b(pago,'Semanal')}</td></tr>
+        <tr><td class="lbl">Inicio</td><td class="val">${inicio?fmtFecha(inicio):'___________'}</td></tr>
+      </table>
+      ${mats?`<div class="doc-clause-title">MATERIALES A CARGO DEL PATRÓN</div><p class="doc-p">${mats}</p>`:''}
+      <p class="doc-p" style="margin-top:14px;">Conforme al Art. 311 LFT, se considera trabajo a domicilio el que se realiza para un patrón en el domicilio del trabajador o en un local libremente elegido por él.</p>
+      <div class="doc-firma-grid" style="margin-top:36px;">
+        <div class="firma-box"><br><br><strong>${b(rep,'Representante legal')}</strong><br>${empresa}</div>
+        <div class="firma-box"><br><br><strong>${b(nombre,'Trabajador a domicilio')}</strong></div>
+      </div>`;
+  }
+
+  preview.innerHTML = membrete + cuerpo + footer;
+}
+
+function renderCampos(){
+  const w=document.getElementById('campos-doc');
+  if(docTab==='colectivo'){
+    w.innerHTML=`
+      <div class="section-label">Datos del sindicato / trabajadores</div>
+      <div class="form-inner">
+        <div class="field"><label>Nombre del sindicato</label><input type="text" id="c-sindicato" oninput="render()" placeholder="Sindicato de Trabajadores de..."></div>
+        <div class="field"><label>Representante del sindicato</label><input type="text" id="c-rep-sind" oninput="render()" placeholder="Nombre del secretario general"></div>
+        <div class="field"><label>Número de registro sindical</label><input type="text" id="c-reg-sind" oninput="render()" placeholder="STPS/CFCRL/000/2025"></div>
+      </div>
+      <div class="section-label">Condiciones generales de trabajo</div>
+      <div class="form-inner">
+        <div class="field-row">
+          <div class="field"><label>Salario mínimo pactado (MXN/día)</label><input type="number" id="c-salario" oninput="render()" placeholder="350.00"></div>
+          <div class="field"><label>Jornada de trabajo</label><select id="c-jornada" oninput="render()"><option>Diurna (8 hrs)</option><option>Nocturna (7 hrs)</option><option>Mixta (7.5 hrs)</option></select></div>
+        </div>
+        <div class="field-row">
+          <div class="field"><label>Día de descanso</label><input type="text" id="c-descanso" oninput="render()" placeholder="Domingo"></div>
+          <div class="field"><label>Período de vigencia</label><input type="text" id="c-vigencia" oninput="render()" placeholder="1 año"></div>
+        </div>
+        <div class="field-row">
+          <div class="field"><label>Ciudad de firma <span class="req">*</span></label><input type="text" id="ciudad_firma" oninput="render()" placeholder="Zapopan, Jalisco"></div>
+          <div class="field"><label>Fecha de firma <span class="req">*</span></label><input type="date" id="fecha_firma" oninput="render()"></div>
+        </div>
+        <div class="field-row">
+          <div class="field"><label>Fecha de firma del contrato</label><input type="date" id="c-fecha" oninput="render()"></div>
+          <div class="field"><label>No. de revisión</label><input type="text" id="c-revision" oninput="render()" placeholder="Primera revisión"></div>
+        </div>
+        <div class="field"><label>Prestaciones adicionales pactadas</label><textarea id="c-prestaciones" oninput="render()" placeholder="Fondo de ahorro 5%, vales de despensa, seguro de vida, etc."></textarea></div>
+        <div class="field"><label>Cláusulas especiales</label><textarea id="c-clausulas" oninput="render()" placeholder="Cualquier cláusula adicional acordada entre las partes..."></textarea></div>
+      </div>`;
+  } else if(docTab==='obra'){
+    w.innerHTML=`
+      <div class="section-label">Datos del trabajador</div>
+      <div class="form-inner">
+        <div class="field"><label>Nombre completo del trabajador</label><input type="text" id="o-nombre" oninput="render()" placeholder="Nombre completo"></div>
+        <div class="field-row">
+          <div class="field"><label>CURP</label><input type="text" id="o-curp" oninput="render()" placeholder="XXXX000000XXXXXX00"></div>
+          <div class="field"><label>NSS (IMSS)</label><input type="text" id="o-nss" oninput="render()" placeholder="00000000000"></div>
+        </div>
+        <div class="field"><label>Puesto / Categoría</label><input type="text" id="o-puesto" oninput="render()" placeholder="Oficial albañil, Electricista, etc."></div>
+      </div>
+      <div class="section-label">Datos de la obra</div>
+      <div class="form-inner">
+        <div class="field"><label>Nombre / descripción de la obra</label><input type="text" id="o-obra" oninput="render()" placeholder="Construcción Edificio Torre Norte"></div>
+        <div class="field"><label>Ubicación de la obra</label><input type="text" id="o-ubicacion" oninput="render()" placeholder="Av. Vallarta 1234, Guadalajara, Jal."></div>
+        <div class="field-row">
+          <div class="field"><label>Salario diario (MXN)</label><input type="number" id="o-salario" oninput="render()" placeholder="500.00"></div>
+          <div class="field"><label>Forma de pago</label><select id="o-pago" oninput="render()"><option value="semanal">Semanal</option><option value="quincenal">Quincenal</option></select></div>
+        </div>
+        <div class="field-row">
+          <div class="field"><label>Fecha de inicio</label><input type="date" id="o-inicio" oninput="render()"></div>
+          <div class="field"><label>Fecha estimada de conclusión</label><input type="date" id="o-fin" oninput="render()"></div>
+        </div>
+        <div class="field"><label>Actividades específicas a realizar</label><textarea id="o-actividades" oninput="render()" placeholder="Describir las labores específicas del trabajador en la obra..."></textarea></div>
+        <div class="field"><label>Representante legal <span class="req">*</span></label><input type="text" id="rep_legal" oninput="render()" placeholder="Lic. Nombre Apellidos"></div>
+        <div class="field-row">
+          <div class="field"><label>Ciudad de firma <span class="req">*</span></label><input type="text" id="ciudad_firma" oninput="render()" placeholder="Zapopan, Jalisco"></div>
+          <div class="field"><label>Fecha de firma <span class="req">*</span></label><input type="date" id="fecha_firma" oninput="render()"></div>
+        </div>
+      </div>`;
+  } else if(docTab==='teletrabajo'){
+    w.innerHTML=`
+      <div class="section-label">Datos del trabajador</div>
+      <div class="form-inner">
+        <div class="field"><label>Nombre completo del trabajador</label><input type="text" id="t-nombre" oninput="render()" placeholder="Nombre completo"></div>
+        <div class="field-row">
+          <div class="field"><label>Puesto</label><input type="text" id="t-puesto" oninput="render()" placeholder="Analista, Desarrollador, etc."></div>
+          <div class="field"><label>Área / Departamento</label><input type="text" id="t-area" oninput="render()" placeholder="TI, Administración, etc."></div>
+        </div>
+        <div class="field"><label>Domicilio de teletrabajo</label><input type="text" id="t-domicilio" oninput="render()" placeholder="Dirección donde prestará el servicio"></div>
+      </div>
+      <div class="section-label">Condiciones del teletrabajo (NOM-037-STPS-2023)</div>
+      <div class="form-inner">
+        <div class="field-row">
+          <div class="field"><label>Salario mensual (MXN)</label><input type="number" id="t-salario" oninput="render()" placeholder="15000.00"></div>
+          <div class="field"><label>Jornada</label><select id="t-jornada" oninput="render()"><option>Diurna 8 hrs</option><option>Mixta 7.5 hrs</option><option>Reducida acordada</option></select></div>
+        </div>
+        <div class="field-row">
+          <div class="field"><label>Horario de trabajo</label><input type="text" id="t-horario" oninput="render()" placeholder="09:00 a 18:00 hrs"></div>
+          <div class="field"><label>% de jornada en domicilio</label><input type="number" id="t-pct" oninput="render()" placeholder="100" min="40" max="100"></div>
+        </div>
+        <div class="field"><label>Equipos proporcionados por el patrón</label><textarea id="t-equipos" oninput="render()" placeholder="Laptop, monitor, silla ergonómica, headset..."></textarea></div>
+        <div class="field"><label>Fecha de inicio</label><input type="date" id="t-inicio" oninput="render()"></div>
+        <div class="field"><label>Representante legal <span class="req">*</span></label><input type="text" id="rep_legal" oninput="render()" placeholder="Lic. Nombre Apellidos"></div>
+        <div class="field-row">
+          <div class="field"><label>Ciudad de firma <span class="req">*</span></label><input type="text" id="ciudad_firma" oninput="render()" placeholder="Zapopan, Jalisco"></div>
+          <div class="field"><label>Fecha de firma <span class="req">*</span></label><input type="date" id="fecha_firma" oninput="render()"></div>
+        </div>
+      </div>`;
+  } else {
+    w.innerHTML=`
+      <div class="section-label">Datos del trabajador</div>
+      <div class="form-inner">
+        <div class="field"><label>Nombre completo del trabajador</label><input type="text" id="d-nombre" oninput="render()" placeholder="Nombre completo"></div>
+        <div class="field-row">
+          <div class="field"><label>CURP</label><input type="text" id="d-curp" oninput="render()" placeholder="XXXX000000XXXXXX00"></div>
+          <div class="field"><label>NSS (IMSS)</label><input type="text" id="d-nss" oninput="render()" placeholder="00000000000"></div>
+        </div>
+        <div class="field"><label>Domicilio del trabajador</label><input type="text" id="d-domicilio-trab" oninput="render()" placeholder="Dirección donde realiza el trabajo"></div>
+      </div>
+      <div class="section-label">Condiciones del trabajo a domicilio (Art. 311-330 LFT)</div>
+      <div class="form-inner">
+        <div class="field"><label>Tipo de trabajo / Producto elaborado</label><input type="text" id="d-trabajo" oninput="render()" placeholder="Costura, tejido, ensamble, bordado..."></div>
+        <div class="field-row">
+          <div class="field"><label>Precio unitario por pieza (MXN)</label><input type="number" id="d-precio" oninput="render()" placeholder="25.00"></div>
+          <div class="field"><label>Producción mínima semanal</label><input type="number" id="d-minimo" oninput="render()" placeholder="100"></div>
+        </div>
+        <div class="field-row">
+          <div class="field"><label>Forma de pago</label><select id="d-pago" oninput="render()"><option value="semanal">Semanal</option><option value="quincenal">Quincenal</option></select></div>
+          <div class="field"><label>Fecha de inicio</label><input type="date" id="d-inicio" oninput="render()"></div>
+        </div>
+        <div class="field"><label>Materiales a cargo del patrón</label><textarea id="d-materiales" oninput="render()" placeholder="Tela, hilo, agujas, etc. que proporciona el patrón..."></textarea></div>
+        <div class="field"><label>Representante legal <span class="req">*</span></label><input type="text" id="rep_legal" oninput="render()" placeholder="Lic. Nombre Apellidos"></div>
+        <div class="field-row">
+          <div class="field"><label>Ciudad de firma <span class="req">*</span></label><input type="text" id="ciudad_firma" oninput="render()" placeholder="Zapopan, Jalisco"></div>
+          <div class="field"><label>Fecha de firma <span class="req">*</span></label><input type="date" id="fecha_firma" oninput="render()"></div>
+        </div>
+      </div>`;
+  }
+}
+// ── INIT ──
+renderPanelMembrete('mem-logo-container');
+(async()=>{
+  try{
+    const _sb = supabase.createClient(
+      'https://hpzgqaplrywwjuvrzhcp.supabase.co',
+      'sb_publishable_1g8US8iFJ8CxnSaF_4MHgA_gqyyAr3W'
+    );
+    await precargarMembreteDesdePortal(_sb);
+  }catch(e){}
+})();
+setTab('colectivo');
+// ── Expediente del trabajador ──
+if (window.ExpedienteHelper) {
+  ExpedienteHelper.init({
+    inputNombreId: 'o-nombre',
+    tipoDocumento: 'contrato_colectivo',
+    nombreDocumentoFn: () => 'Contrato ' + (docTab||'colectivo'),
+  });
+}
+</script>
+<script src="edicion-libre.js?v=4.6"></script>
+
+
+
+
+</body>
+</html>

@@ -1,0 +1,558 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Simulador de Riesgo de Demanda Laboral · ClickLaboral.mx</title>
+<meta name="description" content="Calcule en 2 minutos cuánto le costaría una demanda laboral y qué probabilidad tiene de perder. Simulador gratuito basado en la LFT para empresas en México.">
+<meta name="robots" content="index, follow">
+<link rel="canonical" href="https://www.clicklaboral.mx/simulador-riesgo.html">
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
+:root{
+  --navy:#0f2640;--navy2:#1a3a5c;
+  --red:#dc2626;--red-bg:#fef2f2;--red-border:#fecaca;
+  --amber:#d97706;--amber-bg:#fffbeb;--amber-border:#fde68a;
+  --green:#16a34a;--green-bg:#f0fdf4;--green-border:#86efac;
+  --ink:#111;--ink2:#444;--ink3:#888;
+  --border:rgba(0,0,0,.09);--surface:#f8f7f4;
+  --white:#fff;--r:14px;--r-sm:9px;
+  --font:'Segoe UI',system-ui,-apple-system,sans-serif;
+}
+body{font-family:var(--font);background:var(--surface);color:var(--ink);line-height:1.6;}
+nav{background:var(--navy);padding:0 24px;height:56px;display:flex;align-items:center;justify-content:space-between;}
+.nav-logo{font-size:15px;font-weight:800;color:#fff;}
+.nav-logo span{color:#c5dcf5;font-weight:400;}
+.nav-back{color:rgba(255,255,255,.6);font-size:13px;text-decoration:none;}
+.nav-back:hover{color:#fff;}
+.wrap{max-width:760px;margin:0 auto;padding:48px 20px 100px;}
+/* Hero */
+.hero{text-align:center;margin-bottom:40px;}
+.badge{display:inline-block;background:#fee2e2;color:#991b1b;font-size:11px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;padding:4px 12px;border-radius:20px;margin-bottom:14px;}
+.hero h1{font-size:clamp(24px,4vw,36px);font-weight:800;color:var(--navy);letter-spacing:-.02em;margin-bottom:12px;line-height:1.2;}
+.hero p{font-size:14px;color:var(--ink3);max-width:540px;margin:0 auto;}
+/* Barra progreso */
+.prog-wrap{margin-bottom:32px;}
+.prog-label{display:flex;justify-content:space-between;font-size:12px;color:var(--ink3);margin-bottom:6px;}
+.prog-bar{height:6px;background:#e2e8f0;border-radius:3px;overflow:hidden;}
+.prog-fill{height:100%;background:var(--red);border-radius:3px;transition:width .4s cubic-bezier(.4,0,.2,1);}
+/* Pregunta */
+.bloque{background:var(--white);border-radius:var(--r);padding:24px 28px;margin-bottom:16px;box-shadow:0 1px 3px rgba(0,0,0,.06);display:none;}
+.bloque.activa{display:block;animation:fadeIn .3s ease;}
+@keyframes fadeIn{from{opacity:0;transform:translateY(8px);}to{opacity:1;transform:none;}}
+.bloque-num{font-size:11px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--ink3);margin-bottom:4px;}
+.bloque-titulo{font-size:17px;font-weight:700;color:var(--navy);margin-bottom:8px;line-height:1.4;}
+.bloque-sub{font-size:13px;color:var(--ink3);margin-bottom:20px;}
+/* Opciones */
+.opciones{display:flex;flex-direction:column;gap:10px;}
+.opcion{display:flex;align-items:flex-start;gap:12px;padding:14px 16px;border:1.5px solid var(--border);border-radius:10px;cursor:pointer;transition:all .15s;background:var(--white);}
+.opcion:hover{border-color:#94a3b8;background:#f8fafc;}
+.opcion.sel{border-color:var(--navy2);background:#eff6ff;}
+.opcion input[type=radio]{margin-top:3px;accent-color:var(--navy2);flex-shrink:0;}
+.opcion-texto{font-size:14px;color:var(--ink2);line-height:1.5;}
+.opcion-sub{font-size:12px;color:var(--ink3);margin-top:2px;}
+/* Campo numérico */
+.campo-num{display:flex;align-items:center;gap:10px;margin-top:4px;}
+.campo-num label{font-size:13px;color:var(--ink2);white-space:nowrap;}
+.campo-num input{padding:10px 14px;border:1.5px solid var(--border);border-radius:8px;font-size:14px;font-family:var(--font);width:160px;color:var(--ink);}
+.campo-num input:focus{outline:none;border-color:var(--navy2);}
+.campo-num span{font-size:13px;color:var(--ink3);}
+/* Botones navegación */
+.nav-btns{display:flex;gap:12px;justify-content:space-between;margin-top:20px;}
+.btn{padding:12px 24px;border-radius:8px;font-size:14px;font-weight:700;cursor:pointer;border:none;transition:all .15s;font-family:var(--font);}
+.btn-sec{background:#f1f5f9;color:#334155;}
+.btn-sec:hover{background:#e2e8f0;}
+.btn-pri{background:var(--navy2);color:#fff;}
+.btn-pri:hover{background:var(--navy);}
+.btn-pri:disabled{opacity:.4;cursor:not-allowed;}
+/* RESULTADO */
+#resultado{display:none;}
+.res-header{text-align:center;padding:40px 24px 32px;background:var(--white);border-radius:var(--r);margin-bottom:24px;box-shadow:0 1px 3px rgba(0,0,0,.06);}
+.riesgo-badge{display:inline-flex;align-items:center;gap:8px;padding:8px 20px;border-radius:24px;font-size:13px;font-weight:700;margin-bottom:20px;}
+.riesgo-alto{background:#fef2f2;color:#991b1b;border:1.5px solid #fecaca;}
+.riesgo-medio{background:#fffbeb;color:#92400e;border:1.5px solid #fde68a;}
+.riesgo-bajo{background:#f0fdf4;color:#166534;border:1.5px solid #86efac;}
+.monto-grande{font-size:clamp(36px,6vw,54px);font-weight:800;color:var(--navy);letter-spacing:-.03em;margin-bottom:4px;}
+.monto-sub{font-size:13px;color:var(--ink3);margin-bottom:24px;}
+.prob-wrap{display:flex;align-items:center;gap:12px;justify-content:center;margin-bottom:8px;}
+.prob-bar-wrap{width:200px;height:10px;background:#e2e8f0;border-radius:5px;overflow:hidden;}
+.prob-fill{height:100%;border-radius:5px;transition:width 1s ease;}
+.prob-label{font-size:14px;font-weight:700;}
+/* Desglose */
+.desglose{background:var(--white);border-radius:var(--r);padding:24px 28px;margin-bottom:16px;box-shadow:0 1px 3px rgba(0,0,0,.06);}
+.desglose h3{font-size:13px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--ink3);margin-bottom:16px;}
+.desglose-item{display:flex;justify-content:space-between;align-items:flex-start;padding:10px 0;border-bottom:1px solid var(--border);gap:12px;}
+.desglose-item:last-child{border-bottom:none;}
+.di-label{font-size:13px;color:var(--ink2);}
+.di-base{font-size:11px;color:var(--ink3);margin-top:2px;}
+.di-monto{font-size:14px;font-weight:700;color:var(--navy);white-space:nowrap;}
+.di-riesgo{font-size:11px;padding:2px 8px;border-radius:10px;font-weight:600;}
+.di-r-alto{background:#fef2f2;color:#dc2626;}
+.di-r-medio{background:#fffbeb;color:#d97706;}
+.di-r-bajo{background:#f0fdf4;color:#16a34a;}
+/* Vulnerabilidades */
+.vulns{background:var(--white);border-radius:var(--r);padding:24px 28px;margin-bottom:16px;box-shadow:0 1px 3px rgba(0,0,0,.06);}
+.vulns h3{font-size:13px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--ink3);margin-bottom:16px;}
+.vuln-item{display:flex;gap:12px;padding:10px 0;border-bottom:1px solid var(--border);}
+.vuln-item:last-child{border-bottom:none;}
+.vuln-ico{font-size:16px;flex-shrink:0;margin-top:2px;}
+.vuln-texto{font-size:13px;color:var(--ink2);line-height:1.5;}
+.vuln-fix{font-size:12px;color:var(--green);margin-top:3px;font-weight:600;}
+/* CTA */
+.cta-box{background:var(--navy);border-radius:var(--r);padding:36px 28px;text-align:center;color:#fff;}
+.cta-box h2{font-size:22px;font-weight:800;margin-bottom:10px;letter-spacing:-.01em;}
+.cta-box p{font-size:14px;color:rgba(255,255,255,.7);margin-bottom:24px;max-width:480px;margin-left:auto;margin-right:auto;}
+.cta-btns{display:flex;gap:12px;justify-content:center;flex-wrap:wrap;}
+.cta-wsp{background:#25D366;color:#fff;padding:13px 24px;border-radius:8px;font-size:14px;font-weight:700;text-decoration:none;display:inline-flex;align-items:center;gap:8px;}
+.cta-planes{background:rgba(255,255,255,.1);color:#fff;padding:13px 24px;border-radius:8px;font-size:14px;font-weight:700;text-decoration:none;border:1.5px solid rgba(255,255,255,.3);}
+.disclaimer{font-size:11px;color:var(--ink3);text-align:center;margin-top:24px;line-height:1.6;max-width:580px;margin-left:auto;margin-right:auto;}
+@media(max-width:500px){.nav-btns{flex-direction:column;}.cta-btns{flex-direction:column;}}
+@media print{nav,.nav-btns,.cta-box,.prog-wrap{display:none!important;}}
+</style>
+</head>
+<body>
+<nav>
+  <div class="nav-logo">Click<span>Laboral</span>.mx</div>
+  <a href="index.html" class="nav-back">← Inicio</a>
+</nav>
+
+<div class="wrap">
+  <div class="hero">
+    <div class="badge">⚠️ Simulador gratuito</div>
+    <h1>¿Cuánto le costaría<br>una demanda laboral hoy?</h1>
+    <p>Responda 10 preguntas sobre su situación y calcule el monto estimado de la demanda, la probabilidad de perder y dónde está más expuesto.</p>
+  </div>
+
+  <div class="prog-wrap">
+    <div class="prog-label">
+      <span id="prog-texto">Pregunta 1 de 10</span>
+      <span id="prog-pct">0%</span>
+    </div>
+    <div class="prog-bar"><div class="prog-fill" id="prog-fill" style="width:0%"></div></div>
+  </div>
+
+  <!-- ═══ PREGUNTAS ═══ -->
+
+  <!-- P1: Motivo -->
+  <div class="bloque activa" id="p1">
+    <div class="bloque-num">Pregunta 1 / 10</div>
+    <div class="bloque-titulo">¿Cuál es la situación que quiere simular?</div>
+    <div class="bloque-sub">Seleccione el escenario más cercano a su caso.</div>
+    <div class="opciones">
+      <label class="opcion"><input type="radio" name="motivo" value="despido_justificado"> <div><div class="opcion-texto">Despedí a un trabajador con causa justificada</div><div class="opcion-sub">Faltas, robo, violencia, desobediencia</div></div></label>
+      <label class="opcion"><input type="radio" name="motivo" value="despido_injustificado"> <div><div class="opcion-texto">El trabajador dice que lo despedí sin causa</div><div class="opcion-sub">Argumenta despido injustificado o represalias</div></div></label>
+      <label class="opcion"><input type="radio" name="motivo" value="renuncia_forzada"> <div><div class="opcion-texto">El trabajador renunció pero dice que fue forzado</div><div class="opcion-sub">Reclama acoso, presión o condiciones inaceptables</div></div></label>
+      <label class="opcion"><input type="radio" name="motivo" value="salarios"> <div><div class="opcion-texto">Reclamo de salarios, horas extras o prestaciones no pagadas</div><div class="opcion-sub">Diferencias de salario, overtime, prima vacacional, etc.</div></div></label>
+      <label class="opcion"><input type="radio" name="motivo" value="accidente"> <div><div class="opcion-texto">Accidente o enfermedad de trabajo</div><div class="opcion-sub">Riesgo de trabajo sin IMSS o con incapacidad</div></div></label>
+    </div>
+    <div class="nav-btns"><div></div><button class="btn btn-pri" id="btn-p1" onclick="avanzar(1)" disabled>Siguiente →</button></div>
+  </div>
+
+  <!-- P2: Salario -->
+  <div class="bloque" id="p2">
+    <div class="bloque-num">Pregunta 2 / 10</div>
+    <div class="bloque-titulo">¿Cuál era el salario mensual del trabajador?</div>
+    <div class="bloque-sub">Ingrese el salario bruto mensual (incluyendo comisiones fijas si las había).</div>
+    <div class="campo-num">
+      <label>$</label>
+      <input type="number" id="inp-salario" min="3000" max="500000" placeholder="15,000" oninput="validarCampo(2)">
+      <span>MXN / mes</span>
+    </div>
+    <div class="nav-btns">
+      <button class="btn btn-sec" onclick="retroceder(2)">← Anterior</button>
+      <button class="btn btn-pri" id="btn-p2" onclick="avanzar(2)" disabled>Siguiente →</button>
+    </div>
+  </div>
+
+  <!-- P3: Antigüedad -->
+  <div class="bloque" id="p3">
+    <div class="bloque-num">Pregunta 3 / 10</div>
+    <div class="bloque-titulo">¿Cuánto tiempo llevaba trabajando con usted?</div>
+    <div class="opciones">
+      <label class="opcion"><input type="radio" name="antiguedad" value="0.5"> <div><div class="opcion-texto">Menos de 6 meses</div></div></label>
+      <label class="opcion"><input type="radio" name="antiguedad" value="1"> <div><div class="opcion-texto">6 meses a 1 año</div></div></label>
+      <label class="opcion"><input type="radio" name="antiguedad" value="2"> <div><div class="opcion-texto">1 a 3 años</div></div></label>
+      <label class="opcion"><input type="radio" name="antiguedad" value="5"> <div><div class="opcion-texto">3 a 7 años</div></div></label>
+      <label class="opcion"><input type="radio" name="antiguedad" value="10"> <div><div class="opcion-texto">7 a 15 años</div></div></label>
+      <label class="opcion"><input type="radio" name="antiguedad" value="20"> <div><div class="opcion-texto">Más de 15 años</div></div></label>
+    </div>
+    <div class="nav-btns">
+      <button class="btn btn-sec" onclick="retroceder(3)">← Anterior</button>
+      <button class="btn btn-pri" id="btn-p3" onclick="avanzar(3)" disabled>Siguiente →</button>
+    </div>
+  </div>
+
+  <!-- P4: Contrato -->
+  <div class="bloque" id="p4">
+    <div class="bloque-num">Pregunta 4 / 10</div>
+    <div class="bloque-titulo">¿El trabajador tenía contrato escrito y firmado?</div>
+    <div class="opciones">
+      <label class="opcion"><input type="radio" name="contrato" value="si_det"> <div><div class="opcion-texto">Sí, con contrato detallado y firmado</div><div class="opcion-sub">Con cláusulas de horario, funciones y salario</div></div></label>
+      <label class="opcion"><input type="radio" name="contrato" value="si_basico"> <div><div class="opcion-texto">Sí, pero básico o genérico</div><div class="opcion-sub">Solo datos mínimos, sin cláusulas específicas</div></div></label>
+      <label class="opcion"><input type="radio" name="contrato" value="no"> <div><div class="opcion-texto">No tenía contrato escrito</div><div class="opcion-sub">Acuerdo verbal únicamente</div></div></label>
+    </div>
+    <div class="nav-btns">
+      <button class="btn btn-sec" onclick="retroceder(4)">← Anterior</button>
+      <button class="btn btn-pri" id="btn-p4" onclick="avanzar(4)" disabled>Siguiente →</button>
+    </div>
+  </div>
+
+  <!-- P5: IMSS -->
+  <div class="bloque" id="p5">
+    <div class="bloque-num">Pregunta 5 / 10</div>
+    <div class="bloque-titulo">¿Estaba dado de alta en el IMSS con su salario real?</div>
+    <div class="opciones">
+      <label class="opcion"><input type="radio" name="imss" value="completo"> <div><div class="opcion-texto">Sí, con salario real integrado</div></div></label>
+      <label class="opcion"><input type="radio" name="imss" value="subdeclarado"> <div><div class="opcion-texto">Sí, pero con salario menor al real</div><div class="opcion-sub">Diferencia entre nómina y lo declarado al IMSS</div></div></label>
+      <label class="opcion"><input type="radio" name="imss" value="no"> <div><div class="opcion-texto">No estaba dado de alta en el IMSS</div></div></label>
+    </div>
+    <div class="nav-btns">
+      <button class="btn btn-sec" onclick="retroceder(5)">← Anterior</button>
+      <button class="btn btn-pri" id="btn-p5" onclick="avanzar(5)" disabled>Siguiente →</button>
+    </div>
+  </div>
+
+  <!-- P6: Acta o evidencia -->
+  <div class="bloque" id="p6">
+    <div class="bloque-num">Pregunta 6 / 10</div>
+    <div class="bloque-titulo">¿Tiene documentos que respalden su decisión?</div>
+    <div class="bloque-sub">Evidencias de la causa que motivó el despido o la situación.</div>
+    <div class="opciones">
+      <label class="opcion"><input type="radio" name="evidencia" value="completa"> <div><div class="opcion-texto">Sí — acta administrativa firmada + testigos</div><div class="opcion-sub">Proceso disciplinario documentado antes del despido</div></div></label>
+      <label class="opcion"><input type="radio" name="evidencia" value="parcial"> <div><div class="opcion-texto">Parcial — tengo algo pero no es completo</div><div class="opcion-sub">Correos, reportes o un testigo, pero sin acta formal</div></div></label>
+      <label class="opcion"><input type="radio" name="evidencia" value="no"> <div><div class="opcion-texto">No — no tengo documentos ni testigos confiables</div></div></label>
+    </div>
+    <div class="nav-btns">
+      <button class="btn btn-sec" onclick="retroceder(6)">← Anterior</button>
+      <button class="btn btn-pri" id="btn-p6" onclick="avanzar(6)" disabled>Siguiente →</button>
+    </div>
+  </div>
+
+  <!-- P7: Horas extras -->
+  <div class="bloque" id="p7">
+    <div class="bloque-num">Pregunta 7 / 10</div>
+    <div class="bloque-titulo">¿El trabajador laboraba horas extras habitualmente?</div>
+    <div class="opciones">
+      <label class="opcion"><input type="radio" name="extras" value="no"> <div><div class="opcion-texto">No, solo su jornada normal</div></div></label>
+      <label class="opcion"><input type="radio" name="extras" value="si_pagadas"> <div><div class="opcion-texto">Sí, y las registraba y pagaba correctamente</div><div class="opcion-sub">Con recibo de nómina y control de asistencias</div></div></label>
+      <label class="opcion"><input type="radio" name="extras" value="si_no_pagadas"> <div><div class="opcion-texto">Sí, pero no las pagaba o no las registraba</div><div class="opcion-sub">Horas extra "de palabra" o sin registro</div></div></label>
+    </div>
+    <div class="nav-btns">
+      <button class="btn btn-sec" onclick="retroceder(7)">← Anterior</button>
+      <button class="btn btn-pri" id="btn-p7" onclick="avanzar(7)" disabled>Siguiente →</button>
+    </div>
+  </div>
+
+  <!-- P8: Finiquito -->
+  <div class="bloque" id="p8">
+    <div class="bloque-num">Pregunta 8 / 10</div>
+    <div class="bloque-titulo">¿Se pagó algún finiquito o liquidación al trabajador?</div>
+    <div class="opciones">
+      <label class="opcion"><input type="radio" name="finiquito" value="completo"> <div><div class="opcion-texto">Sí — finiquito completo con recibo firmado</div><div class="opcion-sub">Partes proporcionales, vacaciones, prima y aguinaldo</div></div></label>
+      <label class="opcion"><input type="radio" name="finiquito" value="parcial"> <div><div class="opcion-texto">Pago parcial o sin recibo firmado</div></div></label>
+      <label class="opcion"><input type="radio" name="finiquito" value="no"> <div><div class="opcion-texto">No se pagó nada</div></div></label>
+    </div>
+    <div class="nav-btns">
+      <button class="btn btn-sec" onclick="retroceder(8)">← Anterior</button>
+      <button class="btn btn-pri" id="btn-p8" onclick="avanzar(8)" disabled>Siguiente →</button>
+    </div>
+  </div>
+
+  <!-- P9: Trabajadores -->
+  <div class="bloque" id="p9">
+    <div class="bloque-num">Pregunta 9 / 10</div>
+    <div class="bloque-titulo">¿Cuántos trabajadores tiene su empresa en total?</div>
+    <div class="opciones">
+      <label class="opcion"><input type="radio" name="tamano" value="micro"> <div><div class="opcion-texto">1 a 8 trabajadores</div></div></label>
+      <label class="opcion"><input type="radio" name="tamano" value="pequena"> <div><div class="opcion-texto">9 a 30 trabajadores</div></div></label>
+      <label class="opcion"><input type="radio" name="tamano" value="mediana"> <div><div class="opcion-texto">31 a 100 trabajadores</div></div></label>
+      <label class="opcion"><input type="radio" name="tamano" value="grande"> <div><div class="opcion-texto">Más de 100 trabajadores</div></div></label>
+    </div>
+    <div class="nav-btns">
+      <button class="btn btn-sec" onclick="retroceder(9)">← Anterior</button>
+      <button class="btn btn-pri" id="btn-p9" onclick="avanzar(9)" disabled>Siguiente →</button>
+    </div>
+  </div>
+
+  <!-- P10: Reglamento -->
+  <div class="bloque" id="p10">
+    <div class="bloque-num">Pregunta 10 / 10</div>
+    <div class="bloque-titulo">¿Su empresa tiene Reglamento Interior de Trabajo registrado ante la STPS?</div>
+    <div class="opciones">
+      <label class="opcion"><input type="radio" name="reglamento" value="si"> <div><div class="opcion-texto">Sí, registrado y vigente</div></div></label>
+      <label class="opcion"><input type="radio" name="reglamento" value="no_tiene"> <div><div class="opcion-texto">No tenemos reglamento</div></div></label>
+      <label class="opcion"><input type="radio" name="reglamento" value="no_registrado"> <div><div class="opcion-texto">Tenemos uno pero no está registrado ante la STPS</div></div></label>
+    </div>
+    <div class="nav-btns">
+      <button class="btn btn-sec" onclick="retroceder(10)">← Anterior</button>
+      <button class="btn btn-pri" id="btn-p10" onclick="calcular()" disabled>Calcular mi riesgo →</button>
+    </div>
+  </div>
+
+  <!-- ═══ RESULTADO ═══ -->
+  <div id="resultado">
+    <div class="res-header">
+      <div id="riesgo-badge" class="riesgo-badge"></div>
+      <div class="monto-grande" id="monto-total">$0</div>
+      <div class="monto-sub">Estimado de exposición económica total</div>
+      <div class="prob-wrap">
+        <span style="font-size:13px;color:var(--ink3);">Probabilidad de perder:</span>
+        <div class="prob-bar-wrap"><div class="prob-fill" id="prob-fill"></div></div>
+        <span class="prob-label" id="prob-label"></span>
+      </div>
+      <div style="font-size:12px;color:var(--ink3);margin-top:6px;">+ honorarios de abogado litigante ($15,000–$80,000 estimados)</div>
+    </div>
+
+    <div class="desglose" id="desglose">
+      <h3>Desglose de la reclamación estimada</h3>
+      <div id="desglose-items"></div>
+    </div>
+
+    <div class="vulns" id="vulns-box">
+      <h3>Vulnerabilidades detectadas</h3>
+      <div id="vulns-items"></div>
+    </div>
+
+    <div class="cta-box">
+      <h2>Proteja su empresa desde hoy</h2>
+      <p>Con ClickLaboral tiene contratos sólidos, expedientes digitales, control de jornada y el respaldo de un abogado laboral por menos de lo que cuesta un día de litigio.</p>
+      <div class="cta-btns">
+        <a class="cta-wsp" href="https://wa.me/5213339263817?text=Hice%20el%20simulador%20y%20mi%20riesgo%20es%20alto.%20Quiero%20proteger%20mi%20empresa." target="_blank">
+          💬 Hablar con un abogado ahora
+        </a>
+        <a class="cta-planes" href="index.html#precios">Ver planes desde $799/mes</a>
+      </div>
+    </div>
+
+    <p class="disclaimer">Este simulador es una herramienta orientativa basada en la Ley Federal del Trabajo vigente. Los montos son estimaciones con fines informativos y no constituyen asesoría legal. Los resultados reales dependen de cada caso. Consulte con un abogado laboral para su situación específica.</p>
+
+    <div style="text-align:center;margin-top:32px;">
+      <button class="btn btn-sec" onclick="reiniciar()">↺ Hacer otra simulación</button>
+    </div>
+  </div>
+</div>
+
+<script>
+const WHATSAPP = '5213339263817';
+let respuestas = {};
+let pregActual = 1;
+const TOTAL_PREGS = 10;
+
+// ── Navegación ────────────────────────────────────────────────────────────────
+function avanzar(num) {
+  document.getElementById('p' + num).classList.remove('activa');
+  pregActual = num + 1;
+  if (pregActual <= TOTAL_PREGS) {
+    document.getElementById('p' + pregActual).classList.add('activa');
+  }
+  actualizarBarra();
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+
+function retroceder(num) {
+  document.getElementById('p' + num).classList.remove('activa');
+  pregActual = num - 1;
+  document.getElementById('p' + pregActual).classList.add('activa');
+  actualizarBarra();
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+
+function actualizarBarra() {
+  const pct = Math.round(((pregActual - 1) / TOTAL_PREGS) * 100);
+  document.getElementById('prog-fill').style.width = pct + '%';
+  document.getElementById('prog-pct').textContent = pct + '%';
+  document.getElementById('prog-texto').textContent = pregActual <= TOTAL_PREGS
+    ? `Pregunta ${pregActual} de ${TOTAL_PREGS}`
+    : 'Calculando…';
+}
+
+// ── Activar botón al seleccionar radio ────────────────────────────────────────
+document.querySelectorAll('.opcion input[type=radio]').forEach(radio => {
+  radio.addEventListener('change', function () {
+    const p = this.closest('.bloque');
+    p.querySelectorAll('.opcion').forEach(o => o.classList.remove('sel'));
+    this.closest('.opcion').classList.add('sel');
+    const name = this.name;
+    respuestas[name] = this.value;
+    const num = parseInt(p.id.replace('p', ''));
+    const btn = document.getElementById('btn-p' + num);
+    if (btn) btn.disabled = false;
+  });
+});
+
+function validarCampo(num) {
+  const val = parseFloat(document.getElementById('inp-salario').value);
+  respuestas.salario = val || 0;
+  document.getElementById('btn-p' + num).disabled = !(val > 0);
+}
+
+// ── CÁLCULO ───────────────────────────────────────────────────────────────────
+function calcular() {
+  const R = respuestas;
+  R.salario = parseFloat(document.getElementById('inp-salario').value) || 15000;
+  R.antiguedad = parseFloat(document.querySelector('input[name=antiguedad]:checked')?.value || 2);
+  R.reglamento = document.querySelector('input[name=reglamento]:checked')?.value || 'no_tiene';
+
+  const sdario = R.salario;
+  const antiguedad = R.antiguedad;
+  const sdDiario = sdario / 30;
+  const motivo = R.motivo;
+
+  let items = [];
+  let vulnerabilidades = [];
+  let factorRiesgo = 0;
+
+  // ── Prestaciones proporcionales (siempre aplican) ──────────────────────────
+  const vacProp  = Math.round((6 * antiguedad / 12) * sdDiario);
+  const primaProp = Math.round(vacProp * 0.25);
+  const aguinaldo = Math.round((15 * sdDiario) * Math.min(antiguedad / 12, 1));
+  const partesProp = vacProp + primaProp + aguinaldo;
+
+  items.push({ label: 'Partes proporcionales', base: 'Vacaciones + prima + aguinaldo proporcionales', monto: partesProp, riesgo: 'bajo' });
+
+  // ── Indemnización por despido injustificado o renuncia forzada ─────────────
+  if (motivo === 'despido_injustificado' || motivo === 'renuncia_forzada') {
+    const indem3Meses = sdDiario * 90;
+    const indemnAnual = sdDiario * 20 * antiguedad;
+    const primaAntiguedad = sdDiario * 12 * antiguedad;
+
+    items.push({ label: '3 meses de salario (Art. 50 LFT)', base: `$${fmt(sdDiario * 90)} = $${fmt(sdDiario)}/día × 90 días`, monto: indem3Meses, riesgo: 'alto' });
+    items.push({ label: '20 días por año (Art. 50 LFT)', base: `$${fmt(sdDiario)} × 20 días × ${antiguedad} años`, monto: indemnAnual, riesgo: 'alto' });
+    items.push({ label: 'Prima de antigüedad', base: `12 días por año × ${antiguedad} años`, monto: primaAntig = primaAntiguedad, riesgo: 'medio' });
+    factorRiesgo += 40;
+
+    if (motivo === 'renuncia_forzada') {
+      factorRiesgo += 15;
+      vulnerabilidades.push({ ico: '⚠️', texto: 'Renuncia forzada o provocada — alta probabilidad de condena. Los jueces laborales presumen culpa del patrón si no acredita que la renuncia fue voluntaria.', fix: 'Solución: convenio ante la Junta de Conciliación con testigos y firma libre del trabajador.' });
+    }
+  }
+
+  // ── Horas extras no pagadas ────────────────────────────────────────────────
+  if (motivo === 'salarios' || R.extras === 'si_no_pagadas') {
+    const extrasEstimadas = sdDiario * 2 * 9 * 52 * Math.min(antiguedad, 5);
+    items.push({ label: 'Horas extras reclamadas', base: `Estimado 9 hrs/sem × ${Math.min(antiguedad, 5)} años al doble`, monto: Math.round(extrasEstimadas), riesgo: 'alto' });
+    factorRiesgo += 20;
+    vulnerabilidades.push({ ico: '📋', texto: 'Sin control de asistencias firmado, el trabajador puede reclamar cualquier cantidad de horas extras y el patrón tiene que probar lo contrario.', fix: 'Solución: ClickLaboral registra y respalda cada jornada con control de asistencia y su bitácora.' });
+  }
+
+  // ── Salarios caídos (máx 12 meses desde 2019) ─────────────────────────────
+  const salariosCalidos = sdario * 12;
+  items.push({ label: 'Salarios caídos (máx. 12 meses)', base: 'Art. 48 LFT — reforma 2019', monto: salariosCalidos, riesgo: 'medio' });
+  factorRiesgo += 10;
+
+  // ── Accidente de trabajo ────────────────────────────────────────────────────
+  if (motivo === 'accidente') {
+    const riesgoAccidente = sdDiario * 1095 + sdario * 5;
+    items.push({ label: 'Indemnización por riesgo de trabajo', base: '3 años de salario + daño moral estimado', monto: Math.round(riesgoAccidente), riesgo: 'alto' });
+    factorRiesgo += 35;
+    if (R.imss !== 'completo') {
+      vulnerabilidades.push({ ico: '🏥', texto: 'Accidente sin IMSS completo: doble exposición — demanda laboral + responsabilidad civil. El IMSS puede repetir contra el patrón.', fix: 'Solución: alta IMSS con salario real integrado desde el primer día.' });
+      factorRiesgo += 20;
+    }
+  }
+
+  // ── Factores agravantes/atenuantes ────────────────────────────────────────
+  if (R.contrato === 'no') { factorRiesgo += 20; vulnerabilidades.push({ ico: '📄', texto: 'Sin contrato escrito: el patrón pierde automáticamente la carga de la prueba. El trabajador puede alegar el salario y condiciones que quiera.', fix: 'Solución: genere contratos en segundos con ClickLaboral.' }); }
+  if (R.contrato === 'si_basico') { factorRiesgo += 8; }
+  if (R.imss === 'no') { factorRiesgo += 25; vulnerabilidades.push({ ico: '🏥', texto: 'Trabajador sin IMSS: multa de hasta $500,000 por la autoridad + responsabilidad directa en caso de accidente o enfermedad.', fix: 'Solución: registre a todos sus trabajadores y use el checklist de ClickLaboral.' }); }
+  if (R.imss === 'subdeclarado') { factorRiesgo += 12; vulnerabilidades.push({ ico: '⚠️', texto: 'Salario subdeclarado al IMSS: diferencia de cuotas + posible delito fiscal + base para calcular liquidación mayor.', fix: 'Solución: homologue el salario real con el declarado al IMSS.' }); }
+  if (R.evidencia === 'no') { factorRiesgo += 18; vulnerabilidades.push({ ico: '⚖️', texto: 'Sin acta administrativa ni testigos: prácticamente imposible probar causa justificada ante la Junta de Conciliación.', fix: 'Solución: genere actas administrativas con ClickLaboral antes de despedir.' }); }
+  if (R.evidencia === 'parcial') { factorRiesgo += 8; }
+  if (R.finiquito === 'no') { factorRiesgo += 15; vulnerabilidades.push({ ico: '💰', texto: 'Sin finiquito pagado: el trabajador puede reclamar la cantidad íntegra sin descuento. El no pago se presume mala fe.', fix: 'Solución: calcule y documente finiquitos con ClickLaboral.' }); }
+  if (R.finiquito === 'parcial') { factorRiesgo += 6; }
+  if (R.reglamento === 'no_tiene') { factorRiesgo += 8; }
+  if (motivo === 'despido_justificado' && R.evidencia === 'completa') { factorRiesgo = Math.max(5, factorRiesgo - 25); }
+
+  // Ajustar a máximo 95%
+  factorRiesgo = Math.min(95, factorRiesgo);
+
+  // Daño moral si hay alta exposición
+  if (factorRiesgo > 50 || motivo === 'accidente' || motivo === 'renuncia_forzada') {
+    const danoMoral = Math.round(sdario * 3);
+    items.push({ label: 'Daño moral estimado', base: 'Aplica en casos de mala fe comprobada o accidente', monto: danoMoral, riesgo: 'medio' });
+  }
+
+  const totalMonto = items.reduce((s, i) => s + i.monto, 0);
+
+  // ── Renderizar resultado ──────────────────────────────────────────────────
+  document.getElementById('p10').classList.remove('activa');
+  document.getElementById('resultado').style.display = 'block';
+  actualizarBarra();
+
+  // Badge de riesgo
+  const badge = document.getElementById('riesgo-badge');
+  if (factorRiesgo >= 60) {
+    badge.className = 'riesgo-badge riesgo-alto';
+    badge.textContent = '🔴 Riesgo ALTO — Exposición crítica';
+  } else if (factorRiesgo >= 30) {
+    badge.className = 'riesgo-badge riesgo-medio';
+    badge.textContent = '🟡 Riesgo MEDIO — Exposición moderada';
+  } else {
+    badge.className = 'riesgo-badge riesgo-bajo';
+    badge.textContent = '🟢 Riesgo BAJO — Posición relativamente sólida';
+  }
+
+  // Monto
+  document.getElementById('monto-total').textContent = '$' + fmt(totalMonto);
+
+  // Barra probabilidad
+  const pFill = document.getElementById('prob-fill');
+  pFill.style.width = factorRiesgo + '%';
+  pFill.style.background = factorRiesgo >= 60 ? '#dc2626' : factorRiesgo >= 30 ? '#d97706' : '#16a34a';
+  document.getElementById('prob-label').textContent = factorRiesgo + '%';
+  document.getElementById('prob-label').style.color = factorRiesgo >= 60 ? '#dc2626' : factorRiesgo >= 30 ? '#d97706' : '#16a34a';
+
+  // Desglose
+  const desgloseEl = document.getElementById('desglose-items');
+  desgloseEl.innerHTML = items.map(i => `
+    <div class="desglose-item">
+      <div><div class="di-label">${i.label}</div><div class="di-base">${i.base}</div></div>
+      <div style="display:flex;align-items:center;gap:8px;">
+        <span class="di-riesgo di-r-${i.riesgo}">${i.riesgo.toUpperCase()}</span>
+        <div class="di-monto">$${fmt(i.monto)}</div>
+      </div>
+    </div>`).join('') + `
+    <div class="desglose-item" style="background:#f8fafc;">
+      <div style="font-weight:700;font-size:14px;">TOTAL ESTIMADO</div>
+      <div class="di-monto" style="font-size:16px;">$${fmt(totalMonto)}</div>
+    </div>`;
+
+  // Vulnerabilidades
+  const vulnsEl = document.getElementById('vulns-items');
+  if (vulnerabilidades.length === 0) {
+    vulnsEl.innerHTML = '<div style="font-size:13px;color:var(--ink3);padding:12px 0;">✅ No se detectaron vulnerabilidades críticas. Mantenga su documentación actualizada.</div>';
+  } else {
+    vulnsEl.innerHTML = vulnerabilidades.map(v => `
+      <div class="vuln-item">
+        <div class="vuln-ico">${v.ico}</div>
+        <div><div class="vuln-texto">${v.texto}</div><div class="vuln-fix">${v.fix}</div></div>
+      </div>`).join('');
+  }
+
+  // Actualizar link de WhatsApp con contexto
+  const wspLink = document.querySelector('.cta-wsp');
+  const nivelRiesgo = factorRiesgo >= 60 ? 'ALTO' : factorRiesgo >= 30 ? 'MEDIO' : 'BAJO';
+  wspLink.href = `https://wa.me/${WHATSAPP}?text=Hice%20el%20simulador%20de%20riesgo%20laboral%20y%20mi%20resultado%20fue%3A%20Riesgo%20${nivelRiesgo}%2C%20exposici%C3%B3n%20estimada%20%24${fmt(totalMonto)}%20MXN.%20Quiero%20proteger%20mi%20empresa.`;
+
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+
+function fmt(n) {
+  return Math.round(n).toLocaleString('es-MX');
+}
+
+function reiniciar() {
+  respuestas = {};
+  pregActual = 1;
+  document.getElementById('resultado').style.display = 'none';
+  document.querySelectorAll('.bloque').forEach(b => b.classList.remove('activa'));
+  document.querySelectorAll('.opcion').forEach(o => o.classList.remove('sel'));
+  document.querySelectorAll('input[type=radio]').forEach(r => r.checked = false);
+  document.querySelectorAll('.btn-pri').forEach(b => b.disabled = true);
+  document.getElementById('p1').classList.add('activa');
+  actualizarBarra();
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+</script>
+</body>
+</html>

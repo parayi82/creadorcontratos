@@ -1,0 +1,542 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<script>
+(function(){
+  var params=new URLSearchParams(window.location.search);
+  var modo=params.get('editar')==='1'?'editar':params.get('recuperar')==='1'?'ver':null;
+  if(!modo) return;
+  var gen=window.location.pathname.split('/').pop();
+  var key=(modo==='editar'?'doc_editar_':'doc_recuperado_')+gen.replace('.html','');
+  var g=null; try{g=JSON.parse(localStorage.getItem(key)||'null');}catch(e){}
+  if(!g||!g.html) return;
+  // Bloquear render() para no sobreescribir el contenido
+  var _bloqueado=false,_orig=null;
+  function bloquear(){
+    if(typeof window.render==='function'&&!_bloqueado){
+      _orig=window.render; window.render=function(){}; _bloqueado=true;
+    }
+  }
+  bloquear(); var _iv=setInterval(bloquear,50);
+  function inyectar(){
+    var pr=document.getElementById('doc-preview');
+    if(!pr){setTimeout(inyectar,80);return;}
+    clearInterval(_iv); bloquear();
+    pr.innerHTML=g.html;
+    // En modo editar: activar contenteditable automáticamente
+    if(modo==='editar'){
+      pr.contentEditable='true';
+      pr.style.outline='2px dashed #0f766e';
+      pr.style.cursor='text';
+    }
+    // Banner
+    var b=document.createElement('div');
+    b.id='banner-doc';
+    b.style.cssText='position:sticky;top:0;z-index:200;background:'+(modo==='editar'?'#f0fdf4':'#eff6ff')+';border-bottom:2px solid '+(modo==='editar'?'#86efac':'#93c5fd')+';padding:10px 16px;font-size:12px;color:'+(modo==='editar'?'#166534':'#1e40af')+';display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap;';
+    var etiq=modo==='editar'?'✏️ Modo edición — edita el documento directamente':'📄 Documento guardado';
+    var sp=document.createElement('span');
+    sp.innerHTML='<strong>'+etiq+'</strong> — '+(g.nombre||'')+' · '+(g.fecha||'');
+    var bt=document.createElement('button');
+    bt.textContent=modo==='editar'?'🔄 Restaurar campos':'✏️ Editar';
+    bt.style.cssText='border:1px solid currentColor;background:transparent;color:inherit;padding:4px 12px;border-radius:6px;font-size:11px;cursor:pointer;white-space:nowrap;';
+    bt.onclick=function(){
+      _bloqueado=false;
+      pr.contentEditable='false';
+      pr.style.outline=''; pr.style.cursor='';
+      if(_orig) window.render=_orig;
+      var bel=document.getElementById('banner-doc');
+      if(bel) bel.remove();
+      localStorage.removeItem(key);
+      if(typeof window.render==='function') window.render();
+    };
+    b.appendChild(sp); b.appendChild(bt);
+    pr.insertBefore(b,pr.firstChild);
+    localStorage.removeItem(key);
+  }
+  document.readyState==='loading'?document.addEventListener('DOMContentLoaded',inyectar):inyectar();
+})();
+</script>
+
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Generador · Proceso de Contratación</title>
+<style>
+  :root {
+    --ink: #1a1a18; --ink2: #4a4a46; --ink3: #8a8a84;
+    --surface: #f7f6f2; --white: #ffffff;
+    --accent: #1a3a5c; --accent2: #e8f0f8;
+    --border: #ddddd6; --danger: #c0392b; --success: #1a6b3a;
+    --radius: 6px;
+    --font-ui: 'Segoe UI', system-ui, sans-serif;
+    --font-doc: 'Times New Roman', Georgia, serif;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: var(--font-ui); background: var(--surface); color: var(--ink); min-height: 100vh; font-size: 14px; }
+
+  header { background: var(--accent); color: #fff; padding: 14px 28px; display: flex; align-items: center; justify-content: space-between; position: sticky; top: 0; z-index: 100; box-shadow: 0 1px 4px rgba(0,0,0,.18); }
+  header h1 { font-size: 15px; font-weight: 600; }
+  header span { font-size: 12px; opacity: .7; }
+  .header-actions { display: flex; gap: 10px; }
+  .btn { padding: 7px 18px; border-radius: var(--radius); font-size: 13px; font-weight: 500; cursor: pointer; border: 1px solid transparent; transition: background .15s; }
+  .btn-outline { background: transparent; border-color: rgba(255,255,255,.45); color: #fff; }
+  .btn-outline:hover { background: rgba(255,255,255,.12); }
+  .btn-primary { background: #fff; color: var(--accent); }
+  .btn-primary:hover { opacity: .88; }
+
+  .tipo-tabs { display: grid; grid-template-columns: 1fr 1fr; gap: 0; border: 1px solid var(--border); border-radius: var(--radius); overflow: hidden; margin-bottom: 16px; }
+  .tipo-tab { padding: 12px 8px; text-align: center; font-size: 13px; font-weight: 500; cursor: pointer; background: var(--white); color: var(--ink2); border: none; transition: all .15s; }
+  .tipo-tab:not(:last-child) { border-right: 1px solid var(--border); }
+  .tipo-tab.active { background: var(--accent); color: #fff; }
+
+  .workspace { display: grid; grid-template-columns: 400px 1fr; height: calc(100vh - 52px); }
+  .form-panel { background: var(--white); border-right: 1px solid var(--border); overflow-y: auto; padding: 24px 24px 40px; }
+  .section-label { font-size: 10px; font-weight: 700; letter-spacing: .12em; text-transform: uppercase; color: var(--accent); padding: 20px 0 10px; border-bottom: 1px solid var(--border); margin-bottom: 14px; }
+  .section-label:first-child { padding-top: 4px; }
+  .field { margin-bottom: 13px; }
+  .field label { display: block; font-size: 12px; font-weight: 500; color: var(--ink2); margin-bottom: 4px; }
+  .field label .req { color: var(--danger); margin-left: 2px; }
+  .field input, .field select, .field textarea { width: 100%; padding: 8px 10px; border: 1px solid var(--border); border-radius: var(--radius); font-size: 13px; font-family: var(--font-ui); color: var(--ink); background: var(--white); }
+  .field input:focus, .field select:focus, .field textarea:focus { outline: none; border-color: var(--accent); box-shadow: 0 0 0 3px var(--accent2); }
+  .field textarea { resize: vertical; min-height: 60px; }
+  .field-row { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+  .hint { font-size: 11px; color: var(--ink3); margin-top: 3px; }
+
+  .clause-check { display: flex; align-items: flex-start; gap: 8px; margin-bottom: 7px; }
+  .clause-check input[type=checkbox] { margin-top: 2px; accent-color: var(--accent); }
+  .clause-check label { font-size: 12px; color: var(--ink2); cursor: pointer; line-height: 1.4; }
+
+  .preview-panel { background: #e8e7e0; overflow-y: auto; padding: 32px 40px; display: flex; flex-direction: column; align-items: center; }
+  .doc-sheet { background: var(--white); width: 100%; max-width: 760px; min-height: 1060px; padding: 60px 70px; box-shadow: 0 2px 16px rgba(0,0,0,.12); font-family: var(--font-doc); font-size: 11.5pt; line-height: 1.7; color: #111; }
+  .doc-logo-bar { display: flex; justify-content: space-between; align-items: flex-start; border-bottom: 2px solid var(--accent); padding-bottom: 12px; margin-bottom: 24px; }
+  .doc-logo-empresa { font-size: 13pt; font-weight: bold; color: var(--accent); font-family: var(--font-ui); max-width: 340px; }
+  .doc-folio { font-size: 9pt; color: var(--ink3); font-family: var(--font-ui); text-align: right; line-height: 1.4; }
+  .doc-title { text-align: center; font-size: 14pt; font-weight: bold; text-transform: uppercase; letter-spacing: .04em; margin-bottom: 6px; }
+  .doc-subtitle { text-align: center; font-size: 10pt; color: var(--ink3); font-family: var(--font-ui); margin-bottom: 24px; }
+  .doc-p { margin-bottom: 12px; text-align: justify; }
+  .doc-p .blank { font-weight: bold; color: var(--accent); border-bottom: 1px solid var(--accent); padding: 0 2px; }
+  .doc-p .blank.empty { color: #c0392b; border-bottom-color: #c0392b; font-style: italic; font-weight: normal; }
+  .doc-cap { font-weight: bold; text-transform: uppercase; font-size: 10.5pt; margin: 22px 0 10px; color: var(--accent); border-left: 3px solid var(--accent); padding-left: 10px; }
+
+  /* Checklist items dentro del documento */
+  .check-item { display: flex; align-items: flex-start; gap: 10px; padding: 7px 0; border-bottom: 1px solid #eee; font-size: 10.5pt; font-family: var(--font-ui); }
+  .check-item:last-child { border-bottom: none; }
+  .check-box { width: 16px; height: 16px; border: 1.5px solid #999; border-radius: 3px; flex-shrink: 0; margin-top: 1px; }
+  .check-label { flex: 1; }
+  .check-meta { font-size: 9pt; color: var(--ink3); }
+
+  .doc-table { width: 100%; border-collapse: collapse; margin: 10px 0 18px; font-size: 10.5pt; font-family: var(--font-ui); }
+  .doc-table th { background: #f0f0ea; padding: 7px 10px; text-align: left; font-size: 9.5pt; border: 1px solid #ddd; }
+  .doc-table td { padding: 7px 10px; border: 1px solid #ddd; }
+
+  .firma-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 40px; margin-top: 48px; }
+  .firma-box { border-top: 1px solid #888; padding-top: 8px; font-size: 10pt; text-align: center; line-height: 1.5; }
+  .firma-box strong { display: block; font-size: 9pt; color: var(--ink3); font-family: var(--font-ui); }
+
+  .watermark-empty { text-align: center; color: var(--ink3); font-family: var(--font-ui); font-size: 13px; padding: 80px 0; }
+
+  .doc-badge { display: inline-block; padding: 3px 14px; border-radius: 20px; font-size: 9pt; font-family: var(--font-ui); margin: 0 auto 20px; text-align: center; background: var(--accent2); color: var(--accent); border: 1px solid var(--accent); }
+
+  @media print {
+    header, .form-panel { display: none !important; }
+    .workspace { display: block; height: auto; }
+    .preview-panel { padding: 0; background: white; }
+    .doc-sheet { box-shadow: none; max-width: 100%; padding: 40px; }
+    body { background: white; }
+  }
+
+#auth-gate-loading{position:fixed;inset:0;background:#fff;z-index:9999;display:flex;align-items:center;justify-content:center;font-family:'Segoe UI',system-ui,sans-serif;color:#999;font-size:13px;}
+#auth-gate-blocked{position:fixed;inset:0;background:#0f2640;z-index:9999;display:none;align-items:center;justify-content:center;padding:24px;}
+#auth-gate-blocked .agb-box{background:#fff;border-radius:16px;padding:40px 36px;max-width:420px;text-align:center;font-family:'Segoe UI',system-ui,sans-serif;}
+#auth-gate-blocked .agb-box h2{font-size:18px;margin-bottom:10px;color:#0f2640;}
+#auth-gate-blocked .agb-box p{font-size:13px;color:#666;margin-bottom:20px;line-height:1.6;}
+#auth-gate-blocked .agb-btns{display:flex;gap:10px;justify-content:center;flex-wrap:wrap;}
+#auth-gate-blocked .agb-btns a{padding:10px 18px;border-radius:8px;font-size:13px;font-weight:600;text-decoration:none;}
+#auth-gate-blocked .agb-btns a.agb-primary{background:#1a3a5c;color:#fff;}
+#auth-gate-blocked .agb-btns a.agb-secondary{background:#f0f0ec;color:#1a3a5c;}
+body.modo-demo .doc-sheet{position:relative;user-select:none;-webkit-user-select:none;-moz-user-select:none;}
+body.modo-demo .doc-sheet::after{content:'MUESTRA — CUENTA DEMO, NO VÁLIDO PARA USO LEGAL';position:absolute;top:46%;left:-15%;right:-15%;text-align:center;font-size:26px;font-weight:900;color:rgba(220,38,38,.16);transform:rotate(-18deg);pointer-events:none;font-family:'Segoe UI',system-ui,sans-serif;z-index:50;}
+@media print{ body.modo-demo .doc-sheet::after{display:block!important;color:rgba(220,38,38,.35)!important;} }
+</style>
+<script src="membrete.js?v=3.7"></script>
+</head>
+<body>
+<div id="auth-gate-loading">Verificando acceso…</div>
+<div id="auth-gate-blocked">
+  <div class="agb-box">
+    <h2>🔒 Esta herramienta requiere una suscripción activa</h2>
+    <p>Inicie sesión desde su portal de cliente para usar este generador, o conozca nuestros planes si todavía no es cliente de ClickLaboral.mx.</p>
+    <div class="agb-btns">
+      <a class="agb-primary" href="portal-cliente.html">Iniciar sesión →</a>
+      <a class="agb-secondary" href="index.html#precios">Ver planes</a>
+    </div>
+  </div>
+</div>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
+<script src="expediente-helper.js?v=3.7"></script>
+<script>
+(async()=>{
+  const _sb = supabase.createClient('https://hpzgqaplrywwjuvrzhcp.supabase.co','sb_publishable_1g8US8iFJ8CxnSaF_4MHgA_gqyyAr3W');
+  try {
+    const { data } = await _sb.auth.getSession();
+    document.getElementById('auth-gate-loading').style.display = 'none';
+    if (!data?.session?.user) {
+      document.getElementById('auth-gate-blocked').style.display = 'flex';
+    }
+  } catch(e) {
+    document.getElementById('auth-gate-loading').style.display = 'none';
+    document.getElementById('auth-gate-blocked').style.display = 'flex';
+  }
+})();
+
+</script>
+
+
+<header>
+  <div>
+    <h1>Proceso de Contratación · ClickLaboral.mx</h1>
+    <span>Checklist de Entrevista + Expediente del Trabajador</span>
+  </div>
+  <div class="header-actions">
+    <button class="btn btn-outline" onclick="limpiar()">Limpiar</button>
+    <button class="btn btn-primary" onclick="window.print()">Imprimir / PDF</button>
+  </div>
+</header>
+
+<div class="workspace">
+
+  <!-- ══ FORMULARIO ══ -->
+  <div class="form-panel">
+
+    <div class="tipo-tabs">
+      <div class="tipo-tab active" id="tab-entrevista" onclick="setTipo('entrevista')">📋 Checklist Entrevista</div>
+      <div class="tipo-tab" id="tab-expediente" onclick="setTipo('expediente')">🗂 Expediente Trabajador</div>
+    </div>
+
+    <div class="section-label">Datos de la empresa</div>
+    <div class="field"><label>Razón social <span class="req">*</span></label><input type="text" id="empresa" oninput="render()" placeholder="Ej. Comercializadora Norte, S.A. de C.V."></div>
+    <div class="field"><label>Domicilio del centro de trabajo</label><input type="text" id="domicilio_empresa" oninput="render()" placeholder="Calle, No., Colonia, Ciudad, Estado, C.P."></div>
+    <div class="field-row">
+      <div class="field"><label>Área que solicita</label><input type="text" id="area_solicita" oninput="render()" placeholder="Ej. Ventas, Producción"></div>
+      <div class="field"><label>Puesto a cubrir <span class="req">*</span></label><input type="text" id="puesto" oninput="render()" placeholder="Ej. Auxiliar contable"></div>
+    </div>
+
+    <div class="section-label">Datos del candidato / trabajador</div>
+    <div class="field"><label>Nombre completo <span class="req">*</span></label><input type="text" id="candidato" oninput="render()" placeholder="Nombre(s) Apellido Paterno Apellido Materno"></div>
+    <div class="field-row">
+      <div class="field"><label>CURP</label><input type="text" id="curp" oninput="render()" maxlength="18"></div>
+      <div class="field"><label>RFC</label><input type="text" id="rfc" oninput="render()" maxlength="13"></div>
+    </div>
+    <div class="field-row">
+      <div class="field"><label>Teléfono</label><input type="text" id="telefono" oninput="render()" placeholder="+52..."></div>
+      <div class="field"><label>NSS (si tiene)</label><input type="text" id="nss" oninput="render()" placeholder="11 dígitos"></div>
+    </div>
+    <div class="field"><label>Domicilio del candidato</label><input type="text" id="domicilio_candidato" oninput="render()" placeholder="Calle, No., Colonia, Ciudad, Estado, C.P."></div>
+
+    <div id="seccion-entrevista">
+      <div class="section-label">Datos de la entrevista</div>
+      <div class="field-row">
+        <div class="field"><label>Fecha de entrevista</label><input type="date" id="fecha_entrevista" oninput="render()"></div>
+        <div class="field"><label>Entrevistador</label><input type="text" id="entrevistador" oninput="render()" placeholder="Nombre y puesto"></div>
+      </div>
+      <div class="field"><label>Salario pretendido por el candidato</label><input type="number" id="salario_pretendido" oninput="render()" placeholder="$0.00 MXN"></div>
+      <div class="field"><label>Disponibilidad para iniciar</label><input type="text" id="disponibilidad" oninput="render()" placeholder="Ej. Inmediata, 2 semanas de aviso"></div>
+
+      <div class="section-label">Checklist de verificación previa a contratar</div>
+      <div class="clause-check"><input type="checkbox" id="chk_identificacion" checked onchange="render()"><label for="chk_identificacion">Identificación oficial vigente presentada</label></div>
+      <div class="clause-check"><input type="checkbox" id="chk_curp_doc" checked onchange="render()"><label for="chk_curp_doc">CURP impresa o verificada en línea</label></div>
+      <div class="clause-check"><input type="checkbox" id="chk_comprobante" checked onchange="render()"><label for="chk_comprobante">Comprobante de domicilio (no mayor a 3 meses)</label></div>
+      <div class="clause-check"><input type="checkbox" id="chk_referencias" checked onchange="render()"><label for="chk_referencias">Referencias laborales solicitadas y verificadas</label></div>
+      <div class="clause-check"><input type="checkbox" id="chk_estudios" checked onchange="render()"><label for="chk_estudios">Comprobante de estudios (si el puesto lo requiere)</label></div>
+      <div class="clause-check"><input type="checkbox" id="chk_examen_medico" onchange="render()"><label for="chk_examen_medico">Examen médico de ingreso programado/realizado</label></div>
+      <div class="clause-check"><input type="checkbox" id="chk_antecedentes" onchange="render()"><label for="chk_antecedentes">Verificación de antecedentes (si aplica al puesto)</label></div>
+      <div class="clause-check"><input type="checkbox" id="chk_licencia" onchange="render()"><label for="chk_licencia">Licencia de conducir vigente (si aplica al puesto)</label></div>
+      <div class="clause-check"><input type="checkbox" id="chk_nss_doc" checked onchange="render()"><label for="chk_nss_doc">NSS verificado o trámite de alta IMSS iniciado</label></div>
+      <div class="clause-check"><input type="checkbox" id="chk_cuenta" checked onchange="render()"><label for="chk_cuenta">Cuenta bancaria para depósito de nómina registrada</label></div>
+
+      <div class="section-label">Evaluación de la entrevista</div>
+      <div class="field"><label>Observaciones del entrevistador</label><textarea id="observaciones" oninput="render()" placeholder="Impresión general, fortalezas, áreas de atención..."></textarea></div>
+      <div class="field"><label>Resultado de la entrevista</label>
+        <select id="resultado_entrevista" onchange="render()">
+          <option value="">Pendiente de decisión</option>
+          <option value="aprobado">Aprobado para contratación</option>
+          <option value="segunda">Pasa a segunda entrevista</option>
+          <option value="rechazado">No continúa en el proceso</option>
+        </select>
+      </div>
+    </div>
+
+    <div id="seccion-expediente" style="display:none">
+      <div class="section-label">Datos adicionales del expediente</div>
+      <div class="field-row">
+        <div class="field"><label>Fecha de ingreso <span class="req">*</span></label><input type="date" id="fecha_ingreso" oninput="render()"></div>
+        <div class="field"><label>No. de empleado</label><input type="text" id="num_empleado" oninput="render()" placeholder="Folio interno"></div>
+      </div>
+      <div class="field"><label>Contacto de emergencia</label><input type="text" id="contacto_emergencia" oninput="render()" placeholder="Nombre, parentesco y teléfono"></div>
+
+      <div class="section-label">Documentos que integran el expediente</div>
+      <div class="clause-check"><input type="checkbox" id="exp_solicitud" checked onchange="render()"><label for="exp_solicitud">Solicitud de empleo firmada</label></div>
+      <div class="clause-check"><input type="checkbox" id="exp_ine" checked onchange="render()"><label for="exp_ine">Copia de identificación oficial (INE/Pasaporte)</label></div>
+      <div class="clause-check"><input type="checkbox" id="exp_curp" checked onchange="render()"><label for="exp_curp">Copia de CURP</label></div>
+      <div class="clause-check"><input type="checkbox" id="exp_rfc" checked onchange="render()"><label for="exp_rfc">Copia de constancia de situación fiscal (RFC)</label></div>
+      <div class="clause-check"><input type="checkbox" id="exp_nss" checked onchange="render()"><label for="exp_nss">Copia o constancia de NSS</label></div>
+      <div class="clause-check"><input type="checkbox" id="exp_domicilio" checked onchange="render()"><label for="exp_domicilio">Comprobante de domicilio</label></div>
+      <div class="clause-check"><input type="checkbox" id="exp_estudios" onchange="render()"><label for="exp_estudios">Comprobante de estudios / cédula profesional</label></div>
+      <div class="clause-check"><input type="checkbox" id="exp_contrato" checked onchange="render()"><label for="exp_contrato">Contrato individual de trabajo firmado</label></div>
+      <div class="clause-check"><input type="checkbox" id="exp_aviso_priv" checked onchange="render()"><label for="exp_aviso_priv">Aviso de privacidad firmado (LFPDPPP)</label></div>
+      <div class="clause-check"><input type="checkbox" id="exp_reglamento" onchange="render()"><label for="exp_reglamento">Acuse de recibo del Reglamento Interior</label></div>
+      <div class="clause-check"><input type="checkbox" id="exp_examen" onchange="render()"><label for="exp_examen">Resultado de examen médico de ingreso</label></div>
+      <div class="clause-check"><input type="checkbox" id="exp_cuenta_doc" checked onchange="render()"><label for="exp_cuenta_doc">Comprobante de cuenta bancaria (nómina)</label></div>
+      <div class="clause-check"><input type="checkbox" id="exp_alta_imss" checked onchange="render()"><label for="exp_alta_imss">Acuse de alta ante el IMSS</label></div>
+      <div class="clause-check"><input type="checkbox" id="exp_infonavit" onchange="render()"><label for="exp_infonavit">Constancia de registro INFONAVIT / elección AFORE</label></div>
+      <div class="clause-check"><input type="checkbox" id="exp_fotos" onchange="render()"><label for="exp_fotos">Fotografías recientes (si aplica por política interna)</label></div>
+    </div>
+
+    <div class="section-label">Lugar y fecha</div>
+    <div class="field-row">
+      <div class="field"><label>Ciudad <span class="req">*</span></label><input type="text" id="ciudad" oninput="render()" placeholder="Ciudad, Estado"></div>
+      <div class="field"><label>Fecha del documento <span class="req">*</span></label><input type="date" id="fecha_doc" oninput="render()"></div>
+    </div>
+    <div class="field"><label>Responsable de Recursos Humanos</label><input type="text" id="responsable_rh" oninput="render()" placeholder="Nombre completo"></div>
+  </div>
+
+  <!-- ══ PREVISUALIZACIÓN ══ -->
+  <div class="preview-panel">
+    <div class="doc-sheet" id="doc-preview">
+      <div class="watermark-empty">Complete los datos para generar el documento.</div>
+    </div>
+  </div>
+</div>
+
+<script>
+let tipo = 'entrevista';
+
+function v(id){return(document.getElementById(id)||{}).value||'';}
+function chk(id){return document.getElementById(id)?.checked||false;}
+function b(txt,fb){if(!txt||!txt.trim())return`<span class="blank empty">[${fb}]</span>`;return`<span class="blank">${txt}</span>`;}
+function fmtFecha(iso){if(!iso)return'';const[y,m,d]=iso.split('-');const M=['enero','febrero','marzo','abril','mayo','junio','julio','agosto','septiembre','octubre','noviembre','diciembre'];return`${parseInt(d)} de ${M[parseInt(m)-1]} de ${y}`;}
+function fmtMoneda(n){if(!n)return'';return'$'+parseFloat(n).toLocaleString('es-MX',{minimumFractionDigits:2})+' MXN';}
+
+function setTipo(t){
+  tipo = t;
+  document.getElementById('tab-entrevista').className = 'tipo-tab'+(t==='entrevista'?' active':'');
+  document.getElementById('tab-expediente').className = 'tipo-tab'+(t==='expediente'?' active':'');
+  document.getElementById('seccion-entrevista').style.display = t==='entrevista'?'':'none';
+  document.getElementById('seccion-expediente').style.display = t==='expediente'?'':'none';
+  render();
+}
+
+function limpiar(){
+  if(!confirm('¿Limpiar todos los campos?'))return;
+  document.querySelectorAll('input:not([readonly]),select,textarea').forEach(el=>{
+    if(el.type==='checkbox') el.checked = el.defaultChecked;
+    else el.value='';
+  });
+  render();
+}
+
+function renderEntrevista(){
+  const empresa=v('empresa'), dom=v('domicilio_empresa'), area=v('area_solicita'), puesto=v('puesto');
+  const candidato=v('candidato'), curp=v('curp'), rfc=v('rfc'), tel=v('telefono'), nss=v('nss'), domCand=v('domicilio_candidato');
+  const fechaEnt=v('fecha_entrevista'), entrevistador=v('entrevistador'), salario=v('salario_pretendido'), disp=v('disponibilidad');
+  const obs=v('observaciones'), resultado=v('resultado_entrevista');
+  const ciudad=v('ciudad'), fechaDoc=v('fecha_doc'), respRH=v('responsable_rh');
+
+  const folio = `ENT-${new Date().getFullYear()}-${Math.floor(Math.random()*10000).toString().padStart(4,'0')}`;
+
+  const checklist = [
+    {id:'chk_identificacion', label:'Identificación oficial vigente presentada'},
+    {id:'chk_curp_doc', label:'CURP impresa o verificada en línea'},
+    {id:'chk_comprobante', label:'Comprobante de domicilio (no mayor a 3 meses)'},
+    {id:'chk_referencias', label:'Referencias laborales solicitadas y verificadas'},
+    {id:'chk_estudios', label:'Comprobante de estudios (si el puesto lo requiere)'},
+    {id:'chk_examen_medico', label:'Examen médico de ingreso programado/realizado'},
+    {id:'chk_antecedentes', label:'Verificación de antecedentes (si aplica al puesto)'},
+    {id:'chk_licencia', label:'Licencia de conducir vigente (si aplica al puesto)'},
+    {id:'chk_nss_doc', label:'NSS verificado o trámite de alta IMSS iniciado'},
+    {id:'chk_cuenta', label:'Cuenta bancaria para depósito de nómina registrada'},
+  ];
+
+  const resultadoTexto = {
+    aprobado: '<strong style="color:#1a6b3a;">APROBADO PARA CONTRATACIÓN</strong>',
+    segunda: '<strong style="color:#1a3a5c;">PASA A SEGUNDA ENTREVISTA</strong>',
+    rechazado: '<strong style="color:#c0392b;">NO CONTINÚA EN EL PROCESO</strong>',
+    '': '<em style="color:#8a8a84;">Pendiente de decisión</em>',
+  };
+
+  let html = generarMembrete({...getDatosMembrete(), empresa:v('empresa'), domicilio:v('domicilio_empresa'), folio}) + `
+    <div class="doc-folio">Folio: ${folio}<br>Proceso de contratación</div>
+  </div>
+  <div class="doc-title">Checklist de Entrevista<br>y Verificación de Candidato</div>
+  <div style="text-align:center;"><span class="doc-badge">Proceso de contratación</span></div>
+
+  <div class="doc-p">En ${b(ciudad,'ciudad')}, el ${b(fmtFecha(fechaDoc),'fecha')}, se documenta el proceso de entrevista para el puesto de ${b(puesto,'puesto')}${area?' en el área de '+area:''}, dentro de ${b(empresa,'empresa')}${dom?', con domicilio en '+dom:''}.</div>
+
+  <div class="doc-cap">I. Datos del candidato</div>
+  <table class="doc-table">
+    <tr><th style="width:35%;">Nombre completo</th><td>${b(candidato,'nombre del candidato')}</td></tr>
+    <tr><th>CURP</th><td>${b(curp,'CURP')}</td></tr>
+    <tr><th>RFC</th><td>${rfc||'—'}</td></tr>
+    <tr><th>Teléfono</th><td>${tel||'—'}</td></tr>
+    <tr><th>NSS</th><td>${nss||'No registrado / trámite pendiente'}</td></tr>
+    <tr><th>Domicilio</th><td>${domCand||'—'}</td></tr>
+  </table>
+
+  <div class="doc-cap">II. Datos de la entrevista</div>
+  <table class="doc-table">
+    <tr><th style="width:35%;">Fecha de entrevista</th><td>${b(fmtFecha(fechaEnt),'fecha de entrevista')}</td></tr>
+    <tr><th>Entrevistador</th><td>${entrevistador||'—'}</td></tr>
+    <tr><th>Salario pretendido</th><td>${salario?fmtMoneda(salario):'No especificado'}</td></tr>
+    <tr><th>Disponibilidad</th><td>${disp||'—'}</td></tr>
+  </table>
+
+  <div class="doc-cap">III. Checklist de verificación documental</div>
+  <div style="margin-bottom:16px;">
+    ${checklist.map(c=>`
+      <div class="check-item">
+        <div class="check-box" style="background:${chk(c.id)?'#1a6b3a':'transparent'};border-color:${chk(c.id)?'#1a6b3a':'#999'};"></div>
+        <div class="check-label">${c.label}</div>
+        <div class="check-meta">${chk(c.id)?'✓ Verificado':'Pendiente'}</div>
+      </div>`).join('')}
+  </div>
+
+  <div class="doc-cap">IV. Evaluación y resultado</div>
+  ${obs?`<div class="doc-p"><strong>Observaciones del entrevistador:</strong> ${obs}</div>`:''}
+  <div class="doc-p" style="text-align:center;font-size:12pt;margin-top:14px;">Resultado de la entrevista: ${resultadoTexto[resultado]}</div>
+
+  <div class="doc-p" style="margin-top:28px;font-size:9.5pt;color:#888;">Este documento forma parte del proceso interno de reclutamiento y selección de personal. En caso de avanzar a contratación, deberá integrarse al expediente del trabajador junto con la documentación correspondiente.</div>
+
+  <div class="firma-grid">
+    <div class="firma-box"><br><br>${entrevistador||'__________________________'}<br><strong>ENTREVISTADOR / RH</strong></div>
+    <div class="firma-box"><br><br>${respRH||'__________________________'}<br><strong>RESPONSABLE DE RRHH</strong></div>
+  </div>
+
+  <div style="margin-top:24px;font-size:9pt;color:#888;font-family:var(--font-ui);border-top:1px solid #ddd;padding-top:10px;">Documento generado mediante plataforma de compliance laboral · Folio ${folio}</div>`;
+
+  html += generarFooterDoc({...getDatosMembrete()});
+  document.getElementById('doc-preview').innerHTML = html;
+}
+
+function renderExpediente(){
+  const empresa=v('empresa'), dom=v('domicilio_empresa'), area=v('area_solicita'), puesto=v('puesto');
+  const candidato=v('candidato'), curp=v('curp'), rfc=v('rfc'), tel=v('telefono'), nss=v('nss'), domCand=v('domicilio_candidato');
+  const fechaIngreso=v('fecha_ingreso'), numEmpleado=v('num_empleado'), contactoEmer=v('contacto_emergencia');
+  const ciudad=v('ciudad'), fechaDoc=v('fecha_doc'), respRH=v('responsable_rh');
+
+  const folio = `EXP-${new Date().getFullYear()}-${Math.floor(Math.random()*10000).toString().padStart(4,'0')}`;
+
+  const docs = [
+    {id:'exp_solicitud', label:'Solicitud de empleo firmada'},
+    {id:'exp_ine', label:'Copia de identificación oficial (INE/Pasaporte)'},
+    {id:'exp_curp', label:'Copia de CURP'},
+    {id:'exp_rfc', label:'Copia de constancia de situación fiscal (RFC)'},
+    {id:'exp_nss', label:'Copia o constancia de NSS'},
+    {id:'exp_domicilio', label:'Comprobante de domicilio'},
+    {id:'exp_estudios', label:'Comprobante de estudios / cédula profesional'},
+    {id:'exp_contrato', label:'Contrato individual de trabajo firmado'},
+    {id:'exp_aviso_priv', label:'Aviso de privacidad firmado (LFPDPPP)'},
+    {id:'exp_reglamento', label:'Acuse de recibo del Reglamento Interior'},
+    {id:'exp_examen', label:'Resultado de examen médico de ingreso'},
+    {id:'exp_cuenta_doc', label:'Comprobante de cuenta bancaria (nómina)'},
+    {id:'exp_alta_imss', label:'Acuse de alta ante el IMSS'},
+    {id:'exp_infonavit', label:'Constancia INFONAVIT / elección AFORE'},
+    {id:'exp_fotos', label:'Fotografías recientes (política interna)'},
+  ];
+
+  const completos = docs.filter(d=>chk(d.id)).length;
+  const pct = Math.round(completos/docs.length*100);
+
+  let html = generarMembrete({...getDatosMembrete(), empresa:v('empresa'), domicilio:v('domicilio_empresa'), folio}) + `
+    <div class="doc-folio">Folio: ${folio}<br>Expediente laboral</div>
+  </div>
+  <div class="doc-title">Carátula de Expediente<br>del Trabajador</div>
+  <div style="text-align:center;"><span class="doc-badge">Proceso de contratación</span></div>
+
+  <div class="doc-p">Carátula que documenta la integración del expediente laboral del trabajador, conforme a las buenas prácticas de administración de personal y a las obligaciones documentales previstas en la Ley Federal del Trabajo y la Ley del Seguro Social.</div>
+
+  <div class="doc-cap">I. Datos del trabajador</div>
+  <table class="doc-table">
+    <tr><th style="width:35%;">Nombre completo</th><td>${b(candidato,'nombre del trabajador')}</td></tr>
+    <tr><th>No. de empleado</th><td>${numEmpleado||'—'}</td></tr>
+    <tr><th>CURP</th><td>${b(curp,'CURP')}</td></tr>
+    <tr><th>RFC</th><td>${rfc||'—'}</td></tr>
+    <tr><th>NSS</th><td>${nss||'—'}</td></tr>
+    <tr><th>Teléfono</th><td>${tel||'—'}</td></tr>
+    <tr><th>Domicilio</th><td>${domCand||'—'}</td></tr>
+    <tr><th>Contacto de emergencia</th><td>${contactoEmer||'No registrado'}</td></tr>
+  </table>
+
+  <div class="doc-cap">II. Datos del puesto</div>
+  <table class="doc-table">
+    <tr><th style="width:35%;">Puesto</th><td>${b(puesto,'puesto')}</td></tr>
+    <tr><th>Área</th><td>${area||'—'}</td></tr>
+    <tr><th>Fecha de ingreso</th><td>${b(fmtFecha(fechaIngreso),'fecha de ingreso')}</td></tr>
+    <tr><th>Centro de trabajo</th><td>${dom||'—'}</td></tr>
+  </table>
+
+  <div class="doc-cap">III. Integración documental del expediente (${completos}/${docs.length} · ${pct}%)</div>
+  <div style="margin-bottom:8px;">
+    ${docs.map(d=>`
+      <div class="check-item">
+        <div class="check-box" style="background:${chk(d.id)?'#1a6b3a':'transparent'};border-color:${chk(d.id)?'#1a6b3a':'#999'};"></div>
+        <div class="check-label">${d.label}</div>
+        <div class="check-meta">${chk(d.id)?'✓ Integrado':'Pendiente'}</div>
+      </div>`).join('')}
+  </div>
+
+  <div style="margin-top:18px;padding:12px 16px;background:${pct===100?'#eaf6ee':'#fff8e1'};border-radius:6px;border:1px solid ${pct===100?'#c3e6cb':'#f0c040'};font-size:10pt;font-family:var(--font-ui);color:${pct===100?'#1a6b3a':'#7a5c00'};">
+    ${pct===100?'✓ Expediente completo. Todos los documentos requeridos han sido integrados.':`⚠️ Expediente incompleto. Faltan ${docs.length-completos} documento(s) por integrar antes de considerar el expediente como completo.`}
+  </div>
+
+  <div class="doc-p" style="margin-top:20px;font-size:9.5pt;color:#888;">El presente expediente deberá conservarse mientras subsista la relación laboral y por el plazo de prescripción aplicable conforme a la legislación laboral y fiscal vigente, en términos del artículo 804 de la LFT.</div>
+
+  <div class="firma-grid">
+    <div class="firma-box"><br><br>${respRH||'__________________________'}<br><strong>RESPONSABLE DE RRHH</strong></div>
+    <div class="firma-box"><br><br>${candidato||'__________________________'}<br><strong>TRABAJADOR (de enterado)</strong></div>
+  </div>
+
+  <div style="margin-top:24px;font-size:9pt;color:#888;font-family:var(--font-ui);border-top:1px solid #ddd;padding-top:10px;">Documento generado mediante plataforma de compliance laboral · Folio ${folio} · Art. 804 LFT</div>`;
+
+  html += generarFooterDoc({...getDatosMembrete()});
+  document.getElementById('doc-preview').innerHTML = html;
+}
+
+function render(){
+  const empresa = v('empresa');
+  const candidato = v('candidato');
+  if(!empresa && !candidato){
+    document.getElementById('doc-preview').innerHTML = '<div class="watermark-empty">Complete los datos para generar el documento.</div>';
+    return;
+  }
+  if(tipo==='entrevista') renderEntrevista();
+  else renderExpediente();
+}
+
+// Expediente del trabajador — vincular este documento al roster
+if (window.ExpedienteHelper) {
+  ExpedienteHelper.init({
+    inputNombreId: 'candidato',
+    tipoDocumento: 'expediente_contratacion',
+    nombreDocumentoFn: () => 'Proceso de contratación / expediente inicial',
+  });
+}
+
+// ── INIT ──
+renderPanelMembrete('mem-logo-container');
+(async()=>{
+  try{
+    const _sb = supabase.createClient(
+      'https://hpzgqaplrywwjuvrzhcp.supabase.co',
+      'sb_publishable_1g8US8iFJ8CxnSaF_4MHgA_gqyyAr3W'
+    );
+    await precargarMembreteDesdePortal(_sb);
+  }catch(e){}
+})();
+render();
+</script>
+<script src="edicion-libre.js?v=4.6"></script>
+
+
+
+
+</body>
+</html>

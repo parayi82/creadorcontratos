@@ -1,0 +1,2851 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Mi Portal · ClickLaboral.mx</title>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
+<script src="faq-data.js"></script>
+<script src="lft-glosario.js"></script>
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
+:root{
+  --navy:#0f2640;--navy2:#1a3a5c;--navy3:#24507a;
+  --sky:#e8f2fc;--sky2:#c5dcf5;
+  --white:#fff;--surface:#f5f4f0;--surface2:#eeede8;
+  --ink:#111110;--ink2:#444440;--ink3:#888880;
+  --border:rgba(0,0,0,.08);--border2:rgba(0,0,0,.14);
+  --green:#16a34a;--green-bg:#dcfce7;
+  --amber:#d97706;--amber-bg:#fef3c7;
+  --red:#dc2626;--red-bg:#fee2e2;
+  --purple:#7c3aed;--purple-bg:#ede9fe;
+  --teal:#0d9488;--teal-bg:#ccfbf1;
+  --r:12px;--r-sm:8px;
+  --font:'Segoe UI',system-ui,sans-serif;
+}
+body{font-family:var(--font);background:var(--surface);color:var(--ink);min-height:100vh;font-size:14px;}
+
+/* ══ LOGIN ══ */
+#login-screen{
+  min-height:100vh;background:var(--navy);
+  display:flex;align-items:center;justify-content:center;padding:24px;
+  position:relative;overflow:hidden;
+}
+.login-bg{position:absolute;inset:0;width:100%;height:100%;z-index:0;}
+.login-box{
+  background:#1a3a5c;border-radius:20px;padding:48px 44px;
+  max-width:440px;width:100%;box-shadow:0 32px 80px rgba(0,0,0,.5);
+  position:relative;z-index:1;
+}
+.login-logo{font-size:11px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:rgba(255,255,255,.4);margin-bottom:28px;transition:color .15s;}
+.login-logo:hover{color:rgba(255,255,255,.7);}
+.login-title{font-size:26px;font-weight:800;color:#fff;letter-spacing:-.02em;margin-bottom:6px;}
+.login-sub{font-size:13px;color:rgba(255,255,255,.5);margin-bottom:32px;line-height:1.5;}
+.lf{margin-bottom:16px;}
+.lf label{display:block;font-size:12px;font-weight:600;color:rgba(255,255,255,.55);margin-bottom:6px;letter-spacing:.03em;}
+.lf input{width:100%;padding:12px 14px;background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.12);border-radius:10px;font-size:14px;color:#fff;font-family:var(--font);transition:all .15s;}
+.lf input:focus{outline:none;border-color:rgba(255,255,255,.4);background:rgba(255,255,255,.12);}
+.lf input::placeholder{color:rgba(255,255,255,.25);}
+.login-btn{width:100%;padding:13px;background:#fff;color:var(--navy);font-size:14px;font-weight:700;border:none;border-radius:10px;cursor:pointer;font-family:var(--font);margin-top:8px;transition:all .15s;}
+.login-btn:hover{background:var(--sky);}
+.login-error{background:rgba(220,38,38,.15);border:1px solid rgba(220,38,38,.3);border-radius:8px;padding:10px 14px;font-size:12px;color:#fca5a5;margin-bottom:14px;display:none;}
+
+/* ══ PORTAL APP ══ */
+#portal-app{display:none;}
+
+/* Sidebar */
+.sidebar{
+  position:fixed;top:0;left:0;bottom:0;width:240px;
+  background:var(--navy);color:#fff;
+  display:flex;flex-direction:column;z-index:50;
+}
+.sb-logo{padding:20px 20px 14px;border-bottom:1px solid rgba(255,255,255,.07);}
+.sb-logo-name{font-size:13px;font-weight:700;color:#fff;margin-bottom:2px;line-height:1.3;}
+.sb-logo-plan{font-size:10px;font-weight:600;padding:2px 8px;border-radius:20px;display:inline-block;margin-top:4px;}
+.plan-basico{background:rgba(255,255,255,.1);color:rgba(255,255,255,.6);}
+.plan-estandar{background:rgba(13,148,136,.3);color:#5eead4;}
+.plan-pro{background:rgba(124,58,237,.3);color:#c4b5fd;}
+.sb-nav{
+  flex:1;padding:12px;overflow-y:auto;
+  scrollbar-width:thin; /* Firefox */
+  scrollbar-color:rgba(255,255,255,.25) transparent;
+}
+.sb-nav::-webkit-scrollbar{width:6px;}
+.sb-nav::-webkit-scrollbar-track{background:transparent;}
+.sb-nav::-webkit-scrollbar-thumb{background:rgba(255,255,255,.25);border-radius:3px;}
+.sb-nav::-webkit-scrollbar-thumb:hover{background:rgba(255,255,255,.4);}
+.sb-scroll-hint{
+  position:relative;margin-top:-34px;height:34px;pointer-events:none;
+  background:linear-gradient(to bottom, rgba(15,38,64,0) 0%, var(--navy) 75%);
+  display:flex;align-items:flex-end;justify-content:center;
+  font-size:10px;color:rgba(255,255,255,.5);font-weight:600;padding-bottom:4px;
+  letter-spacing:.02em;
+  transition:opacity .2s;
+}
+.sb-scroll-hint.hidden{opacity:0;}
+.sb-sec{font-size:9px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:rgba(255,255,255,.25);padding:14px 8px 6px;}
+.nav-item{display:flex;align-items:center;gap:10px;padding:9px 10px;border-radius:8px;cursor:pointer;font-size:13px;color:rgba(255,255,255,.65);margin-bottom:2px;transition:all .15s;user-select:none;}
+.nav-item:hover{background:rgba(255,255,255,.08);color:#fff;}
+.nav-item.active{background:rgba(255,255,255,.12);color:#fff;font-weight:500;}
+.nav-icon{width:20px;text-align:center;font-size:15px;}
+.nav-badge{margin-left:auto;background:var(--red);color:#fff;font-size:9px;font-weight:700;padding:1px 6px;border-radius:20px;}
+.sb-user{padding:14px 16px;border-top:1px solid rgba(255,255,255,.07);}
+.sb-user-name{font-size:12px;font-weight:600;color:#fff;margin-bottom:2px;}
+.sb-user-rfc{font-size:10px;color:rgba(255,255,255,.35);font-family:monospace;}
+.sb-logout{font-size:11px;color:rgba(255,255,255,.35);cursor:pointer;margin-top:8px;display:flex;align-items:center;gap:4px;}
+.sb-logout:hover{color:rgba(255,255,255,.7);}
+
+/* Main area */
+.main-area{margin-left:240px;min-height:100vh;display:flex;flex-direction:column;overflow-y:auto;}
+.topbar{background:var(--white);border-bottom:1px solid var(--border);padding:0 28px;height:54px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:40;}
+.topbar-title{font-size:15px;font-weight:700;}
+.topbar-actions{display:flex;align-items:center;gap:10px;}
+.btn{display:inline-flex;align-items:center;gap:6px;padding:7px 16px;border-radius:var(--r-sm);font-size:12px;font-weight:500;cursor:pointer;border:1px solid transparent;transition:all .15s;font-family:var(--font);}
+.btn-primary{background:var(--navy2);color:#fff;}.btn-primary:hover{background:var(--navy3);}
+.btn-ghost{background:transparent;border-color:var(--border2);color:var(--ink2);}.btn-ghost:hover{background:var(--surface);}
+.btn-green{background:var(--green);color:#fff;}.btn-green:hover{background:#15803d;}
+.btn-sm{padding:5px 12px;font-size:11px;}
+
+.content{padding:24px 28px;flex:1;}
+.panel{display:none;}.panel.active{display:block;flex:1;min-height:0;overflow-y:auto;padding:20px;}
+
+/* Cards */
+.card{background:var(--white);border:1px solid var(--border);border-radius:var(--r);padding:20px 22px;}
+.card-title{font-size:14px;font-weight:700;margin-bottom:4px;}
+.card-sub{font-size:12px;color:var(--ink3);margin-bottom:14px;}
+
+/* Stats */
+.stats-row{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:20px;}
+.stat-card{background:var(--white);border:1px solid var(--border);border-radius:var(--r);padding:16px 18px;}
+.stat-label{font-size:11px;color:var(--ink3);font-weight:500;text-transform:uppercase;letter-spacing:.06em;margin-bottom:6px;}
+.stat-value{font-size:24px;font-weight:800;color:var(--ink);line-height:1;}
+.stat-sub{font-size:11px;color:var(--ink3);margin-top:4px;}
+
+/* Semáforo */
+.semaforo-grande{background:var(--white);border:1px solid var(--border);border-radius:var(--r);padding:24px;margin-bottom:20px;}
+.sem-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:20px;}
+.sem-titulo{font-size:16px;font-weight:700;}
+.sem-score{font-size:42px;font-weight:900;line-height:1;}
+.sem-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;}
+.sem-item{padding:12px;border-radius:var(--r-sm);border:1px solid var(--border);text-align:center;}
+.sem-item-icon{font-size:22px;margin-bottom:6px;}
+.sem-item-label{font-size:11px;color:var(--ink2);line-height:1.3;margin-bottom:6px;}
+.sem-item-status{font-size:11px;font-weight:600;padding:2px 8px;border-radius:20px;}
+.status-ok{background:var(--green-bg);color:var(--green);}
+.status-warn{background:var(--amber-bg);color:var(--amber);}
+.status-bad{background:var(--red-bg);color:var(--red);}
+.status-na{background:var(--surface2);color:var(--ink3);}
+
+/* Docs */
+.doc-row{display:flex;align-items:center;gap:12px;padding:12px;border-bottom:1px solid var(--border);border-radius:6px;transition:background .12s;}
+.doc-row:hover{background:var(--surface);}
+.active-filter{background:var(--navy2)!important;color:#fff!important;}
+.doc-row:last-child{border:none;}
+.doc-icon{font-size:22px;width:32px;text-align:center;}
+.doc-info{flex:1;}
+.doc-name{font-size:13px;font-weight:500;}
+.doc-meta{font-size:11px;color:var(--ink3);margin-top:2px;}
+.badge{display:inline-flex;align-items:center;padding:2px 8px;border-radius:20px;font-size:10px;font-weight:600;}
+.badge-green{background:var(--green-bg);color:var(--green);}
+.badge-amber{background:var(--amber-bg);color:var(--amber);}
+.badge-red{background:var(--red-bg);color:var(--red);}
+.badge-blue{background:var(--sky);color:var(--navy2);}
+.badge-gray{background:var(--surface2);color:var(--ink3);}
+
+/* Alertas */
+.alert-item{display:flex;gap:12px;padding:12px 14px;border-radius:var(--r-sm);margin-bottom:8px;border:1px solid transparent;}
+.alert-urgent{background:var(--red-bg);border-color:rgba(220,38,38,.2);}
+.alert-warn{background:var(--amber-bg);border-color:rgba(217,119,6,.2);}
+.alert-info{background:var(--sky);border-color:rgba(37,99,235,.15);}
+.alert-icon{font-size:16px;}
+.alert-body{flex:1;}
+.alert-title{font-size:12px;font-weight:600;}
+.alert-urgent .alert-title{color:var(--red);}
+.alert-warn .alert-title{color:var(--amber);}
+.alert-info .alert-title{color:var(--navy2);}
+.alert-desc{font-size:11px;color:var(--ink2);margin-top:2px;}
+.alert-days{font-size:11px;font-weight:700;white-space:nowrap;align-self:center;}
+.alert-urgent .alert-days{color:var(--red);}
+.alert-warn .alert-days{color:var(--amber);}
+
+/* Two-col */
+.two-col{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:16px;}
+.form-input{width:100%;padding:8px 10px;border:1px solid var(--border2);border-radius:var(--r-sm);font-size:13px;font-family:var(--font);color:var(--ink);background:var(--white);outline:none;}
+.form-input:focus{border-color:var(--navy2);box-shadow:0 0 0 3px var(--sky);}
+.calc-row{display:flex;justify-content:space-between;align-items:center;padding:9px 0;border-bottom:1px solid rgba(255,255,255,.1);font-size:13px;}
+.calc-row:last-child{border-bottom:none;}
+.calc-row-total{display:flex;justify-content:space-between;align-items:center;padding:12px 0 0;margin-top:4px;font-size:15px;font-weight:800;border-top:2px solid rgba(255,255,255,.3);}
+.calc-label{opacity:.65;}
+.calc-value{font-weight:600;font-family:monospace;}
+.three-col{display:grid;grid-template-columns:1fr 1fr 1fr;gap:14px;}
+
+/* Doc generators */
+.gen-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(160px,1fr));gap:10px;}
+.gen-tile{background:var(--white);border:1px solid var(--border);border-radius:var(--r);padding:16px;cursor:pointer;transition:all .15s;text-align:center;}
+.gen-tile:hover{border-color:var(--navy2);box-shadow:0 2px 12px rgba(0,0,0,.08);transform:translateY(-2px);}
+.gen-tile-icon{font-size:26px;margin-bottom:8px;}
+.gen-tile-name{font-size:12px;font-weight:600;color:var(--ink);line-height:1.3;margin-bottom:4px;}
+.gen-tile-art{font-size:10px;color:var(--ink3);}
+
+/* Solicitudes */
+.solicitud-form .field{margin-bottom:12px;}
+.solicitud-form .field label{display:block;font-size:12px;font-weight:500;color:var(--ink2);margin-bottom:4px;}
+.solicitud-form .field input,
+.solicitud-form .field select,
+.solicitud-form .field textarea{width:100%;padding:8px 10px;border:1px solid var(--border2);border-radius:var(--r-sm);font-size:13px;font-family:var(--font);color:var(--ink);}
+.solicitud-form .field input:focus,
+.solicitud-form .field select:focus,
+.solicitud-form .field textarea:focus{outline:none;border-color:var(--navy2);}
+.solicitud-form .field textarea{resize:vertical;min-height:80px;}
+.field-row{display:grid;grid-template-columns:1fr 1fr;gap:10px;}
+
+/* Timeline */
+.tl-item{display:flex;gap:12px;padding-bottom:14px;position:relative;}
+.tl-item:not(:last-child)::after{content:'';position:absolute;left:14px;top:28px;bottom:0;width:1px;background:var(--border);}
+.tl-dot{width:28px;height:28px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:12px;flex-shrink:0;z-index:1;}
+.tl-green{background:var(--green-bg);}
+.tl-amber{background:var(--amber-bg);}
+.tl-blue{background:var(--sky);}
+.tl-gray{background:var(--surface2);}
+.tl-body{flex:1;padding-top:4px;}
+.tl-title{font-size:13px;font-weight:500;}
+.tl-date{font-size:11px;color:var(--ink3);}
+
+/* Cuenta/Suscripción */
+.plan-card{background:var(--navy);color:#fff;border-radius:var(--r);padding:24px;margin-bottom:16px;}
+.plan-name{font-size:12px;font-weight:700;opacity:.5;text-transform:uppercase;letter-spacing:.06em;margin-bottom:4px;}
+.plan-precio{font-size:32px;font-weight:900;letter-spacing:-.02em;}
+.plan-precio span{font-size:14px;font-weight:400;opacity:.5;}
+.plan-status{display:inline-flex;align-items:center;gap:6px;background:var(--green-bg);color:var(--green);font-size:11px;font-weight:600;padding:3px 10px;border-radius:20px;margin:10px 0 16px;}
+.plan-features{display:flex;flex-direction:column;gap:8px;}
+.plan-feature{font-size:12px;opacity:.75;display:flex;align-items:center;gap:8px;}
+.plan-feature::before{content:'✓';color:#4ade80;font-weight:700;}
+
+/* Notif preferences */
+.notif-row{display:flex;align-items:center;justify-content:space-between;padding:12px 0;border-bottom:1px solid var(--border);}
+.notif-row:last-child{border:none;}
+.notif-info{flex:1;}
+.notif-label{font-size:13px;font-weight:500;}
+.notif-desc{font-size:11px;color:var(--ink3);margin-top:2px;}
+.toggle{position:relative;width:40px;height:22px;cursor:pointer;}
+.toggle input{opacity:0;width:0;height:0;}
+.toggle-track{position:absolute;inset:0;background:var(--border2);border-radius:11px;transition:background .2s;}
+.toggle input:checked+.toggle-track{background:var(--green);}
+.toggle-thumb{position:absolute;top:3px;left:3px;width:16px;height:16px;background:#fff;border-radius:50%;transition:transform .2s;box-shadow:0 1px 3px rgba(0,0,0,.2);}
+.toggle input:checked~.toggle-thumb{transform:translateX(18px);}
+
+/* IA widget */
+.ia-widget{background:linear-gradient(135deg,var(--navy) 0%,#24507a 100%);border-radius:var(--r);padding:20px;color:#fff;margin-bottom:16px;}
+.ia-widget-title{font-size:14px;font-weight:700;margin-bottom:6px;display:flex;align-items:center;gap:8px;}
+.ia-badge{background:var(--purple);font-size:9px;font-weight:700;padding:2px 7px;border-radius:20px;letter-spacing:.04em;}
+.ia-desc{font-size:12px;opacity:.6;margin-bottom:14px;line-height:1.5;}
+.ia-input{width:100%;padding:10px 12px;background:rgba(255,255,255,.1);border:1px solid rgba(255,255,255,.15);border-radius:8px;font-size:13px;color:#fff;font-family:var(--font);margin-bottom:8px;}
+.ia-input::placeholder{color:rgba(255,255,255,.3);}
+.ia-input:focus{outline:none;border-color:rgba(255,255,255,.4);}
+.ia-btn{background:#fff;color:var(--navy);font-size:12px;font-weight:700;border:none;border-radius:7px;padding:8px 16px;cursor:pointer;font-family:var(--font);}
+.ia-response{background:rgba(255,255,255,.08);border-radius:8px;padding:12px;font-size:12px;line-height:1.6;margin-top:10px;display:none;max-height:200px;overflow-y:auto;}
+.ia-loading{text-align:center;padding:12px;font-size:12px;opacity:.5;}
+
+::-webkit-scrollbar{width:4px;height:4px;}
+::-webkit-scrollbar-track{background:transparent;}
+::-webkit-scrollbar-thumb{background:var(--border2);border-radius:2px;}
+@media print{.sidebar,.topbar{display:none!important;}.main-area{margin-left:0;}}
+
+/* ══ RESPONSIVE — móvil y tablet (≤900px) ══ */
+@media(max-width:900px){
+  .sidebar{transform:translateX(-100%);transition:transform .25s ease;width:260px;}
+  .sidebar.open{transform:translateX(0);}
+  .main-area{margin-left:0;}
+  .topbar{padding:0 14px;gap:8px;}
+  .topbar-title{font-size:14px;}
+  .topbar-actions{gap:6px;}
+  .topbar-actions span{display:none;} /* oculta la fecha larga para dar espacio en pantallas chicas */
+  .content{padding:16px;}
+  .two-col{grid-template-columns:1fr!important;}
+  .three-col{grid-template-columns:1fr!important;}
+  .sb-menu-btn{display:flex!important;}
+  .sb-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.4);z-index:49;}
+  .sb-overlay.show{display:block;}
+}
+@media(min-width:901px){
+  .sb-menu-btn{display:none;}
+}
+
+</style>
+</head>
+<body>
+
+<!-- ══════════════════════════════════════════
+     PANTALLA DE LOGIN
+══════════════════════════════════════════ -->
+<div id="login-screen">
+  <svg class="login-bg" viewBox="0 0 1400 800" preserveAspectRatio="xMidYMid slice" xmlns="http://www.w3.org/2000/svg">
+    <defs>
+      <pattern id="loginHex" width="58" height="100" patternUnits="userSpaceOnUse">
+        <path d="M29 0 L58 17 L58 51 L29 68 L0 51 L0 17 Z" fill="none" stroke="#7dd3fc" stroke-opacity="0.12" stroke-width="1"/>
+      </pattern>
+      <radialGradient id="loginFade" cx="50%" cy="40%" r="65%">
+        <stop offset="0%" stop-color="white" stop-opacity="0"/>
+        <stop offset="100%" stop-color="white" stop-opacity="1"/>
+      </radialGradient>
+      <mask id="loginMask"><rect width="1400" height="800" fill="url(#loginFade)"/></mask>
+      <filter id="loginGlow" x="-100%" y="-100%" width="300%" height="300%">
+        <feGaussianBlur stdDeviation="3" result="b"/><feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge>
+      </filter>
+    </defs>
+    <rect width="1400" height="800" fill="url(#loginHex)" mask="url(#loginMask)"/>
+    <g filter="url(#loginGlow)">
+      <line x1="120" y1="120" x2="220" y2="200" stroke="#5eead4" stroke-width="1" stroke-opacity="0.3"/>
+      <line x1="1220" y1="600" x2="1300" y2="680" stroke="#5eead4" stroke-width="1" stroke-opacity="0.3"/>
+      <line x1="1280" y1="160" x2="1340" y2="240" stroke="#5eead4" stroke-width="1" stroke-opacity="0.3"/>
+      <circle cx="120" cy="120" r="3" fill="#5eead4"/>
+      <circle cx="220" cy="200" r="4" fill="#7dd3fc"/>
+      <circle cx="1220" cy="600" r="3.5" fill="#5eead4"/>
+      <circle cx="1300" cy="680" r="3" fill="#7dd3fc"/>
+      <circle cx="1280" cy="160" r="3" fill="#5eead4"/>
+      <circle cx="1340" cy="240" r="4" fill="#7dd3fc"/>
+    </g>
+    <path d="M1330 660 L1340 686 L1366 696 L1340 706 L1330 732 L1320 706 L1294 696 L1320 686 Z" fill="rgba(255,255,255,0.14)"/>
+    <path d="M90 660 L96 674 L110 680 L96 686 L90 700 L84 686 L70 680 L84 674 Z" fill="rgba(255,255,255,0.1)"/>
+  </svg>
+  <div class="login-box">
+    <a href="index.html" class="login-logo" style="text-decoration:none;display:inline-flex;align-items:center;font-size:18px;font-weight:800;color:#fff;letter-spacing:-.01em;">
+      <svg width="30" height="30" viewBox="0 0 100 100" style="vertical-align:-6px;margin-right:5px;flex-shrink:0;">
+        <defs><linearGradient id="clGradLogin" x1="10" y1="10" x2="90" y2="95" gradientUnits="userSpaceOnUse">
+          <stop offset="0%" stop-color="#1a3a5c"/><stop offset="55%" stop-color="#1e6f6c"/><stop offset="100%" stop-color="#2dd4bf"/>
+        </linearGradient></defs>
+        <path d="M50 7 L83 20 V51 C83 73 68 87 50 95 C32 87 17 73 17 51 V20 Z" fill="none" stroke="url(#clGradLogin)" stroke-width="6" stroke-linejoin="round"/>
+        <circle cx="40" cy="38" r="8.5" fill="#5eead4"/>
+        <path d="M25 63 C25 51 31 45 40 45 C49 45 55 51 55 63 Z" fill="#5eead4"/>
+        <circle cx="55" cy="33" r="9.5" fill="#14b8a6"/>
+        <path d="M38 61 C38 48 45.5 41 55 41 C64.5 41 72 48 72 61 Z" fill="#14b8a6"/>
+        <path d="M29 61 L45 77 L78 40" fill="none" stroke="#e8f2fc" stroke-width="9" stroke-linecap="round" stroke-linejoin="round"/>
+      </svg>Click<span style="color:#5eead4;font-weight:400;">Laboral.mx</span>
+    </a>
+    <div class="login-title">Acceso a su portal</div>
+    <div class="login-sub">Ingrese con el RFC de su empresa y la contraseña asignada por su asesor.</div>
+
+    <div class="login-error" id="login-error">RFC o contraseña incorrectos. Intente de nuevo.</div>
+
+    <div class="lf">
+      <label>RFC de la empresa</label>
+      <input type="text" id="login-rfc" placeholder="RFC de su empresa" maxlength="13" oninput="this.value=this.value.toUpperCase()" onkeydown="if(event.key==='Enter')loginSubmit()">
+    </div>
+    <div class="lf">
+      <label>Contraseña</label>
+      <input type="password" id="login-pass" placeholder="Contraseña de acceso" onkeydown="if(event.key==='Enter')loginSubmit()">
+    </div>
+    <button class="login-btn" onclick="loginSubmit()">Ingresar al portal →</button>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════
+     PORTAL APP
+══════════════════════════════════════════ -->
+<div id="portal-app">
+
+  <!-- SIDEBAR -->
+  <aside class="sidebar">
+    <div class="sb-logo">
+      <div style="margin-bottom:10px;display:flex;align-items:center;font-size:12px;font-weight:800;color:rgba(255,255,255,.7);letter-spacing:-.01em;">
+        <svg width="22" height="22" viewBox="0 0 100 100" style="vertical-align:-6px;margin-right:5px;flex-shrink:0;">
+        <defs><linearGradient id="clGradSb" x1="10" y1="10" x2="90" y2="95" gradientUnits="userSpaceOnUse">
+          <stop offset="0%" stop-color="#1a3a5c"/><stop offset="55%" stop-color="#1e6f6c"/><stop offset="100%" stop-color="#2dd4bf"/>
+        </linearGradient></defs>
+        <path d="M50 7 L83 20 V51 C83 73 68 87 50 95 C32 87 17 73 17 51 V20 Z" fill="none" stroke="url(#clGradSb)" stroke-width="6" stroke-linejoin="round"/>
+        <circle cx="40" cy="38" r="8.5" fill="#5eead4"/>
+        <path d="M25 63 C25 51 31 45 40 45 C49 45 55 51 55 63 Z" fill="#5eead4"/>
+        <circle cx="55" cy="33" r="9.5" fill="#14b8a6"/>
+        <path d="M38 61 C38 48 45.5 41 55 41 C64.5 41 72 48 72 61 Z" fill="#14b8a6"/>
+        <path d="M29 61 L45 77 L78 40" fill="none" stroke="#e8f2fc" stroke-width="9" stroke-linecap="round" stroke-linejoin="round"/>
+      </svg>Click<span style="color:#5eead4;font-weight:400;">Laboral.mx</span>
+      </div>
+      <div class="sb-logo-name" id="sb-empresa-name">Empresa</div>
+      <div><span class="sb-logo-plan" id="sb-plan-badge">Plan</span></div>
+    </div>
+    <div class="sb-nav">
+      <div class="sb-sec">Mi empresa</div>
+      <div class="nav-item active" onclick="goPanel('inicio')"><span class="nav-icon">⊞</span> Inicio</div>
+      <div class="nav-item" onclick="window.open('simulador-riesgo.html')"><span class="nav-icon">⚠️</span> Simulador de riesgo</div>
+      <div class="nav-item" onclick="window.open('contratos-por-sector.html')"><span class="nav-icon">🏭</span> Contratos por sector</div>
+      <div class="nav-item" onclick="goPanel('reportes')"><span class="nav-icon">📊</span> Reportes gerenciales</div>
+      <div class="nav-item" onclick="goPanel('compliance')"><span class="nav-icon">📊</span> Mi compliance</div>
+      <div class="nav-item" onclick="goPanel('alertas')"><span class="nav-icon">🔔</span> Alertas <span class="nav-badge" id="sb-alert-badge">0</span></div>
+      <div class="nav-item" onclick="goPanel('comisiones')"><span class="nav-icon">🏛</span> Comisiones mixtas</div>
+
+      <div class="sb-sec">Documentos</div>
+
+      <div class="nav-item" onclick="goPanel('generadores')"><span class="nav-icon">✏️</span> Generar nuevo</div>
+      <div class="nav-item" onclick="goPanel('solicitudes')"><span class="nav-icon">📨</span> Solicitar asesoría</div>
+
+      <div class="sb-sec">Personal</div>
+      <div class="nav-item" onclick="window.open('asistencias-vacaciones.html');cerrarSidebarMobile()"><span class="nav-icon">🗂</span> Expedientes de trabajadores</div>
+      <div class="nav-item" onclick="window.open('pruebas-psicometricas.html');cerrarSidebarMobile()"><span class="nav-icon">🧠</span> Pruebas psicométricas</div>
+      <div class="nav-item" onclick="window.open('nom035-evaluacion.html?empresa='+encodeURIComponent((clienteActual&&clienteActual.empresa)||'')+'&rfc='+encodeURIComponent((clienteActual&&clienteActual.rfc)||''));cerrarSidebarMobile()"><span class="nav-icon">⚕️</span> Evaluación NOM-035</div>
+
+      <div class="sb-sec">Asistente IA</div>
+      <div class="nav-item" onclick="goPanel('calculadora')"><span class="nav-icon">🧮</span> Calculadora laboral</div>
+      <div class="nav-item" onclick="goPanel('asistente')"><span class="nav-icon">⚖️</span> Consultas legales</div>
+
+      <div class="sb-sec">Mi cuenta</div>
+      <div class="nav-item" onclick="goPanel('suscripcion')"><span class="nav-icon">💳</span> Suscripción</div>
+      <div class="nav-item" onclick="goPanel('configuracion')"><span class="nav-icon">⚙️</span> Configuración</div>
+    </div>
+    <div class="sb-scroll-hint" id="sb-scroll-hint">⌄ más opciones</div>
+    <div class="sb-user">
+      <div class="sb-user-name" id="sb-contacto-name">Contacto</div>
+      <div class="sb-user-rfc" id="sb-rfc-display">RFC</div>
+      <div class="sb-logout" onclick="logout()">← Cerrar sesión</div>
+    </div>
+  </aside>
+
+  <!-- MAIN -->
+  <div class="main-area">
+    <div class="topbar">
+      <button class="sb-menu-btn" id="sb-menu-btn" onclick="toggleSidebarMobile()" aria-label="Abrir menú" style="display:none;background:none;border:none;cursor:pointer;width:32px;height:32px;align-items:center;justify-content:center;flex-direction:column;gap:4px;flex-shrink:0;margin-right:4px;">
+        <span style="width:18px;height:2px;background:var(--ink);border-radius:2px;"></span>
+        <span style="width:18px;height:2px;background:var(--ink);border-radius:2px;"></span>
+        <span style="width:18px;height:2px;background:var(--ink);border-radius:2px;"></span>
+      </button>
+      <div class="topbar-title" id="topbar-title">Inicio</div>
+      <div class="topbar-actions">
+        <span id="topbar-fecha" style="font-size:12px;color:var(--ink3);"></span>
+        <button class="btn btn-primary btn-sm" onclick="goPanel('solicitudes')">+ Solicitar asesoría</button>
+      </div>
+    </div>
+    <div class="sb-overlay" id="sb-overlay" onclick="cerrarSidebarMobile()"></div>
+
+    <div class="content">
+
+      <!-- ── INICIO ── -->
+      <div class="panel active" id="panel-inicio">
+        <div class="stats-row" id="inicio-stats"></div>
+        <div class="two-col">
+          <div>
+            <!-- Semáforo resumen -->
+            <div class="card" style="margin-bottom:16px;">
+              <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;">
+                <div>
+                  <div class="card-title">Estado de compliance</div>
+                  <div class="card-sub">Actualizado hoy</div>
+                </div>
+                <div style="text-align:right;">
+                  <div id="inicio-score" style="font-size:36px;font-weight:900;line-height:1;"></div>
+                  <div style="font-size:10px;color:var(--ink3);">Score</div>
+                </div>
+              </div>
+              <div id="inicio-sem-grid" style="display:grid;grid-template-columns:1fr 1fr;gap:8px;"></div>
+            </div>
+
+            <!-- Alertas recientes -->
+            <div class="card">
+              <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;">
+                <div class="card-title">Alertas activas</div>
+                <button class="btn btn-ghost btn-sm" onclick="goPanel('alertas')">Ver todas →</button>
+              </div>
+              <div id="inicio-alertas"></div>
+            </div>
+          </div>
+          <div>
+            <!-- Widget IA -->
+            <div class="ia-widget">
+              <div class="ia-widget-title">⚖️ Consulta rápida <span class="ia-badge">BASE LEGAL</span></div>
+              <div class="ia-desc">Escriba su duda en lenguaje natural — buscamos en nuestras preguntas frecuentes y en los artículos de la LFT relacionados. Respuesta inmediata.</div>
+              <textarea class="ia-input" id="ia-quick-input" rows="2" placeholder="Ej. ¿Cuándo debo pagar el aguinaldo? ¿Qué ocurre si un trabajador falta 3 días?"></textarea>
+              <button class="ia-btn" onclick="preguntarIA()">Consultar →</button>
+              <div class="ia-response" id="ia-quick-response"></div>
+            </div>
+
+            <!-- Próximas obligaciones -->
+            <div class="card" style="margin-bottom:16px;">
+              <div class="card-title" style="margin-bottom:12px;">📅 Próximas obligaciones</div>
+              <div id="inicio-obligaciones"></div>
+            </div>
+
+            <!-- Accesos rápidos -->
+            <div class="card">
+              <div class="card-title" style="margin-bottom:12px;">⚡ Accesos rápidos</div>
+              <div style="display:flex;flex-direction:column;gap:8px;">
+                <button class="btn btn-ghost" style="justify-content:flex-start;" onclick="window.open('contrato-indeterminado.html')">📋 Nuevo contrato de trabajo</button>
+                <button class="btn btn-ghost" style="justify-content:flex-start;" onclick="window.open('acta-administrativa.html')">📝 Levantar acta administrativa</button>
+                <button class="btn btn-ghost" style="justify-content:flex-start;" onclick="window.open('asistencias-vacaciones.html')">🗂 Expedientes de trabajadores</button>
+                <button class="btn btn-ghost" style="justify-content:flex-start;" onclick="goPanel('solicitudes')">📨 Solicitar asesoría al abogado</button>
+                <button class="btn btn-ghost" style="justify-content:flex-start;" onclick="abrirConsultasLegales()">⚖️ Consultas legales</button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ── COMPLIANCE ── -->
+      <div class="panel" id="panel-compliance">
+        <div class="semaforo-grande">
+          <div class="sem-header">
+            <div>
+              <div class="sem-titulo">Mapa de compliance laboral</div>
+              <div style="font-size:12px;color:var(--ink3);margin-top:4px;">Actualización mensual por su asesor</div>
+            </div>
+            <div style="text-align:right;">
+              <div class="sem-score" id="comp-score-num"></div>
+              <div style="font-size:12px;color:var(--ink3);">/ 100</div>
+            </div>
+          </div>
+          <div class="sem-grid" id="comp-sem-grid"></div>
+        </div>
+
+        <!-- Detalle por área -->
+        <div id="comp-detalle"></div>
+
+        <!-- GRÁFICAS DE COMPLIANCE -->
+        <div id="comp-graficas" style="margin-top:16px;"></div>
+      </div>
+
+      <!-- ── ALERTAS ── -->
+      <div class="panel" id="panel-alertas">
+        <div id="alertas-lista"></div>
+      </div>
+
+      <!-- ── MIS DOCUMENTOS ── -->
+      <!-- ── COMISIONES MIXTAS ── -->
+      <div class="panel" id="panel-comisiones">
+
+        <div style="background:var(--sky);border:1px solid var(--border2);border-radius:var(--r-sm);padding:12px 16px;margin-bottom:18px;font-size:13px;color:var(--navy2);line-height:1.6;">
+          🏛 Las comisiones mixtas son <strong>obligatorias por la LFT</strong> para toda empresa con trabajadores. Use esta guía para implementarlas paso a paso. Marque cada acción conforme la complete — su asesor puede generarle los documentos necesarios desde <strong>"Generar nuevo"</strong>.
+        </div>
+
+        <div id="com-checklist-wrap"></div>
+      </div>
+
+      <!-- ── MIS DOCUMENTOS ── -->
+
+      <!-- ── GENERADORES ── -->
+      <div class="panel" id="panel-generadores">
+        <div class="card">
+          <div class="card-title" style="margin-bottom:4px;">Generadores de documentos</div>
+          <div class="card-sub">Haga clic para abrir el generador. Los datos de su empresa se pre-cargan automáticamente.</div>
+          <div class="gen-grid" id="gen-grid"></div>
+        </div>
+      </div>
+
+      <!-- ── SOLICITUDES ── -->
+      <div class="panel" id="panel-solicitudes">
+        <div class="two-col">
+          <div>
+            <div class="card solicitud-form">
+              <div class="card-title">Nueva solicitud de asesoría</div>
+              <div class="card-sub">Su asesor responderá en menos de 24 horas hábiles</div>
+              <div class="field">
+                <label>Tipo de consulta</label>
+                <select id="sol-tipo">
+                  <option>Revisión de contrato</option>
+                  <option>Elaborar acta administrativa</option>
+                  <option>Duda sobre LFT / IMSS</option>
+                  <option>Responder notificación STPS</option>
+                  <option>Cálculo de liquidación</option>
+                  <option>Actualizar reglamento interior</option>
+                  <option>Situación de urgencia</option>
+                  <option>Otro</option>
+                </select>
+              </div>
+              <div class="field">
+                <label>Prioridad</label>
+                <select id="sol-prioridad">
+                  <option value="normal">Normal (24-48 hrs)</option>
+                  <option value="urgente">Urgente (mismo día)</option>
+                  <option value="critica">Crítica (inmediata)</option>
+                </select>
+              </div>
+              <div class="field">
+                <label>Descripción detallada</label>
+                <textarea id="sol-descripcion" placeholder="Describa con detalle su consulta, situación o lo que necesita. Incluya fechas, nombres y contexto relevante..."></textarea>
+              </div>
+              <div class="field">
+                <label>Trabajador involucrado (si aplica)</label>
+                <input type="text" id="sol-trabajador" placeholder="Nombre completo del trabajador">
+              </div>
+              <div class="field-row">
+                <div class="field">
+                  <label>Antigüedad del trabajador</label>
+                  <input type="text" id="sol-antiguedad" placeholder="Ej. 2 años 3 meses">
+                </div>
+                <div class="field">
+                  <label>Salario diario</label>
+                  <input type="number" id="sol-salario" placeholder="$0.00 MXN">
+                </div>
+              </div>
+              <button class="btn btn-primary" style="width:100%;justify-content:center;margin-top:6px;" onclick="enviarSolicitud()">
+                📨 Enviar solicitud
+              </button>
+            </div>
+          </div>
+          <div>
+            <div class="card" style="margin-bottom:14px;">
+              <div class="card-title" style="margin-bottom:12px;">Solicitudes recientes</div>
+              <div id="solicitudes-recientes">
+                <div style="font-size:13px;color:var(--ink3);text-align:center;padding:20px 0;">Sin solicitudes previas en este período</div>
+              </div>
+            </div>
+            <div class="card">
+              <div class="card-title" style="margin-bottom:8px;">⏱ Tiempos de respuesta</div>
+              <div style="font-size:12px;color:var(--ink2);line-height:1.9;">
+                <div>📋 Consulta normal: <strong>24–48 hrs hábiles</strong></div>
+                <div>⚡ Urgente: <strong>mismo día hábil</strong></div>
+                <div>🚨 Crítica: <strong>menos de 2 horas</strong></div>
+                <div style="margin-top:8px;font-size:11px;color:var(--ink3);">Horario de atención: Lunes–Viernes 9:00–18:00 hrs</div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+      </div><!-- cierre panel-solicitudes -->
+      <!-- ── PANEL: Reportes gerenciales ── -->
+      <div class="panel" id="panel-reportes">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:20px;flex-wrap:wrap;gap:12px;">
+          <h2 style="font-size:18px;font-weight:800;color:var(--navy);">📊 Reportes gerenciales</h2>
+          <div style="display:flex;gap:8px;align-items:center;">
+            <select id="rep-periodo" onchange="renderReportes()" style="padding:7px 12px;border:1.5px solid var(--border);border-radius:8px;font-size:12px;background:var(--white);">
+              <option value="mes">Este mes</option>
+              <option value="trimestre">Este trimestre</option>
+              <option value="anio">Este año</option>
+              <option value="todo" selected>Todo el tiempo</option>
+            </select>
+            <button onclick="window.print()" class="btn btn-outline" style="font-size:12px;">🖨️ Imprimir</button>
+          </div>
+        </div>
+        <div id="rep-contenido"><div style="text-align:center;padding:40px;color:var(--ink3);">Cargando reportes…</div></div>
+      </div>
+
+      <!-- ── PANEL: Reportes gerenciales ── -->
+
+
+      <!-- ── CALCULADORA LABORAL ── -->
+      <div class="panel" id="panel-calculadora">
+
+        <!-- Selector de tipo de cálculo -->
+        <div style="display:flex;gap:8px;margin-bottom:20px;flex-wrap:wrap;">
+          <button class="btn btn-primary btn-sm" id="calc-tab-finiquito" onclick="calcSetTab('finiquito')">📄 Finiquito</button>
+          <button class="btn btn-ghost btn-sm" id="calc-tab-liquidacion" onclick="calcSetTab('liquidacion')">⚖️ Liquidación</button>
+          <button class="btn btn-ghost btn-sm" id="calc-tab-vacaciones" onclick="calcSetTab('vacaciones')">🏖️ Vacaciones</button>
+          <button class="btn btn-ghost btn-sm" id="calc-tab-antiguedad" onclick="calcSetTab('antiguedad')">📅 Prima de antigüedad</button>
+        </div>
+
+        <!-- FINIQUITO -->
+        <div id="calc-panel-finiquito">
+
+          <!-- Selector de trabajador -->
+          <div class="card" style="margin-bottom:14px;padding:14px 16px;">
+            <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;">
+              <label style="font-size:12px;font-weight:600;color:var(--ink3);white-space:nowrap;">👤 Trabajador del roster:</label>
+              <select id="calc-select-trabajador" class="form-input" style="flex:1;min-width:200px;" onchange="calcAutocompletarTrabajador()">
+                <option value="">— Seleccionar del roster (opcional) —</option>
+              </select>
+              <div id="calc-trab-info" style="font-size:11px;color:var(--ink3);"></div>
+            </div>
+          </div>
+
+          <div class="two-col">
+            <div class="card">
+              <div class="card-title" style="margin-bottom:14px;">Datos del trabajador</div>
+              <div style="display:flex;flex-direction:column;gap:10px;">
+                <div><label style="font-size:12px;color:var(--ink3);display:block;margin-bottom:3px;">Nombre del trabajador</label><input type="text" id="fq-nombre" class="form-input" placeholder="Nombre completo" oninput="calcFiniquito()"></div>
+                <div><label style="font-size:12px;color:var(--ink3);display:block;margin-bottom:3px;">Salario diario (MXN)</label><input type="number" id="fq-salario" class="form-input" placeholder="500.00" oninput="calcFiniquito()"></div>
+                <div><label style="font-size:12px;color:var(--ink3);display:block;margin-bottom:3px;">Puesto</label><input type="text" id="fq-puesto" class="form-input" placeholder="Puesto o categoría" oninput="calcFiniquito()"></div>
+                <div><label style="font-size:12px;color:var(--ink3);display:block;margin-bottom:3px;">Fecha de ingreso</label><input type="date" id="fq-ingreso" class="form-input" oninput="calcFiniquito()"></div>
+                <div><label style="font-size:12px;color:var(--ink3);display:block;margin-bottom:3px;">Fecha de baja</label><input type="date" id="fq-baja" class="form-input" oninput="calcFiniquito()"></div>
+                <div><label style="font-size:12px;color:var(--ink3);display:block;margin-bottom:3px;">Días de vacaciones pendientes</label><input type="number" id="fq-vac-pend" class="form-input" placeholder="0" value="0" oninput="calcFiniquito()"></div>
+                <div><label style="font-size:12px;color:var(--ink3);display:block;margin-bottom:3px;">Partes proporcionales de aguinaldo (días)</label><input type="number" id="fq-aguinaldo-dias" class="form-input" placeholder="15" value="15" oninput="calcFiniquito()"></div>
+              </div>
+            </div>
+            <div class="card" style="background:var(--navy);color:#fff;">
+              <div style="font-size:12px;opacity:.5;text-transform:uppercase;letter-spacing:.08em;margin-bottom:14px;">Resultado del finiquito</div>
+              <div id="fq-resultado" style="display:flex;flex-direction:column;gap:10px;">
+                <div style="text-align:center;padding:20px;opacity:.4;font-size:13px;">Complete los datos para calcular</div>
+              </div>
+              <div id="fq-botones" style="display:none;margin-top:16px;display:flex;flex-direction:column;gap:8px;">
+                <button class="btn btn-outline" style="color:#fff;border-color:rgba(255,255,255,.4);" onclick="imprimirCalculadora('finiquito')">🖨 Imprimir resultado</button>
+                <button class="btn btn-primary" onclick="generarDocumentoDesdeCalc('finiquito')">📄 Generar documento oficial</button>
+              </div>
+            </div>
+          </div>
+          <div class="card" style="margin-top:14px;background:var(--sky);border:1px solid var(--border2);">
+            <div style="font-size:11px;color:var(--navy2);font-weight:600;margin-bottom:4px;">ℹ️ ¿Qué incluye el finiquito?</div>
+            <div style="font-size:12px;color:var(--ink2);line-height:1.6;">El finiquito aplica cuando el trabajador renuncia voluntariamente (Art. 53 LFT). Incluye: salarios pendientes, partes proporcionales de vacaciones, prima vacacional (25%) y aguinaldo. No incluye 20 días por año ni 3 meses de salario (esas son prestaciones de liquidación por despido injustificado).</div>
+          </div>
+        </div>
+
+        <!-- LIQUIDACIÓN -->
+        <div id="calc-panel-liquidacion" style="display:none;">
+          <div class="two-col">
+            <div class="card">
+              <div class="card-title" style="margin-bottom:14px;">Datos del trabajador</div>
+              <div style="display:flex;flex-direction:column;gap:10px;">
+                <div><label style="font-size:12px;color:var(--ink3);display:block;margin-bottom:3px;">Salario diario integrado (MXN)</label><input type="number" id="lq-salario" class="form-input" placeholder="600.00" oninput="calcLiquidacion()"><div style="font-size:11px;color:var(--ink3);margin-top:3px;">Salario diario + partes prop. de prestaciones (Art. 89 LFT)</div></div>
+                <div><label style="font-size:12px;color:var(--ink3);display:block;margin-bottom:3px;">Fecha de ingreso</label><input type="date" id="lq-ingreso" class="form-input" oninput="calcLiquidacion()"></div>
+                <div><label style="font-size:12px;color:var(--ink3);display:block;margin-bottom:3px;">Fecha de despido</label><input type="date" id="lq-despido" class="form-input" oninput="calcLiquidacion()"></div>
+                <div><label style="font-size:12px;color:var(--ink3);display:block;margin-bottom:3px;">Tipo de despido</label>
+                  <select id="lq-tipo" class="form-input" onchange="calcLiquidacion()">
+                    <option value="injustificado">Injustificado (Art. 48 LFT)</option>
+                    <option value="voluntario">Rescisión por causa justificada del trabajador (Art. 51 LFT)</option>
+                  </select>
+                </div>
+                <div><label style="font-size:12px;color:var(--ink3);display:block;margin-bottom:3px;">¿Incluir prima de antigüedad? (Art. 162 LFT)</label>
+                  <select id="lq-antiguedad" class="form-input" onchange="calcLiquidacion()">
+                    <option value="si">Sí (aplica al renunciar con 15+ años o al ser despedido)</option>
+                    <option value="no">No</option>
+                  </select>
+                </div>
+                <div><label style="font-size:12px;color:var(--ink3);display:block;margin-bottom:3px;">Salario mínimo vigente (MXN/día)</label><input type="number" id="lq-salmin" class="form-input" value="248.93" oninput="calcLiquidacion()"><div style="font-size:11px;color:var(--ink3);margin-top:3px;">Tope máximo de prima de antigüedad = 2 × salario mínimo</div></div>
+              </div>
+            </div>
+            <div class="card" style="background:var(--navy);color:#fff;">
+              <div style="font-size:12px;opacity:.5;text-transform:uppercase;letter-spacing:.08em;margin-bottom:14px;">Resultado de la liquidación</div>
+              <div id="lq-resultado" style="display:flex;flex-direction:column;gap:10px;">
+                <div style="text-align:center;padding:20px;opacity:.4;font-size:13px;">Complete los datos para calcular</div>
+              </div>
+              <div id="lq-botones" style="display:none;margin-top:16px;display:flex;flex-direction:column;gap:8px;">
+                <button class="btn btn-outline" style="color:#fff;border-color:rgba(255,255,255,.4);" onclick="imprimirCalculadora('liquidacion')">🖨 Imprimir resultado</button>
+                <button class="btn btn-primary" onclick="generarDocumentoDesdeCalc('liquidacion')">📄 Generar documento oficial</button>
+              </div>
+            </div>
+          </div>
+          <div class="card" style="margin-top:14px;background:var(--sky);border:1px solid var(--border2);">
+            <div style="font-size:11px;color:var(--navy2);font-weight:600;margin-bottom:4px;">ℹ️ Fórmula de liquidación (Art. 48 LFT)</div>
+            <div style="font-size:12px;color:var(--ink2);line-height:1.6;"><strong>3 meses de salario</strong> + <strong>20 días de salario por año trabajado</strong> + partes proporcionales de finiquito (vacaciones, prima vacacional, aguinaldo) + prima de antigüedad si aplica (12 días por año, tope 2 × salario mínimo). El resultado es orientativo — consulte a su asesor ante cualquier duda específica.</div>
+          </div>
+        </div>
+
+        <!-- VACACIONES -->
+        <div id="calc-panel-vacaciones" style="display:none;">
+          <div class="two-col">
+            <div class="card">
+              <div class="card-title" style="margin-bottom:14px;">Cálculo de vacaciones (Reforma 2023)</div>
+              <div style="display:flex;flex-direction:column;gap:10px;">
+                <div><label style="font-size:12px;color:var(--ink3);display:block;margin-bottom:3px;">Fecha de ingreso</label><input type="date" id="vac-ingreso" class="form-input" oninput="calcVacaciones()"></div>
+                <div><label style="font-size:12px;color:var(--ink3);display:block;margin-bottom:3px;">Fecha de corte (para calcular)</label><input type="date" id="vac-corte" class="form-input" oninput="calcVacaciones()"></div>
+                <div><label style="font-size:12px;color:var(--ink3);display:block;margin-bottom:3px;">Salario diario (MXN)</label><input type="number" id="vac-salario" class="form-input" placeholder="500.00" oninput="calcVacaciones()"></div>
+              </div>
+              <div id="vac-resultado" style="margin-top:16px;"></div>
+            </div>
+            <div class="card">
+              <div class="card-title" style="margin-bottom:12px;">Tabla de días de vacaciones (Art. 76 LFT — Reforma 2023)</div>
+              <table style="width:100%;border-collapse:collapse;font-size:13px;">
+                <thead><tr style="background:var(--navy);color:#fff;">
+                  <th style="padding:8px;text-align:left;">Años de antigüedad</th>
+                  <th style="padding:8px;text-align:center;">Días de vacaciones</th>
+                </tr></thead>
+                <tbody id="vac-tabla">
+                  <tr><td style="padding:7px 8px;border-bottom:1px solid var(--border);">1 año</td><td style="padding:7px 8px;border-bottom:1px solid var(--border);text-align:center;font-weight:600;">12 días</td></tr>
+                  <tr><td style="padding:7px 8px;border-bottom:1px solid var(--border);">2 años</td><td style="padding:7px 8px;border-bottom:1px solid var(--border);text-align:center;font-weight:600;">14 días</td></tr>
+                  <tr><td style="padding:7px 8px;border-bottom:1px solid var(--border);">3 años</td><td style="padding:7px 8px;border-bottom:1px solid var(--border);text-align:center;font-weight:600;">16 días</td></tr>
+                  <tr><td style="padding:7px 8px;border-bottom:1px solid var(--border);">4 años</td><td style="padding:7px 8px;border-bottom:1px solid var(--border);text-align:center;font-weight:600;">18 días</td></tr>
+                  <tr><td style="padding:7px 8px;border-bottom:1px solid var(--border);">5 años</td><td style="padding:7px 8px;border-bottom:1px solid var(--border);text-align:center;font-weight:600;">20 días</td></tr>
+                  <tr><td style="padding:7px 8px;border-bottom:1px solid var(--border);">6–10 años</td><td style="padding:7px 8px;border-bottom:1px solid var(--border);text-align:center;font-weight:600;">22 días</td></tr>
+                  <tr><td style="padding:7px 8px;border-bottom:1px solid var(--border);">11–15 años</td><td style="padding:7px 8px;border-bottom:1px solid var(--border);text-align:center;font-weight:600;">24 días</td></tr>
+                  <tr><td style="padding:7px 8px;border-bottom:1px solid var(--border);">16–20 años</td><td style="padding:7px 8px;border-bottom:1px solid var(--border);text-align:center;font-weight:600;">26 días</td></tr>
+                  <tr><td style="padding:7px 8px;">21+ años</td><td style="padding:7px 8px;text-align:center;font-weight:600;">+2 días cada 5 años</td></tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+
+        <!-- PRIMA DE ANTIGÜEDAD -->
+        <div id="calc-panel-antiguedad" style="display:none;">
+          <div class="two-col">
+            <div class="card">
+              <div class="card-title" style="margin-bottom:14px;">Prima de antigüedad (Art. 162 LFT)</div>
+              <div style="display:flex;flex-direction:column;gap:10px;">
+
+                <div>
+                  <label style="font-size:12px;color:var(--ink3);display:block;margin-bottom:3px;">Motivo de la terminación</label>
+                  <select id="ant-motivo" class="form-input" onchange="calcAntiguedad()">
+                    <option value="">— Seleccione el motivo —</option>
+                    <option value="despido_injust">Despido injustificado (Art. 48 LFT) ✅ siempre aplica</option>
+                    <option value="art51">Rescisión por causa imputable al patrón (Art. 51 LFT) ✅ siempre aplica</option>
+                    <option value="renuncia">Renuncia voluntaria del trabajador ⚠️ solo si tiene 15+ años</option>
+                    <option value="fallecimiento">Fallecimiento del trabajador ✅ siempre aplica</option>
+                    <option value="incapacidad">Incapacidad física o mental permanente ✅ siempre aplica</option>
+                  </select>
+                </div>
+
+                <div id="ant-aviso-renuncia" style="display:none;background:#fef3c7;border:1px solid #f59e0b;border-radius:6px;padding:10px 12px;font-size:12px;color:#78350f;line-height:1.6;">
+                  ⚠️ <strong>Art. 162 LFT — Renuncia voluntaria:</strong> La prima de antigüedad por renuncia <strong>solo aplica si el trabajador tiene 15 años o más</strong> de servicio. Si tiene menos de 15 años y renuncia voluntariamente, <strong>no tiene derecho a esta prestación</strong>. El cálculo se habilitará únicamente si se cumple este requisito.
+                </div>
+
+                <div><label style="font-size:12px;color:var(--ink3);display:block;margin-bottom:3px;">Fecha de ingreso</label><input type="date" id="ant-ingreso" class="form-input" oninput="calcAntiguedad()"></div>
+                <div><label style="font-size:12px;color:var(--ink3);display:block;margin-bottom:3px;">Fecha de baja</label><input type="date" id="ant-baja" class="form-input" oninput="calcAntiguedad()"></div>
+                <div><label style="font-size:12px;color:var(--ink3);display:block;margin-bottom:3px;">Salario diario del trabajador (MXN)</label><input type="number" id="ant-salario" class="form-input" placeholder="600.00" oninput="calcAntiguedad()"></div>
+                <div><label style="font-size:12px;color:var(--ink3);display:block;margin-bottom:3px;">Salario mínimo vigente (MXN/día)</label><input type="number" id="ant-salmin" class="form-input" value="248.93" oninput="calcAntiguedad()"><div style="font-size:11px;color:var(--ink3);margin-top:3px;">El salario aplicable no puede exceder el doble del mínimo (Art. 162 LFT)</div></div>
+              </div>
+            </div>
+            <div class="card" style="background:var(--navy);color:#fff;">
+              <div style="font-size:12px;opacity:.5;text-transform:uppercase;letter-spacing:.08em;margin-bottom:14px;">Resultado</div>
+              <div id="ant-resultado" style="display:flex;flex-direction:column;gap:10px;">
+                <div style="text-align:center;padding:20px;opacity:.4;font-size:13px;">Seleccione el motivo de la terminación para calcular</div>
+              </div>
+            </div>
+          </div>
+          <div class="card" style="margin-top:14px;background:var(--sky);border:1px solid var(--border2);">
+            <div style="font-size:11px;color:var(--navy2);font-weight:600;margin-bottom:4px;">ℹ️ Art. 162 LFT — ¿Cuándo aplica la prima de antigüedad?</div>
+            <div style="font-size:12px;color:var(--ink2);line-height:1.7;">
+              <strong>✅ Siempre aplica:</strong> despido injustificado, rescisión imputable al patrón (Art. 51), fallecimiento, incapacidad permanente.<br>
+              <strong>⚠️ Solo si tiene 15+ años:</strong> renuncia voluntaria del trabajador.<br>
+              <strong>❌ No aplica:</strong> renuncia con menos de 15 años de servicio, conclusión natural de contrato por tiempo determinado.<br><br>
+              <strong>Fórmula:</strong> 12 días × años trabajados × salario aplicable (máx. 2 × salario mínimo diario).
+            </div>
+          </div>
+        </div>
+
+        <div style="margin-top:16px;padding:12px 14px;background:var(--surface);border-radius:var(--r-sm);font-size:11px;color:var(--ink3);line-height:1.6;border:1px solid var(--border);">
+          ⚠️ <strong>Aviso:</strong> Esta calculadora es una herramienta orientativa con fines informativos, basada en la LFT vigente. Los montos reales pueden variar por partes proporcionales, prestaciones superiores a la ley, acuerdos convencionales u otras circunstancias particulares. Ante cualquier duda o caso específico, consulte a su asesor a través de "Solicitar asesoría".
+          <div style="margin-top:8px;"><button class="btn btn-primary btn-sm" onclick="goPanel('solicitudes')">Consultar a mi asesor →</button></div>
+        </div>
+      </div>
+
+      <!-- ── ASISTENTE IA ── -->
+      <div class="panel" id="panel-asistente">
+        <div style="text-align:center;padding:40px 20px;">
+          <div style="font-size:48px;margin-bottom:16px;">⚖️</div>
+          <div style="font-size:18px;font-weight:700;margin-bottom:8px;">Consultas Legales</div>
+          <div style="font-size:14px;color:var(--ink3);max-width:400px;margin:0 auto 24px;">Base de conocimiento con respuestas verificadas sobre la LFT. Si su pregunta no está prevista, le conectamos directo con un abogado por WhatsApp.</div>
+          <button class="btn btn-primary" style="font-size:14px;padding:12px 28px;" onclick="abrirConsultasLegales()">Buscar mi pregunta →</button>
+        </div>
+      </div>
+
+      <!-- ── SUSCRIPCIÓN ── -->
+      <div class="panel" id="panel-suscripcion">
+        <div class="two-col">
+          <div>
+            <div class="plan-card" id="plan-card"></div>
+            <div class="card">
+              <div class="card-title" style="margin-bottom:4px;">Historial de pagos</div>
+              <div style="font-size:11px;color:var(--ink3);margin-bottom:12px;">Vea o descargue sus facturas y recibos directamente desde Stripe.</div>
+              <button class="btn btn-outline btn-sm" id="btn-ver-facturas" onclick="abrirPortalFacturacion()" style="margin-bottom:14px;">🧾 Ver y descargar facturas</button>
+              <div id="historial-pagos"></div>
+            </div>
+          </div>
+          <div>
+            <div class="card" style="margin-bottom:14px;" id="upgrade-card">
+              <div class="card-title" style="margin-bottom:4px;">Mejorar plan</div>
+              <p style="font-size:11px;color:var(--ink3);margin-bottom:12px;">Los planes incluyen exactamente el mismo servicio — solo cambia el precio según su número de trabajadores. Si su empresa creció, puede subir de plan en cualquier momento.</p>
+              <div id="upgrade-opciones" style="display:flex;flex-direction:column;gap:10px;"></div>
+            </div>
+            <div class="card">
+              <div class="card-title" style="margin-bottom:8px;">🤝 Programa de referidos</div>
+              <div style="font-size:12px;color:var(--ink2);margin-bottom:12px;line-height:1.6;">Refiera a otra empresa y reciba 25% de comisión recurrente cada mes mientras su referido continúe activo, sin importar el plan que elija.</div>
+              <button class="btn btn-primary" style="width:100%;justify-content:center;" onclick="window.open('portal-referidos.html')">Conocer programa de referidos</button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ── CONFIGURACIÓN ── -->
+      <div class="panel" id="panel-configuracion">
+        <div class="two-col">
+          <div class="card">
+            <div class="card-title" style="margin-bottom:14px;">Datos de contacto</div>
+            <div class="solicitud-form">
+              <div class="field"><label>Nombre del contacto RRHH</label><input type="text" id="cfg-contacto" placeholder="Nombre completo"></div>
+              <div class="field"><label>Email</label><input type="email" id="cfg-email" placeholder="correo@empresa.mx"></div>
+              <div class="field"><label>Teléfono</label><input type="text" id="cfg-tel" placeholder="+52 33 1234 5678"></div>
+            </div>
+            <button class="btn btn-primary btn-sm" onclick="guardarConfig()">Guardar cambios</button>
+          </div>
+          <div class="card">
+            <div class="card-title" style="margin-bottom:14px;">Preferencias de notificación</div>
+            <div id="notif-prefs"></div>
+          </div>
+        </div>
+      </div>
+
+    </div><!-- /content -->
+  </div><!-- /main-area -->
+</div><!-- /portal-app -->
+
+<script>
+// ════════════════════════════════════════════
+// AUTH — Conectado a Supabase Auth real
+// ════════════════════════════════════════════
+const SUPABASE_URL = 'https://hpzgqaplrywwjuvrzhcp.supabase.co';
+const SUPABASE_ANON_KEY = 'sb_publishable_1g8US8iFJ8CxnSaF_4MHgA_gqyyAr3W';
+const sbAuth = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+let clienteActual = null;
+// Variables globales de datos — accesibles por renderReportes y otras funciones
+let _gTrabajadores = [], _gTrabajadoresBaja = [], _gDocumentos = [], _gSolicitudes = [];
+let _sbAuth  = null;   // cliente Supabase autenticado (global para reportes)
+let _rfcReal = null;   // RFC del cliente autenticado (global para reportes)
+
+
+async function cargarDatosCliente(rfc){
+  // Fuente de verdad: auth.users (user_metadata) + tablas reales de Supabase
+  const { data: sessionData } = await sbAuth.auth.getSession();
+  const user = sessionData?.session?.user;
+  if (!user) throw new Error('Sesión no válida. Inicie sesión nuevamente.');
+
+  const meta = user.user_metadata || {};
+  const rfcReal = meta.rfc || rfc;
+  const plan = (meta.plan || 'basico').toLowerCase();
+
+  // Cargar datos reales en paralelo
+  const hoy = new Date();
+  // hace30, hace7, inicioMes: ya no necesarios
+
+  const [trabRes, solRes, docsRes, asistRes, identRes, alertasRes] = await Promise.all([
+    sbAuth.from('trabajadores')
+      .select('id,nombre,puesto,activo,fecha_ingreso,nss')
+      .eq('cliente_rfc', rfcReal).order('nombre'),
+    sbAuth.from('solicitudes')
+      .select('*').eq('cliente_rfc', rfcReal)
+      .order('created_at', { ascending: false }).limit(20),
+    sbAuth.from('documentos_expediente')
+      .select('id,nombre,tipo,fecha,generado_en,trabajador_id')
+      .eq('cliente_rfc', rfcReal)
+      .order('fecha', { ascending: false }).limit(100),
+    Promise.resolve({ data: [] }), // asistencias retiradas del compliance
+    sbAuth.from('documentos_identidad')
+      .select('trabajador_id,tipo,nombre_archivo')
+      .eq('cliente_rfc', rfcReal).limit(200),
+    sbAuth.from('alertas_laborales')
+      .select('tipo,trabajador_nombre,mensaje,urgencia,fecha_alerta')
+      .eq('cliente_rfc', rfcReal)
+      .eq('leida', false)
+      .order('fecha_alerta', {ascending:false})
+      .limit(10),
+  ]);
+
+  const trabajadores    = (trabRes.data || []);
+  const trabActivos     = trabajadores.filter(t => t.activo !== false && !t.fecha_baja);
+  const solicitudes     = solRes.data  || [];
+  const documentos      = docsRes.data || [];
+  // Guardar en globales para que renderReportes pueda acceder
+  _gTrabajadores     = trabajadores;
+  _gTrabajadoresBaja = trabajadores.filter(t => t.activo === false || t.fecha_baja);
+  _gDocumentos       = documentos;
+  _gSolicitudes      = solicitudes;
+  const asistencias     = asistRes.data || [];
+  const docsIdentidad   = identRes.data || [];
+  const alertasLaborales = alertasRes?.data || [];
+
+  // ─── Compliance por área ────────────────────────────────────────────────
+  // 1. Contratos: % de trabajadores activos con contrato
+  const trabConContrato = new Set(documentos.filter(d=>d.tipo&&/contrato/i.test(d.tipo)).map(d=>d.trabajador_id));
+  const pctContratos = trabActivos.length ? Math.round(trabConContrato.size/trabActivos.length*100) : 0;
+  const statusContratos = pctContratos===100?'ok': pctContratos>=50?'warn':'bad';
+
+  // 2. Expediente: % de trabajadores con al menos un documento de identidad
+  const trabConDocs = new Set(docsIdentidad.map(d=>d.trabajador_id));
+  const pctExpediente = trabActivos.length ? Math.round(trabConDocs.size/trabActivos.length*100) : 0;
+  const statusExpediente = pctExpediente===100?'ok': pctExpediente>=50?'warn':'bad';
+
+  // Control de asistencias: retirado del compliance
+
+  // 4. Reglamento interior
+  const tieneReglamento = documentos.some(d=>d.tipo&&/reglamento/i.test(d.tipo));
+  const statusReglamento = tieneReglamento?'ok':'warn';
+
+  // 5. NOM-035 (comisiones mixtas)
+  const tieneNom035 = documentos.some(d=>d.tipo&&/nom.?035|comision|psicosocial/i.test(d.tipo));
+  const statusNom035 = tieneNom035?'ok':'warn';
+
+  // 6. Actas administrativas al corriente
+  const pendientesSolicitudes = solicitudes.filter(s=>s.status==='pendiente').length;
+  const statusActas = pendientesSolicitudes===0?'ok': pendientesSolicitudes<=2?'warn':'bad';
+
+  // 7. Trabajadores con NSS
+  const trabConNSS = trabActivos.filter(t=>t.nss&&t.nss.trim()).length;
+  const pctNSS = trabActivos.length ? Math.round(trabConNSS/trabActivos.length*100) : 0;
+  const statusNSS = pctNSS===100?'ok': pctNSS>=70?'warn':'bad';
+
+  // 8. Constancias firmadas (jornada)
+  const tieneConstancias = docsIdentidad.some(d=>d.tipo&&/constancia|firma/i.test(d.tipo));
+  const statusConstancias = trabActivos.length===0?'ok': tieneConstancias?'ok':'warn';
+
+  const compliance = {
+    'Contratos de trabajo':       { status:statusContratos,   label: trabActivos.length ? `${trabConContrato.size}/${trabActivos.length} trabajadores` : 'Sin trabajadores', icon:'📋', pct:pctContratos },
+    'Expedientes completos':      { status:statusExpediente,  label: trabActivos.length ? `${trabConDocs.size}/${trabActivos.length} con documentos` : 'Sin trabajadores', icon:'🗂️', pct:pctExpediente },
+    'Reglamento interior':        { status:statusReglamento,  label: tieneReglamento?'Generado':'Pendiente de generar', icon:'📖', pct:tieneReglamento?100:0 },
+    'NOM-035 STPS':               { status:statusNom035,      label: tieneNom035?'Al día':'Pendiente', icon:'⚕️', pct:tieneNom035?100:0 },
+    'Número de seguridad social': { status:statusNSS,         label: trabActivos.length ? `${trabConNSS}/${trabActivos.length} registrados` : 'Sin trabajadores', icon:'🏥', pct:pctNSS },
+    'Solicitudes pendientes':     { status:statusActas,       label: pendientesSolicitudes ? `${pendientesSolicitudes} por atender` : 'Al día', icon:'📨', pct:pendientesSolicitudes===0?100:0 },
+    'Constancias de jornada':     { status:statusConstancias, label: tieneConstancias?'Con constancias firmadas':'Sin constancias aún', icon:'✍️', pct:tieneConstancias?100:0 },
+  };
+
+  // Score ponderado real
+  const pesos = [3,2,2,2,1,2,1]; // 7 áreas sin asistencias
+  const areas = Object.values(compliance);
+  const scoreReal = Math.round(
+    areas.reduce((sum,a,i)=>sum + (a.status==='ok'?pesos[i]: a.status==='warn'?pesos[i]*0.5:0), 0) /
+    pesos.reduce((s,p)=>s+p, 0) * 100
+  );
+
+  // Obligaciones próximas calculadas
+  const obligaciones = [];
+  const mesNombre = ['ene','feb','mar','abr','may','jun','jul','ago','sep','oct','nov','dic'];
+  const ultimoDia = new Date(hoy.getFullYear(), hoy.getMonth()+1, 0);
+  const diasAlFin = Math.ceil((ultimoDia - hoy) / 86400000);
+  if(trabActivos.length > 0){
+    obligaciones.push({ label:'Pago bimestral IMSS', fecha:`${ultimoDia.getDate()} ${mesNombre[ultimoDia.getMonth()]}`, dias:diasAlFin });
+    if(!tieneNom035) obligaciones.push({ label:'Evaluación NOM-035 STPS', fecha:'Próximo mes', dias:30 });
+    if(!tieneReglamento) obligaciones.push({ label:'Registrar Reglamento ante STPS', fecha:'Pendiente', dias:45 });
+  }
+  obligaciones.sort((a,b)=>a.dias-b.dias);
+
+  // Historial de actividad reciente
+  const historial = documentos.slice(0,8).map(d=>({
+    icon:'📄', cl:'tl-ok',
+    titulo: d.nombre || d.tipo || 'Documento generado',
+    fecha: d.fecha ? new Date(d.fecha+'T12:00:00').toLocaleDateString('es-MX',{day:'2-digit',month:'short',year:'numeric'}) : '',
+  }));
+
+  const CUOTAS = { basico:499, estandar:799, pro:2399 }; // basico se mantiene para clientes existentes (legacy)
+  const cuota  = CUOTAS[plan] || 799;
+
+  // Guardar para reportes
+  _sbAuth  = sbAuth;
+  _rfcReal = rfcReal;
+
+  clienteActual = {
+    rfc:             rfcReal,
+    empresa:         meta.empresa    || rfcReal,
+    contacto:        meta.contacto_rrhh || meta.empresa || rfcReal,
+    email:           meta.email_contacto || user.email || '',
+    tel:             meta.tel         || '',
+    plan:            capitalize((meta.plan || 'Básico').replace(/^plan\s+/i,'')),
+    cuota,
+    score:           scoreReal,
+    semaforo:        scoreReal>=70?'verde': scoreReal>=40?'amarillo':'rojo',
+    trabajadores:    trabActivos.length,
+    _trabajadoresRaw: trabajadores, // todos incluyendo bajas para reportes
+    trabajadoresTotal: trabajadores.length,
+    stripeCustomerId: meta.stripe_customer_id || null,
+    giro:            meta.giro        || '',
+    ciudad:          meta.domicilio   || '',
+    inicioServicio:  user.created_at  ? user.created_at.split('T')[0] : '',
+    proximoPago:     '—',
+    compliance,
+    alertas: [
+      ...(!tieneReglamento && trabActivos.length>0 ? [{ tipo:'warn', titulo:'Reglamento interior pendiente', desc:'Genere su reglamento interior de trabajo', dias:45, url:'reglamento-interior.html' }] : []),
+      ...(!tieneNom035 && trabActivos.length>0 ? [{ tipo:'warn', titulo:'NOM-035 STPS pendiente', desc:'Realice la evaluación de factores de riesgo psicosocial', dias:30, url:'nom035-evaluacion.html' }] : []),
+      ...(statusContratos!=='ok' && trabActivos.length>0 ? [{ tipo:'warn', titulo:`Contratos pendientes`, desc:`${trabActivos.length - trabConContrato.size} trabajador(es) sin contrato generado`, dias:7 }] : []),
+      // asistencias: sin alerta en portal
+      ...solicitudes.filter(s=>s.status==='pendiente').slice(0,3).map(s=>({ tipo:'warn', titulo:s.tipo||'Solicitud pendiente', desc:s.descripcion||'', dias:0 })),
+      ...alertasLaborales.map(a=>({ tipo:a.urgencia==='alta'?'bad':'warn', titulo: a.tipo==='periodo_prueba'?'⏰ Período de prueba próximo a vencer':'📅 Prima vacacional próxima', desc:a.mensaje||'', dias:0 })),
+    ].slice(0,6),
+    docs: documentos.slice(0,20).map(d => ({
+      icon:'📄', nombre: d.nombre || d.tipo, tipo: d.tipo,
+      fecha: d.fecha || '', status: 'ok',
+    })),
+    historial,
+    pagos: [],
+    obligaciones,
+  };
+
+  document.getElementById('login-screen').style.display = 'none';
+  document.getElementById('portal-app').style.display = 'block';
+  initPortal();
+}
+
+
+// Rate limiting: bloqueo tras 5 intentos fallidos por 15 minutos
+const _rlState = {
+  intentos: parseInt(sessionStorage.getItem('_rl_int')||'0'),
+  bloqueadoHasta: parseInt(sessionStorage.getItem('_rl_hasta')||'0'),
+};
+function _rlBloqueado(){
+  if(_rlState.bloqueadoHasta > Date.now()) return true;
+  if(_rlState.bloqueadoHasta && _rlState.bloqueadoHasta <= Date.now()){
+    _rlState.intentos = 0; _rlState.bloqueadoHasta = 0;
+    sessionStorage.removeItem('_rl_int'); sessionStorage.removeItem('_rl_hasta');
+  }
+  return false;
+}
+function _rlFallo(){
+  _rlState.intentos++;
+  sessionStorage.setItem('_rl_int', _rlState.intentos);
+  if(_rlState.intentos >= 5){
+    _rlState.bloqueadoHasta = Date.now() + 15*60*1000;
+    sessionStorage.setItem('_rl_hasta', _rlState.bloqueadoHasta);
+  }
+}
+function _rlExito(){ _rlState.intentos=0; _rlState.bloqueadoHasta=0; sessionStorage.removeItem('_rl_int'); sessionStorage.removeItem('_rl_hasta'); }
+async function loginSubmit(){
+  const rfc = document.getElementById('login-rfc').value.trim().toUpperCase();
+  const pass = document.getElementById('login-pass').value;
+  const err = document.getElementById('login-error');
+  const btn = document.querySelector('.login-btn');
+  err.style.display = 'none';
+
+  if(!rfc || !pass){
+    err.textContent = 'Ingrese su RFC y contraseña.';
+    err.style.display = 'block';
+    return;
+  }
+
+  const btnOriginal = btn.textContent;
+  btn.textContent = 'Verificando...';
+  btn.disabled = true;
+
+  try {
+    // El RFC se convierte internamente al formato de email que usa Supabase Auth
+    const emailInterno = `${rfc.toLowerCase()}@clicklaboral.mx`;
+
+    const { data: authData, error: authError } = await sbAuth.auth.signInWithPassword({
+      email: emailInterno,
+      password: pass,
+    });
+
+    if (authError) {
+      err.textContent = 'RFC o contraseña incorrectos. Intente de nuevo.';
+      err.style.display = 'block';
+      document.getElementById('login-pass').value = '';
+      btn.textContent = btnOriginal;
+      btn.disabled = false;
+      return;
+    }
+
+    await cargarDatosCliente(rfc);
+
+  } catch (e) {
+    console.error('Error de login:', e);
+    err.textContent = 'Error de conexión. Intente de nuevo en unos segundos.';
+    err.style.display = 'block';
+    btn.textContent = btnOriginal;
+    btn.disabled = false;
+  }
+}
+
+function capitalize(s){
+  if(!s) return '';
+  return s.charAt(0).toUpperCase() + s.slice(1);
+}
+
+function abrirConsultasLegales(){
+  const plan = clienteActual?.plan || 'Estándar';
+  const rfc = clienteActual?.rfc || '';
+  window.open(`consultas-legales.html?plan=${encodeURIComponent(plan)}&rfc=${encodeURIComponent(rfc)}`);
+}
+
+
+// ── Reportes gerenciales ────────────────────────────────────────────────────
+function kpiCard(label, val, sub, color) {
+  return '<div style="background:var(--white);border-radius:10px;padding:14px;border:1px solid var(--border);">'
+    + '<div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.05em;color:var(--ink3);margin-bottom:4px;">' + label + '</div>'
+    + '<div style="font-size:22px;font-weight:800;color:' + color + ';">' + val + '</div>'
+    + '<div style="font-size:11px;color:var(--ink3);">' + sub + '</div>'
+    + '</div>';
+}
+
+async function renderReportes() {
+  const el = document.getElementById('rep-contenido');
+  if (!el) { console.error('rep-contenido no encontrado'); return; }
+
+  const rfcUsar = _rfcReal || clienteActual?.rfc;
+  console.log('[Rep] rfcUsar:', rfcUsar, '| _sbAuth:', !!_sbAuth, '| clienteActual:', !!clienteActual);
+
+  if (!rfcUsar || !_sbAuth) {
+    // Intentar con sbAuth global del portal
+    const sbUsar = typeof sbAuth !== 'undefined' ? sbAuth : null;
+    const rfcFallback = clienteActual?.rfc || null;
+    console.log('[Rep] Fallback sbUsar:', !!sbUsar, 'rfcFallback:', rfcFallback);
+    if (!sbUsar || !rfcFallback) {
+      el.innerHTML = `<div style="padding:40px;text-align:center;color:#dc2626;">
+        Sin datos: rfcUsar=${rfcUsar}, _sbAuth=${!!_sbAuth}, clienteActual=${!!clienteActual}<br>
+        <button onclick="renderReportes()" style="margin-top:12px;padding:8px 16px;background:var(--navy2);color:#fff;border:none;border-radius:6px;cursor:pointer;">🔄 Reintentar</button>
+      </div>`;
+      return;
+    }
+    // Usar fallback
+    _sbAuth = sbUsar;
+    _rfcReal = rfcFallback;
+  }
+
+  el.innerHTML = '<div style="text-align:center;padding:60px;color:var(--ink3);">⏳ Cargando reportes…</div>';
+
+  try {
+    // Obtener token fresco y hacer fetch directo a REST API
+    const { data: sesData } = await _sbAuth.auth.getSession();
+    const tok = sesData?.session?.access_token;
+    console.log('[Rep] token:', tok ? tok.substring(0,15)+'...' : 'VACÍO');
+
+    if (!tok) {
+      el.innerHTML = '<div style="padding:40px;text-align:center;color:#dc2626;">Sin token de sesión. <button onclick="location.reload()" style="padding:8px 16px;background:var(--navy2);color:#fff;border:none;border-radius:6px;cursor:pointer;margin-left:8px;">Recargar</button></div>';
+      return;
+    }
+
+    const hdrs = {
+      apikey: SUPABASE_ANON_KEY,
+      Authorization: 'Bearer ' + tok,
+      Accept: 'application/json',
+    };
+    const base = SUPABASE_URL + '/rest/v1/';
+    const rfc = encodeURIComponent(rfcUsar);
+
+    const [j1, j2] = await Promise.all([
+      fetch(base + 'trabajadores?select=id,nombre,puesto,activo,fecha_ingreso,fecha_baja,motivo_baja,nss&cliente_rfc=eq.' + rfc + '&order=nombre.asc', {headers: hdrs}).then(r=>{ console.log('[Rep] trabajadores status:', r.status); return r.ok?r.json():[]; }),
+      fetch(base + 'documentos_expediente?select=id,tipo,nombre,fecha&cliente_rfc=eq.' + rfc + '&order=fecha.desc&limit=200', {headers: hdrs}).then(r=>{ console.log('[Rep] docs status:', r.status); return r.ok?r.json():[]; }),
+    ]);
+
+    const trabs = Array.isArray(j1) ? j1 : [];
+    const docs  = Array.isArray(j2) ? j2 : [];
+    console.log('[Rep] Resultado — trabajadores:', trabs.length, '| docs:', docs.length);
+    const activos = trabs.filter(t => t.activo !== false && !t.fecha_baja);
+    const bajas   = trabs.filter(t => t.activo === false || t.fecha_baja);
+
+    const periodo = document.getElementById('rep-periodo')?.value || 'todo';
+    const hoy = new Date();
+    let desdeStr = '2020-01-01';
+    if (periodo === 'mes') desdeStr = new Date(hoy.getFullYear(), hoy.getMonth(), 1).toISOString().split('T')[0];
+    else if (periodo === 'trimestre') desdeStr = new Date(hoy.getFullYear(), Math.floor(hoy.getMonth()/3)*3, 1).toISOString().split('T')[0];
+    else if (periodo === 'anio') desdeStr = new Date(hoy.getFullYear(), 0, 1).toISOString().split('T')[0];
+
+    const docsFiltrados = docs.filter(d => !d.fecha || d.fecha >= desdeStr);
+    const altasPeriodo  = trabs.filter(t => (t.fecha_ingreso||'') >= desdeStr).length;
+    const bajasPeriodo  = bajas.filter(t => (t.fecha_baja||'') >= desdeStr).length;
+    const rotacion = activos.length > 0 ? Math.round(bajasPeriodo/activos.length*100) : 0;
+
+    const puestos = {};
+    activos.forEach(t => { const p=t.puesto||'Sin puesto'; puestos[p]=(puestos[p]||0)+1; });
+    const puestosOrden = Object.entries(puestos).sort((a,b)=>b[1]-a[1]).slice(0,6);
+    const maxP = puestosOrden[0]?.[1] || 1;
+
+    const tiposDocs = {};
+    docsFiltrados.forEach(d => { const t=d.tipo||'otro'; tiposDocs[t]=(tiposDocs[t]||0)+1; });
+    const tiposOrden = Object.entries(tiposDocs).sort((a,b)=>b[1]-a[1]).slice(0,6);
+    const maxT = tiposOrden[0]?.[1] || 1;
+
+    const fmt = d => d ? new Date(d+'T12:00:00').toLocaleDateString('es-MX',{day:'2-digit',month:'short',year:'numeric'}) : '—';
+    const antig = fi => { if(!fi) return '—'; const d=Math.floor((new Date()-new Date(fi+'T12:00:00'))/86400000); if(d<30) return d+'d'; if(d<365) return Math.floor(d/30)+'m'; return (d/365).toFixed(1)+' años'; };
+    const bar = (v,max,col='var(--navy2)') => `<div style="height:8px;background:#f1f5f9;border-radius:4px;overflow:hidden;flex:1;"><div style="height:100%;width:${Math.round(v/max*100)}%;background:${col};border-radius:4px;"></div></div>`;
+
+    console.log('[Rep] Renderizando HTML con', activos.length, 'activos,', bajas.length, 'bajas');
+
+    // Construcción del HTML por partes — sin template literals anidados
+    let html = '';
+
+    // KPIs
+    html += '<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:12px;margin-bottom:18px;">';
+    html += kpiCard('Trabajadores activos', activos.length, bajas.length + ' de baja', '#0f2640');
+    html += kpiCard('Rotación', rotacion + '%', bajasPeriodo + ' baja(s)', rotacion > 15 ? '#dc2626' : rotacion > 5 ? '#d97706' : '#16a34a');
+    html += kpiCard('Documentos', docsFiltrados.length, docsFiltrados.filter(function(d){return d.tipo&&/contrato/i.test(d.tipo);}).length + ' contratos', '#0f766e');
+    html += kpiCard('Altas en período', altasPeriodo, 'nuevos ingresos', '#16a34a');
+    html += '</div>';
+
+    // Distribución por puesto
+    if (puestosOrden.length > 0) {
+      html += '<div style="background:var(--white);border-radius:10px;padding:16px;border:1px solid var(--border);margin-bottom:14px;">';
+      html += '<div style="font-size:13px;font-weight:700;color:var(--navy);margin-bottom:12px;">Distribución por puesto</div>';
+      puestosOrden.forEach(function(entry) {
+        var k = entry[0], v = entry[1];
+        html += '<div style="display:grid;grid-template-columns:130px 1fr 30px;align-items:center;gap:8px;margin-bottom:6px;">';
+        html += '<div style="font-size:12px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">' + k + '</div>';
+        html += '<div style="height:8px;background:#f1f5f9;border-radius:4px;overflow:hidden;flex:1;"><div style="height:100%;width:' + Math.round(v/maxP*100) + '%;background:var(--navy2);border-radius:4px;"></div></div>';
+        html += '<div style="font-size:12px;font-weight:700;text-align:right;">' + v + '</div>';
+        html += '</div>';
+      });
+      html += '</div>';
+    }
+
+    // Documentos por tipo
+    if (tiposOrden.length > 0) {
+      html += '<div style="background:var(--white);border-radius:10px;padding:16px;border:1px solid var(--border);margin-bottom:14px;">';
+      html += '<div style="font-size:13px;font-weight:700;color:var(--navy);margin-bottom:12px;">Documentos por tipo</div>';
+      tiposOrden.forEach(function(entry) {
+        var k = entry[0], v = entry[1];
+        html += '<div style="display:grid;grid-template-columns:150px 1fr 30px;align-items:center;gap:8px;margin-bottom:6px;">';
+        html += '<div style="font-size:12px;">' + k.replace(/_/g,' ') + '</div>';
+        html += '<div style="height:8px;background:#f1f5f9;border-radius:4px;overflow:hidden;flex:1;"><div style="height:100%;width:' + Math.round(v/maxT*100) + '%;background:var(--teal,#0f766e);border-radius:4px;"></div></div>';
+        html += '<div style="font-size:12px;font-weight:700;text-align:right;">' + v + '</div>';
+        html += '</div>';
+      });
+      html += '</div>';
+    }
+
+    // Tabla trabajadores
+    html += '<div style="background:var(--white);border-radius:10px;padding:16px;border:1px solid var(--border);overflow-x:auto;">';
+    html += '<div style="font-size:13px;font-weight:700;color:var(--navy);margin-bottom:12px;">Trabajadores activos (' + activos.length + ')</div>';
+    html += '<table style="width:100%;border-collapse:collapse;font-size:12px;">';
+    html += '<thead><tr><th style="text-align:left;padding:7px 10px;border-bottom:1.5px solid var(--border);font-size:10px;text-transform:uppercase;color:var(--ink3);">Nombre</th><th style="text-align:left;padding:7px 10px;border-bottom:1.5px solid var(--border);font-size:10px;text-transform:uppercase;color:var(--ink3);">Puesto</th><th style="text-align:left;padding:7px 10px;border-bottom:1.5px solid var(--border);font-size:10px;text-transform:uppercase;color:var(--ink3);">Ingreso</th><th style="text-align:left;padding:7px 10px;border-bottom:1.5px solid var(--border);font-size:10px;text-transform:uppercase;color:var(--ink3);">Antigüedad</th><th style="text-align:left;padding:7px 10px;border-bottom:1.5px solid var(--border);font-size:10px;text-transform:uppercase;color:var(--ink3);">NSS</th></tr></thead>';
+    html += '<tbody>';
+    if (activos.length === 0) {
+      html += '<tr><td colspan="5" style="padding:20px;text-align:center;color:var(--ink3);">Sin trabajadores</td></tr>';
+    } else {
+      activos.forEach(function(t) {
+        html += '<tr>';
+        html += '<td style="padding:8px 10px;border-bottom:1px solid var(--border);font-weight:600;">' + (t.nombre||'') + '</td>';
+        html += '<td style="padding:8px 10px;border-bottom:1px solid var(--border);color:var(--ink2);">' + (t.puesto||'—') + '</td>';
+        html += '<td style="padding:8px 10px;border-bottom:1px solid var(--border);color:var(--ink2);">' + fmt(t.fecha_ingreso) + '</td>';
+        html += '<td style="padding:8px 10px;border-bottom:1px solid var(--border);color:var(--ink2);">' + antig(t.fecha_ingreso) + '</td>';
+        html += '<td style="padding:8px 10px;border-bottom:1px solid var(--border);color:var(--ink2);">' + (t.nss||'—') + '</td>';
+        html += '</tr>';
+      });
+    }
+    html += '</tbody></table></div>';
+
+    // Tabla bajas
+    if (bajas.length > 0) {
+      html += '<div style="background:var(--white);border-radius:10px;padding:16px;border:1px solid var(--border);margin-top:14px;overflow-x:auto;">';
+      html += '<div style="font-size:13px;font-weight:700;color:var(--navy);margin-bottom:12px;">Bajas (' + bajas.length + ')</div>';
+      html += '<table style="width:100%;border-collapse:collapse;font-size:12px;">';
+      html += '<thead><tr><th style="text-align:left;padding:7px 10px;border-bottom:1.5px solid var(--border);font-size:10px;text-transform:uppercase;color:var(--ink3);">Nombre</th><th style="text-align:left;padding:7px 10px;border-bottom:1.5px solid var(--border);font-size:10px;text-transform:uppercase;color:var(--ink3);">Puesto</th><th style="text-align:left;padding:7px 10px;border-bottom:1.5px solid var(--border);font-size:10px;text-transform:uppercase;color:var(--ink3);">Fecha baja</th><th style="text-align:left;padding:7px 10px;border-bottom:1.5px solid var(--border);font-size:10px;text-transform:uppercase;color:var(--ink3);">Motivo</th></tr></thead>';
+      html += '<tbody>';
+      bajas.forEach(function(t) {
+        html += '<tr>';
+        html += '<td style="padding:8px 10px;border-bottom:1px solid var(--border);font-weight:600;">' + (t.nombre||'') + '</td>';
+        html += '<td style="padding:8px 10px;border-bottom:1px solid var(--border);color:var(--ink2);">' + (t.puesto||'—') + '</td>';
+        html += '<td style="padding:8px 10px;border-bottom:1px solid var(--border);color:var(--ink2);">' + fmt(t.fecha_baja) + '</td>';
+        html += '<td style="padding:8px 10px;border-bottom:1px solid var(--border);color:var(--ink2);">' + (t.motivo_baja||'—') + '</td>';
+        html += '</tr>';
+      });
+      html += '</tbody></table></div>';
+    }
+
+    el.innerHTML = html;
+    console.log('[Rep] HTML renderizado OK (' + html.length + ' chars)');
+  } catch(e) {
+    console.error('renderReportes error:', e.message, e.stack);
+    el.innerHTML = '<div style="padding:40px;color:#dc2626;font-size:13px;"><strong>Error:</strong> '+e.message+'<br><pre style="font-size:11px;margin-top:8px;white-space:pre-wrap;">'+e.stack+'</pre></div>';
+  }
+}
+
+
+async function logout(){
+  await sbAuth.auth.signOut();
+  clienteActual = null;
+  document.getElementById('portal-app').style.display = 'none';
+  document.getElementById('login-screen').style.display = 'flex';
+  document.getElementById('login-rfc').value = '';
+  document.getElementById('login-pass').value = '';
+}
+
+// ════════════════════════════════════════════
+// PORTAL INIT
+// ════════════════════════════════════════════
+function initPortal(){
+  const c = clienteActual;
+
+  // Sidebar
+  document.getElementById('sb-empresa-name').textContent = c.empresa;
+  document.getElementById('sb-rfc-display').textContent = c.rfc;
+  document.getElementById('sb-contacto-name').textContent = c.contacto;
+  const planBadge = document.getElementById('sb-plan-badge');
+  planBadge.textContent = 'Plan '+c.plan;
+  const planSlug = {'Básico':'basico','Estándar':'estandar','Pro':'pro'}[c.plan] || 'estandar';
+  planBadge.className = 'sb-logo-plan plan-'+planSlug;
+  document.getElementById('sb-alert-badge').textContent = c.alertas.length;
+
+  // Topbar fecha
+  document.getElementById('topbar-fecha').textContent = new Date().toLocaleDateString('es-MX',{weekday:'long',day:'numeric',month:'long',year:'numeric'});
+
+  // Config
+  document.getElementById('cfg-contacto').value = c.contacto;
+  document.getElementById('cfg-email').value = c.email;
+  document.getElementById('cfg-tel').value = c.tel;
+
+  renderInicio();
+  renderCompliance();
+  renderAlertas();
+  renderDocs();
+  renderGeneradores();
+  renderSuscripcion();
+  renderNotifPrefs();
+  initScrollHintSidebar();
+}
+
+// ════════════════════════════════════════════
+// HINT VISUAL DE SCROLL EN EL MENÚ LATERAL
+// Evita que el cliente no se entere de que hay más opciones abajo
+// (Suscripción, Configuración) cuando el menú no cabe completo.
+// ════════════════════════════════════════════
+function initScrollHintSidebar(){
+  const nav = document.querySelector('.sb-nav');
+  const hint = document.getElementById('sb-scroll-hint');
+  if (!nav || !hint) return;
+
+  function actualizarHint(){
+    const haySobrante = nav.scrollHeight - nav.clientHeight > 4;
+    const yaLlegoAlFondo = nav.scrollTop + nav.clientHeight >= nav.scrollHeight - 4;
+    hint.classList.toggle('hidden', !haySobrante || yaLlegoAlFondo);
+  }
+
+  nav.addEventListener('scroll', actualizarHint);
+  window.addEventListener('resize', actualizarHint);
+  // Pequeño delay para que el layout ya esté pintado antes de medir
+  setTimeout(actualizarHint, 50);
+}
+
+// ════════════════════════════════════════════
+// RENDERS
+// ════════════════════════════════════════════
+const scoreColor = s => s>=80?'var(--green)':s>=50?'var(--amber)':'var(--red)';
+
+function renderInicio(){
+  const c = clienteActual;
+
+  // Stats
+  document.getElementById('inicio-stats').innerHTML = `
+    <div class="stat-card"><div class="stat-label">Trabajadores</div><div class="stat-value">${c.trabajadores}</div><div class="stat-sub">${c.giro}</div></div>
+    <div class="stat-card"><div class="stat-label">Compliance</div><div class="stat-value" style="color:${scoreColor(c.score)}">${c.score}%</div><div class="stat-sub">Score actual</div></div>
+    <div class="stat-card"><div class="stat-label">Alertas activas</div><div class="stat-value" style="color:var(--amber)">${c.alertas.length}</div><div class="stat-sub">requieren atención</div></div>
+    <div class="stat-card"><div class="stat-label">Documentos</div><div class="stat-value">${c.docs.length}</div><div class="stat-sub">en su expediente</div></div>`;
+
+  // Score
+  document.getElementById('inicio-score').innerHTML = `<span style="color:${scoreColor(c.score)}">${c.score}</span>`;
+
+  // Semáforo compacto
+  const compItems = Object.entries(c.compliance).slice(0,4);
+  document.getElementById('inicio-sem-grid').innerHTML = compItems.map(([k,v])=>`
+    <div style="display:flex;align-items:center;gap:8px;padding:8px 10px;background:var(--surface);border-radius:6px;">
+      <span style="font-size:16px;">${v.icon}</span>
+      <div style="flex:1;min-width:0;">
+        <div style="font-size:11px;font-weight:500;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${k}</div>
+        <span class="${v.status==='ok'?'badge-green':v.status==='warn'?'badge-amber':'badge-red'} badge" style="margin-top:2px;">${v.label}</span>
+      </div>
+    </div>`).join('');
+
+  // Alertas
+  document.getElementById('inicio-alertas').innerHTML = c.alertas.length
+    ? c.alertas.slice(0,3).map(alertHTML).join('')
+    : '<div style="font-size:12px;color:var(--ink3);text-align:center;padding:16px;">✅ Sin alertas activas</div>';
+
+  // Obligaciones
+  document.getElementById('inicio-obligaciones').innerHTML = c.obligaciones.map(o=>`
+    <div style="display:flex;align-items:center;gap:10px;padding:8px 0;border-bottom:1px solid var(--border);">
+      <div style="font-size:11px;font-weight:600;color:${o.dias<=7?'var(--red)':o.dias<=30?'var(--amber)':'var(--ink3)'};min-width:70px;">${o.dias}d</div>
+      <div style="font-size:12px;flex:1;">${o.label}</div>
+      <div style="font-size:11px;color:var(--ink3);">${o.fecha}</div>
+    </div>`).join('') || '<div style="font-size:12px;color:var(--ink3);padding:10px 0;">Sin obligaciones próximas</div>';
+}
+
+function renderCompliance(){
+  const c = clienteActual;
+  document.getElementById('comp-score-num').innerHTML = `<span style="color:${scoreColor(c.score)}">${c.score}</span>`;
+  document.getElementById('comp-sem-grid').innerHTML = Object.entries(c.compliance).map(([k,v])=>`
+    <div class="sem-item">
+      <div class="sem-item-icon">${v.icon}</div>
+      <div class="sem-item-label">${k}</div>
+      <div class="sem-item-status ${v.status==='ok'?'status-ok':v.status==='warn'?'status-warn':'status-bad'}">${v.label}</div>
+    </div>`).join('');
+
+  // Historial
+  document.getElementById('comp-detalle').innerHTML = `
+    <div class="card" style="margin-top:16px;">
+      <div class="card-title" style="margin-bottom:14px;">Historial de actividad</div>
+      <div>${c.historial.map(h=>`
+        <div class="tl-item">
+          <div class="tl-dot ${h.cl}">${h.icon}</div>
+          <div class="tl-body"><div class="tl-title">${h.titulo}</div><div class="tl-date">${h.fecha}</div></div>
+        </div>`).join('')}</div>
+    </div>`;
+
+  // Gráficas
+  renderGraficasCompliance(c);
+}
+
+// ════════════════════════════════════════════════════════
+// GRÁFICAS DE COMPLIANCE — Canvas nativo, sin dependencias
+// ════════════════════════════════════════════════════════
+function renderGraficasCompliance(c){
+  const areas = Object.entries(c.compliance);
+  const ok   = areas.filter(([,v])=>v.status==='ok').length;
+  const warn = areas.filter(([,v])=>v.status==='warn').length;
+  const bad  = areas.filter(([,v])=>v.status==='bad').length;
+  const total = areas.length;
+
+  const GREEN  = '#16a34a';
+  const AMBER  = '#d97706';
+  const RED    = '#dc2626';
+  const NAVY   = '#0f2640';
+  const NAVY2  = '#1a3a5c';
+  const SKY    = '#e8f2fc';
+  const GRAY   = '#d1d5db';
+  const INK3   = '#888880';
+  const WHITE  = '#ffffff';
+
+  document.getElementById('comp-graficas').innerHTML = `
+    <div class="three-col" style="margin-bottom:16px;">
+      <div class="card" style="display:flex;flex-direction:column;align-items:center;padding:20px 12px;">
+        <div style="font-size:12px;color:var(--ink3);font-weight:600;text-transform:uppercase;letter-spacing:.06em;margin-bottom:12px;">Score general</div>
+        <canvas id="gc-gauge" width="180" height="100"></canvas>
+        <div style="margin-top:6px;font-size:12px;color:var(--ink3);text-align:center;">Índice de cumplimiento laboral</div>
+      </div>
+      <div class="card" style="display:flex;flex-direction:column;align-items:center;padding:20px 12px;">
+        <div style="font-size:12px;color:var(--ink3);font-weight:600;text-transform:uppercase;letter-spacing:.06em;margin-bottom:12px;">Distribución por estado</div>
+        <canvas id="gc-donut" width="160" height="160"></canvas>
+        <div id="gc-donut-legend" style="margin-top:10px;display:flex;gap:14px;flex-wrap:wrap;justify-content:center;font-size:12px;"></div>
+      </div>
+      <div class="card" style="display:flex;flex-direction:column;padding:20px 16px;">
+        <div style="font-size:12px;color:var(--ink3);font-weight:600;text-transform:uppercase;letter-spacing:.06em;margin-bottom:14px;">Resumen de áreas</div>
+        <div style="display:flex;flex-direction:column;gap:8px;flex:1;justify-content:center;">
+          <div style="display:flex;align-items:center;gap:10px;">
+            <div style="width:12px;height:12px;border-radius:50%;background:${GREEN};flex-shrink:0;"></div>
+            <div style="flex:1;font-size:13px;">Al día</div>
+            <div style="font-size:20px;font-weight:800;color:${GREEN};">${ok}</div>
+            <div style="font-size:11px;color:var(--ink3);width:36px;text-align:right;">${total?Math.round(ok/total*100):0}%</div>
+          </div>
+          <div style="display:flex;align-items:center;gap:10px;">
+            <div style="width:12px;height:12px;border-radius:50%;background:${AMBER};flex-shrink:0;"></div>
+            <div style="flex:1;font-size:13px;">Por atender</div>
+            <div style="font-size:20px;font-weight:800;color:${AMBER};">${warn}</div>
+            <div style="font-size:11px;color:var(--ink3);width:36px;text-align:right;">${total?Math.round(warn/total*100):0}%</div>
+          </div>
+          <div style="display:flex;align-items:center;gap:10px;">
+            <div style="width:12px;height:12px;border-radius:50%;background:${RED};flex-shrink:0;"></div>
+            <div style="flex:1;font-size:13px;">Crítico</div>
+            <div style="font-size:20px;font-weight:800;color:${RED};">${bad}</div>
+            <div style="font-size:11px;color:var(--ink3);width:36px;text-align:right;">${total?Math.round(bad/total*100):0}%</div>
+          </div>
+          <div style="margin-top:8px;padding-top:8px;border-top:1px solid var(--border);display:flex;align-items:center;gap:10px;">
+            <div style="flex:1;font-size:13px;font-weight:600;">Total áreas</div>
+            <div style="font-size:20px;font-weight:800;color:var(--navy2);">${total}</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="card" style="margin-bottom:16px;">
+      <div style="font-size:12px;color:var(--ink3);font-weight:600;text-transform:uppercase;letter-spacing:.06em;margin-bottom:16px;">Estado por área de compliance</div>
+      <canvas id="gc-barras" width="900" height="${Math.max(220, areas.length*36)}" style="width:100%;height:auto;display:block;"></canvas>
+    </div>
+
+    <div class="two-col">
+      <div class="card">
+        <div style="font-size:12px;color:var(--ink3);font-weight:600;text-transform:uppercase;letter-spacing:.06em;margin-bottom:12px;">Radar de cumplimiento por área</div>
+        <canvas id="gc-radar" width="300" height="300" style="width:100%;max-width:300px;display:block;margin:0 auto;"></canvas>
+      </div>
+      <div class="card">
+        <div style="font-size:12px;color:var(--ink3);font-weight:600;text-transform:uppercase;letter-spacing:.06em;margin-bottom:12px;">Próximas obligaciones</div>
+        <canvas id="gc-timeline" width="400" height="180" style="width:100%;height:auto;display:block;"></canvas>
+        <div id="gc-obl-lista" style="margin-top:10px;"></div>
+      </div>
+    </div>`;
+
+  // Esperar al siguiente frame para que el DOM esté pintado
+  requestAnimationFrame(()=>{
+    dibujarGauge(c.score, GREEN, AMBER, RED, NAVY2, INK3);
+    dibujarDonut([ok,warn,bad], [GREEN,AMBER,RED], ['Al día','Por atender','Crítico'], total);
+    dibujarBarras(areas, GREEN, AMBER, RED, GRAY, NAVY, INK3, WHITE);
+    dibujarRadar(areas, GREEN, AMBER, RED, NAVY2, SKY);
+    dibujarTimeline(c.obligaciones||[], AMBER, RED, GREEN, INK3, NAVY);
+  });
+}
+
+function dibujarGauge(score, GREEN, AMBER, RED, NAVY2, INK3){
+  const cv = document.getElementById('gc-gauge'); if(!cv) return;
+  const ctx = cv.getContext('2d');
+  const W=cv.width, H=cv.height, cx=W/2, cy=H-10, r=H-18;
+  ctx.clearRect(0,0,W,H);
+  // Arco de fondo
+  const segmentos=[{color:RED,from:Math.PI,to:Math.PI+Math.PI*0.33},{color:AMBER,from:Math.PI+Math.PI*0.33,to:Math.PI+Math.PI*0.66},{color:GREEN,from:Math.PI+Math.PI*0.66,to:2*Math.PI}];
+  segmentos.forEach(s=>{
+    ctx.beginPath(); ctx.arc(cx,cy,r,s.from,s.to); ctx.lineWidth=18; ctx.strokeStyle=s.color; ctx.stroke();
+  });
+  // Aguja
+  const ang = Math.PI + (score/100)*Math.PI;
+  const ax = cx + (r-9)*Math.cos(ang), ay = cy + (r-9)*Math.sin(ang);
+  ctx.beginPath(); ctx.moveTo(cx,cy); ctx.lineTo(ax,ay);
+  ctx.lineWidth=3; ctx.strokeStyle=NAVY2; ctx.lineCap='round'; ctx.stroke();
+  ctx.beginPath(); ctx.arc(cx,cy,6,0,2*Math.PI); ctx.fillStyle=NAVY2; ctx.fill();
+  // Score text
+  ctx.fillStyle=score>=70?GREEN:score>=40?AMBER:RED;
+  ctx.font=`bold 26px system-ui`; ctx.textAlign='center'; ctx.textBaseline='bottom';
+  ctx.fillText(score, cx, cy-16);
+  ctx.fillStyle=INK3; ctx.font=`11px system-ui`;
+  ctx.fillText('/ 100', cx, cy-2);
+}
+
+function dibujarDonut([ok,warn,bad],[G,A,R],[lOk,lWarn,lBad],total){
+  const cv = document.getElementById('gc-donut'); if(!cv) return;
+  const ctx = cv.getContext('2d');
+  const W=cv.width, H=cv.height, cx=W/2, cy=H/2, r=64, ri=36;
+  ctx.clearRect(0,0,W,H);
+  const vals=[{v:ok,c:G},{v:warn,c:A},{v:bad,c:R}].filter(x=>x.v>0);
+  if(!total){ ctx.fillStyle='#e5e7eb'; ctx.beginPath(); ctx.arc(cx,cy,r,0,2*Math.PI); ctx.fill(); return; }
+  let ang=-Math.PI/2;
+  vals.forEach(({v,c})=>{
+    const sweep=(v/total)*2*Math.PI;
+    ctx.beginPath(); ctx.moveTo(cx,cy); ctx.arc(cx,cy,r,ang,ang+sweep);
+    ctx.closePath(); ctx.fillStyle=c; ctx.fill();
+    ang+=sweep;
+  });
+  // Hueco interior
+  ctx.beginPath(); ctx.arc(cx,cy,ri,0,2*Math.PI); ctx.fillStyle=document.body.style.background||'#f5f4f0';
+  ctx.fill();
+  // Centro
+  ctx.fillStyle='#888'; ctx.font='bold 18px system-ui'; ctx.textAlign='center'; ctx.textBaseline='middle';
+  ctx.fillText(total, cx, cy-6);
+  ctx.font='10px system-ui'; ctx.fillText('áreas', cx, cy+10);
+  // Leyenda
+  const leg=document.getElementById('gc-donut-legend'); if(leg){
+    leg.innerHTML=[{c:G,l:lOk,v:ok},{c:A,l:lWarn,v:warn},{c:R,l:lBad,v:bad}].filter(x=>x.v>0)
+      .map(x=>`<span style="display:flex;align-items:center;gap:4px;"><span style="width:10px;height:10px;border-radius:50%;background:${x.c};display:inline-block;"></span>${x.l}: ${x.v}</span>`).join('');
+  }
+}
+
+function dibujarBarras(areas, GREEN, AMBER, RED, GRAY, NAVY, INK3, WHITE){
+  const cv = document.getElementById('gc-barras'); if(!cv) return;
+  const ctx = cv.getContext('2d');
+  const W=cv.width, H=cv.height;
+  ctx.clearRect(0,0,W,H);
+  const padL=200, padR=80, padT=14, padB=10;
+  const barH=22, gap=14;
+  const availW=W-padL-padR;
+
+  areas.forEach(([label,v],i)=>{
+    const y = padT + i*(barH+gap);
+    const pct = v.status==='ok'?100:v.status==='warn'?50:15;
+    const color = v.status==='ok'?GREEN:v.status==='warn'?AMBER:RED;
+    const barW = Math.round((pct/100)*availW);
+
+    // Fondo barra
+    ctx.fillStyle=GRAY; ctx.beginPath();
+    ctx.roundRect(padL, y, availW, barH, 4); ctx.fill();
+
+    // Barra de valor
+    ctx.fillStyle=color; ctx.beginPath();
+    ctx.roundRect(padL, y, barW, barH, 4); ctx.fill();
+
+    // Label izquierda
+    ctx.fillStyle='#18233A'; ctx.font=`${window.devicePixelRatio>1?'12':'13'}px system-ui`;
+    ctx.textAlign='right'; ctx.textBaseline='middle';
+    const labelCorto = label.length>26 ? label.slice(0,24)+'…' : label;
+    ctx.fillText(labelCorto, padL-10, y+barH/2);
+
+    // Estado derecha
+    ctx.fillStyle=color; ctx.font='bold 12px system-ui';
+    ctx.textAlign='left'; ctx.textBaseline='middle';
+    ctx.fillText(v.label, padL+availW+10, y+barH/2);
+
+    // Icono en barra
+    ctx.fillStyle=WHITE; ctx.font='12px system-ui';
+    ctx.textAlign='left'; ctx.textBaseline='middle';
+    if(barW>24) ctx.fillText(v.icon, padL+6, y+barH/2);
+  });
+}
+
+function dibujarRadar(areas, GREEN, AMBER, RED, NAVY2, SKY){
+  const cv = document.getElementById('gc-radar'); if(!cv) return;
+  const ctx = cv.getContext('2d');
+  const W=cv.width, H=cv.height, cx=W/2, cy=H/2, r=100;
+  ctx.clearRect(0,0,W,H);
+  const n=areas.length; if(n<3) return;
+  const ang=i=>(-Math.PI/2)+(2*Math.PI/n)*i;
+
+  // Rejilla de fondo (3 niveles)
+  [1,0.66,0.33].forEach((frac,ri)=>{
+    ctx.beginPath();
+    areas.forEach((_,i)=>{ const a=ang(i); const px=cx+r*frac*Math.cos(a), py=cy+r*frac*Math.sin(a); i===0?ctx.moveTo(px,py):ctx.lineTo(px,py); });
+    ctx.closePath(); ctx.strokeStyle=ri===0?'#c7ccd2':'#dde1e5'; ctx.lineWidth=1; ctx.stroke();
+    if(ri===0){ ctx.fillStyle='rgba(232,242,252,.3)'; ctx.fill(); }
+  });
+
+  // Ejes
+  areas.forEach((_,i)=>{ const a=ang(i); ctx.beginPath(); ctx.moveTo(cx,cy); ctx.lineTo(cx+r*Math.cos(a),cy+r*Math.sin(a)); ctx.strokeStyle='#dde1e5'; ctx.lineWidth=1; ctx.stroke(); });
+
+  // Polígono de compliance
+  const vals=areas.map(([,v])=>v.status==='ok'?1:v.status==='warn'?0.5:0.15);
+  ctx.beginPath();
+  vals.forEach((val,i)=>{ const a=ang(i), px=cx+r*val*Math.cos(a), py=cy+r*val*Math.sin(a); i===0?ctx.moveTo(px,py):ctx.lineTo(px,py); });
+  ctx.closePath();
+  ctx.fillStyle='rgba(26,58,92,.18)'; ctx.fill();
+  ctx.strokeStyle=NAVY2; ctx.lineWidth=2; ctx.stroke();
+
+  // Puntos
+  vals.forEach((val,i)=>{
+    const a=ang(i), px=cx+r*val*Math.cos(a), py=cy+r*val*Math.sin(a);
+    const col=areas[i][1].status==='ok'?GREEN:areas[i][1].status==='warn'?AMBER:RED;
+    ctx.beginPath(); ctx.arc(px,py,4,0,2*Math.PI); ctx.fillStyle=col; ctx.fill();
+  });
+
+  // Labels
+  ctx.font='10px system-ui'; ctx.fillStyle='#444440'; ctx.textAlign='center'; ctx.textBaseline='middle';
+  areas.forEach(([label],i)=>{
+    const a=ang(i), dist=r+18;
+    const px=cx+dist*Math.cos(a), py=cy+dist*Math.sin(a);
+    const corto=label.length>14?label.slice(0,12)+'…':label;
+    ctx.fillText(corto, px, py);
+  });
+}
+
+function dibujarTimeline(obligaciones, AMBER, RED, GREEN, INK3, NAVY){
+  const cv = document.getElementById('gc-timeline'); if(!cv) return;
+  const lista = document.getElementById('gc-obl-lista'); if(!lista) return;
+
+  if(!obligaciones || !obligaciones.length){
+    cv.style.display='none';
+    lista.innerHTML='<div style="text-align:center;padding:24px;color:var(--ink3);font-size:13px;">✅ Sin obligaciones pendientes próximas</div>';
+    return;
+  }
+
+  const ctx=cv.getContext('2d');
+  const W=cv.width, H=cv.height;
+  ctx.clearRect(0,0,W,H);
+
+  const padL=16, padR=16, padT=28, padB=28;
+  const maxDias=Math.max(...obligaciones.map(o=>o.dias||0), 60);
+  const availW=W-padL-padR;
+
+  // Línea base
+  const baseY=H-padB;
+  ctx.beginPath(); ctx.moveTo(padL,baseY); ctx.lineTo(W-padR,baseY);
+  ctx.strokeStyle='#d1d5db'; ctx.lineWidth=2; ctx.stroke();
+
+  // Punto "hoy"
+  ctx.fillStyle=NAVY; ctx.font='bold 11px system-ui'; ctx.textAlign='center'; ctx.textBaseline='bottom';
+  ctx.fillText('HOY', padL, baseY-4);
+  ctx.beginPath(); ctx.arc(padL,baseY,5,0,2*Math.PI); ctx.fillStyle=NAVY; ctx.fill();
+
+  obligaciones.slice(0,5).forEach((o,i)=>{
+    const x = padL + ((o.dias||0)/maxDias)*availW;
+    const col = (o.dias||0)<=14?RED:(o.dias||0)<=30?AMBER:GREEN;
+    // Línea vertical
+    ctx.beginPath(); ctx.moveTo(x,baseY); ctx.lineTo(x,padT);
+    ctx.strokeStyle=col; ctx.lineWidth=1.5; ctx.setLineDash([3,3]); ctx.stroke(); ctx.setLineDash([]);
+    // Punto
+    ctx.beginPath(); ctx.arc(x,baseY,5,0,2*Math.PI); ctx.fillStyle=col; ctx.fill();
+    // Etiqueta de días
+    ctx.fillStyle=col; ctx.font='bold 11px system-ui'; ctx.textAlign='center'; ctx.textBaseline='bottom';
+    ctx.fillText((o.dias||0)+'d', x, baseY-8);
+    // Label arriba alternado
+    ctx.fillStyle='#18233A'; ctx.font='10px system-ui';
+    ctx.textBaseline='bottom';
+    ctx.fillText((i%2===0?'':' '), x, padT+(i%2)*12);
+  });
+
+  // Lista debajo del canvas
+  lista.innerHTML = obligaciones.slice(0,5).map(o=>{
+    const col=(o.dias||0)<=14?'color:#dc2626':(o.dias||0)<=30?'color:#d97706':'color:#16a34a';
+    return `<div style="display:flex;align-items:center;gap:10px;padding:7px 0;border-bottom:1px solid var(--border);font-size:12px;">
+      <div style="font-weight:700;min-width:36px;${col}">${o.dias||0}d</div>
+      <div style="flex:1;">${o.label}</div>
+      <div style="font-size:11px;color:var(--ink3);">${o.fecha}</div>
+    </div>`;
+  }).join('');
+}
+
+function renderAlertas(){
+  const c = clienteActual;
+  document.getElementById('alertas-lista').innerHTML = c.alertas.length
+    ? `<div class="card"><div class="card-title" style="margin-bottom:14px;">Alertas activas (${c.alertas.length})</div>${c.alertas.map(alertHTML).join('')}</div>`
+    : `<div class="card" style="text-align:center;padding:48px;">
+        <div style="font-size:40px;margin-bottom:12px;">✅</div>
+        <div style="font-size:15px;font-weight:600;margin-bottom:6px;">Sin alertas activas</div>
+        <div style="font-size:13px;color:var(--ink3);">Su empresa está al día en todas las obligaciones</div>
+      </div>`;
+}
+
+function alertHTML(a){
+  const cls = a.tipo==='urgent'?'alert-urgent':a.tipo==='warn'?'alert-warn':'alert-info';
+  const icon = a.tipo==='urgent'?'🚨':a.tipo==='warn'?'⚠️':'ℹ️';
+  const dias = a.dias>0?`${a.dias} días`:a.tipo==='urgent'?'Vencido':'—';
+  let clickable='';
+  if(a.url){
+    const c=clienteActual||{};
+    const params=`?empresa=${encodeURIComponent(c.empresa||'')}&rfc=${encodeURIComponent(c.rfc||'')}`;
+    clickable=` style="cursor:pointer;" title="Abrir generador" onclick="window.open('${a.url}${params}')"`;
+  }
+  return `<div class="alert-item ${cls}"${clickable}>
+    <div class="alert-icon">${icon}</div>
+    <div class="alert-body">
+      <div class="alert-title">${a.titulo}</div>
+      <div class="alert-desc">${a.desc}</div>
+    </div>
+    <div class="alert-days">${a.url?'Resolver →':dias}</div>
+  </div>`;
+}
+
+// ── Mis documentos — carga en tiempo real desde documentos_expediente ──
+let _todosLosDocs = [];
+let _filtroDocsActual = 'todos';
+
+async function cargarMisDocumentos() {
+  const lista = document.getElementById('docs-lista');
+  if (!lista) return;
+  lista.innerHTML = '<div style="text-align:center;padding:24px;color:var(--ink3);">⏳ Cargando documentos...</div>';
+
+  try {
+    const rfc = clienteActual?.rfc;
+    if (!rfc) { lista.innerHTML = '<div style="text-align:center;padding:24px;color:var(--ink3);">Inicie sesión para ver sus documentos.</div>'; return; }
+
+    const { data, error } = await sbAuth
+      .from('documentos_expediente')
+      .select('id, nombre, tipo, fecha, generado_en, generador, trabajador_id, metadata')
+      .eq('cliente_rfc', rfc)
+      .order('generado_en', { ascending: false })
+      .limit(200);
+
+    if (error) throw error;
+    _todosLosDocs = data || [];
+    renderMisDocumentos();
+  } catch(e) {
+    lista.innerHTML = `<div style="text-align:center;padding:24px;color:var(--ink3);">Error al cargar: ${e.message||e}</div>`;
+  }
+}
+
+function filtrarDocs(tipo, btn) {
+  _filtroDocsActual = tipo;
+  document.querySelectorAll('#docs-filtros .btn').forEach(b => b.classList.remove('active-filter'));
+  if (btn) btn.classList.add('active-filter');
+  renderMisDocumentos();
+}
+
+function renderMisDocumentos() {
+  const lista = document.getElementById('docs-lista');
+  if (!lista) return;
+
+  // Aplicar filtro
+  let docs = _todosLosDocs;
+  if (_filtroDocsActual !== 'todos') {
+    docs = docs.filter(d => (d.tipo||'').toLowerCase().includes(_filtroDocsActual) ||
+                             (d.nombre||'').toLowerCase().includes(_filtroDocsActual));
+  }
+
+  if (!docs.length) {
+    lista.innerHTML = `<div style="text-align:center;padding:32px;color:var(--ink3);">
+      ${_filtroDocsActual !== 'todos' ? 'Sin documentos de ese tipo.' : 'Sin documentos guardados todavía.'}
+      <div style="margin-top:12px;"><button class="btn btn-primary btn-sm" onclick="goPanel(\'generadores\')">Generar primer documento →</button></div>
+    </div>`;
+    return;
+  }
+
+  // Iconos por tipo
+  const ICONOS = {
+    contrato:'📋', acta:'📝', carta:'✉️', finiquito:'💸', liquidacion:'💸',
+    reglamento:'📖', formato:'🗂', comision:'🏛', convenio:'🤝', permiso:'🏖',
+    recibo:'💵', nomina:'💵', solicitud:'👤', confidencialidad:'🔒',
+    evaluacion:'📊', oferta:'📨', default:'📄',
+  };
+  const getIcono = tipo => {
+    const t = (tipo||'').toLowerCase();
+    return Object.entries(ICONOS).find(([k]) => t.includes(k))?.[1] || ICONOS.default;
+  };
+
+  // Mapa de generador → URL del generador para reabrir
+  const GENERADORES_URL = {
+    'acta-administrativa.html':          'acta-administrativa.html',
+    'cartas-laborales.html':             'cartas-laborales.html',
+    'contrato-indeterminado.html':       'contrato-indeterminado.html',
+    'contrato-tiempo-determinado.html':  'contrato-tiempo-determinado.html',
+    'contrato-prueba.html':              'contrato-prueba.html',
+    'contrato-capacitacion.html':        'contrato-capacitacion.html',
+    'contratos-nuevos.html':             'contratos-nuevos.html',
+    'contratos-especiales.html':         'contratos-especiales.html',
+    'reglamento-interior.html':          'reglamento-interior.html',
+    'comisiones-mixtas.html':            'comisiones-mixtas.html',
+    'recibos-pagos.html':                'recibos-pagos.html',
+    'formatos-rh.html':                  'formatos-rh.html',
+    'permisos-ausencias.html':           'permisos-ausencias.html',
+    'horario-anexos.html':               'horario-anexos.html',
+    'convenios-economicos.html':         'convenios-economicos.html',
+    'confidencialidad-civiles.html':     'confidencialidad-civiles.html',
+    'asignacion-recursos.html':          'asignacion-recursos.html',
+    'proceso-contratacion.html':         'proceso-contratacion.html',
+    'cobranza-pagares.html':             'cobranza-pagares.html',
+    'aviso-rescision.html':              'aviso-rescision.html',
+    'cartas-poder-varios.html':          'cartas-poder-varios.html',
+  };
+
+  lista.innerHTML = docs.map(d => {
+    const icono    = getIcono(d.tipo);
+    const fecha    = d.fecha || d.generado_en?.slice(0,10) || '—';
+    const fechaFmt = fecha !== '—' ? new Date(fecha+'T12:00:00').toLocaleDateString('es-MX', {day:'2-digit',month:'short',year:'numeric'}) : '—';
+    const genUrl   = d.generador ? GENERADORES_URL[d.generador] : null;
+    const params   = new URLSearchParams({ empresa: clienteActual.empresa||'', rfc: clienteActual.rfc||'' });
+    const abrirUrl = genUrl ? `${genUrl}?${params}` : null;
+
+    return `<div class="doc-row" style="cursor:${abrirUrl?'pointer':'default'};"
+        title="${abrirUrl?'Doble clic para abrir en el generador':''}"
+        ondblclick="${abrirUrl?`abrirDocumentoEnGenerador('${abrirUrl}')`:''}"
+        style="cursor:${abrirUrl?'pointer':'default'};transition:background .15s;">
+        <div class="doc-icon">${icono}</div>
+        <div class="doc-info" style="flex:1;">
+          <div class="doc-name">${d.nombre || d.tipo || 'Documento'}</div>
+          <div class="doc-meta">${d.tipo||'Documento'} · ${fechaFmt}${abrirUrl?` · <span style="color:var(--navy2);font-size:10px;">Doble clic para abrir en el generador</span>`:''}</div>
+        </div>
+        <div style="display:flex;gap:6px;align-items:center;">
+          ${abrirUrl ? `<button class="btn btn-ghost btn-sm" onclick="abrirDocumentoEnGenerador('${abrirUrl}')" title="Abrir en el generador" style="font-size:11px;">✏️ Abrir</button>` : ''}
+          <button class="btn btn-danger btn-sm" onclick="eliminarDocumento('${d.id}','${(d.nombre||'este documento').replace(/'/g,"\\'")}',this)" title="Eliminar documento" style="font-size:11px;">✕</button>
+        </div>
+      </div>`;
+  }).join('');
+}
+
+function abrirDocumentoEnGenerador(url) {
+  window.open(url, '_blank');
+}
+
+async function eliminarDocumento(id, nombre, btn) {
+  if (!confirm(`¿Eliminar el registro de "${nombre}" del expediente?\n\nNota: esto elimina el registro guardado, no el documento impreso.`)) return;
+  btn.disabled = true; btn.textContent = '...';
+  try {
+    const { error } = await sbAuth.from('documentos_expediente').delete().eq('id', id);
+    if (error) throw error;
+    _todosLosDocs = _todosLosDocs.filter(d => d.id !== id);
+    renderMisDocumentos();
+  } catch(e) {
+    alert('Error al eliminar: ' + (e.message||e));
+    btn.disabled = false; btn.textContent = '✕';
+  }
+}
+
+function renderDocs(){
+  // Compatibilidad: si se llama desde initPortal, usar la carga real
+  cargarMisDocumentos();
+}
+
+function renderGeneradores(){
+  const c = clienteActual;
+  const params = `?empresa=${encodeURIComponent(c.empresa)}&rfc=${encodeURIComponent(c.rfc)}`;
+  const gens = [
+    // ── Nómina y recibos ──
+    {icon:'💵', name:'Lista de Nómina y Recibos',     art:'Nómina · Aguinaldo · PTU · Vacaciones',  url:'recibos-pagos.html'},
+    // ── RH y selección ──
+    {icon:'🧑‍💼', name:'Formatos de RH',               art:'Solicitud empleo · Carta oferta · Privacidad · Evaluación · Encuesta salida', url:'formatos-rh.html'},
+    // ── Contratación ──
+    {icon:'🗂', name:'Entrevista + Expediente',       art:'Art. 804 LFT',                          url:'proceso-contratacion.html'},
+    {icon:'📋', name:'Contrato Indeterminado',         art:'Art. 35 LFT',                           url:'contrato-indeterminado.html'},
+    {icon:'⏱',  name:'Contrato Determinado',           art:'Arts. 35-36 LFT',                       url:'contrato-tiempo-determinado.html'},
+    {icon:'🔬', name:'Período a Prueba',               art:'Art. 39-A LFT',                         url:'contrato-prueba.html'},
+    {icon:'🎓', name:'Capacitación Inicial',           art:'Art. 39-B LFT',                         url:'contrato-capacitacion.html'},
+    {icon:'💼', name:'Comisionista / Viajante',        art:'Arts. 285-289 LFT',                     url:'contratos-especiales.html'},
+    {icon:'📊', name:'Asimilados a Salarios',          art:'Art. 94 LISR',                          url:'contratos-especiales.html'},
+    {icon:'📜', name:'Contratos Especiales',           art:'Colectivo · Obra · Teletrabajo · Domicilio', url:'contratos-nuevos.html'},
+    // ── Terminación ──
+    {icon:'📤', name:'Cartas Laborales',               art:'Renuncia · Recomendación · Constancia', url:'cartas-laborales.html'},
+    {icon:'💸', name:'Finiquito / Liquidación',        art:'Arts. 47, 48, 53, 162 LFT',             url:'cartas-laborales.html', tipo:'liquidacion'},
+    {icon:'🤝', name:'Convenio de Terminación',        art:'Art. 33 LFT · Ratificación JFCA',       url:'cartas-laborales.html', tipo:'finiquito'},
+    {icon:'🚪', name:'Aviso de Rescisión',             art:'Art. 47 LFT · Despido justificado + escrito al Tribunal', url:'aviso-rescision.html'},
+    // ── Disciplina y control ──
+    {icon:'⚠️', name:'Acta Administrativa',            art:'Arts. 47 y 110 LFT',                    url:'acta-administrativa.html'},
+    {icon:'📖', name:'Reglamento Interior de Trabajo', art:'Arts. 422-425 LFT',                     url:'reglamento-interior.html'},
+    {icon:'🏛',  name:'Comisiones Mixtas',              art:'Integración · Sesión · Recorrido · Asistencia', url:'comisiones-mixtas.html'},
+    {icon:'🧠', name:'Evaluación NOM-035',             art:'Riesgo psicosocial · Guías II y III · calificación automática', url:'nom035-evaluacion.html'},
+    // ── Operativos ──
+    {icon:'🗓', name:'Permisos y Ausencias',           art:'Permiso · Falta · Incapacidad',         url:'permisos-ausencias.html'},
+    {icon:'🧰', name:'Resguardo de Activos',           art:'Herramientas · Uniformes · Vehículo',   url:'asignacion-recursos.html'},
+    {icon:'⏰', name:'Horario y Anexos',               art:'Cambio de horario · Modificatorio',     url:'horario-anexos.html'},
+    {icon:'💰', name:'Préstamos y Bonos',              art:'Préstamo sobre nómina · Bono',           url:'convenios-economicos.html'},
+    {icon:'🔒', name:'Confidencialidad / Servicios',  art:'NDA · Prestación de servicios',          url:'confidencialidad-civiles.html'},
+    // ── Cobranza ──
+    {icon:'🧾', name:'Cobranza y Pagarés',             art:'Pagaré LGTOC · Requerimiento · Convenio de adeudo · Recibo', url:'cobranza-pagares.html'},
+    {icon:'💰', name:'Contrato de Mutuo / Poderes',    art:'Mutuo con interés · Carta poder · Beneficiarios 501 · Carta patronal', url:'cartas-poder-varios.html'},
+    // ── Herramienta ──
+    {icon:'🧮', name:'Calculadora Laboral',            art:'Finiquito · Liquidación · Vacaciones · Antigüedad', url:null, accion:'calculadora'},
+  ];
+  document.getElementById('gen-grid').innerHTML = gens.map(g=>{
+    const onclick = g.accion
+      ? `onclick="goPanel('${g.accion}')"`
+      : `onclick="window.open('${g.url + params + (g.tipo ? '&tipo=' + g.tipo : '')}')"`;
+    return `<div class="gen-tile" ${onclick}>
+      <div class="gen-tile-icon">${g.icon}</div>
+      <div class="gen-tile-name">${g.name}</div>
+      <div class="gen-tile-art">${g.art}</div>
+    </div>`;
+  }).join('');
+}
+
+const CATALOGO_PLANES = [
+  { nombre:'Básico',   orden:1, cuota:499,   rango:'plan anterior', legacy:true },
+  { nombre:'Estándar', orden:2, cuota:799,   rango:'1 a 50 trabajadores' },
+  { nombre:'Pro',      orden:3, cuota:2399,  rango:'51 a 500 trabajadores' },
+];
+// Compara nombres de plan ignorando acentos y mayúsculas ("Estandar" === "Estándar")
+function _normPlan(t){ return String(t||'').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,''); }
+
+function renderSuscripcion(){
+  const c = clienteActual;
+  const featuresComunes = ['Contratos sin límite (8+ modalidades) y por sector','Actas, finiquitos y formatos de RH sin límite','NOM-035, Reglamento Interior y comisiones mixtas','Expedientes digitales y control de asistencias','Pruebas psicométricas para selección de personal','Reportes gerenciales exportables a PDF','Asistente Legal IA + biblioteca de 46+ consultas','Checklist de contratación y políticas internas','Alertas multicanal + WhatsApp directo','Auditoría anual y asesoría reactiva'];
+  document.getElementById('plan-card').innerHTML = `
+    <div class="plan-name">Plan ${c.plan}</div>
+    <div class="plan-precio">$${c.cuota.toLocaleString('es-MX')}<span>/mes, IVA incluido</span></div>
+    <div class="plan-status" id="plan-status-linea">● Activo · Próximo pago: ${c.proximoPago}</div>
+    <div class="plan-features">
+      ${featuresComunes.map(f=>`<div class="plan-feature">${f}</div>`).join('')}
+    </div>`;
+
+  // Upgrade — solo se muestran planes de orden superior al actual
+  const planActualInfo = CATALOGO_PLANES.find(p => _normPlan(p.nombre) === _normPlan(c.plan));
+  const ordenActual = planActualInfo ? planActualInfo.orden : 1;
+  const superiores = CATALOGO_PLANES.filter(p => p.orden > ordenActual && !p.legacy);
+
+  const upgradeCont = document.getElementById('upgrade-opciones');
+  if (!superiores.length) {
+    // Ya está en el plan más alto: ofrecer plan a medida para +500 trabajadores
+    document.getElementById('upgrade-card').style.display = 'block';
+    upgradeCont.innerHTML = `
+      <div style="padding:14px;border:1px solid var(--border);border-radius:var(--r-sm);font-size:12px;color:var(--ink2);line-height:1.6;">
+        Usted ya cuenta con el plan más alto. ¿Su empresa superó los <strong>500 trabajadores</strong>?
+        Contáctenos por WhatsApp o desde <strong>Solicitar asesoría</strong> para diseñar un plan a su medida.
+      </div>`;
+  } else {
+    document.getElementById('upgrade-card').style.display = 'block';
+    upgradeCont.innerHTML = superiores.map(p=>`
+      <div style="padding:14px;border:1px solid var(--border);border-radius:var(--r-sm);display:flex;align-items:center;justify-content:space-between;gap:10px;">
+        <div>
+          <div style="font-size:13px;font-weight:600;">Plan ${p.nombre}</div>
+          <div style="font-size:18px;font-weight:800;color:var(--navy2);margin:2px 0;">$${p.cuota.toLocaleString('es-MX')}<span style="font-size:12px;font-weight:400;color:var(--ink3);">/mes</span></div>
+          <div style="font-size:11px;color:var(--ink3);">${p.rango}</div>
+        </div>
+        <button class="btn btn-primary btn-sm" onclick="solicitarUpgrade('${p.nombre}')">Subir a ${p.nombre} →</button>
+      </div>`).join('');
+  }
+
+  // Historial de pagos: cargar desde Stripe en segundo plano
+  const histEl = document.getElementById('historial-pagos');
+  histEl.innerHTML = '<div style="text-align:center;padding:16px;color:var(--ink3);font-size:12px;">Cargando historial de pagos…</div>';
+  cargarHistorialPagos(c);
+
+  // El botón de facturas solo tiene sentido si el cliente pagó por Stripe
+  document.getElementById('btn-ver-facturas').style.display = c.stripeCustomerId ? 'block' : 'none';
+}
+
+async function cargarHistorialPagos(c){
+  const histEl = document.getElementById('historial-pagos');
+  try {
+    const { data: _ses } = await sbAuth.auth.getSession();
+    const _tok = _ses?.session?.access_token;
+    if (!_tok) throw new Error('Sesión no válida. Inicie sesión nuevamente.');
+    const resp = await fetch('/.netlify/functions/historial-pagos', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + _tok },
+      body: JSON.stringify({ rfc: c.rfc }),
+    });
+    const data = await resp.json();
+    if (!resp.ok) throw new Error(data.error || 'Error al consultar pagos');
+
+    // Actualizar la línea de estado del plan con datos reales de Stripe
+    const s = data.suscripcion;
+    const statusLinea = document.getElementById('plan-status-linea');
+    if (s && statusLinea) {
+      const punto = s.status === 'active' || s.status === 'trialing' ? '●' : '⚠';
+      statusLinea.textContent = `${punto} ${s.statusLabel}` +
+        (s.proximoPago ? ` · Próximo pago: ${s.proximoPago}` : '') +
+        (s.cancelaAlFinal ? ' · Se cancelará al final del periodo' : '');
+    } else if (data.manual && statusLinea) {
+      statusLinea.textContent = '● Activo · Suscripción administrada por su asesor';
+    }
+
+    const pagos = data.pagos || [];
+    if (data.manual) {
+      histEl.innerHTML = '<div style="text-align:center;padding:16px;color:var(--ink3);font-size:12px;">Su suscripción fue dada de alta directamente con su asesor, por lo que no hay cargos de Stripe que mostrar aquí.<br>Para dudas sobre sus pagos, contáctenos por WhatsApp.</div>';
+      const sl = document.getElementById('plan-status-linea');
+      if (sl) sl.textContent = '● Activo · Suscripción administrada por su asesor';
+      return;
+    }
+    // Si la función auto-vinculó la cuenta con Stripe, habilitar el botón de facturas
+    document.getElementById('btn-ver-facturas').style.display = 'block';
+    if (!pagos.length) {
+      histEl.innerHTML = '<div style="text-align:center;padding:16px;color:var(--ink3);font-size:12px;">Sin pagos registrados todavía.</div>';
+      return;
+    }
+    histEl.innerHTML = pagos.map(p=>`
+      <div style="display:flex;align-items:center;justify-content:space-between;padding:10px 0;border-bottom:1px solid var(--border);font-size:13px;">
+        <div>
+          <div style="font-weight:500;">${p.mes}</div>
+          <div style="font-size:11px;color:var(--ink3);">${p.metodo}${p.fecha?` · ${p.fecha}`:''}</div>
+        </div>
+        <div style="text-align:right;">
+          <div style="font-weight:600;">$${(p.monto||0).toLocaleString('es-MX',{minimumFractionDigits:2})}</div>
+          <span class="badge ${p.status==='Pagado'?'badge-green':'badge-amber'}">${p.status}</span>
+          ${p.recibo?`<div><a href="${p.recibo}" target="_blank" style="font-size:11px;color:var(--navy2);">Ver recibo →</a></div>`:''}
+        </div>
+      </div>`).join('');
+  } catch(e) {
+    histEl.innerHTML = `<div style="text-align:center;padding:16px;color:var(--ink3);font-size:12px;">No se pudo cargar el historial de pagos.<br><span style="font-size:11px;">${e.message||e}</span></div>`;
+  }
+}
+
+function solicitarUpgrade(planDestino){
+  if (!confirm(`¿Solicitar el cambio a Plan ${planDestino}? Su asesor confirmará el cambio y ajustará su cobro a partir del siguiente período.`)) return;
+  goPanel('solicitudes');
+  setTimeout(()=>{
+    const desc = document.getElementById('sol-descripcion');
+    const tipo = document.getElementById('sol-tipo');
+    if (desc) desc.value = `Solicito cambiar mi suscripción del Plan ${clienteActual.plan} al Plan ${planDestino}.`;
+    if (tipo) tipo.value = 'Otro';
+  }, 50);
+}
+
+async function abrirPortalFacturacion(){
+  const btn = document.getElementById('btn-ver-facturas');
+  const textoOriginal = btn.textContent;
+  btn.disabled = true;
+  btn.textContent = 'Generando enlace seguro...';
+  try {
+    const { data: _ses } = await sbAuth.auth.getSession();
+    const _tok = _ses?.session?.access_token;
+    if (!_tok) throw new Error('Sesión no válida. Inicie sesión nuevamente.');
+    const resp = await fetch('/.netlify/functions/portal-facturacion', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + _tok },
+      body: JSON.stringify({ rfc: clienteActual.rfc }),
+    });
+    const data = await resp.json();
+    if (!resp.ok) throw new Error(data.error || 'No se pudo generar el enlace.');
+    window.open(data.url, '_blank');
+  } catch(e) {
+    alert('No se pudo abrir el portal de facturación: ' + (e.message || e));
+  }
+  btn.disabled = false;
+  btn.textContent = textoOriginal;
+}
+
+function renderNotifPrefs(){
+  const prefs = [
+    {label:'Alertas de vencimiento', desc:'7 días antes de cada obligación', id:'np-venc', default:true},
+    {label:'Resumen semanal', desc:'Resumen de estado del compliance cada lunes', id:'np-resumen', default:true},
+    {label:'Cambios en la LFT', desc:'Notificaciones ante reformas legislativas', id:'np-ley', default:true},
+    {label:'Respuesta del asesor', desc:'Cuando su asesor responde una solicitud', id:'np-asesor', default:true},
+    {label:'Nuevos documentos disponibles', desc:'Cuando se agreguen documentos a su expediente', id:'np-docs', default:false},
+  ];
+  document.getElementById('notif-prefs').innerHTML = prefs.map(p=>`
+    <div class="notif-row">
+      <div class="notif-info">
+        <div class="notif-label">${p.label}</div>
+        <div class="notif-desc">${p.desc}</div>
+      </div>
+      <label class="toggle">
+        <input type="checkbox" ${p.default?'checked':''}>
+        <div class="toggle-track"></div>
+        <div class="toggle-thumb"></div>
+      </label>
+    </div>`).join('');
+}
+
+// ════════════════════════════════════════════
+// NAVEGACIÓN
+// ════════════════════════════════════════════
+const panelTitles = {
+  inicio:'Inicio', compliance:'Mi compliance', alertas:'Alertas',
+  comisiones:'Comisiones mixtas — Guía de implementación',
+  generadores:'Generar documento', reportes:'Reportes gerenciales',
+  solicitudes:'Solicitar asesoría', calculadora:'Calculadora laboral',
+  asistente:'Asistente Legal IA',
+  suscripcion:'Mi suscripción', configuracion:'Configuración'
+};
+
+function goPanel(id){
+  document.querySelectorAll('.panel').forEach(p=>p.classList.remove('active'));
+  document.querySelectorAll('.nav-item').forEach(n=>n.classList.remove('active'));
+  const el = document.getElementById('panel-'+id);
+  if(el) el.classList.add('active');
+  const nav = document.querySelector(`.nav-item[onclick="goPanel('${id}')"]`);
+  if(nav) nav.classList.add('active');
+  document.getElementById('topbar-title').textContent = panelTitles[id]||id;
+  if(id==='solicitudes') cargarSolicitudesRecientes();
+  if(id==='comisiones') renderComisiones();
+  if(id==='calculadora') calcCargarRoster();
+  if(id==='reportes') renderReportes();
+  cerrarSidebarMobile();
+}
+
+// ════════════════════════════════════════════
+// MENÚ MÓVIL — sidebar deslizable para pantallas ≤900px
+// ════════════════════════════════════════════
+function toggleSidebarMobile(){
+  document.querySelector('.sidebar').classList.toggle('open');
+  document.getElementById('sb-overlay').classList.toggle('show');
+}
+function cerrarSidebarMobile(){
+  document.querySelector('.sidebar')?.classList.remove('open');
+  document.getElementById('sb-overlay')?.classList.remove('show');
+}
+
+// ════════════════════════════════════════════
+// CONSULTA RÁPIDA — busca en la base de preguntas frecuentes
+// (sin IA en vivo; ver faq-data.js)
+// ════════════════════════════════════════════
+const FAQ_STOPWORDS = new Set(['cuando','como','que','cual','cuales','donde','quien','quienes','para','por','con','sin','sobre','este','esta','estos','estas','ese','esa','esos','esas','debo','debe','deben','puedo','puede','pueden','hay','estan','esto','son','las','los','una','unos','unas','del','les','muy','mas','todo','toda','todos','todas','tengo','tiene','tienen','dias','dia','anos','ano','sera','seria','tipo','tipos','sido','siendo','desde','hasta','entre','cada','otro','otra','algun','alguna','algunos','tener','hacer','haber','tambien','solo','si','no','mi','su','sus']);
+const FAQ_CODIGOS_CORTOS = new Set(['nom','lft','imss','ptu','sdi','dc3','dc-3','repse','cfcrl','reps','infonavit','art']);
+
+function normalizarTxt(txt){
+  return txt.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'');
+}
+function tokenizarFAQ(txt){
+  return normalizarTxt(txt).split(/[^a-z0-9]+/).filter(w=>{
+    if(!w) return false;
+    if(FAQ_STOPWORDS.has(w)) return false;
+    if(w.length>3) return true;
+    if(/^\d+$/.test(w)) return true;
+    if(FAQ_CODIGOS_CORTOS.has(w)) return true;
+    return false;
+  });
+}
+let _faqDF=null, _faqN=0;
+function construirIndiceFAQ(){
+  if(_faqDF || typeof FAQ_DATA==='undefined') return;
+  _faqDF={}; _faqN=FAQ_DATA.length;
+  FAQ_DATA.forEach(item=>{
+    new Set(tokenizarFAQ(item.q+' '+item.a)).forEach(w=>{ _faqDF[w]=(_faqDF[w]||0)+1; });
+  });
+}
+function idfFAQ(w){ return Math.log((_faqN+1)/((_faqDF[w]||0)+1))+1; }
+
+function buscarMejorRespuestaFAQ(pregunta){
+  construirIndiceFAQ();
+  if(!_faqDF) return null;
+  const palabras = tokenizarFAQ(pregunta);
+  if(!palabras.length) return null;
+  let mejor=null, mejorScore=0;
+  FAQ_DATA.forEach(item=>{
+    const tokensPregunta = tokenizarFAQ(item.q);
+    const tokensRespuesta = tokenizarFAQ(item.a);
+    let score=0;
+    palabras.forEach(p=>{
+      const peso = idfFAQ(p);
+      if(tokensPregunta.includes(p)) score += peso*2;
+      else if(tokensRespuesta.includes(p)) score += peso*0.5;
+    });
+    if(score>mejorScore){ mejorScore=score; mejor=item; }
+  });
+  return mejorScore>=6 ? mejor : null;
+}
+
+function preguntarIA(){
+  const pregunta = document.getElementById('ia-quick-input').value.trim();
+  if(!pregunta) return;
+  const resp = document.getElementById('ia-quick-response');
+  resp.style.display = 'block';
+  resp.innerHTML = '<div class="ia-loading">⟳ Buscando en la base de conocimiento legal...</div>';
+
+  setTimeout(()=>{
+    const match = buscarMejorRespuestaFAQ(pregunta);
+    if(match){
+      resp.innerHTML = `<div style="font-size:11px;color:rgba(255,255,255,.5);margin-bottom:8px;">📚 De nuestra base de preguntas frecuentes:</div>
+        <div style="font-weight:600;margin-bottom:6px;">${match.q}</div>
+        <div style="font-size:13px;line-height:1.6;">${match.a}</div>
+        <a href="consultas-legales.html" target="_blank" style="display:inline-block;margin-top:10px;font-size:12px;color:#7dd3fc;">Ver más en Consultas legales →</a>`;
+      return;
+    }
+
+    // Respaldo: glosario de artículos LFT por palabra clave
+    const articulos = (typeof buscarEnGlosarioLFT === 'function') ? buscarEnGlosarioLFT(pregunta, 5) : [];
+    if(articulos.length){
+      resp.innerHTML = `<div style="font-size:11px;color:rgba(255,255,255,.5);margin-bottom:8px;">📖 No tenemos una respuesta exacta en nuestras preguntas frecuentes, pero estos artículos de la LFT están relacionados con su consulta:</div>
+        <div style="display:flex;flex-direction:column;gap:8px;">
+          ${articulos.map(a=>`
+            <div style="background:rgba(255,255,255,.06);border-radius:8px;padding:10px 12px;">
+              <div style="font-weight:700;font-size:12.5px;color:#7dd3fc;">Art. ${a.art} LFT — ${a.tema}</div>
+              <div style="font-size:12.5px;line-height:1.55;margin-top:4px;">${a.resumen}</div>
+            </div>`).join('')}
+        </div>
+        <div style="font-size:11px;color:rgba(255,255,255,.45);margin-top:10px;">Esta es una referencia general, no sustituye asesoría legal específica para su caso.</div>
+        <div style="display:flex;gap:8px;margin-top:10px;flex-wrap:wrap;">
+          <a href="consultas-legales.html" target="_blank" class="ia-btn" style="text-decoration:none;display:inline-block;">Buscar en Consultas legales</a>
+          <button class="ia-btn" onclick="goPanel('solicitudes')" style="background:transparent;border:1px solid rgba(255,255,255,.3);">Preguntarle a su asesor</button>
+        </div>`;
+      return;
+    }
+
+    resp.innerHTML = `<div style="font-size:13px;">No encontramos esto en nuestra base de preguntas frecuentes ni en el glosario de la LFT.</div>
+      <div style="display:flex;gap:8px;margin-top:10px;flex-wrap:wrap;">
+        <a href="consultas-legales.html" target="_blank" class="ia-btn" style="text-decoration:none;display:inline-block;">Buscar en Consultas legales</a>
+        <button class="ia-btn" onclick="goPanel('solicitudes')" style="background:transparent;border:1px solid rgba(255,255,255,.3);">Preguntarle a su asesor</button>
+      </div>`;
+  }, 400);
+}
+
+// ════════════════════════════════════════════
+// ACCIONES
+// ════════════════════════════════════════════
+// ⚠️ Número de WhatsApp del abogado — reemplazar con el real.
+// (Es el mismo placeholder que falta llenar en faq-app.js)
+const WHATSAPP_NUMERO_ASESOR = '5213339263817';
+
+async function enviarSolicitud(){
+  const tipo = document.getElementById('sol-tipo').value;
+  const prioridad = document.getElementById('sol-prioridad').value;
+  const desc = document.getElementById('sol-descripcion').value.trim();
+  const trabajador = document.getElementById('sol-trabajador').value.trim();
+  const antiguedad = document.getElementById('sol-antiguedad').value.trim();
+  const salario = document.getElementById('sol-salario').value;
+  if(!desc){ alert('Por favor describa su consulta'); return; }
+
+  const btn = event.target;
+  const textoOriginal = btn.textContent;
+  btn.disabled = true;
+  btn.textContent = 'Enviando...';
+
+  try {
+    const { error } = await sbAuth.from('solicitudes').insert({
+      cliente_rfc: clienteActual.rfc,
+      empresa: clienteActual.empresa,
+      tipo, prioridad, descripcion: desc,
+      trabajador: trabajador || null,
+      antiguedad: antiguedad || null,
+      salario: salario ? parseFloat(salario) : null,
+      status: 'pendiente',
+    });
+    if (error) throw error;
+
+    btn.textContent = '✓ Solicitud enviada';
+    btn.style.background = 'var(--green)';
+
+    // Urgente o crítica: además de guardar, abrimos WhatsApp con el mensaje listo para enviar al abogado
+    if (prioridad === 'urgente' || prioridad === 'critica') {
+      const msg = `🚨 Solicitud ${prioridad.toUpperCase()} — ${clienteActual.empresa}\nTipo: ${tipo}\n${desc}`;
+      window.open(`https://wa.me/${WHATSAPP_NUMERO_ASESOR}?text=${encodeURIComponent(msg)}`, '_blank');
+    }
+
+    document.getElementById('sol-descripcion').value = '';
+    document.getElementById('sol-trabajador').value = '';
+    document.getElementById('sol-antiguedad').value = '';
+    document.getElementById('sol-salario').value = '';
+    await cargarSolicitudesRecientes();
+  } catch(e) {
+    alert('No se pudo enviar la solicitud. Verifique que la migración SQL ya se haya ejecutado en Supabase.\n\n'+(e.message||e));
+    btn.textContent = textoOriginal;
+  } finally {
+    btn.disabled = false;
+    setTimeout(()=>{ btn.textContent = textoOriginal; btn.style.background=''; }, 3000);
+  }
+}
+
+async function cargarSolicitudesRecientes(){
+  const cont = document.getElementById('solicitudes-recientes');
+  try {
+    const { data, error } = await sbAuth.from('solicitudes').select('*')
+      .eq('cliente_rfc', clienteActual.rfc)
+      .order('created_at', { ascending:false }).limit(8);
+    if (error) throw error;
+    if (!data || !data.length) {
+      cont.innerHTML = '<div style="font-size:13px;color:var(--ink3);text-align:center;padding:20px 0;">Sin solicitudes previas</div>';
+      return;
+    }
+    const estadoColor = { pendiente:'var(--amber-bg)', en_proceso:'var(--sky)', resuelta:'var(--green-bg)' };
+    const estadoTexto = { pendiente:'⏳ Pendiente', en_proceso:'🔧 En proceso', resuelta:'✓ Resuelta' };
+    cont.innerHTML = data.map(s=>`
+      <div style="padding:10px;background:${estadoColor[s.status]||'var(--surface)'};border-radius:8px;margin-bottom:8px;">
+        <div style="font-size:12px;font-weight:600;">${estadoTexto[s.status]||s.status}</div>
+        <div style="font-size:11px;color:var(--ink2);margin-top:4px;">${s.tipo||''}</div>
+        <div style="font-size:11px;color:var(--ink3);">${new Date(s.created_at).toLocaleString('es-MX')}</div>
+        ${s.respuesta?`<div style="font-size:11px;color:var(--ink2);margin-top:6px;padding-top:6px;border-top:1px solid rgba(0,0,0,.08);"><strong>Respuesta:</strong> ${s.respuesta}</div>`:''}
+      </div>`).join('');
+  } catch(e) {
+    cont.innerHTML = '<div style="font-size:12px;color:var(--ink3);text-align:center;padding:20px 0;">No se pudieron cargar las solicitudes.</div>';
+    console.error(e.message||e);
+  }
+}
+
+async function guardarConfig(){
+  const contacto = document.getElementById('cfg-contacto').value.trim();
+  const email    = document.getElementById('cfg-email').value.trim();
+  const tel      = document.getElementById('cfg-tel').value.trim();
+
+  if(!contacto){ alert('⚠️ El nombre del contacto no puede quedar vacío.'); return; }
+  if(email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)){ alert('⚠️ El email no tiene un formato válido.'); return; }
+
+  const btn = document.querySelector('#panel-configuracion .btn-primary');
+  const btnTxt = btn ? btn.textContent : '';
+  if(btn){ btn.disabled = true; btn.textContent = 'Guardando…'; }
+
+  try {
+    // Escritura vía función serverless (misma arquitectura que mutar-datos-cliente):
+    // valida el token y solo permite campos de contacto — nunca plan/rfc/role.
+    const { data: sesData } = await sbAuth.auth.getSession();
+    const accessToken = sesData?.session?.access_token;
+    if(!accessToken) throw new Error('Sesión expirada. Inicie sesión nuevamente.');
+
+    const resp = await fetch('/api/actualizar-config-cliente', {
+      method: 'POST',
+      headers: { 'Content-Type':'application/json', 'Authorization':'Bearer '+accessToken },
+      body: JSON.stringify({ contacto_rrhh: contacto, email_contacto: email, tel: tel })
+    });
+    const resultado = await resp.json().catch(()=>({}));
+    if(!resp.ok) throw new Error(resultado.error || 'Error del servidor ('+resp.status+')');
+
+    // Refrescar la sesión local para que user_metadata traiga los nuevos valores
+    await sbAuth.auth.refreshSession().catch(()=>{});
+
+    // Actualizar estado en memoria
+    if(clienteActual){
+      clienteActual.contacto = contacto;
+      clienteActual.email    = email;
+      clienteActual.tel      = tel;
+    }
+
+    // Reflejar de inmediato en el menú lateral
+    const sbName = document.getElementById('sb-contacto-name');
+    if(sbName) sbName.textContent = contacto;
+
+    alert('✅ Configuración guardada correctamente.');
+  } catch(e){
+    console.error('guardarConfig:', e.message||e);
+    alert('❌ No se pudo guardar la configuración: ' + (e.message||'error de conexión') + '\nIntente de nuevo.');
+  } finally {
+    if(btn){ btn.disabled = false; btn.textContent = btnTxt; }
+  }
+}
+
+// ════════════════════════════════════════════
+// RESTAURAR SESIÓN EXISTENTE — evita pedir login de nuevo al volver
+// de otra página del portal (ej. asistencias-vacaciones.html → "Volver")
+// ════════════════════════════════════════════
+// ════════════════════════════════════════════════════════
+// COMISIONES MIXTAS — Guía con checklist para el cliente
+// ════════════════════════════════════════════════════════
+function renderComisiones(){
+  if(document.getElementById('com-checklist-wrap').children.length) return; // ya renderizado
+
+  const COMISIONES = [
+    {
+      id:'sh', icon:'🦺', nombre:'Comisión Mixta de Seguridad e Higiene',
+      base:'Art. 509 LFT + NOM-019-STPS-2011', colorBadge:'badge-red',
+      desc:'Obligatoria para <strong>todas las empresas</strong> sin importar tamaño. Identifica y previene riesgos de trabajo. Requiere reuniones mensuales y recorridos trimestrales.',
+      pasos:[
+        'Designar al menos 1 representante patronal y 1 trabajador (propietario + suplente cada uno)',
+        'Elaborar y firmar el Acta de Integración con nombres, puestos y RFC de integrantes',
+        'Registrar la comisión ante la STPS en el SIRCE (Sistema de Registro de Comisiones)',
+        'Elaborar el Programa Anual de Seguridad e Higiene con fechas de recorridos',
+        'Realizar recorridos de verificación mínimo cada 3 meses y levantar acta',
+        'Celebrar reuniones mensuales y documentarlas en Acta de Sesión',
+        'Publicar en tablero de avisos los resultados y medidas correctivas',
+        'Conservar documentación: 1 año (recorridos), 3 años (actas de sesión)',
+      ]
+    },
+    {
+      id:'cap', icon:'🎓', nombre:'Comisión Mixta de Capacitación y Adiestramiento',
+      base:'Art. 153-E LFT', colorBadge:'badge-blue',
+      desc:'Obligatoria con <strong>20 o más trabajadores</strong>. Planifica y vigila el programa anual de capacitación. El incumplimiento puede derivar en multas del IMSS e INFONAVIT.',
+      pasos:[
+        'Integrar al menos 1 representante patronal y 1 trabajador',
+        'Elaborar el Acta de Integración y registrar ante la STPS (SRFT)',
+        'Detectar necesidades de capacitación (DNC) con cada trabajador',
+        'Elaborar el Plan y Programa Anual de Capacitación (formulario DC-2)',
+        'Contratar o designar al instructor / organismo capacitador (OEC)',
+        'Ejecutar los cursos y recabar firmas de asistencia',
+        'Emitir Constancias de Habilidades Laborales (DC-3) a cada trabajador capacitado',
+        'Reunión trimestral para revisar avances del programa',
+        'Archivar DC-3, listas y planes de capacitación (mínimo 5 años)',
+      ]
+    },
+    {
+      id:'ptu', icon:'💰', nombre:'Comisión Mixta para la Determinación de PTU',
+      base:'Art. 125 LFT', colorBadge:'badge-green',
+      desc:'Obligatoria en empresas que generen utilidades. Verifica y dictamina el cálculo correcto de la Participación de los Trabajadores en las Utilidades.',
+      pasos:[
+        'Integrar la comisión en febrero de cada año',
+        'Solicitar al patrón copia de la declaración anual del ISR presentada al SAT',
+        'Verificar la renta gravable base del cálculo',
+        'Elaborar el Dictamen de PTU firmado por la comisión',
+        'Publicar el dictamen en el tablero de avisos de la empresa',
+        'Pagar la PTU: mayo (PM) o junio (PF) — máximo 60 días después de declaración',
+        'Recabar firma de cada trabajador al momento de cobrar',
+        'Conservar la documentación mínimo 5 años',
+      ]
+    },
+    {
+      id:'esc', icon:'📈', nombre:'Comisión Mixta de Escalafón',
+      base:'Arts. 158-159 LFT', colorBadge:'badge-amber',
+      desc:'Obligatoria con <strong>más de 20 trabajadores</strong>. Define las reglas objetivas de ascenso y promoción, evitando conflictos y demandas por discriminación.',
+      pasos:[
+        'Integrar la comisión e incluirla en el Reglamento Interior de Trabajo',
+        'Definir los criterios de escalafón: antigüedad, aptitud, conocimientos y disciplina',
+        'Elaborar el reglamento interno de la comisión',
+        'Sesionar cada vez que exista una vacante definitiva o puesto de nueva creación',
+        'Documentar cada resolución de ascenso en acta firmada por ambas partes',
+        'Publicar los criterios vigentes en tablero de avisos',
+      ]
+    },
+    {
+      id:'rit', icon:'📖', nombre:'Comisión Mixta de Revisión del Reglamento Interior',
+      base:'Art. 424 LFT', colorBadge:'badge-gray',
+      desc:'Revisa el Reglamento Interior de Trabajo cada <strong>dos años</strong> o cuando haya cambios legislativos relevantes. El RIT debe estar depositado en el CFCRL.',
+      pasos:[
+        'Integrar la comisión (pueden ser los mismos representantes de otra comisión)',
+        'Revisar el RIT vigente frente a cambios de la LFT y condiciones de la empresa',
+        'Redactar las modificaciones o ratificar el texto vigente mediante acuerdo firmado',
+        'Firmar el Acuerdo de Revisión entre trabajadores y patrón',
+        'Depositar el RIT actualizado ante la CFCRL (Centro Federal de Conciliación)',
+        'Publicar el RIT en tablero de avisos y entregar copia a cada trabajador',
+      ]
+    },
+  ];
+
+  document.getElementById('com-checklist-wrap').innerHTML = COMISIONES.map(com=>{
+    const n = com.pasos.length;
+    return `
+    <div class="card" style="margin-bottom:14px;">
+      <div style="display:flex;align-items:flex-start;gap:12px;margin-bottom:14px;">
+        <div style="font-size:28px;line-height:1;">${com.icon}</div>
+        <div style="flex:1;">
+          <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:4px;">
+            <div style="font-size:14px;font-weight:700;color:var(--navy2);">${com.nombre}</div>
+            <span class="badge ${com.colorBadge}" style="font-size:10px;">${com.base}</span>
+          </div>
+          <div style="font-size:12px;color:var(--ink2);line-height:1.6;">${com.desc}</div>
+        </div>
+        <div id="com-prog-${com.id}" style="text-align:center;min-width:52px;flex-shrink:0;">
+          <div style="font-size:18px;font-weight:800;color:var(--ink3);">0/${n}</div>
+          <div style="font-size:10px;color:var(--ink3);">pasos</div>
+        </div>
+      </div>
+      <div style="display:flex;flex-direction:column;gap:6px;">
+        ${com.pasos.map((paso,i)=>`
+          <label id="com-row-${com.id}-${i}" style="display:flex;align-items:flex-start;gap:10px;cursor:pointer;padding:8px 10px;border-radius:var(--r-sm);border:1px solid var(--border);font-size:12px;color:var(--ink2);line-height:1.5;transition:background .1s;">
+            <input type="checkbox" id="com-chk-${com.id}-${i}" style="margin-top:2px;accent-color:var(--navy2);flex-shrink:0;" onchange="actualizarProgresoComPortal('${com.id}',${n})">
+            <span><strong style="color:var(--ink3);font-size:10px;">Paso ${i+1}.</strong> ${paso}</span>
+          </label>`).join('')}
+      </div>
+      <div style="margin-top:12px;display:flex;gap:8px;flex-wrap:wrap;">
+        <button class="btn btn-ghost btn-sm" onclick="window.open('comisiones-mixtas.html?empresa='+encodeURIComponent(clienteActual.empresa)+'&rfc='+encodeURIComponent(clienteActual.rfc))">📄 Generar documentos de esta comisión</button>
+        <button class="btn btn-ghost btn-sm" onclick="goPanel('solicitudes')">📨 Consultar a mi asesor</button>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+function actualizarProgresoComPortal(id, total){
+  const checks = document.querySelectorAll(`[id^="com-chk-${id}-"]`);
+  const completados = Array.from(checks).filter(c=>c.checked).length;
+  const el = document.getElementById(`com-prog-${id}`);
+  if(!el) return;
+  const pct = Math.round(completados/total*100);
+  const color = pct===100?'var(--green)':pct>=50?'#d97706':'var(--ink3)';
+  el.innerHTML = `<div style="font-size:18px;font-weight:800;color:${color};">${completados}/${total}</div><div style="font-size:10px;color:${color};">${pct===100?'✅ Listo':'pasos'}</div>`;
+  // Marcar visualmente las filas completadas
+  checks.forEach((c,i)=>{
+    const row = document.getElementById(`com-row-${id}-${i}`);
+    if(row) row.style.background = c.checked ? '#f0fdf4' : '';
+  });
+}
+// Prima de Antigüedad (LFT vigente con reforma 2023)
+// ════════════════════════════════════════════════════════
+
+function calcSetTab(tab){
+  ['finiquito','liquidacion','vacaciones','antiguedad'].forEach(t=>{
+    document.getElementById('calc-panel-'+t).style.display = t===tab ? '' : 'none';
+    const btn = document.getElementById('calc-tab-'+t);
+    if(btn){ btn.className = t===tab ? 'btn btn-primary btn-sm' : 'btn btn-ghost btn-sm'; }
+  });
+}
+
+// ── Calculadora — Autocompletado desde roster ──
+let _calcRoster = [];
+
+async function calcCargarRoster() {
+  if (_calcRoster.length > 0) return;
+  try {
+    const rfc = clienteActual?.rfc;
+    if (!rfc) return;
+    const { data } = await sbAuth.from('trabajadores')
+      .select('id,nombre,puesto,fecha_ingreso,activo')
+      .eq('cliente_rfc', rfc).eq('activo', true).order('nombre');
+    _calcRoster = data || [];
+    const sel = document.getElementById('calc-select-trabajador');
+    if (!sel) return;
+    sel.innerHTML = '<option value="">— Seleccionar del roster (opcional) —</option>';
+    _calcRoster.forEach(t => {
+      const opt = document.createElement('option');
+      opt.value = t.id;
+      opt.dataset.nombre  = t.nombre;
+      opt.dataset.puesto  = t.puesto || '';
+      opt.dataset.ingreso = t.fecha_ingreso || '';
+      opt.textContent = t.nombre + (t.puesto ? ' — ' + t.puesto : '');
+      sel.appendChild(opt);
+    });
+  } catch(e) { console.error('calcCargarRoster:', e.message||e); }
+}
+
+function calcAutocompletarTrabajador() {
+  const sel = document.getElementById('calc-select-trabajador');
+  const opt = sel?.options[sel.selectedIndex];
+  if (!opt?.value) { document.getElementById('calc-trab-info').textContent=''; return; }
+  const nombre = opt.dataset.nombre||'', puesto = opt.dataset.puesto||'', ingreso = opt.dataset.ingreso||'';
+  const setVal = (id, v) => { const el = document.getElementById(id); if(el) el.value = v; };
+  setVal('fq-nombre', nombre); setVal('fq-puesto', puesto);
+  if (ingreso) { setVal('fq-ingreso', ingreso); setVal('lq-ingreso', ingreso); }
+  document.getElementById('calc-trab-info').textContent =
+    nombre + (puesto?' · '+puesto:'') + (ingreso?' · Ingreso: '+new Date(ingreso+'T12:00:00').toLocaleDateString('es-MX'):'');
+  calcFiniquito(); calcLiquidacion();
+}
+
+function imprimirCalculadora(tipo) {
+  const nombre  = document.getElementById('fq-nombre')?.value || '';
+  const empresa = clienteActual?.empresa || '';
+  const resId   = tipo==='finiquito' ? 'fq-resultado' : 'lq-resultado';
+  const res     = document.getElementById(resId);
+  if (!res) return;
+  const titulo  = tipo==='finiquito' ? 'FINIQUITO' : 'LIQUIDACIÓN';
+  const w = window.open('', '_blank', 'width=720,height=650');
+  w.document.write(`<!DOCTYPE html><html><head>
+    <meta charset="UTF-8"><title>${titulo}</title>
+    <style>
+      body{font-family:'Segoe UI',Arial,sans-serif;max-width:580px;margin:40px auto;color:#1a1a1a;}
+      h1{font-size:22px;color:#1a3a5c;border-bottom:2px solid #1a3a5c;padding-bottom:8px;margin:0;}
+      .sub{font-size:13px;color:#666;margin:4px 0 20px;}
+      .row{display:flex;justify-content:space-between;padding:10px 0;border-bottom:1px solid #eee;font-size:14px;}
+      .total{display:flex;justify-content:space-between;padding:14px 0;font-size:17px;font-weight:800;border-top:2px solid #1a3a5c;color:#1a3a5c;}
+      .label{opacity:.7;} .value{font-family:monospace;font-weight:600;}
+      .nota{margin-top:24px;font-size:10px;color:#999;line-height:1.6;border-top:1px solid #eee;padding-top:12px;}
+      @media print{@page{margin:18mm;}}
+    </style>
+  </head><body>
+    <h1>${titulo}</h1>
+    <div class="sub">${empresa}${nombre?' · '+nombre:''} · ${new Date().toLocaleDateString('es-MX',{dateStyle:'long'})}</div>
+    ${res.innerHTML
+      .replace(/class="calc-row"/g,'class="row"')
+      .replace(/class="calc-row-total"/g,'class="total"')
+      .replace(/class="calc-label"/g,'class="label"')
+      .replace(/class="calc-value"/g,'class="value"')}
+    <div class="nota">⚠️ Cálculo orientativo basado en la LFT vigente. Los montos reales pueden variar. Consulte a su asesor ante cualquier caso específico.<br>Generado mediante ClickLaboral.mx · ${new Date().toLocaleString('es-MX')}</div>
+    <script>window.print(); setTimeout(()=>window.close(),1200);<\/script>
+  </body></html>`);
+  w.document.close();
+}
+
+function generarDocumentoDesdeCalc(tipo) {
+  const get = id => document.getElementById(id)?.value || '';
+  const resEl   = document.getElementById(tipo==='finiquito'?'fq-resultado':'lq-resultado');
+  const totalEl = resEl?.querySelector('.calc-row-total .calc-value');
+
+  const params = new URLSearchParams({
+    empresa:    clienteActual?.empresa || '',
+    rfc:        clienteActual?.rfc || '',
+    tipo,
+    trabajador: get('fq-nombre'),
+    puesto:     get('fq-puesto'),
+    salario:    get(tipo==='finiquito'?'fq-salario':'lq-salario'),
+    ingreso:    get(tipo==='finiquito'?'fq-ingreso':'lq-ingreso'),
+    baja:       get(tipo==='finiquito'?'fq-baja':'lq-despido'),
+    vac_pend:   get('fq-vac-pend'),
+    ag_dias:    get('fq-aguinaldo-dias'),
+    total_calc: totalEl?.textContent || '',
+  });
+  window.open('cartas-laborales.html?' + params.toString(), '_blank');
+}
+
+function mxn(n){ return '$'+n.toLocaleString('es-MX',{minimumFractionDigits:2,maximumFractionDigits:2}); }
+
+function diffDias(fechaInicio, fechaFin){
+  const d1 = new Date(fechaInicio), d2 = new Date(fechaFin);
+  return Math.max(0, Math.round((d2-d1)/(1000*60*60*24)));
+}
+function diffAnios(fechaInicio, fechaFin){
+  const d1 = new Date(fechaInicio), d2 = new Date(fechaFin);
+  let anios = d2.getFullYear() - d1.getFullYear();
+  const m = d2.getMonth() - d1.getMonth();
+  if(m < 0 || (m===0 && d2.getDate()<d1.getDate())) anios--;
+  return Math.max(0, anios);
+}
+
+// Tabla de vacaciones Art. 76 LFT (reforma 2023 "vacaciones dignas")
+function diasVacacionesPorAnios(anios){
+  if(anios < 1) return 0;
+  if(anios === 1) return 12;
+  if(anios === 2) return 14;
+  if(anios === 3) return 16;
+  if(anios === 4) return 18;
+  if(anios === 5) return 20;
+  if(anios <= 10) return 22;
+  if(anios <= 15) return 24;
+  if(anios <= 20) return 26;
+  // 21+ años: 26 + 2 días por cada 5 años adicionales (a partir de los 21)
+  return 26 + (Math.floor((anios-20)/5)*2);
+}
+
+function renderFilas(filas){
+  return filas.map(([label,val,bold])=>
+    bold
+      ? `<div class="calc-row-total"><span>${label}</span><span>${val}</span></div>`
+      : `<div class="calc-row"><span class="calc-label">${label}</span><span class="calc-value">${val}</span></div>`
+  ).join('');
+}
+
+function calcFiniquito(){
+  const sal = parseFloat(document.getElementById('fq-salario').value);
+  const ing = document.getElementById('fq-ingreso').value;
+  const baj = document.getElementById('fq-baja').value;
+  const vacPend = parseFloat(document.getElementById('fq-vac-pend').value)||0;
+  const agDias = parseFloat(document.getElementById('fq-aguinaldo-dias').value)||15;
+  const res = document.getElementById('fq-resultado');
+
+  if(!sal||sal<=0||!ing||!baj||new Date(baj)<=new Date(ing)){
+    res.innerHTML='<div style="text-align:center;padding:20px;opacity:.4;font-size:13px;">Complete los datos correctamente</div>';
+    return;
+  }
+
+  const diasTotal = diffDias(ing, baj);
+  const anios = diffAnios(ing, baj);
+
+  // Días trabajados del año en curso (para aguinaldo proporcional)
+  const inicioAnio = new Date(new Date(baj).getFullYear(), 0, 1).toISOString().split('T')[0];
+  const diasAnio = diffDias(inicioAnio, baj);
+
+  const salPendientes = sal * (diasTotal % 365 === 0 ? 0 : (diasTotal - anios*365));
+  // Simplificamos: días trabajados desde último aniversario
+  const diasDesdeAniversario = diasTotal - (anios * 365);
+
+  const vacaciones = vacPend * sal;
+  const primaVac = vacaciones * 0.25;
+  const aguinaldo = (diasAnio / 365) * agDias * sal;
+  const total = vacaciones + primaVac + aguinaldo;
+
+  res.innerHTML = renderFilas([
+    ['Vacaciones pendientes ('+vacPend+' días)', mxn(vacaciones)],
+    ['Prima vacacional (25%)', mxn(primaVac)],
+    ['Aguinaldo proporcional ('+Math.round(diasAnio)+' días del año)', mxn(aguinaldo)],
+    ['TOTAL FINIQUITO', mxn(total), true],
+  ]);
+  // Mostrar botones de imprimir y generar documento
+  const btnDiv = document.getElementById('fq-botones');
+  if (btnDiv) btnDiv.style.display = 'flex';
+}
+
+function calcLiquidacion(){
+  const sal = parseFloat(document.getElementById('lq-salario').value);
+  const ing = document.getElementById('lq-ingreso').value;
+  const des = document.getElementById('lq-despido').value;
+  const tipo = document.getElementById('lq-tipo').value;
+  const inclAnt = document.getElementById('lq-antiguedad').value === 'si';
+  const salMin = parseFloat(document.getElementById('lq-salmin').value)||248.93;
+  const res = document.getElementById('lq-resultado');
+
+  if(!sal||sal<=0||!ing||!des||new Date(des)<=new Date(ing)){
+    res.innerHTML='<div style="text-align:center;padding:20px;opacity:.4;font-size:13px;">Complete los datos correctamente</div>';
+    return;
+  }
+
+  const anios = diffAnios(ing, des);
+  const diasTotal = diffDias(ing, des);
+  const inicioAnio = new Date(new Date(des).getFullYear(), 0, 1).toISOString().split('T')[0];
+  const diasAnio = diffDias(inicioAnio, des);
+
+  // Prestaciones de liquidación (Art. 48 LFT)
+  const tresMeses = sal * 90;
+  const veinteDias = sal * 20 * Math.max(1, anios);
+
+  // Partes proporcionales (finiquito)
+  const aniosProp = Math.max(1, anios);
+  const diasVac = diasVacacionesPorAnios(aniosProp);
+  const vacaciones = diasVac > 0 ? diasVac * sal : 0;
+  const primaVac = vacaciones * 0.25;
+  const aguinaldo = (diasAnio / 365) * 15 * sal;
+
+  // Prima de antigüedad Art. 162 LFT
+  const salAntiguedad = Math.min(sal, salMin * 2);
+  const primaAntiguedad = inclAnt ? (salAntiguedad * 12 * Math.max(1, anios)) : 0;
+
+  const subtotalBase = tresMeses + veinteDias + vacaciones + primaVac + aguinaldo;
+  const total = subtotalBase + primaAntiguedad;
+
+  const filas = [
+    ['3 meses de salario (Art. 48)', mxn(tresMeses)],
+    ['20 días × año ('+anios+' años)', mxn(veinteDias)],
+    ['Vacaciones proporcionales ('+diasVac+' días)', mxn(vacaciones)],
+    ['Prima vacacional (25%)', mxn(primaVac)],
+    ['Aguinaldo proporcional', mxn(aguinaldo)],
+  ];
+  if(inclAnt) filas.push(['Prima de antigüedad (12 días × '+anios+' años)', mxn(primaAntiguedad)]);
+  filas.push(['TOTAL LIQUIDACIÓN', mxn(total), true]);
+  res.innerHTML = renderFilas(filas);
+  const btnDiv = document.getElementById('lq-botones');
+  if (btnDiv) btnDiv.style.display = 'flex';
+}
+
+function calcVacaciones(){
+  const ing = document.getElementById('vac-ingreso').value;
+  const cor = document.getElementById('vac-corte').value;
+  const sal = parseFloat(document.getElementById('vac-salario').value)||0;
+  const res = document.getElementById('vac-resultado');
+
+  if(!ing||!cor||new Date(cor)<=new Date(ing)){
+    res.innerHTML='';
+    return;
+  }
+
+  const anios = diffAnios(ing, cor);
+  const diasVac = diasVacacionesPorAnios(anios);
+  const primVac = diasVac * sal * 0.25;
+  const totalVac = diasVac * sal;
+
+  res.innerHTML = `
+    <div class="card" style="background:var(--navy);color:#fff;">
+      ${renderFilas([
+        ['Años de antigüedad', anios+' años'],
+        ['Días de vacaciones que corresponden', diasVac+' días'],
+        sal ? ['Importe de vacaciones', mxn(totalVac)] : null,
+        sal ? ['Prima vacacional (25%)', mxn(primVac)] : null,
+        sal ? ['Total a pagar', mxn(totalVac + primVac), true] : null,
+      ].filter(Boolean))}
+    </div>`;
+}
+
+function calcAntiguedad(){
+  const motivo = document.getElementById('ant-motivo').value;
+  const sal = parseFloat(document.getElementById('ant-salario').value);
+  const salMin = parseFloat(document.getElementById('ant-salmin').value)||248.93;
+  const ing = document.getElementById('ant-ingreso').value;
+  const baj = document.getElementById('ant-baja').value;
+  const res = document.getElementById('ant-resultado');
+  const avisoRenuncia = document.getElementById('ant-aviso-renuncia');
+
+  // Mostrar aviso cuando es renuncia voluntaria
+  avisoRenuncia.style.display = motivo === 'renuncia' ? 'block' : 'none';
+
+  if(!motivo){
+    res.innerHTML='<div style="text-align:center;padding:20px;opacity:.4;font-size:13px;">Seleccione el motivo de la terminación para calcular</div>';
+    return;
+  }
+
+  if(!ing || !baj || new Date(baj) <= new Date(ing)){
+    res.innerHTML='<div style="text-align:center;padding:20px;opacity:.4;font-size:13px;">Ingrese las fechas de ingreso y baja</div>';
+    return;
+  }
+
+  const anios = Math.max(1, diffAnios(ing, baj));
+
+  // Verificar condición de 15 años para renuncia voluntaria
+  if(motivo === 'renuncia' && anios < 15){
+    res.innerHTML=`
+      <div style="background:rgba(220,38,38,.15);border:1px solid rgba(220,38,38,.3);border-radius:8px;padding:16px;text-align:center;">
+        <div style="font-size:24px;margin-bottom:8px;">❌</div>
+        <div style="font-weight:700;margin-bottom:6px;color:#fca5a5;">No aplica la prima de antigüedad</div>
+        <div style="font-size:12px;opacity:.8;line-height:1.6;">El trabajador tiene <strong>${anios} año${anios===1?'':'s'}</strong> de servicio. Para que aplique la prima de antigüedad por renuncia voluntaria se requieren <strong>15 años o más</strong> (Art. 162, fracc. I, LFT).</div>
+      </div>`;
+    return;
+  }
+
+  if(!sal || sal <= 0){
+    res.innerHTML='<div style="text-align:center;padding:20px;opacity:.4;font-size:13px;">Ingrese el salario diario para obtener el monto</div>';
+    return;
+  }
+
+  const salAplicable = Math.min(sal, salMin * 2);
+  const primaAntiguedad = salAplicable * 12 * anios;
+  const motivoLabel = {
+    despido_injust: 'Despido injustificado',
+    art51: 'Rescisión imputable al patrón (Art. 51)',
+    renuncia: 'Renuncia voluntaria (15+ años)',
+    fallecimiento: 'Fallecimiento',
+    incapacidad: 'Incapacidad permanente',
+  }[motivo] || motivo;
+
+  res.innerHTML = renderFilas([
+    ['Motivo', motivoLabel],
+    ['Años de antigüedad', anios+' año'+(anios===1?'':'s')],
+    ['Salario diario del trabajador', mxn(sal)],
+    ['Tope máximo (2 × '+mxn(salMin)+')', mxn(salMin*2)],
+    ['Salario aplicable para el cálculo', mxn(salAplicable)+(sal>salMin*2?' (topado)':'')],
+    ['Fórmula: 12 × '+anios+' años × '+mxn(salAplicable), ''],
+    ['PRIMA DE ANTIGÜEDAD', mxn(primaAntiguedad), true],
+  ]);
+}
+
+// ════════════════════════════════════════════════════════
+
+(async function restaurarSesion(){
+  try {
+    const { data } = await sbAuth.auth.getSession();
+    const session = data?.session;
+    const rfc = session?.user?.user_metadata?.rfc;
+    if (!session || !rfc) return; // sin sesión activa — se queda en la pantalla de login normal
+    await cargarDatosCliente(rfc);
+  } catch (e) {
+    console.error('No se pudo restaurar la sesión existente, se mostrará el login:', e.message || e);
+    // Si algo falla al restaurar, simplemente se queda en login-screen (comportamiento normal)
+  }
+})();
+</script>
+</body>
+</html>

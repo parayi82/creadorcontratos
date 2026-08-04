@@ -1,0 +1,14 @@
+User-agent: *
+Allow: /
+Disallow: /launcher.html
+Disallow: /dashboard-compliance.html
+Disallow: /admin-suscripciones.html
+Disallow: /portal-cliente.html
+Disallow: /panel-despacho.html
+Disallow: /asistencias-vacaciones.html
+Disallow: /recibos-pagos.html
+Disallow: /netlify/
+Disallow: /_db/
+Disallow: /_interno/
+
+Sitemap: https://www.clicklaboral.mx/sitemap.xml

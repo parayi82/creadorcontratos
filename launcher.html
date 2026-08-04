@@ -1,0 +1,153 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ClickLaboral.mx · Centro de acceso</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0;}
+body{font-family:'Segoe UI',system-ui,sans-serif;background:#0f2640;color:#fff;min-height:100vh;display:flex;align-items:center;justify-content:center;padding:24px;}
+.wrap{max-width:820px;width:100%;}
+.header{text-align:center;margin-bottom:32px;}
+.logo{font-size:11px;font-weight:700;letter-spacing:.14em;text-transform:uppercase;opacity:.3;margin-bottom:10px;}
+.version{display:inline-block;background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.12);border-radius:20px;padding:3px 14px;font-size:10px;font-weight:600;letter-spacing:.04em;margin-bottom:14px;}
+h1{font-size:26px;font-weight:900;letter-spacing:-.02em;margin-bottom:6px;}
+.sub{font-size:13px;opacity:.35;margin-bottom:0;}
+.sec{font-size:9px;font-weight:700;letter-spacing:.14em;text-transform:uppercase;opacity:.28;margin:22px 0 10px;}
+.grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;}
+.grid-3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;}
+.grid-4{display:grid;grid-template-columns:1fr 1fr 1fr 1fr;gap:8px;}
+.btn{display:block;padding:13px 16px;border-radius:10px;font-size:12px;font-weight:600;cursor:pointer;text-align:left;transition:all .15s;border:1px solid rgba(255,255,255,.08);background:rgba(255,255,255,.05);color:#fff;text-decoration:none;}
+.btn:hover{background:rgba(255,255,255,.12);transform:translateY(-1px);border-color:rgba(255,255,255,.18);}
+.icon{font-size:18px;display:block;margin-bottom:5px;}
+.meta{font-size:10px;opacity:.38;font-weight:400;margin-top:2px;}
+.btn-main{background:rgba(255,255,255,.12);border-color:rgba(255,255,255,.2);}
+.btn-ia{background:rgba(124,58,237,.3);border-color:rgba(124,58,237,.45);}
+.btn-ia:hover{background:rgba(124,58,237,.5);}
+.btn-teal{background:rgba(13,148,136,.25);border-color:rgba(13,148,136,.4);}
+.btn-teal:hover{background:rgba(13,148,136,.45);}
+.btn-gold{background:rgba(217,119,6,.25);border-color:rgba(217,119,6,.4);}
+.btn-gold:hover{background:rgba(217,119,6,.45);}
+.btn-green{background:rgba(22,163,74,.2);border-color:rgba(22,163,74,.35);}
+.btn-green:hover{background:rgba(22,163,74,.4);}
+.btn-sm{padding:9px 11px;}
+.divider{height:1px;background:rgba(255,255,255,.06);margin:18px 0;}
+.footer{text-align:center;font-size:10px;opacity:.15;margin-top:22px;line-height:1.7;}
+
+/* ══ GATE DE LOGIN ADMIN ══ */
+#login-gate{min-height:100vh;display:flex;align-items:center;justify-content:center;padding:24px;}
+.login-box{max-width:340px;width:100%;background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.1);border-radius:14px;padding:32px 28px;}
+.login-box h2{font-size:17px;margin-bottom:6px;}
+.login-box p{font-size:12px;opacity:.5;margin-bottom:20px;}
+.login-field{margin-bottom:14px;}
+.login-field label{display:block;font-size:11px;opacity:.6;margin-bottom:5px;}
+.login-field input{width:100%;padding:10px 12px;border-radius:8px;border:1px solid rgba(255,255,255,.15);background:rgba(255,255,255,.06);color:#fff;font-size:13px;}
+.login-error{display:none;background:rgba(220,38,38,.15);border:1px solid rgba(220,38,38,.3);color:#fca5a5;font-size:12px;padding:8px 12px;border-radius:8px;margin-bottom:14px;}
+.login-btn{width:100%;padding:11px;border-radius:8px;border:none;background:#fff;color:#0f2640;font-weight:700;font-size:13px;cursor:pointer;}
+.login-btn:hover{background:#e8f2fc;}
+.login-btn:disabled{opacity:.6;cursor:default;}
+
+  .section-label{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:1px;color:#8a94a3;margin:22px 0 8px;}
+  .grid-sm{display:grid;grid-template-columns:repeat(auto-fill,minmax(100px,1fr));gap:8px;margin-bottom:4px;}
+  .btn-teal{background:#0f766e;color:#fff;}
+  .btn-teal:hover{background:#0d6460;}
+</style>
+</head>
+<body>
+
+<body>
+<div class="wrap">
+  <h1>🗂️ Centro de acceso — Clicklaboral</h1>
+
+  <!-- ── ACCESO PRINCIPAL ── -->
+  <div class="section-label">Acceso principal</div>
+  <div class="grid">
+    <a class="btn btn-gold" href="portal-cliente.html"><span class="icon">🏢</span>Portal del cliente<div class="meta">Login RFC · docs · alertas · suscripción</div></a>
+    <a class="btn btn-teal" href="panel-despacho.html"><span class="icon">🗂️</span>Panel del contador / despacho<div class="meta">Marca blanca · gestión de cartera · todas las herramientas</div></a>
+    <a class="btn btn-main" href="dashboard-compliance.html"><span class="icon">⊞</span>Dashboard administrador<div class="meta">Clientes · alertas · semáforo · despachos · gestión</div></a>
+  </div>
+
+  <!-- ── PLATAFORMA DEL CLIENTE ── -->
+  <div class="section-label">Herramientas del cliente</div>
+  <div class="grid">
+    <a class="btn" href="asistencias-vacaciones.html"><span class="icon">📋</span>Expedientes y asistencias<div class="meta">Trabajadores · jornada · horas extras · firmas LFT</div></a>
+    <a class="btn" href="recibos-pagos.html"><span class="icon">📊</span>Recibos y nómina<div class="meta">Recibos CFDI · aguinaldo · PTU · vacaciones</div></a>
+    <a class="btn" href="proceso-contratacion.html"><span class="icon">🗂️</span>Proceso de contratación<div class="meta">Checklist · pasos · documentos de ingreso</div></a>
+    <a class="btn" href="permisos-ausencias.html"><span class="icon">📤</span>Permisos y ausencias<div class="meta">Formatos · justificaciones · incapacidades</div></a>
+    <a class="btn" href="asignacion-recursos.html"><span class="icon">📦</span>Asignación de recursos<div class="meta">Entrega de equipo · resguardos · inventario</div></a>
+    <a class="btn" href="formatos-rh.html"><span class="icon">📝</span>Formatos de RH<div class="meta">Solicitud de empleo · evaluación · encuesta de salida</div></a>
+  </div>
+
+  <!-- ── CONTRATOS ── -->
+  <div class="section-label">Generadores de contratos</div>
+  <div class="grid-sm">
+    <a class="btn btn-sm" href="proceso-contratacion.html"><span style="font-size:15px;">🗂</span><br><span>Contratación</span></a>
+    <a class="btn btn-sm" href="contrato-tiempo-determinado.html"><span style="font-size:15px;">⏱</span><br><span>Determinado</span></a>
+    <a class="btn btn-sm" href="contrato-indeterminado.html"><span style="font-size:15px;">📋</span><br><span>Indeterminado</span></a>
+    <a class="btn btn-sm" href="contrato-prueba.html"><span style="font-size:15px;">🔬</span><br><span>A prueba</span></a>
+    <a class="btn btn-sm" href="contrato-capacitacion.html"><span style="font-size:15px;">🎓</span><br><span>Capacitación</span></a>
+    <a class="btn btn-sm" href="contratos-especiales.html"><span style="font-size:15px;">💼</span><br><span>Comisionista</span></a>
+    <a class="btn btn-sm" href="contratos-nuevos.html"><span style="font-size:15px;">🌐</span><br><span>Colectivo/Obra</span></a>
+    <a class="btn btn-sm" href="confidencialidad-civiles.html"><span style="font-size:15px;">🔒</span><br><span>Confidencial.</span></a>
+  </div>
+
+  <!-- ── NORMATIVIDAD ── -->
+  <div class="section-label">Normatividad y documentos</div>
+  <div class="grid">
+    <a class="btn" href="reglamento-interior.html"><span class="icon">📖</span>Reglamento interior<div class="meta">NOM-035 · LFT · personalizado por empresa</div></a>
+    <a class="btn" href="horario-anexos.html"><span class="icon">🗓️</span>Horario y anexos<div class="meta">Jornada · turnos · anexo al contrato</div></a>
+    <a class="btn" href="comisiones-mixtas.html"><span class="icon">👥</span>Comisiones mixtas STPS<div class="meta">Seguridad · capacitación · productividad</div></a>
+    <a class="btn" href="convenios-economicos.html"><span class="icon">📖</span>Convenios económicos<div class="meta">Liquidaciones · finiquitos · acuerdos</div></a>
+    <a class="btn" href="acta-administrativa.html"><span class="icon">⚠️</span>Actas administrativas<div class="meta">Faltas · sanciones · rescisión con causa</div></a>
+    <a class="btn" href="cartas-laborales.html"><span class="icon">✉️</span>Cartas laborales<div class="meta">Recomendación · constancia · aviso rescisión</div></a>
+    <a class="btn" href="biblioteca-documentos.html"><span class="icon">📚</span>Biblioteca de documentos<div class="meta">Todos los generadores en un lugar</div></a>
+  </div>
+
+  <!-- ── IA Y CONSULTAS ── -->
+  <div class="section-label">Inteligencia artificial y consultas</div>
+  <div class="grid">
+    <a class="btn btn-ia" href="asistente-legal-ia.html"><span class="icon">⚖️</span>Asistente legal IA<div class="meta">Consultas laborales complejas · criterios SCJN</div></a>
+    <a class="btn btn-teal" href="generador-avanzado-ia.html"><span class="icon">✍️</span>Generador avanzado IA<div class="meta">Cláusulas y escritos personalizados con IA</div></a>
+    <a class="btn btn-gold" href="consultas-legales.html"><span class="icon">📚</span>Base de consultas legales<div class="meta">46+ preguntas · calculadoras · sin IA · WhatsApp</div></a>
+    <a class="btn" href="diagnostico-cumplimiento.html"><span class="icon">🔍</span>Autodiagnóstico gratis<div class="meta">Detectar riesgos laborales · lead magnet</div></a>
+  </div>
+
+  <!-- ── ADMINISTRACIÓN Y VENTAS ── -->
+  <div class="section-label">Administración y ventas</div>
+  <div class="grid">
+    <a class="btn btn-main" href="admin-suscripciones.html"><span class="icon">💰</span>Admin de suscripciones<div class="meta">MRR · cobros · retención · onboarding</div></a>
+    <a class="btn btn-gold" href="portal-referidos.html"><span class="icon">💼</span>Portal de referidos<div class="meta">Contadores · 25% comisión recurrente</div></a>
+    <a class="btn" href="checkout.html"><span class="icon">💳</span>Checkout / suscripción<div class="meta">Stripe · pago mensual o anual</div></a>
+    <a class="btn" href="paquete-bienvenida.html"><span class="icon">📦</span>Paquete bienvenida<div class="meta">Carta · docs · email automatizado</div></a>
+    <a class="btn" href="index.html"><span class="icon">🌐</span>Página de ventas<div class="meta">Captación · calculadora ROI · precios</div></a>
+  </div>
+
+  <!-- ── TÉCNICO ── -->
+  <div class="section-label">Técnico / Desarrollador</div>
+  <div class="grid">
+    <div class="btn" style="opacity:.72;cursor:default;"><span class="icon">📖</span>Guía de deployment<div class="meta">Solo local — abra <code>_interno/guia-deployment.html</code> desde su carpeta</div></div>
+    <div class="btn" style="opacity:.72;cursor:default;"><span class="icon">💻</span>Infraestructura y código<div class="meta">Solo local — abra <code>_interno/infraestructura-codigo.html</code> desde su carpeta</div></div>
+  </div>
+
+  <!-- ── HERRAMIENTAS NUEVAS ── -->
+  <div class="section-label">Simulador y políticas internas</div>
+  <div class="grid">
+    <a class="btn" href="reportes-gerenciales.html"><span class="icon">📊</span>Reportes gerenciales<div class="meta">KPIs · Rotación · Asistencias · Documentos</div></a>
+    <a class="btn btn-teal" href="contratos-por-sector.html"><span class="icon">🏭</span>Contratos por sector<div class="meta">Salud · Restaurantes · Construcción · Retail</div></a>
+    <a class="btn btn-gold" href="simulador-riesgo.html"><span class="icon">⚠️</span>Simulador de riesgo de demanda<div class="meta">Calcule su exposición económica antes de despedir</div></a>
+    <a class="btn" href="politica-home-office.html"><span class="icon">🏠</span>Política de Home Office<div class="meta">NOM-037 · Art. 330-A LFT · Teletrabajo</div></a>
+    <a class="btn" href="politica-uso-dispositivos.html"><span class="icon">💻</span>Uso de dispositivos y redes sociales<div class="meta">Confidencialidad · Propiedad intelectual</div></a>
+    <a class="btn" href="politica-codigo-vestimenta.html"><span class="icon">👔</span>Código de vestimenta<div class="meta">Imagen institucional · Uniformes · EPP</div></a>
+    <a class="btn" href="politica-prevencion-adicciones.html"><span class="icon">🚫</span>Prevención de adicciones<div class="meta">NOM-035 · Art. 47 Fr. VIII LFT</div></a>
+    <a class="btn" href="politica-nno-discriminacion.html"><span class="icon">⚖️</span>No discriminación e igualdad<div class="meta">NOM-035 · Art. 3° LFT · Protocolo de denuncia</div></a>
+  </div>
+
+  <!-- ── LEGAL ── -->
+  <div class="section-label">Legal</div>
+  <div class="grid">
+    <a class="btn" href="aviso-de-privacidad.html"><span class="icon">🔒</span>Aviso de privacidad<div class="meta">LFPDPPP · usuarios y datos</div></a>
+    <a class="btn" href="terminos-de-servicio.html"><span class="icon">📄</span>Términos de servicio<div class="meta">Condiciones de uso · SLA · responsabilidad</div></a>
+  </div>
+
+</div>
+</body>

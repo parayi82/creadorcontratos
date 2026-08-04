@@ -1,0 +1,875 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Asistente Legal IA · ClickLaboral.mx</title>
+<style>
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+:root {
+  --navy:#0f2640; --navy2:#1a3a5c; --navy3:#24507a;
+  --sky:#e8f2fc; --sky2:#c5dcf5;
+  --white:#fff; --surface:#f5f4f0; --surface2:#eeede8;
+  --ink:#111110; --ink2:#444440; --ink3:#888880;
+  --border:rgba(0,0,0,.08); --border2:rgba(0,0,0,.14);
+  --green:#16a34a; --green-bg:#dcfce7;
+  --amber:#d97706; --amber-bg:#fef3c7;
+  --red:#dc2626; --red-bg:#fee2e2;
+  --purple:#7c3aed; --purple-bg:#ede9fe;
+  --r:10px; --r-sm:6px;
+  --font:'Segoe UI',system-ui,sans-serif;
+  --font-mono:'SF Mono','Fira Code',monospace;
+}
+body { font-family:var(--font); background:var(--surface); color:var(--ink); height:100vh; display:flex; flex-direction:column; font-size:14px; overflow:hidden; }
+
+/* ── Header ── */
+header { background:var(--navy); color:#fff; padding:0 24px; height:54px; display:flex; align-items:center; justify-content:space-between; flex-shrink:0; z-index:10; box-shadow:0 1px 0 rgba(255,255,255,.06); }
+.logo { font-size:14px; font-weight:700; display:flex; align-items:center; gap:10px; }
+.logo-badge { background:var(--purple); font-size:10px; font-weight:700; padding:2px 8px; border-radius:20px; letter-spacing:.04em; }
+.header-nav { display:flex; gap:8px; }
+.btn { display:inline-flex; align-items:center; gap:6px; padding:6px 14px; border-radius:var(--r-sm); font-size:12px; font-weight:500; cursor:pointer; border:1px solid transparent; transition:all .15s; font-family:var(--font); }
+.btn-ghost { background:transparent; border-color:rgba(255,255,255,.25); color:rgba(255,255,255,.8); }
+.btn-ghost:hover { background:rgba(255,255,255,.1); color:#fff; }
+.btn-white { background:#fff; color:var(--navy); }
+.btn-white:hover { background:var(--sky); }
+.btn-purple { background:var(--purple); color:#fff; border-color:var(--purple); }
+.btn-purple:hover { background:#6d28d9; }
+.btn-sm { padding:5px 11px; font-size:11px; }
+
+/* ── Layout principal ── */
+.shell { display:grid; grid-template-columns:280px 1fr 320px; flex:1; overflow:hidden; }
+
+/* ── Panel izquierdo: herramientas ── */
+.tools-panel { background:var(--white); border-right:1px solid var(--border); display:flex; flex-direction:column; overflow:hidden; }
+.tools-header { padding:16px 18px 12px; border-bottom:1px solid var(--border); }
+.tools-title { font-size:12px; font-weight:700; text-transform:uppercase; letter-spacing:.08em; color:var(--ink3); margin-bottom:10px; }
+.tools-scroll { overflow-y:auto; flex:1; padding:12px; }
+
+.tool-card { border:1px solid var(--border); border-radius:var(--r-sm); padding:12px 14px; margin-bottom:8px; cursor:pointer; transition:all .15s; }
+.tool-card:hover { border-color:var(--navy2); background:var(--sky); }
+.tool-card.active { border-color:var(--purple); background:var(--purple-bg); }
+.tool-icon { font-size:18px; margin-bottom:6px; }
+.tool-name { font-size:13px; font-weight:600; margin-bottom:3px; }
+.tool-desc { font-size:11px; color:var(--ink3); line-height:1.4; }
+
+.sec-label { font-size:10px; font-weight:700; letter-spacing:.1em; text-transform:uppercase; color:var(--ink3); padding:14px 0 8px; }
+
+.prompt-chip { display:inline-block; padding:5px 10px; border:1px solid var(--border2); border-radius:6px; font-size:11px; color:var(--ink2); cursor:pointer; margin:3px; transition:all .15s; line-height:1.3; }
+.prompt-chip:hover { border-color:var(--navy2); background:var(--sky); color:var(--navy2); }
+
+/* ── Chat principal ── */
+.chat-panel { display:flex; flex-direction:column; overflow:hidden; }
+
+.chat-toolbar { padding:12px 20px; border-bottom:1px solid var(--border); display:flex; align-items:center; justify-content:space-between; background:var(--white); flex-shrink:0; }
+.chat-mode-tabs { display:flex; gap:2px; background:var(--surface); border-radius:var(--r-sm); padding:3px; }
+.mode-tab { padding:5px 14px; border-radius:5px; font-size:12px; font-weight:500; cursor:pointer; color:var(--ink3); transition:all .15s; white-space:nowrap; }
+.mode-tab.active { background:var(--white); color:var(--navy2); box-shadow:0 1px 3px rgba(0,0,0,.1); }
+.chat-actions { display:flex; gap:6px; }
+
+.messages { flex:1; overflow-y:auto; padding:20px; display:flex; flex-direction:column; gap:16px; }
+
+/* Mensajes */
+.msg { display:flex; gap:12px; max-width:85%; }
+.msg.user { flex-direction:row-reverse; align-self:flex-end; }
+.msg-avatar { width:32px; height:32px; border-radius:50%; display:flex; align-items:center; justify-content:center; font-size:14px; flex-shrink:0; margin-top:2px; }
+.avatar-ai { background:var(--purple); color:#fff; font-size:12px; font-weight:700; }
+.avatar-user { background:var(--navy); color:#fff; font-size:14px; }
+.msg-bubble { padding:12px 16px; border-radius:12px; font-size:13px; line-height:1.65; }
+.msg.ai .msg-bubble { background:var(--white); border:1px solid var(--border); border-radius:4px 12px 12px 12px; }
+.msg.user .msg-bubble { background:var(--navy); color:#fff; border-radius:12px 4px 12px 12px; }
+.msg.ai .msg-bubble h4 { font-size:12px; font-weight:700; text-transform:uppercase; letter-spacing:.06em; color:var(--purple); margin-bottom:8px; }
+.msg.ai .msg-bubble p { margin-bottom:8px; }
+.msg.ai .msg-bubble p:last-child { margin-bottom:0; }
+.msg.ai .msg-bubble ul, .msg.ai .msg-bubble ol { margin:8px 0 8px 20px; }
+.msg.ai .msg-bubble li { margin-bottom:4px; }
+.msg.ai .msg-bubble strong { color:var(--navy2); }
+.msg.ai .msg-bubble code { background:var(--surface); padding:1px 5px; border-radius:3px; font-family:var(--font-mono); font-size:11px; }
+.msg.ai .msg-bubble .art-ref { display:inline-block; background:var(--sky); color:var(--navy2); font-size:10px; font-weight:600; padding:1px 6px; border-radius:4px; margin:0 2px; }
+.msg-time { font-size:10px; color:var(--ink3); margin-top:4px; text-align:right; }
+.msg.user .msg-time { text-align:left; }
+
+/* Typing indicator */
+.typing { display:flex; gap:4px; align-items:center; padding:14px 16px; }
+.typing span { width:7px; height:7px; background:var(--ink3); border-radius:50%; animation:bounce .9s infinite; }
+.typing span:nth-child(2) { animation-delay:.15s; }
+.typing span:nth-child(3) { animation-delay:.3s; }
+@keyframes bounce { 0%,60%,100%{transform:translateY(0)} 30%{transform:translateY(-6px)} }
+
+/* Doc generado */
+.doc-bubble { background:var(--surface); border:1px solid var(--border); border-radius:var(--r-sm); padding:14px 16px; margin-top:8px; }
+.doc-bubble-header { display:flex; align-items:center; justify-content:space-between; margin-bottom:8px; }
+.doc-bubble-title { font-size:12px; font-weight:600; color:var(--navy2); }
+.doc-bubble-copy { font-size:11px; color:var(--purple); cursor:pointer; font-weight:500; }
+.doc-bubble-copy:hover { text-decoration:underline; }
+.doc-bubble-content { font-size:12px; color:var(--ink2); line-height:1.7; white-space:pre-wrap; font-family:var(--font-mono); background:var(--white); padding:10px 12px; border-radius:var(--r-sm); border:1px solid var(--border); max-height:200px; overflow-y:auto; }
+
+/* Input area */
+.input-area { padding:16px 20px; background:var(--white); border-top:1px solid var(--border); flex-shrink:0; }
+.input-row { display:flex; gap:10px; align-items:flex-end; }
+.input-box { flex:1; position:relative; }
+.chat-input { width:100%; padding:11px 44px 11px 14px; border:1px solid var(--border2); border-radius:10px; font-size:13px; font-family:var(--font); color:var(--ink); resize:none; line-height:1.5; min-height:44px; max-height:120px; overflow-y:auto; transition:border-color .15s; }
+.chat-input:focus { outline:none; border-color:var(--purple); box-shadow:0 0 0 3px var(--purple-bg); }
+.send-btn { width:36px; height:36px; border-radius:8px; background:var(--purple); color:#fff; border:none; cursor:pointer; font-size:16px; display:flex; align-items:center; justify-content:center; transition:all .15s; flex-shrink:0; }
+.send-btn:hover { background:#6d28d9; }
+.send-btn:disabled { background:var(--surface2); cursor:not-allowed; }
+.input-meta { display:flex; justify-content:space-between; align-items:center; margin-top:8px; }
+.input-hint { font-size:11px; color:var(--ink3); }
+.ctx-badge { font-size:11px; background:var(--purple-bg); color:var(--purple); padding:2px 8px; border-radius:20px; font-weight:500; }
+
+/* ── Panel derecho: contexto ── */
+.context-panel { background:var(--white); border-left:1px solid var(--border); display:flex; flex-direction:column; overflow:hidden; }
+.ctx-header { padding:14px 16px 12px; border-bottom:1px solid var(--border); }
+.ctx-title { font-size:12px; font-weight:700; text-transform:uppercase; letter-spacing:.08em; color:var(--ink3); }
+.ctx-scroll { overflow-y:auto; flex:1; padding:12px 14px; }
+
+.ctx-section { margin-bottom:20px; }
+.ctx-sec-label { font-size:10px; font-weight:700; letter-spacing:.08em; text-transform:uppercase; color:var(--ink3); margin-bottom:8px; }
+
+.ctx-empresa { background:var(--surface); border-radius:var(--r-sm); padding:12px; border:1px solid var(--border); margin-bottom:12px; }
+.ctx-empresa-name { font-size:13px; font-weight:600; margin-bottom:2px; }
+.ctx-empresa-meta { font-size:11px; color:var(--ink3); }
+
+.ctx-field { margin-bottom:10px; }
+.ctx-field label { display:block; font-size:11px; font-weight:500; color:var(--ink3); margin-bottom:3px; }
+.ctx-field input, .ctx-field select, .ctx-field textarea { width:100%; padding:7px 9px; border:1px solid var(--border2); border-radius:var(--r-sm); font-size:12px; font-family:var(--font); color:var(--ink); background:var(--white); }
+.ctx-field input:focus, .ctx-field select:focus, .ctx-field textarea:focus { outline:none; border-color:var(--purple); }
+.ctx-field textarea { resize:vertical; min-height:60px; }
+
+.ref-item { padding:8px 10px; border-radius:var(--r-sm); background:var(--surface); margin-bottom:6px; }
+.ref-art { font-size:10px; font-weight:700; color:var(--navy2); font-family:var(--font-mono); }
+.ref-desc { font-size:11px; color:var(--ink2); margin-top:2px; line-height:1.4; }
+
+.output-box { background:var(--surface); border:1px solid var(--border); border-radius:var(--r-sm); padding:12px; font-size:12px; color:var(--ink2); line-height:1.65; min-height:80px; white-space:pre-wrap; position:relative; }
+.output-copy { position:absolute; top:8px; right:8px; font-size:10px; color:var(--purple); cursor:pointer; font-weight:600; background:var(--white); padding:2px 6px; border-radius:4px; border:1px solid var(--border); }
+
+/* Historial */
+.hist-item { padding:8px 10px; border-radius:var(--r-sm); border:1px solid var(--border); margin-bottom:6px; cursor:pointer; transition:all .15s; }
+.hist-item:hover { border-color:var(--purple); background:var(--purple-bg); }
+.hist-item-title { font-size:12px; font-weight:500; color:var(--ink); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+.hist-item-meta { font-size:10px; color:var(--ink3); margin-top:2px; }
+
+/* Welcome */
+.welcome { flex:1; display:flex; flex-direction:column; align-items:center; justify-content:center; padding:40px; text-align:center; }
+.welcome-icon { font-size:48px; margin-bottom:20px; }
+.welcome-title { font-size:20px; font-weight:700; color:var(--ink); margin-bottom:8px; }
+.welcome-sub { font-size:14px; color:var(--ink3); max-width:400px; line-height:1.6; margin-bottom:28px; }
+.welcome-grid { display:grid; grid-template-columns:1fr 1fr; gap:10px; width:100%; max-width:500px; }
+.welcome-chip { padding:12px 14px; border:1px solid var(--border2); border-radius:var(--r-sm); font-size:12px; cursor:pointer; text-align:left; transition:all .15s; color:var(--ink2); background:var(--white); }
+.welcome-chip:hover { border-color:var(--purple); background:var(--purple-bg); color:var(--purple); }
+.welcome-chip strong { display:block; font-size:12px; color:var(--ink); margin-bottom:2px; }
+
+/* Scrollbar */
+::-webkit-scrollbar { width:4px; height:4px; }
+::-webkit-scrollbar-track { background:transparent; }
+::-webkit-scrollbar-thumb { background:var(--border2); border-radius:2px; }
+
+.badge { display:inline-flex; align-items:center; gap:3px; padding:2px 7px; border-radius:20px; font-size:10px; font-weight:600; }
+.badge-green { background:var(--green-bg); color:var(--green); }
+.badge-purple { background:var(--purple-bg); color:var(--purple); }
+.badge-amber { background:var(--amber-bg); color:var(--amber); }
+</style>
+<script src="faq-data.js"></script>
+</head>
+<body>
+
+<header>
+  <div class="logo">
+    <span>⚖️ Asistente Legal IA</span>
+    <span class="logo-badge">✦ Base legal + IA (parcial)</span>
+  </div>
+  <div class="header-nav">
+    <button class="btn btn-ghost btn-sm" onclick="window.open('portal-cliente.html')">← Volver al portal</button>
+    <button class="btn btn-ghost btn-sm" onclick="limpiarChat()">🗑 Nueva sesión</button>
+    <button class="btn btn-white btn-sm" onclick="exportarConversacion()">⬇ Exportar</button>
+  </div>
+</header>
+
+<div class="shell">
+
+  <!-- ── PANEL IZQUIERDO: herramientas ── -->
+  <div class="tools-panel">
+    <div class="tools-header">
+      <div class="tools-title">Herramientas IA</div>
+      <div style="display:flex;flex-direction:column;gap:6px;">
+        <div class="tool-card active" id="tool-asesor" onclick="setTool('asesor',this)">
+          <div class="tool-icon">⚖️</div>
+          <div class="tool-name">Asesor laboral</div>
+          <div class="tool-desc">Consultas sobre LFT, IMSS, STPS, jurisprudencia</div>
+        </div>
+        <div class="tool-card" id="tool-clausulas" onclick="setTool('clausulas',this)">
+          <div class="tool-icon">📝</div>
+          <div class="tool-name">Generador de cláusulas <span style="font-size:9px;font-weight:700;color:var(--amber);">⏳ IA pendiente</span></div>
+          <div class="tool-desc">Redacta cláusulas contractuales personalizadas</div>
+        </div>
+        <div class="tool-card" id="tool-stps" onclick="setTool('stps',this)">
+          <div class="tool-icon">🏛️</div>
+          <div class="tool-name">Respuestas STPS / IMSS <span style="font-size:9px;font-weight:700;color:var(--amber);">⏳ IA pendiente</span></div>
+          <div class="tool-desc">Redacta escritos y respuestas a notificaciones</div>
+        </div>
+        <div class="tool-card" id="tool-liquidacion" onclick="setTool('liquidacion',this)">
+          <div class="tool-icon">🧮</div>
+          <div class="tool-name">Calculadora de liquidación <span style="font-size:9px;font-weight:700;color:var(--amber);">⏳ Narrativa IA pendiente</span></div>
+          <div class="tool-desc">Liquidación, finiquito e indemnización constitucional</div>
+        </div>
+        <div class="tool-card" id="tool-dictamen" onclick="setTool('dictamen',this)">
+          <div class="tool-icon">📋</div>
+          <div class="tool-name">Dictamen de compliance <span style="font-size:9px;font-weight:700;color:var(--amber);">⏳ IA pendiente</span></div>
+          <div class="tool-desc">Diagnóstico completo para un cliente</div>
+        </div>
+      </div>
+    </div>
+    <div class="tools-scroll">
+      <div class="sec-label">Preguntas frecuentes</div>
+      <div id="quick-prompts"></div>
+    </div>
+  </div>
+
+  <!-- ── CHAT ── -->
+  <div class="chat-panel">
+    <div class="chat-toolbar">
+      <div class="chat-mode-tabs" id="mode-tabs">
+        <div class="mode-tab active" onclick="setMode('chat',this)">💬 Chat libre</div>
+        <div class="mode-tab" onclick="setMode('guiado',this)">🧭 Guiado</div>
+        <div class="mode-tab" onclick="setMode('batch',this)">⚡ Lote</div>
+      </div>
+      <div class="chat-actions">
+        <span class="badge badge-green" id="status-badge">● Conectado</span>
+      </div>
+    </div>
+
+    <div class="messages" id="messages">
+      <!-- Welcome state -->
+      <div class="welcome" id="welcome-state">
+        <div class="welcome-icon">⚖️</div>
+        <div class="welcome-title">Asistente Legal Laboral IA</div>
+        <div class="welcome-sub">Especializado en Derecho Laboral Mexicano — LFT, IMSS, STPS, NOMs y jurisprudencia. Pregúnteme lo que necesite.</div>
+        <div class="welcome-grid" id="welcome-chips"></div>
+      </div>
+    </div>
+
+    <div class="input-area">
+      <div class="input-row">
+        <div class="input-box">
+          <textarea class="chat-input" id="chat-input" placeholder="Escriba su consulta laboral..." rows="1"
+            onkeydown="if(event.key==='Enter'&&!event.shiftKey){event.preventDefault();enviar();}"
+            oninput="autoResize(this)"></textarea>
+        </div>
+        <button class="send-btn" id="send-btn" onclick="enviar()">➤</button>
+      </div>
+      <div class="input-meta">
+        <span class="input-hint">Enter para enviar · Shift+Enter para nueva línea</span>
+        <span class="ctx-badge" id="ctx-badge">⚖️ Asesor laboral</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── PANEL DERECHO: contexto ── -->
+  <div class="context-panel">
+    <div class="ctx-header">
+      <div class="ctx-title">Contexto del cliente</div>
+    </div>
+    <div class="ctx-scroll">
+
+      <div class="ctx-section">
+        <div class="ctx-sec-label">Empresa activa</div>
+        <div class="ctx-empresa">
+          <div class="ctx-empresa-name" id="ctx-empresa-name">Sin empresa seleccionada</div>
+          <div class="ctx-empresa-meta" id="ctx-empresa-meta">Configure el contexto para respuestas personalizadas</div>
+        </div>
+        <div class="ctx-field">
+          <label>Razón social</label>
+          <input type="text" id="ctx-empresa" placeholder="Nombre de la empresa" oninput="actualizarCtx()">
+        </div>
+        <div class="ctx-field">
+          <label>Giro / industria</label>
+          <input type="text" id="ctx-giro" placeholder="Ej. Manufactura, Retail, Servicios" oninput="actualizarCtx()">
+        </div>
+        <div class="ctx-field">
+          <label>No. trabajadores</label>
+          <input type="number" id="ctx-trab" placeholder="Ej. 45" oninput="actualizarCtx()">
+        </div>
+        <div class="ctx-field">
+          <label>Estado / ciudad</label>
+          <input type="text" id="ctx-estado" placeholder="Ej. Jalisco, Guadalajara" oninput="actualizarCtx()">
+        </div>
+        <div class="ctx-field">
+          <label>Contexto adicional (opcional)</label>
+          <textarea id="ctx-extra" placeholder="Ej. Empresa sindicalizada, opera en maquiladora, tiene trabajadores remotos..." oninput="actualizarCtx()"></textarea>
+        </div>
+      </div>
+
+      <div class="ctx-section" id="refs-section">
+        <div class="ctx-sec-label">Referencias legales usadas</div>
+        <div id="refs-list"><div style="font-size:11px;color:var(--ink3);">Aparecerán al recibir respuestas</div></div>
+      </div>
+
+      <div class="ctx-section">
+        <div class="ctx-sec-label">Último documento generado</div>
+        <div class="output-box" id="last-output">
+          <span style="color:var(--ink3);font-size:11px;">Los documentos generados aparecerán aquí para copiar rápidamente.</span>
+        </div>
+      </div>
+
+      <div class="ctx-section">
+        <div class="ctx-sec-label">Historial de sesión</div>
+        <div id="historial"></div>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+<script>
+// ════════════════════════════════════════════════════════
+// ESTADO GLOBAL
+// ════════════════════════════════════════════════════════
+let herramienta = 'asesor';
+let modo = 'chat';
+let conversacion = [];
+let cargando = false;
+let historialSesion = [];
+
+const SYSTEM_PROMPTS = {
+  asesor: `Eres un abogado laboralista mexicano experto con más de 20 años de experiencia en Derecho Laboral Mexicano. 
+Conoces a profundidad la Ley Federal del Trabajo (LFT) vigente, la Ley del Seguro Social, la Ley del INFONAVIT, las NOMs de la STPS y la jurisprudencia de la Suprema Corte de Justicia de la Nación en materia laboral.
+
+INSTRUCCIONES:
+- Responde siempre citando los artículos específicos de la LFT u otras leyes aplicables
+- Usa el formato: "conforme al artículo XX de la LFT" o "según la fracción X del artículo XX"
+- Cuando haya jurisprudencia relevante, menciónala
+- Si el contexto de empresa está disponible, personaliza tus respuestas
+- Sé preciso, práctico y orientado a la acción
+- Advierte cuando algo requiere análisis del caso concreto
+- Estructura tus respuestas con párrafos claros, usa listas cuando sean útiles
+- Responde en español formal pero accesible
+- Al final de respuestas complejas, agrega una sección "⚡ Acción recomendada"
+
+Nunca inventes artículos de ley. Si no estás seguro de un artículo específico, dilo claramente.`,
+
+  clausulas: `Eres un redactor jurídico especializado en contratos laborales mexicanos conforme a la LFT vigente.
+Tu tarea es redactar cláusulas contractuales precisas, válidas y personalizadas.
+
+INSTRUCCIONES:
+- Redacta cláusulas en lenguaje jurídico formal pero claro
+- Cita siempre el fundamento legal de cada cláusula
+- Incluye los elementos esenciales: objeto, sujetos, derechos y obligaciones
+- Cuando generes una cláusula, usa este formato:
+
+CLÁUSULA [NÚMERO]. — [NOMBRE EN MAYÚSCULAS]
+[Texto de la cláusula...]
+Fundamento: [artículo aplicable]
+
+- Adapta las cláusulas al contexto de la empresa si está disponible
+- Ofrece variantes o alternativas cuando sea pertinente
+- Advierte sobre cláusulas que podrían ser nulas (art. 5 LFT)`,
+
+  stps: `Eres un abogado experto en trámites y procedimientos ante la STPS, IMSS, INFONAVIT y Tribunales Laborales Mexicanos.
+Tu especialidad es redactar escritos, respuestas a requerimientos e impugnaciones.
+
+INSTRUCCIONES:
+- Redacta en formato de escrito formal con estructura legal: ciudad y fecha, autoridad destinataria, número de oficio, hechos, fundamento de derecho, puntos petitorios
+- Usa vocabulario procesal correcto
+- Cita los artículos de los reglamentos específicos de cada autoridad
+- Estructura del escrito:
+  [Ciudad], [fecha]
+  [Autoridad]
+  [Asunto]: ...
+  HECHOS: ...
+  FUNDAMENTO DE DERECHO: ...
+  PUNTOS PETITORIOS: ...
+  ATENTAMENTE: ...
+- Adapta el tono según la autoridad (STPS inspección, IMSS determinación, Tribunal)`,
+
+  liquidacion: `Eres un experto en cálculo de prestaciones laborales conforme a la LFT mexicana vigente.
+Calculas con precisión: liquidaciones, finiquitos, indemnizaciones constitucionales y partes proporcionales.
+
+INSTRUCCIONES:
+- Siempre solicita los datos necesarios si no están disponibles: salario diario, antigüedad, fecha de ingreso/separación, tipo de separación
+- Calcula paso a paso, mostrando cada componente
+- Usa las fórmulas exactas de la LFT:
+  * Indemnización constitucional: 90 días de salario (art. 50 o art. 48 LFT)
+  * 20 días por año trabajado (art. 50 fracc. II o art. 48)
+  * Prima de antigüedad: 12 días por año (art. 162 LFT), tope 2 veces SMG
+  * Partes proporcionales: aguinaldo (art. 87), vacaciones (art. 76), prima vacacional (art. 80)
+- Presenta el cálculo en tabla clara con subtotales
+- Advierte sobre el salario integrado (art. 84 LFT) vs. salario diario
+- Menciona el tope del salario mínimo general para prima de antigüedad`,
+
+  dictamen: `Eres un consultor de compliance laboral que elabora dictámenes y diagnósticos de cumplimiento para empresas mexicanas.
+Generas reportes estructurados y planes de acción.
+
+INSTRUCCIONES:
+- Estructura el dictamen con:
+  1. DATOS DE LA EMPRESA
+  2. ALCANCE DEL DIAGNÓSTICO  
+  3. HALLAZGOS POR ÁREA (contratos, jornada, salarios, seguridad social, seguridad e higiene, capacitación)
+  4. SEMÁFORO DE RIESGOS (🔴 crítico / 🟡 atención / 🟢 cumplido)
+  5. PLAN DE ACCIÓN con prioridades y plazos
+  6. ESTIMADO DE RIESGO ECONÓMICO
+- Basate en la información del contexto de empresa
+- Sé específico y práctico
+- Incluye los artículos de la LFT y NOMs aplicables a cada hallazgo`
+};
+
+const QUICK_PROMPTS = {
+  asesor: [
+    "¿Cuándo procede una rescisión sin responsabilidad para el patrón?",
+    "¿Qué elementos debe tener un contrato individual de trabajo?",
+    "¿Qué obligaciones genera la NOM-035 para mi empresa?",
+    "¿Cómo se calcula el aguinaldo proporcional?",
+    "¿Cuándo vence el plazo para demandar al patrón?",
+    "¿Qué es el REPSE y cuándo se necesita?",
+    "¿Cómo se integra el salario base para el IMSS?",
+    "¿Qué dice la LFT sobre el trabajo en días de descanso?",
+  ],
+  clausulas: [
+    "Redacta una cláusula de confidencialidad para contrato de trabajo",
+    "Cláusula de no competencia válida durante vigencia del contrato",
+    "Cláusula de uso y devolución de equipo de trabajo",
+    "Cláusula de teletrabajo conforme a NOM-037",
+    "Cláusula de exclusividad para comisionista",
+    "Cláusula de rescisión con causal específica",
+  ],
+  stps: [
+    "Respuesta a acta de inspección de la STPS por jornada",
+    "Escrito ante el IMSS impugnando diferencias de cuotas",
+    "Respuesta a requerimiento de integración de comisión mixta",
+    "Aviso de suspensión de actividades ante el CFCRL",
+    "Solicitud de prórroga ante tribunal laboral",
+  ],
+  liquidacion: [
+    "Calcula la liquidación de un trabajador con 3 años de antigüedad",
+    "¿Cuál es la diferencia entre finiquito y liquidación?",
+    "Calcula el finiquito de un trabajador que renuncia voluntariamente",
+    "¿Cómo se calcula la indemnización constitucional?",
+    "Prima de antigüedad para trabajador con 10 años de servicio",
+  ],
+  dictamen: [
+    "Genera un dictamen de compliance para empresa de manufactura",
+    "Diagnóstico de cumplimiento para empresa de 50 trabajadores",
+    "Plan de acción para empresa recién constituida",
+    "Lista de verificación completa de obligaciones laborales",
+  ],
+};
+
+const REFS_LEGALES = {
+  asesor: [
+    { art: "Art. 47 LFT", desc: "Causales de rescisión sin responsabilidad para el patrón" },
+    { art: "Art. 50 LFT", desc: "Indemnización por separación injustificada" },
+    { art: "Art. 76 LFT", desc: "Período de vacaciones anuales (mín. 12 días)" },
+    { art: "Art. 87 LFT", desc: "Aguinaldo — mínimo 15 días anuales" },
+    { art: "NOM-035-STPS-2018", desc: "Factores de riesgo psicosocial en el trabajo" },
+  ],
+  clausulas: [
+    { art: "Art. 5 LFT", desc: "Cláusulas nulas de pleno derecho en contratos de trabajo" },
+    { art: "Art. 25 LFT", desc: "Contenido mínimo del contrato individual" },
+    { art: "Art. 330-A LFT", desc: "Regulación del teletrabajo" },
+    { art: "Art. 47 fracc. VIII LFT", desc: "Revelación de secretos como causal de rescisión" },
+  ],
+  stps: [
+    { art: "RCEA STPS", desc: "Reglamento de Condiciones Generales de las Inspecciones" },
+    { art: "Art. 541 LFT", desc: "Atribuciones de los inspectores del trabajo" },
+    { art: "Arts. 992-994 LFT", desc: "Multas por infracciones a la LFT" },
+    { art: "LSS Art. 304-A", desc: "Infracciones al régimen del Seguro Social" },
+  ],
+  liquidacion: [
+    { art: "Art. 48 LFT", desc: "Reinstalación o indemnización al trabajador despedido injustamente" },
+    { art: "Art. 50 LFT", desc: "Indemnizaciones en contratos por tiempo determinado" },
+    { art: "Art. 84 LFT", desc: "Integración del salario base" },
+    { art: "Art. 162 LFT", desc: "Prima de antigüedad — 12 días por año" },
+  ],
+  dictamen: [
+    { art: "Art. 423 LFT", desc: "Contenido obligatorio del Reglamento Interior de Trabajo" },
+    { art: "NOM-019-STPS-2011", desc: "Integración, funcionamiento y actividades de las comisiones de S&H" },
+    { art: "Art. 153-A LFT", desc: "Obligación patronal de capacitar a los trabajadores" },
+    { art: "Art. 123 CPEUM", desc: "Derechos laborales de rango constitucional" },
+  ],
+};
+
+// ════════════════════════════════════════════════════════
+// INIT
+// ════════════════════════════════════════════════════════
+function init() {
+  renderQuickPrompts();
+  renderWelcomeChips();
+  renderRefs();
+}
+
+function renderQuickPrompts() {
+  const cont = document.getElementById('quick-prompts');
+  const prompts = QUICK_PROMPTS[herramienta] || [];
+  cont.innerHTML = prompts.map(p =>
+    `<span class="prompt-chip" onclick="usarPrompt('${p.replace(/'/g,"\\'")}')">💬 ${p}</span>`
+  ).join('');
+}
+
+function renderWelcomeChips() {
+  const cont = document.getElementById('welcome-chips');
+  if (!cont) return;
+  const prompts = QUICK_PROMPTS[herramienta] || [];
+  cont.innerHTML = prompts.slice(0,6).map(p =>
+    `<div class="welcome-chip" onclick="usarPrompt('${p.replace(/'/g,"\\'")}')">
+      <strong>${p.split(' ').slice(0,4).join(' ')}...</strong>
+      ${p}
+    </div>`
+  ).join('');
+}
+
+function renderRefs() {
+  const refs = REFS_LEGALES[herramienta] || [];
+  document.getElementById('refs-list').innerHTML = refs.map(r =>
+    `<div class="ref-item"><div class="ref-art">${r.art}</div><div class="ref-desc">${r.desc}</div></div>`
+  ).join('');
+}
+
+function setTool(tool, el) {
+  herramienta = tool;
+  document.querySelectorAll('.tool-card').forEach(c => c.classList.remove('active'));
+  el.classList.add('active');
+  document.getElementById('ctx-badge').textContent = `${getToolEmoji(tool)} ${getToolName(tool)}`;
+  renderQuickPrompts();
+  renderWelcomeChips();
+  renderRefs();
+}
+
+function getToolEmoji(t) {
+  return { asesor:'⚖️', clausulas:'📝', stps:'🏛️', liquidacion:'🧮', dictamen:'📋' }[t] || '⚖️';
+}
+function getToolName(t) {
+  return { asesor:'Asesor laboral', clausulas:'Generador de cláusulas', stps:'Respuestas STPS/IMSS', liquidacion:'Calculadora', dictamen:'Dictamen' }[t] || '';
+}
+
+function setMode(m, el) {
+  modo = m;
+  document.querySelectorAll('.mode-tab').forEach(t => t.classList.remove('active'));
+  el.classList.add('active');
+  if (m === 'guiado') iniciarModoGuiado();
+  if (m === 'batch') iniciarModoBatch();
+}
+
+function usarPrompt(texto) {
+  document.getElementById('chat-input').value = texto;
+  enviar();
+}
+
+function actualizarCtx() {
+  const empresa = document.getElementById('ctx-empresa').value;
+  const giro = document.getElementById('ctx-giro').value;
+  const trab = document.getElementById('ctx-trab').value;
+  const estado = document.getElementById('ctx-estado').value;
+  document.getElementById('ctx-empresa-name').textContent = empresa || 'Sin empresa seleccionada';
+  document.getElementById('ctx-empresa-meta').textContent = [giro, trab ? trab+' trabajadores' : '', estado].filter(Boolean).join(' · ') || 'Configure el contexto';
+}
+
+// ════════════════════════════════════════════════════════
+// RENDER MENSAJES
+// ════════════════════════════════════════════════════════
+function agregarMensajeUI(rol, contenido, extra) {
+  const welcome = document.getElementById('welcome-state');
+  if (welcome) welcome.remove();
+
+  const cont = document.getElementById('messages');
+  const div = document.createElement('div');
+  div.className = `msg ${rol}`;
+  const hora = new Date().toLocaleTimeString('es-MX', { hour:'2-digit', minute:'2-digit' });
+
+  if (rol === 'user') {
+    div.innerHTML = `
+      <div class="msg-avatar avatar-user">👤</div>
+      <div>
+        <div class="msg-bubble">${escapeHtml(contenido)}</div>
+        <div class="msg-time">${hora}</div>
+      </div>`;
+  } else {
+    div.innerHTML = `
+      <div class="msg-avatar avatar-ai">IA</div>
+      <div style="flex:1;min-width:0;">
+        <div class="msg-bubble" id="bubble-${Date.now()}">${formatearRespuesta(contenido)}</div>
+        <div class="msg-time" style="text-align:left;">${hora} · ${getToolName(herramienta)}</div>
+        ${extra?.docContent ? `
+        <div class="doc-bubble">
+          <div class="doc-bubble-header">
+            <span class="doc-bubble-title">📄 Documento generado</span>
+            <span class="doc-bubble-copy" onclick="copiarTexto(this,'${btoa(encodeURIComponent(extra.docContent))}')">Copiar</span>
+          </div>
+          <div class="doc-bubble-content">${escapeHtml(extra.docContent)}</div>
+        </div>` : ''}
+      </div>`;
+  }
+
+  cont.appendChild(div);
+  cont.scrollTop = cont.scrollHeight;
+  return div;
+}
+
+function agregarTyping() {
+  const cont = document.getElementById('messages');
+  const div = document.createElement('div');
+  div.className = 'msg ai';
+  div.id = 'typing-indicator';
+  div.innerHTML = `
+    <div class="msg-avatar avatar-ai">IA</div>
+    <div class="msg-bubble">
+      <div class="typing"><span></span><span></span><span></span></div>
+    </div>`;
+  cont.appendChild(div);
+  cont.scrollTop = cont.scrollHeight;
+  return div;
+}
+
+function formatearRespuesta(texto) {
+  let h = escapeHtml(texto);
+  // Negritas
+  h = h.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>');
+  h = h.replace(/__(.*?)__/g, '<strong>$1</strong>');
+  // Cursivas
+  h = h.replace(/\*(.*?)\*/g, '<em>$1</em>');
+  // Código inline
+  h = h.replace(/`(.*?)`/g, '<code>$1</code>');
+  // Referencias legales → badge
+  h = h.replace(/(art(?:ículo)?s?\.\s*\d+[^\s,;.]*(?:\s*(?:fracc?\.?|párrafo|inciso)\s*[IVXivx\d]+)?)/gi, '<span class="art-ref">$1</span>');
+  h = h.replace(/(NOM-\d+-[A-Z]+-\d+)/g, '<span class="art-ref">$1</span>');
+  // Headers
+  h = h.replace(/^####\s(.+)$/gm, '<h4>$1</h4>');
+  h = h.replace(/^###\s(.+)$/gm, '<h4>$1</h4>');
+  // Listas
+  h = h.replace(/^\*\s(.+)$/gm, '<li>$1</li>');
+  h = h.replace(/^-\s(.+)$/gm, '<li>$1</li>');
+  h = h.replace(/^\d+\.\s(.+)$/gm, '<li>$1</li>');
+  // Agrupar listas
+  h = h.replace(/(<li>.*<\/li>\n?)+/g, m => `<ul>${m}</ul>`);
+  // Párrafos
+  h = h.split('\n\n').map(p => p.trim() ? (p.startsWith('<') ? p : `<p>${p}</p>`) : '').join('');
+  return h;
+}
+
+function escapeHtml(s) {
+  return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+
+// ════════════════════════════════════════════════════════
+// BASE DE PREGUNTAS FRECUENTES — usada por el modo "asesor"
+// (sin IA en vivo; ver faq-data.js)
+// ════════════════════════════════════════════════════════
+const FAQ_STOPWORDS = new Set(['cuando','como','que','cual','cuales','donde','quien','quienes','para','por','con','sin','sobre','este','esta','estos','estas','ese','esa','esos','esas','debo','debe','deben','puedo','puede','pueden','hay','estan','esto','son','las','los','una','unos','unas','del','les','muy','mas','todo','toda','todos','todas','tengo','tiene','tienen','dias','dia','anos','ano','sera','seria','tipo','tipos','sido','siendo','desde','hasta','entre','cada','otro','otra','algun','alguna','algunos','tener','hacer','haber','tambien','solo','si','no','mi','su','sus']);
+const FAQ_CODIGOS_CORTOS = new Set(['nom','lft','imss','ptu','sdi','dc3','dc-3','repse','cfcrl','reps','infonavit','art']);
+function normalizarTxt(txt){ return txt.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,''); }
+function tokenizarFAQ(txt){
+  return normalizarTxt(txt).split(/[^a-z0-9]+/).filter(w=>{
+    if(!w) return false;
+    if(FAQ_STOPWORDS.has(w)) return false;
+    if(w.length>3) return true;
+    if(/^\d+$/.test(w)) return true;
+    if(FAQ_CODIGOS_CORTOS.has(w)) return true;
+    return false;
+  });
+}
+let _faqDF=null, _faqN=0;
+function construirIndiceFAQ(){
+  if(_faqDF || typeof FAQ_DATA==='undefined') return;
+  _faqDF={}; _faqN=FAQ_DATA.length;
+  FAQ_DATA.forEach(item=>{ new Set(tokenizarFAQ(item.q+' '+item.a)).forEach(w=>{ _faqDF[w]=(_faqDF[w]||0)+1; }); });
+}
+function idfFAQ(w){ return Math.log((_faqN+1)/((_faqDF[w]||0)+1))+1; }
+function buscarMejorRespuestaFAQ(pregunta){
+  construirIndiceFAQ();
+  if(!_faqDF) return null;
+  const palabras = tokenizarFAQ(pregunta);
+  if(!palabras.length) return null;
+  let mejor=null, mejorScore=0;
+  FAQ_DATA.forEach(item=>{
+    const tokensPregunta = tokenizarFAQ(item.q);
+    const tokensRespuesta = tokenizarFAQ(item.a);
+    let score=0;
+    palabras.forEach(p=>{
+      const peso = idfFAQ(p);
+      if(tokensPregunta.includes(p)) score += peso*2;
+      else if(tokensRespuesta.includes(p)) score += peso*0.5;
+    });
+    if(score>mejorScore){ mejorScore=score; mejor=item; }
+  });
+  return mejorScore>=6 ? mejor : null;
+}
+
+// Inserta un mensaje del asistente con HTML real (respuestas de FAQ), sin pasar por formatearRespuesta
+function agregarMensajeHTML(htmlContenido){
+  const welcome = document.getElementById('welcome-state');
+  if (welcome) welcome.remove();
+  const cont = document.getElementById('messages');
+  const div = document.createElement('div');
+  div.className = 'msg ai';
+  const hora = new Date().toLocaleTimeString('es-MX', { hour:'2-digit', minute:'2-digit' });
+  div.innerHTML = `
+    <div class="msg-avatar avatar-ai">IA</div>
+    <div style="flex:1;min-width:0;">
+      <div class="msg-bubble">${htmlContenido}</div>
+      <div class="msg-time" style="text-align:left;">${hora} · Asesor laboral</div>
+    </div>`;
+  cont.appendChild(div);
+  cont.scrollTop = cont.scrollHeight;
+}
+
+// ════════════════════════════════════════════════════════
+// ENVÍO DE MENSAJES
+// ════════════════════════════════════════════════════════
+async function enviar() {
+  if (cargando) return;
+  const input = document.getElementById('chat-input');
+  const texto = input.value.trim();
+  if (!texto) return;
+
+  input.value = '';
+  autoResize(input);
+  cargando = true;
+  document.getElementById('send-btn').disabled = true;
+  document.getElementById('status-badge').textContent = '⟳ Generando...';
+  document.getElementById('status-badge').className = 'badge badge-amber';
+
+  agregarMensajeUI('user', texto);
+  conversacion.push({ role: 'user', content: texto });
+
+  // Agregar a historial
+  historialSesion.push({ titulo: texto, hora: new Date().toLocaleTimeString('es-MX', {hour:'2-digit',minute:'2-digit'}) });
+  renderHistorial();
+
+  const typing = agregarTyping();
+
+  // ── Modo "asesor": preguntas generales — se resuelven con la base de FAQ (sin IA en vivo) ──
+  if (herramienta === 'asesor') {
+    setTimeout(() => {
+      typing.remove();
+      const match = buscarMejorRespuestaFAQ(texto);
+      if (match) {
+        agregarMensajeHTML(`<div style="font-size:11px;color:var(--ink3,#888);margin-bottom:8px;">📚 De nuestra base de preguntas frecuentes:</div>
+          <div style="font-weight:700;margin-bottom:6px;">${match.q}</div>
+          ${match.a}
+          <div style="margin-top:10px;"><a href="consultas-legales.html" target="_blank" style="font-size:12px;">Ver más en Consultas legales →</a></div>`);
+      } else {
+        agregarMensajeHTML(`<p>No encontré esto en nuestra base de preguntas frecuentes.</p>
+          <p>Puede buscar con otras palabras en <a href="consultas-legales.html" target="_blank">Consultas legales</a>, o escribirle directo a su asesor.</p>`);
+      }
+      document.getElementById('status-badge').textContent = '● Conectado';
+      document.getElementById('status-badge').className = 'badge badge-green';
+      cargando = false;
+      document.getElementById('send-btn').disabled = false;
+      input.focus();
+    }, 500);
+    return;
+  }
+
+  // ── Modos de generación a la medida (cláusulas, escritos STPS, narrativa de liquidación, dictamen) ──
+  // Estos requieren redactar contenido nuevo según los datos del caso concreto — una base de FAQ no
+  // puede sustituir eso honestamente. Mientras no haya un backend de IA en vivo conectado, lo avisamos:
+  typing.remove();
+  agregarMensajeUI('ai', `Esta función (**${getToolName(herramienta)}**) genera contenido a la medida de cada caso y todavía no está conectada a un servicio de IA en vivo. Por ahora, puede solicitar este documento directamente a su asesor por WhatsApp o desde "Solicitar asesoría" en el portal.`);
+  conversacion.pop();
+  document.getElementById('status-badge').textContent = '● IA no conectada';
+  document.getElementById('status-badge').className = 'badge badge-amber';
+  cargando = false;
+  document.getElementById('send-btn').disabled = false;
+  input.focus();
+  return;
+
+  cargando = false;
+  document.getElementById('send-btn').disabled = false;
+  input.focus();
+  return;
+
+  // ── CÓDIGO ORIGINAL (llamada directa a Anthropic) — desactivado.
+  // No funciona desde el navegador: falta clave de API y Anthropic bloquea por
+  // CORS las llamadas directas desde un sitio web. Para activar generación de IA
+  // en vivo en estos modos, se necesita un backend (Netlify Function) con
+  // ANTHROPIC_API_KEY del lado del servidor — ver netlify/functions/crear-suscripcion.js
+  // como referencia del patrón ya usado en este proyecto para Stripe.
+}
+
+// ════════════════════════════════════════════════════════
+// MODOS ESPECIALES
+// ════════════════════════════════════════════════════════
+function iniciarModoGuiado() {
+  const preguntas = {
+    asesor: ["¿Cuál es el giro de la empresa?", "¿Cuántos trabajadores tiene?", "¿Cuál es la situación o duda específica?"],
+    clausulas: ["¿Qué tipo de cláusula necesita?", "¿Para qué modalidad de contrato?", "¿Hay alguna particularidad que incluir?"],
+    stps: ["¿Qué tipo de notificación recibió?", "¿De qué autoridad proviene?", "¿Cuál es el número de oficio o expediente?"],
+    liquidacion: ["¿Cuál es el salario diario del trabajador?", "¿Cuántos años de antigüedad tiene?", "¿Cuál fue la causa de separación?"],
+    dictamen: ["¿Cuántos trabajadores tiene la empresa?", "¿Cuál es el giro principal?", "¿Tiene reglamento interior depositado?"],
+  };
+  const p = preguntas[herramienta];
+  if (p) {
+    const prompt = `Vas a hacer un diagnóstico guiado. Empezaré por preguntarte: ${p[0]}`;
+    setTimeout(() => { document.getElementById('chat-input').value = prompt; enviar(); }, 100);
+  }
+}
+
+function iniciarModoBatch() {
+  const prompts = QUICK_PROMPTS[herramienta]?.slice(0,3) || [];
+  agregarMensajeUI('ai', `**Modo lote activado** — Procesaré estas ${prompts.length} consultas frecuentes automáticamente:\n\n${prompts.map((p,i) => `${i+1}. ${p}`).join('\n')}\n\n¿Confirmas? (escribe "sí" para continuar)`);
+}
+
+// ════════════════════════════════════════════════════════
+// UTILS
+// ════════════════════════════════════════════════════════
+function renderHistorial() {
+  const cont = document.getElementById('historial');
+  if (!historialSesion.length) {
+    cont.innerHTML = '<div style="font-size:11px;color:var(--ink3);">Sin consultas en esta sesión</div>';
+    return;
+  }
+  cont.innerHTML = historialSesion.slice(-5).reverse().map(h =>
+    `<div class="hist-item">
+      <div class="hist-item-title">${h.titulo}</div>
+      <div class="hist-item-meta">${h.hora} · ${getToolName(herramienta)}</div>
+    </div>`
+  ).join('');
+}
+
+function copiarTexto(el, b64) {
+  const texto = decodeURIComponent(atob(b64));
+  navigator.clipboard.writeText(texto).then(() => {
+    const orig = el.textContent;
+    el.textContent = '✓ Copiado';
+    setTimeout(() => { el.textContent = orig; }, 2000);
+  });
+}
+
+function limpiarChat() {
+  if (conversacion.length && !confirm('¿Iniciar nueva sesión? Se borrará el chat actual.')) return;
+  conversacion = [];
+  historialSesion = [];
+  document.getElementById('messages').innerHTML = `
+    <div class="welcome" id="welcome-state">
+      <div class="welcome-icon">⚖️</div>
+      <div class="welcome-title">Asistente Legal Laboral IA</div>
+      <div class="welcome-sub">Especializado en Derecho Laboral Mexicano — LFT, IMSS, STPS, NOMs y jurisprudencia.</div>
+      <div class="welcome-grid" id="welcome-chips"></div>
+    </div>`;
+  renderWelcomeChips();
+  renderHistorial();
+  document.getElementById('last-output').innerHTML = '<span style="color:var(--ink3);font-size:11px;">Los documentos generados aparecerán aquí.</span>';
+}
+
+function exportarConversacion() {
+  if (!conversacion.length) { alert('No hay conversación que exportar.'); return; }
+  let txt = `CONSULTA LEGAL LABORAL — CLICKLABORAL.MX\n`;
+  txt += `Herramienta: ${getToolName(herramienta)}\n`;
+  txt += `Fecha: ${new Date().toLocaleString('es-MX')}\n`;
+  txt += `${'─'.repeat(60)}\n\n`;
+  conversacion.forEach(m => {
+    txt += m.role === 'user' ? `CONSULTA:\n${m.content}\n\n` : `RESPUESTA:\n${m.content}\n\n${'─'.repeat(60)}\n\n`;
+  });
+  const blob = new Blob([txt], { type: 'text/plain;charset=utf-8' });
+  const a = document.createElement('a'); a.href = URL.createObjectURL(blob);
+  a.download = `consulta_laboral_${Date.now()}.txt`; a.click();
+}
+
+function autoResize(el) {
+  el.style.height = 'auto';
+  el.style.height = Math.min(el.scrollHeight, 120) + 'px';
+}
+
+// ── INIT ──
+init();
+renderHistorial();
+</script>
+</body>
+</html>

@@ -1,0 +1,171 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Política de Prevención de Adicciones y Sustancias · ClickLaboral.mx</title>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
+<script src="membrete.js?v=3.7"></script>
+<script src="expediente-helper.js?v=3.7"></script>
+<script src="edicion-libre.js?v=4.6"></script>
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
+:root{--navy:#0f2640;--navy2:#1a3a5c;--teal:#0f766e;--ink:#111;--ink2:#444;--ink3:#888;--border:rgba(0,0,0,.09);--surface:#f8f7f4;--white:#fff;--r:14px;--r-sm:9px;--font:'Segoe UI',system-ui,-apple-system,sans-serif;}
+body{font-family:var(--font);background:var(--surface);color:var(--ink);}
+.topbar{background:var(--navy);color:#fff;padding:0 24px;height:56px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:200;}
+.topbar-logo{font-size:14px;font-weight:800;color:#fff;text-decoration:none;}
+.topbar-logo span{color:#c5dcf5;font-weight:400;}
+.header-actions{display:flex;gap:8px;}
+.btn{padding:9px 16px;border-radius:7px;font-size:13px;font-weight:700;cursor:pointer;border:none;font-family:var(--font);transition:all .15s;}
+.btn-primary{background:#fff;color:var(--navy);}
+.btn-outline{background:transparent;color:#fff;border:1.5px solid rgba(255,255,255,.4);}
+.layout{display:grid;grid-template-columns:320px 1fr;gap:0;min-height:calc(100vh - 56px);}
+.panel-izq{background:var(--white);border-right:1px solid var(--border);padding:20px;overflow-y:auto;}
+.panel-der{background:var(--surface);padding:24px;overflow-y:auto;}
+.field{margin-bottom:14px;}
+.field label{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.05em;color:var(--ink3);display:block;margin-bottom:5px;}
+.field input,.field textarea,.field select{width:100%;padding:9px 12px;border:1.5px solid var(--border);border-radius:8px;font-size:13px;font-family:var(--font);color:var(--ink);background:var(--white);}
+.field input:focus,.field textarea:focus{outline:none;border-color:var(--teal);}
+.field textarea{min-height:70px;resize:vertical;}
+.sec-title{font-size:10px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--ink3);padding:8px 0 6px;border-bottom:1px solid var(--border);margin-bottom:12px;}
+.doc-sheet{background:var(--white);border-radius:12px;box-shadow:0 2px 16px rgba(0,0,0,.08);padding:48px 52px;max-width:780px;margin:0 auto;min-height:900px;}
+.doc-header{margin-bottom:32px;}
+.doc-firma{display:flex;gap:40px;margin-top:48px;padding-top:24px;border-top:1px solid #e5e7eb;}
+.firma-bloque{flex:1;text-align:center;}
+.firma-linea{border-top:1px solid #374151;margin-bottom:8px;padding-top:8px;font-size:11px;color:#6b7280;}
+@media(max-width:768px){.layout{grid-template-columns:1fr;}.panel-izq{display:none;}}
+@media print{.topbar,.panel-izq{display:none!important;}.panel-der{padding:0;}.doc-sheet{box-shadow:none;padding:20px;}}
+</style>
+</head>
+<body>
+
+<div class="topbar">
+  <a href="portal-cliente.html" class="topbar-logo">Click<span>Laboral</span>.mx</a>
+  <div class="header-actions">
+    <button class="btn btn-outline" onclick="limpiar()">Limpiar</button>
+    <button class="btn btn-outline" id="btn-guardar-expediente">💾 Guardar en expediente</button>
+    <button class="btn btn-primary" onclick="window.print()">Imprimir / PDF</button>
+  </div>
+</div>
+
+<div class="layout">
+  <!-- Panel izquierdo -->
+  <div class="panel-izq">
+    <div class="sec-title">Datos de la empresa</div>
+    <div class="field"><label>Empresa / Razón social</label><input id="empresa" oninput="render()" placeholder="Mi Empresa S.A. de C.V."></div>
+    <div class="field"><label>RFC</label><input id="rfc" oninput="render()" placeholder="XAXX010101000" maxlength="13"></div>
+    <div class="field"><label>Domicilio</label><input id="domicilio" oninput="render()" placeholder="Av. Reforma 123, CDMX"></div>
+    <div class="field"><label>Representante legal</label><input id="rep_legal" oninput="render()" placeholder="Lic. Nombre Apellidos"></div>
+    <div class="field"><label>Ciudad de firma</label><input id="ciudad_firma" oninput="render()" placeholder="Guadalajara, Jalisco"></div>
+    <div class="field"><label>Fecha</label><input type="date" id="fecha_firma" oninput="render()"></div>
+    
+    <div class="sec-title" style="margin-top:16px;">Configuración específica</div>
+    <div class="field"><label>Zona para fumadores</label><input id="zona_fumadores" oninput="render()" placeholder="exterior del edificio"></div>
+  </div>
+
+  <!-- Panel derecho -->
+  <div class="panel-der">
+    <div class="doc-sheet" id="doc-preview">
+      <div class="doc-header" id="membrete-container"></div>
+      <div style="text-align:center;margin-bottom:32px;">
+        <div style="font-size:13px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:#6b7280;margin-bottom:8px;">DOCUMENTO INTERNO</div>
+        <h1 style="font-size:20px;font-weight:800;color:#111;margin-bottom:6px;">POLÍTICA DE PREVENCIÓN DE ADICCIONES Y SUSTANCIAS</h1>
+        <div style="font-size:12px;color:#6b7280;">NOM-035-STPS-2018 · Art. 47 Fr. VIII LFT · Seguridad laboral</div>
+        <div style="margin-top:12px;font-size:12px;color:#374151;">Empresa: <strong id="r-empresa">[EMPRESA]</strong> · RFC: <span id="r-rfc">[RFC]</span></div>
+      </div>
+
+      
+        <div style="margin-bottom:24px;">
+          <h3 style="font-size:12px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:#6b7280;margin-bottom:8px;">CLÁUSULA 1. OBJETO Y FUNDAMENTO LEGAL</h3>
+          <p style="font-size:13px;line-height:1.8;color:#374151;margin-bottom:0;">La presente Política tiene por objeto establecer las medidas para prevenir el consumo de alcohol, tabaco, drogas y otras sustancias psicoactivas en el centro de trabajo de <strong id="r-empresa">[EMPRESA]</strong>, conforme a la NOM-035-STPS-2018 y los artículos 47 fracción VIII y 135 fracción I de la Ley Federal del Trabajo.</p>
+          
+        </div>
+        <div style="margin-bottom:24px;">
+          <h3 style="font-size:12px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:#6b7280;margin-bottom:8px;">CLÁUSULA 2. PROHIBICIONES</h3>
+          <p style="font-size:13px;line-height:1.8;color:#374151;margin-bottom:0;">Está <strong>estrictamente prohibido</strong> en las instalaciones de la empresa y durante la jornada laboral: (a) Introducir, consumir o estar bajo el influjo de bebidas alcohólicas. (b) Introducir, poseer o consumir sustancias ilícitas. (c) Presentarse al trabajo en estado de embriaguez o bajo los efectos de cualquier sustancia que altere las capacidades del trabajador.</p>
+          
+        </div>
+        <div style="margin-bottom:24px;">
+          <h3 style="font-size:12px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:#6b7280;margin-bottom:8px;">CLÁUSULA 3. POLÍTICA DE TABACO</h3>
+          <p style="font-size:13px;line-height:1.8;color:#374151;margin-bottom:0;">El consumo de tabaco y productos derivados (incluyendo cigarros electrónicos) está <strong>prohibido</strong> dentro de las instalaciones cerradas conforme a la Ley General para el Control del Tabaco. En caso de existir, se habilitará <strong id="r-zona_fumadores">[una zona designada al exterior]</strong> para este fin.</p>
+          
+        </div>
+        <div style="margin-bottom:24px;">
+          <h3 style="font-size:12px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:#6b7280;margin-bottom:8px;">CLÁUSULA 4. PROGRAMA DE APOYO</h3>
+          <p style="font-size:13px;line-height:1.8;color:#374151;margin-bottom:0;">La empresa reconoce que las adicciones son un problema de salud. El trabajador que voluntariamente solicite apoyo para tratar una adicción tendrá acceso a orientación y referencias a servicios de salud, sin que ello derive en medidas disciplinarias por la sola manifestación del problema. La confidencialidad de esta información está garantizada.</p>
+          
+        </div>
+        <div style="margin-bottom:24px;">
+          <h3 style="font-size:12px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:#6b7280;margin-bottom:8px;">CLÁUSULA 5. CONSECUENCIAS DEL INCUMPLIMIENTO</h3>
+          <p style="font-size:13px;line-height:1.8;color:#374151;margin-bottom:0;">Presentarse al trabajo bajo el influjo de alcohol o sustancias ilícitas constituye causa de rescisión sin responsabilidad para el Patrón conforme al Art. 47 Fr. VIII de la LFT. La empresa podrá aplicar pruebas de detección de alcohol mediante alcoholímetro, previo aviso al trabajador.</p>
+          
+        </div>
+        <div style="margin-bottom:24px;">
+          <h3 style="font-size:12px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:#6b7280;margin-bottom:8px;">CLÁUSULA 6. COMITÉ DE SEGURIDAD</h3>
+          <p style="font-size:13px;line-height:1.8;color:#374151;margin-bottom:0;">La Comisión Mixta de Seguridad e Higiene será la responsable de supervisar el cumplimiento de esta política y de organizar al menos una campaña anual de prevención de adicciones.</p>
+          
+        </div>
+
+      <div class="doc-firma">
+        <div class="firma-bloque">
+          <div style="height:60px;"></div>
+          <div class="firma-linea">El Patrón / Representante Legal<br><strong id="r-rep_legal">[REPRESENTANTE LEGAL]</strong></div>
+        </div>
+        <div class="firma-bloque">
+          <div style="height:60px;"></div>
+          <div class="firma-linea">Trabajador / Colaborador<br>Nombre y firma de recibido</div>
+        </div>
+      </div>
+
+      <div style="margin-top:32px;padding:16px;background:#f9fafb;border-radius:8px;font-size:11px;color:#6b7280;line-height:1.7;">
+        <strong>Vigencia:</strong> La presente política entra en vigor a partir de la fecha de firma y sustituye cualquier disposición anterior sobre la misma materia.<br>
+        <strong>Ciudad y fecha:</strong> <span id="r-ciudad_firma">[Ciudad]</span>, a <span id="r-fecha_firma">[fecha]</span>.<br>
+        <strong>Empresa:</strong> <span id="r-empresa-footer">[EMPRESA]</span> · RFC: <span id="r-rfc-footer">[RFC]</span>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+const SUPABASE_URL = 'https://hpzgqaplrywwjuvrzhcp.supabase.co';
+const SUPABASE_ANON_KEY = 'sb_publishable_1g8US8iFJ8CxnSaF_4MHgA_gqyyAr3W';
+const sb = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+const v = id => (document.getElementById(id)||{}).value || '';
+const set = (id, val) => { const el=document.getElementById(id); if(el) el.textContent=val||''; };
+
+function render() {
+  set('r-empresa', v('empresa') || '[EMPRESA]');
+  set('r-empresa2', v('empresa') || '[EMPRESA]');
+  set('r-empresa-footer', v('empresa') || '[EMPRESA]');
+  set('r-rfc', v('rfc') || '[RFC]');
+  set('r-rfc-footer', v('rfc') || '[RFC]');
+  set('r-rep_legal', v('rep_legal') || '[REPRESENTANTE LEGAL]');
+  set('r-ciudad_firma', v('ciudad_firma') || '[Ciudad]');
+  const fd = v('fecha_firma');
+  set('r-fecha_firma', fd ? new Date(fd+'T12:00:00').toLocaleDateString('es-MX',{day:'numeric',month:'long',year:'numeric'}) : '[fecha]');
+  
+  set('r-zona_fumadores', v('zona_fumadores') || 'exterior del edificio');
+  if(window.MembreteMgr) window.MembreteMgr.render();
+}
+
+function limpiar() {
+  document.querySelectorAll('input,textarea').forEach(el=>{el.value='';});
+  render();
+}
+
+document.addEventListener('DOMContentLoaded', () => {
+  render();
+  if(window.ExpedienteHelper) ExpedienteHelper.init({
+    inputNombreId: 'empresa',
+    tipoDocumento: 'politica_adicciones',
+    nombreDocumentoFn: () => 'Política de Prevención de Adicciones y Sustancias',
+  });
+  // Fecha por defecto
+  const hoy = new Date().toISOString().split('T')[0];
+  document.getElementById('fecha_firma').value = hoy;
+  render();
+});
+</script>
+</body>
+</html>

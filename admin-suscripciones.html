@@ -1,0 +1,776 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Admin Suscripciones · ClickLaboral.mx</title>
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
+:root{
+  --navy:#0f2640;--navy2:#1a3a5c;--navy3:#24507a;
+  --sky:#e8f2fc;--white:#fff;--surface:#f5f4f0;--surface2:#eeede8;
+  --ink:#111110;--ink2:#444440;--ink3:#888880;
+  --border:rgba(0,0,0,.08);--border2:rgba(0,0,0,.14);
+  --green:#16a34a;--green-bg:#dcfce7;
+  --amber:#d97706;--amber-bg:#fef3c7;
+  --red:#dc2626;--red-bg:#fee2e2;
+  --purple:#7c3aed;--purple-bg:#ede9fe;
+  --r:10px;--r-sm:6px;--font:'Segoe UI',system-ui,sans-serif;
+}
+body{font-family:var(--font);background:var(--surface);color:var(--ink);min-height:100vh;font-size:14px;}
+header{background:var(--navy);color:#fff;padding:0 28px;height:54px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:50;}
+.logo{font-size:14px;font-weight:700;}
+.logo span{opacity:.4;font-size:12px;margin-left:8px;}
+.hn{display:flex;gap:8px;}
+.btn{display:inline-flex;align-items:center;gap:6px;padding:6px 14px;border-radius:var(--r-sm);font-size:12px;font-weight:500;cursor:pointer;border:1px solid transparent;transition:all .15s;font-family:var(--font);}
+.btn-ghost{background:transparent;border-color:rgba(255,255,255,.25);color:rgba(255,255,255,.8);}.btn-ghost:hover{background:rgba(255,255,255,.1);color:#fff;}
+.btn-white{background:#fff;color:var(--navy);}.btn-white:hover{background:var(--sky);}
+.btn-green{background:var(--green);color:#fff;}.btn-green:hover{background:#15803d;}
+.btn-red{background:var(--red-bg);color:var(--red);border-color:rgba(220,38,38,.2);}.btn-red:hover{background:#fecaca;}
+.btn-primary{background:var(--navy2);color:#fff;}.btn-primary:hover{background:var(--navy3);}
+.btn-sm{padding:5px 11px;font-size:11px;}
+
+.shell{display:grid;grid-template-columns:220px 1fr;min-height:calc(100vh - 54px);}
+.sidebar{background:var(--white);border-right:1px solid var(--border);padding:16px 12px;}
+.sb-sec{font-size:10px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--ink3);padding:12px 8px 6px;}
+.nav-item{display:flex;align-items:center;gap:10px;padding:8px 10px;border-radius:var(--r-sm);cursor:pointer;font-size:13px;color:var(--ink2);margin-bottom:2px;transition:all .15s;}
+.nav-item:hover{background:var(--surface);color:var(--ink);}
+.nav-item.active{background:var(--sky);color:var(--navy2);font-weight:500;}
+.nav-icon{width:18px;text-align:center;}
+
+.main{padding:24px 28px;}
+.panel{display:none;}.panel.active{display:block;}
+
+/* KPI row */
+.kpi-row{display:grid;grid-template-columns:repeat(5,1fr);gap:12px;margin-bottom:24px;}
+.kpi{background:var(--white);border:1px solid var(--border);border-radius:var(--r);padding:16px 18px;}
+.kpi-label{font-size:11px;color:var(--ink3);font-weight:600;text-transform:uppercase;letter-spacing:.06em;margin-bottom:6px;}
+.kpi-value{font-size:24px;font-weight:800;line-height:1;margin-bottom:4px;}
+.kpi-sub{font-size:11px;color:var(--ink3);}
+.kpi-trend{font-size:11px;font-weight:600;margin-top:4px;}
+.trend-up{color:var(--green);}
+.trend-down{color:var(--red);}
+
+.card{background:var(--white);border:1px solid var(--border);border-radius:var(--r);padding:18px 20px;}
+.card-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;}
+.card-title{font-size:14px;font-weight:700;}
+.card-sub{font-size:12px;color:var(--ink3);margin-top:2px;}
+.two-col{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:16px;}
+.three-col{display:grid;grid-template-columns:1fr 1fr 1fr;gap:14px;}
+
+/* Tabla suscripciones */
+.sub-table{width:100%;border-collapse:collapse;}
+.sub-table th{text-align:left;font-size:11px;font-weight:600;color:var(--ink3);text-transform:uppercase;letter-spacing:.06em;padding:8px 12px;border-bottom:1px solid var(--border);background:var(--surface);}
+.sub-table td{padding:11px 12px;border-bottom:1px solid var(--border);font-size:13px;vertical-align:middle;}
+.sub-table tr:last-child td{border-bottom:none;}
+.sub-table tr:hover td{background:var(--surface);}
+.empresa-name{font-weight:600;}
+.empresa-rfc{font-size:10px;color:var(--ink3);font-family:monospace;margin-top:1px;}
+
+.badge{display:inline-flex;align-items:center;padding:2px 8px;border-radius:20px;font-size:10px;font-weight:600;}
+.badge-green{background:var(--green-bg);color:var(--green);}
+.badge-amber{background:var(--amber-bg);color:var(--amber);}
+.badge-red{background:var(--red-bg);color:var(--red);}
+.badge-blue{background:var(--sky);color:var(--navy2);}
+.badge-purple{background:var(--purple-bg);color:var(--purple);}
+.badge-gray{background:var(--surface2);color:var(--ink3);}
+
+/* MRR Chart */
+.mrr-bars{display:flex;align-items:flex-end;gap:6px;height:120px;margin-top:12px;}
+.mrr-bar-wrap{flex:1;display:flex;flex-direction:column;align-items:center;gap:4px;}
+.mrr-bar{width:100%;border-radius:4px 4px 0 0;background:var(--navy2);transition:all .3s;}
+.mrr-bar.current{background:var(--green);}
+.mrr-bar-label{font-size:10px;color:var(--ink3);text-align:center;}
+.mrr-bar-val{font-size:10px;font-weight:600;color:var(--ink2);text-align:center;}
+
+/* Facturas */
+.factura-row{display:flex;align-items:center;gap:12px;padding:10px 0;border-bottom:1px solid var(--border);}
+.factura-row:last-child{border:none;}
+.factura-icon{font-size:18px;width:28px;text-align:center;}
+.factura-info{flex:1;}
+.factura-empresa{font-size:13px;font-weight:500;}
+.factura-meta{font-size:11px;color:var(--ink3);}
+.factura-monto{font-size:13px;font-weight:700;color:var(--ink);}
+
+/* Métricas de retención */
+.retencion-grid{display:grid;grid-template-columns:1fr 1fr;gap:16px;}
+.metric-box{background:var(--surface);border-radius:var(--r-sm);padding:16px;text-align:center;}
+.metric-num{font-size:28px;font-weight:800;color:var(--navy2);margin-bottom:4px;}
+.metric-label{font-size:11px;color:var(--ink3);}
+
+/* Churn funnel */
+.funnel-item{display:flex;align-items:center;gap:12px;padding:10px 0;border-bottom:1px solid var(--border);}
+.funnel-item:last-child{border:none;}
+.funnel-bar{flex:1;height:10px;background:var(--surface2);border-radius:5px;overflow:hidden;}
+.funnel-fill{height:100%;border-radius:5px;}
+.funnel-label{font-size:12px;min-width:100px;}
+.funnel-val{font-size:12px;font-weight:700;min-width:40px;text-align:right;}
+
+/* Modal */
+.modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:200;display:flex;align-items:center;justify-content:center;padding:20px;}
+.modal{background:var(--white);border-radius:var(--r);max-width:520px;width:100%;max-height:90vh;overflow-y:auto;box-shadow:0 20px 60px rgba(0,0,0,.2);}
+.modal-header{padding:18px 22px 14px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;}
+.modal-title{font-size:15px;font-weight:700;}
+.modal-close{background:none;border:none;cursor:pointer;font-size:18px;color:var(--ink3);}
+.modal-body{padding:18px 22px;}
+.modal-footer{padding:12px 22px;border-top:1px solid var(--border);display:flex;gap:8px;justify-content:flex-end;}
+.mf{margin-bottom:12px;}
+.mf label{display:block;font-size:12px;font-weight:500;color:var(--ink2);margin-bottom:4px;}
+.mf input,.mf select,.mf textarea{width:100%;padding:8px 10px;border:1px solid var(--border2);border-radius:var(--r-sm);font-size:13px;font-family:var(--font);color:var(--ink);}
+.mf input:focus,.mf select:focus{outline:none;border-color:var(--navy2);}
+.mf-row{display:grid;grid-template-columns:1fr 1fr;gap:10px;}
+
+::-webkit-scrollbar{width:4px;height:4px;}
+::-webkit-scrollbar-track{background:transparent;}
+::-webkit-scrollbar-thumb{background:var(--border2);border-radius:2px;}
+#login-gate{min-height:100vh;display:flex;align-items:center;justify-content:center;background:var(--navy);padding:24px;position:relative;overflow:hidden;}
+.login-bg{position:absolute;inset:0;width:100%;height:100%;z-index:0;}
+.login-box{background:var(--white);border-radius:16px;padding:40px 36px;max-width:380px;width:100%;box-shadow:0 8px 40px rgba(0,0,0,.25);position:relative;z-index:1;}
+.login-box h2{font-size:18px;margin-bottom:10px;color:var(--navy);}
+.login-box p{font-size:13px;color:#666;margin-bottom:20px;line-height:1.6;}
+.login-field{margin-bottom:14px;}
+.login-field label{display:block;font-size:11px;font-weight:600;color:#444;margin-bottom:5px;}
+.login-field input{width:100%;padding:10px 12px;border:1px solid #ddd;border-radius:8px;font-size:13px;font-family:inherit;}
+.login-btn2{width:100%;padding:12px;background:var(--navy2);color:#fff;font-size:13px;font-weight:700;border:none;border-radius:8px;cursor:pointer;margin-top:6px;}
+.login-btn2:disabled{opacity:.6;}
+.login-error2{background:#fee2e2;border:1px solid rgba(220,38,38,.25);border-radius:8px;padding:10px 12px;font-size:12px;color:#dc2626;margin-bottom:14px;display:none;}
+</style>
+</head>
+<body>
+<div id="login-gate">
+  <svg class="login-bg" viewBox="0 0 1400 800" preserveAspectRatio="xMidYMid slice" xmlns="http://www.w3.org/2000/svg">
+    <defs>
+      <pattern id="asHex" width="58" height="100" patternUnits="userSpaceOnUse">
+        <path d="M29 0 L58 17 L58 51 L29 68 L0 51 L0 17 Z" fill="none" stroke="#7dd3fc" stroke-opacity="0.12" stroke-width="1"/>
+      </pattern>
+      <radialGradient id="asFade" cx="50%" cy="40%" r="65%">
+        <stop offset="0%" stop-color="white" stop-opacity="0"/><stop offset="100%" stop-color="white" stop-opacity="1"/>
+      </radialGradient>
+      <mask id="asMask"><rect width="1400" height="800" fill="url(#asFade)"/></mask>
+    </defs>
+    <rect width="1400" height="800" fill="url(#asHex)" mask="url(#asMask)"/>
+  </svg>
+  <div class="login-box">
+    <h2>🔒 Admin · Suscripciones</h2>
+    <p>Acceso restringido — solo para el despacho.</p>
+    <div class="login-error2" id="login-error2">Correo o contraseña incorrectos.</div>
+    <div class="login-field"><label>Correo</label><input type="email" id="la-email" placeholder="tu@correo.mx"></div>
+    <div class="login-field"><label>Contraseña</label><input type="password" id="la-password" onkeydown="if(event.key==='Enter')loginAdmin2()"></div>
+    <button class="login-btn2" id="login-btn2" onclick="loginAdmin2()">Ingresar →</button>
+  </div>
+</div>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
+<div id="app-shell" style="display:none;">
+<header>
+  <div class="logo">ClickLaboral.mx <span>Admin · Suscripciones</span></div>
+  <div class="hn">
+    <button class="btn btn-ghost btn-sm" onclick="window.open('dashboard-compliance.html')">← Dashboard</button>
+    <button class="btn btn-ghost btn-sm" onclick="window.open('portal-cliente.html')">👤 Portal cliente</button>
+    <button class="btn btn-white btn-sm" onclick="abrirModalNuevo()">+ Nueva suscripción</button>
+  </div>
+</header>
+
+<div class="shell">
+  <div class="sidebar">
+    <div class="sb-sec">Ingresos</div>
+    <div class="nav-item active" onclick="goPanel('mrr')"><span class="nav-icon">💰</span> MRR y métricas</div>
+    <div class="nav-item" onclick="goPanel('suscripciones')"><span class="nav-icon">📋</span> Suscripciones</div>
+    <div class="nav-item" onclick="goPanel('facturas')"><span class="nav-icon">🧾</span> Facturas / cobros</div>
+
+    <div class="sb-sec">Análisis</div>
+    <div class="nav-item" onclick="goPanel('retencion')"><span class="nav-icon">📊</span> Retención / churn</div>
+    <div class="nav-item" onclick="goPanel('planes')"><span class="nav-icon">⭐</span> Planes y pricing</div>
+
+    <div class="sb-sec">Operación</div>
+    <div class="nav-item" onclick="goPanel('onboarding')"><span class="nav-icon">🚀</span> Onboarding</div>
+    <div class="nav-item" onclick="window.open('launcher.html')"><span class="nav-icon">🧭</span> Centro de acceso</div>
+  </div>
+
+  <div class="main">
+
+    <!-- ══ MRR ══ -->
+    <div class="panel active" id="panel-mrr">
+      <div class="kpi-row">
+        <div class="kpi">
+          <div class="kpi-label">MRR</div>
+          <div class="kpi-value" id="kpi-mrr" style="color:var(--green);">$0</div>
+          <div class="kpi-sub">MXN / mes, IVA incluido (solo planes mensuales)</div>
+        </div>
+        <div class="kpi">
+          <div class="kpi-label">ARR</div>
+          <div class="kpi-value" id="kpi-arr">$0</div>
+          <div class="kpi-sub">Anualizado (mensuales ×12 + pagos anuales)</div>
+        </div>
+        <div class="kpi">
+          <div class="kpi-label">Clientes activos</div>
+          <div class="kpi-value" id="kpi-clientes">0</div>
+          <div class="kpi-sub">suscripciones</div>
+        </div>
+        <div class="kpi">
+          <div class="kpi-label">Ticket promedio</div>
+          <div class="kpi-value" id="kpi-arpu">—</div>
+          <div class="kpi-sub" id="kpi-arpu-sub">Sin clientes activos</div>
+        </div>
+        <div class="kpi">
+          <div class="kpi-label">Churn rate</div>
+          <div class="kpi-value" id="kpi-churn" style="color:var(--green);">0%</div>
+          <div class="kpi-sub">histórico (cancelados / total)</div>
+        </div>
+      </div>
+
+      <div class="two-col">
+        <!-- Mix de planes -->
+        <div class="card">
+          <div class="card-header"><div class="card-title">Mix de planes</div></div>
+          <div style="display:flex;flex-direction:column;gap:12px;margin-top:4px;" id="mix-planes"></div>
+        </div>
+
+        <!-- Resumen de cobros -->
+        <div class="card">
+          <div class="card-header"><div class="card-title">Resumen rápido</div></div>
+          <div style="display:flex;flex-direction:column;gap:10px;font-size:13px;color:var(--ink2);">
+            <div style="padding:12px;background:var(--surface);border-radius:var(--r-sm);">
+              <div style="font-weight:600;margin-bottom:4px;">📋 Suscripciones</div>
+              <div>Ve el detalle completo y cancela suscripciones desde la pestaña "Suscripciones" en el menú lateral.</div>
+            </div>
+            <div style="padding:12px;background:var(--surface);border-radius:var(--r-sm);">
+              <div style="font-weight:600;margin-bottom:4px;">🧾 Facturación e historial</div>
+              <div>El historial detallado de cobros vive en el <a href="https://dashboard.stripe.com" target="_blank" style="color:var(--navy2);font-weight:600;">Dashboard de Stripe</a> — ahí puedes ver facturas, reintentos y tarjetas rechazadas con el detalle completo.</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ══ SUSCRIPCIONES ══ -->
+    <div class="panel" id="panel-suscripciones">
+      <div class="card" style="padding:0;overflow:hidden;">
+        <div style="padding:14px 18px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;">
+          <div>
+            <div class="card-title">Suscripciones activas</div>
+            <div class="card-sub" id="subs-header-sub">Cargando...</div>
+          </div>
+          <div style="display:flex;gap:8px;">
+            <input type="text" placeholder="Buscar..." style="padding:6px 10px;border:1px solid var(--border2);border-radius:var(--r-sm);font-size:12px;width:160px;" oninput="filtrarSubs(this.value)">
+            <button class="btn btn-green btn-sm" onclick="abrirModalNuevo()">+ Nueva</button>
+          </div>
+        </div>
+        <table class="sub-table" id="tabla-subs"></table>
+      </div>
+    </div>
+
+    <!-- ══ FACTURAS ══ -->
+    <div class="panel" id="panel-facturas">
+      <div class="two-col">
+        <div class="card">
+          <div class="card-header"><div class="card-title">Cobros pendientes</div><span class="badge badge-green">Al día</span></div>
+          <div style="text-align:center;padding:24px;color:var(--ink3);">
+            <div style="font-size:32px;margin-bottom:8px;">✅</div>
+            <div style="font-size:13px;">Sin cobros pendientes<br>Todos los clientes al corriente</div>
+          </div>
+        </div>
+        <div class="card">
+          <div class="card-header"><div class="card-title">Próximos cobros</div></div>
+          <div id="proximos-cobros"></div>
+        </div>
+      </div>
+      <div class="card">
+        <div class="card-header"><div class="card-title">Últimos 10 cobros</div></div>
+        <div id="historial-cobros"></div>
+      </div>
+    </div>
+
+    <!-- ══ RETENCIÓN ══ -->
+    <div class="panel" id="panel-retencion">
+      <div class="two-col" style="margin-bottom:16px;">
+        <div class="card">
+          <div class="card-title" style="margin-bottom:14px;">Retención</div>
+          <div class="retencion-grid">
+            <div class="metric-box"><div class="metric-num" id="ret-activos" style="color:var(--green);">0</div><div class="metric-label">Clientes activos</div></div>
+            <div class="metric-box"><div class="metric-num" id="ret-cancelados" style="color:var(--red);">0</div><div class="metric-label">Cancelados (histórico)</div></div>
+            <div class="metric-box"><div class="metric-num" id="ret-churn">0%</div><div class="metric-label">Churn rate histórico</div></div>
+            <div class="metric-box"><div class="metric-num" id="ret-anuales">0</div><div class="metric-label">Clientes en plan anual</div></div>
+          </div>
+        </div>
+        <div class="card">
+          <div class="card-title" style="margin-bottom:14px;">Clientes cancelados</div>
+          <div id="lista-cancelados" style="display:flex;flex-direction:column;gap:8px;"></div>
+        </div>
+      </div>
+      <div class="card">
+        <div class="card-title" style="margin-bottom:6px;">¿Quieres ver de dónde vienen tus clientes?</div>
+        <p style="font-size:12px;color:var(--ink3);">Para medir conversión real (visitas → formulario → cliente) necesitas conectar Google Analytics o Plausible a la landing page. Avísame si quieres que lo configuremos — por ahora esta sección solo muestra datos reales de clientes ya registrados, sin proyecciones inventadas.</p>
+      </div>
+    </div>
+
+    <!-- ══ PLANES ══ -->
+    <div class="panel" id="panel-planes">
+      <div class="three-col" style="margin-bottom:16px;" id="planes-resumen"></div>
+      <div class="card">
+        <div class="card-title" style="margin-bottom:12px;">Accesos rápidos</div>
+        <div style="display:flex;flex-direction:column;gap:8px;">
+          <div style="padding:12px 14px;background:var(--surface);border-radius:var(--r-sm);border:1px solid var(--border);display:flex;align-items:center;gap:12px;">
+            <div style="flex:1;">
+              <div style="font-size:13px;font-weight:600;">Ver y editar precios en la landing page</div>
+              <div style="font-size:11px;color:var(--ink3);">Cambia montos, promociones o bonos de los planes</div>
+            </div>
+            <button class="btn btn-primary btn-sm" onclick="window.open('index.html#precios')">Ver landing</button>
+          </div>
+          <div style="padding:12px 14px;background:var(--surface);border-radius:var(--r-sm);border:1px solid var(--border);display:flex;align-items:center;gap:12px;">
+            <div style="flex:1;">
+              <div style="font-size:13px;font-weight:600;">Programa de referidos</div>
+              <div style="font-size:11px;color:var(--ink3);">25% de comisión recurrente por cada cliente referido, sin importar el plan que elija</div>
+            </div>
+            <button class="btn btn-primary btn-sm" onclick="window.open('portal-referidos.html')">Ver programa</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ══ ONBOARDING ══ -->
+    <div class="panel" id="panel-onboarding">
+      <div class="card" style="margin-bottom:16px;">
+        <div class="card-title" style="margin-bottom:14px;">Clientes recién registrados</div>
+        <div id="onboarding-clientes"></div>
+      </div>
+      <div class="card">
+        <div class="card-title" style="margin-bottom:12px;">📦 Acciones rápidas</div>
+        <div style="display:flex;flex-direction:column;gap:8px;">
+          <button class="btn btn-primary" style="justify-content:flex-start;" onclick="window.open('paquete-bienvenida.html')">📦 Crear paquete para nuevo cliente</button>
+          <button class="btn btn-ghost" style="justify-content:flex-start;" onclick="window.open('asistente-legal-ia.html')">⚖️ Abrir asistente IA para diagnóstico</button>
+          <button class="btn btn-ghost" style="justify-content:flex-start;" onclick="window.open('generador-avanzado-ia.html')">📋 Generar dictamen de compliance</button>
+          <button class="btn btn-ghost" style="justify-content:flex-start;" onclick="window.open('index.html')">🌐 Ver página de ventas</button>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<!-- MODAL NUEVA SUSCRIPCIÓN -->
+<div class="modal-overlay" id="modal-nuevo" style="display:none;" onclick="if(event.target===this)cerrarModal()">
+  <div class="modal">
+    <div class="modal-header">
+      <div class="modal-title">Nueva suscripción</div>
+      <button class="modal-close" onclick="cerrarModal()">✕</button>
+    </div>
+    <div class="modal-body">
+      <div class="mf"><label>Razón social *</label><input type="text" id="ns-empresa" placeholder="Nombre completo de la empresa"></div>
+      <div class="mf-row">
+        <div class="mf"><label>RFC *</label><input type="text" id="ns-rfc" placeholder="RFC 12/13 caracteres" maxlength="13" oninput="this.value=this.value.toUpperCase()"></div>
+        <div class="mf"><label>No. trabajadores</label><input type="number" id="ns-trab" placeholder="Ej. 45" min="1"></div>
+      </div>
+      <div class="mf"><label>Email de contacto</label><input type="email" id="ns-email" placeholder="rrhh@empresa.mx"></div>
+      <div class="mf"><label>Teléfono</label><input type="text" id="ns-tel" placeholder="+52 33 1234 5678"></div>
+      <div class="mf-row">
+        <div class="mf"><label>Plan contratado *</label>
+          <select id="ns-plan">
+            <option value="Básico">Básico — $499/mes (legacy, ya no se ofrece)</option>
+            <option value="Estándar" selected>Estándar — $799/mes (1-50 trabajadores)</option>
+            <option value="Pro">Pro — $2,399/mes (51-500 trabajadores)</option>
+          </select>
+        </div>
+        <div class="mf"><label>Fecha de inicio</label><input type="date" id="ns-inicio"></div>
+      </div>
+      <div class="mf"><label>Notas internas</label>
+        <textarea id="ns-notas" style="width:100%;padding:8px 10px;border:1px solid var(--border2);border-radius:var(--r-sm);font-size:13px;font-family:var(--font);resize:vertical;min-height:60px;" placeholder="Notas para el equipo (no se muestran al cliente)..."></textarea>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-ghost btn-sm" onclick="cerrarModal()">Cancelar</button>
+      <button class="btn btn-green btn-sm" onclick="guardarNuevo()">✓ Crear suscripción</button>
+    </div>
+  </div>
+</div>
+</div>
+
+<script>
+// ════════════════════════════════════════════════════════
+// DATOS REALES — se cargan desde Supabase (tabla "clientes")
+// ════════════════════════════════════════════════════════
+const sbData = supabase.createClient('https://hpzgqaplrywwjuvrzhcp.supabase.co','sb_publishable_1g8US8iFJ8CxnSaF_4MHgA_gqyyAr3W');
+
+let SUBS = [];          // clientes activos, normalizados desde Supabase
+let SUBS_CANCELADOS = []; // clientes con suscripcion_activa = false (para churn real)
+
+const CUOTAS_PLAN_BASE = { 'Plan Básico':499, 'Plan Estándar':799, 'Plan Pro':2399,
+  'Plan Básico Anual':4990, 'Plan Estándar Anual':7990, 'Plan Pro Anual':23990 }; // Básico = legacy
+
+function planCorto(nombrePlan){
+  if(!nombrePlan) return 'Estándar';
+  if(nombrePlan.includes('Pro')) return 'Pro';
+  if(nombrePlan.includes('Básico')) return 'Básico';
+  return 'Estándar';
+}
+
+async function cargarClientesReales(){
+  try {
+    // Obtener usuarios desde auth.users (via función admin de Netlify)
+    const [resUsers, resTrab, resSols] = await Promise.all([
+      fetch('/.netlify/functions/buscar-cliente-admin?rfc=TODOS').then(r=>r.json()).catch(()=>({users:[]})),
+      sbData.from('trabajadores').select('cliente_rfc, activo').eq('activo', true),
+      sbData.from('solicitudes').select('cliente_rfc, status').eq('status', 'pendiente'),
+    ]);
+
+    const users    = resUsers.users || [];
+    const trabs    = resTrab.data   || [];
+    const sols     = resSols.data   || [];
+
+    // Conteos por RFC
+    const conteosTrab = {};
+    trabs.forEach(t => { conteosTrab[t.cliente_rfc] = (conteosTrab[t.cliente_rfc]||0)+1; });
+
+    const CUOTAS = { basico:499, estandar:799, pro:2399 }; // basico legacy
+    const planKey = p => (p||'').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'');
+
+    const clientes = users
+      .filter(u => {
+        const meta = u.user_metadata || {};
+        const rfc     = (meta.rfc     || '').toUpperCase();
+        const empresa = (meta.empresa || '').toUpperCase();
+        return rfc && empresa && empresa !== rfc && meta.role !== 'admin';
+      })
+      .map(u => {
+        const meta  = u.user_metadata || {};
+        const rfc   = (meta.rfc || '').toUpperCase();
+        const plan  = planKey(meta.plan || 'estandar');
+        const cuota = CUOTAS[plan] || 799;
+        return {
+          rfc, empresa: meta.empresa || rfc,
+          plan: planCorto(meta.plan || 'Básico'),
+          planCompleto: meta.plan || 'Plan Básico',
+          cuota,
+          status: meta.suscripcion_activa === false ? 'cancelado' : 'activo',
+          inicio: u.created_at ? u.created_at.slice(0,10) : '—',
+          proximo: '—',
+          trab: conteosTrab[rfc] || 0,
+          email: meta.email_contacto || u.email || '',
+          periodo: meta.periodo || 'mensual',
+          stripeSubId: meta.stripe_subscription_id || null,
+          stripeCustId: meta.stripe_customer_id || null,
+          userId: u.id,
+        };
+      });
+
+    SUBS           = clientes.filter(c => c.status === 'activo');
+    SUBS_CANCELADOS = clientes.filter(c => c.status === 'cancelado');
+  } catch(e) {
+    console.error('No se pudieron cargar clientes:', e.message||e);
+    SUBS = []; SUBS_CANCELADOS = [];
+  }
+}
+
+
+function goPanel(id){
+  document.querySelectorAll('.panel').forEach(p=>p.classList.remove('active'));
+  document.querySelectorAll('.nav-item').forEach(n=>n.classList.remove('active'));
+  document.getElementById('panel-'+id).classList.add('active');
+  document.querySelector(`.nav-item[onclick="goPanel('${id}')"]`)?.classList.add('active');
+  if(id==='mrr') renderMRR();
+  if(id==='suscripciones') renderSubs();
+  if(id==='facturas') renderFacturas();
+  if(id==='retencion') renderRetencion();
+  if(id==='planes') renderPlanes();
+  if(id==='onboarding') renderOnboarding();
+}
+
+function calcularMRRTotal(){
+  // Solo cuenta planes mensuales en el MRR — los anuales no son recurrentes mensuales
+  return SUBS.filter(s=>s.periodo==='mensual').reduce((a,s)=>a+(s.cuota||0),0);
+}
+function calcularARRTotal(){
+  // Mensuales anualizados + anuales tal cual (ya son el monto del año)
+  const mensualAnualizado = SUBS.filter(s=>s.periodo==='mensual').reduce((a,s)=>a+(s.cuota||0),0) * 12;
+  const anuales = SUBS.filter(s=>s.periodo==='anual').reduce((a,s)=>a+(s.cuota||0),0);
+  return mensualAnualizado + anuales;
+}
+
+function renderKPIs(){
+  const mrr = calcularMRRTotal();
+  const arr = calcularARRTotal();
+  const totalClientes = SUBS.length;
+  const arpu = totalClientes ? Math.round((SUBS.reduce((a,s)=>a+(s.cuota||0),0))/totalClientes) : 0;
+  const totalHistorico = totalClientes + SUBS_CANCELADOS.length;
+  const churn = totalHistorico ? ((SUBS_CANCELADOS.length/totalHistorico)*100).toFixed(1) : '0.0';
+
+  document.getElementById('kpi-mrr').textContent = '$'+mrr.toLocaleString('es-MX');
+  document.getElementById('kpi-arr').textContent = '$'+arr.toLocaleString('es-MX');
+  document.getElementById('kpi-clientes').textContent = totalClientes;
+  document.getElementById('kpi-arpu').textContent = totalClientes ? '$'+arpu.toLocaleString('es-MX') : '—';
+  document.getElementById('kpi-churn').textContent = churn+'%';
+
+  const conteoPlanes = {Básico:0, Estándar:0, Pro:0};
+  SUBS.forEach(s=>{ if(conteoPlanes[s.plan]!==undefined) conteoPlanes[s.plan]++; });
+  document.getElementById('kpi-arpu-sub').textContent = totalClientes
+    ? `${conteoPlanes.Pro} Pro · ${conteoPlanes.Estándar} Estándar · ${conteoPlanes.Básico} Básico`
+    : 'Sin clientes activos';
+}
+
+function renderMRR(){
+  renderKPIs();
+  // Mix de planes — con datos reales, sin proyecciones inventadas
+  const mrr = calcularMRRTotal() || 1;
+  const planes = ['Básico','Estándar','Pro'];
+  const colores = {Básico:'var(--ink3)', Estándar:'var(--navy2)', Pro:'var(--green)'};
+  let html = '';
+  planes.forEach(p=>{
+    const clientesPlan = SUBS.filter(s=>s.plan===p);
+    const montoPlan = clientesPlan.reduce((a,s)=>a+(s.cuota||0),0);
+    const pct = SUBS.length ? ((montoPlan/mrr)*100).toFixed(1) : 0;
+    html += `<div>
+      <div style="display:flex;justify-content:space-between;font-size:12px;margin-bottom:5px;">
+        <span>Plan ${p} (${clientesPlan.length} clientes)</span><span style="font-weight:700;">$${montoPlan.toLocaleString('es-MX')} · ${pct}%</span>
+      </div>
+      <div style="height:8px;background:var(--surface2);border-radius:4px;overflow:hidden;">
+        <div style="height:100%;width:${pct}%;background:${colores[p]};border-radius:4px;"></div>
+      </div>
+    </div>`;
+  });
+  document.getElementById('mix-planes').innerHTML = html;
+}
+
+function renderSubs(filtro=''){
+  const rows = SUBS.filter(s=>!filtro||s.empresa.toLowerCase().includes(filtro.toLowerCase())||s.rfc.toLowerCase().includes(filtro.toLowerCase()));
+  const planBadge = p=>p==='Pro'?'badge-purple':p==='Estándar'?'badge-blue':'badge-gray';
+  document.getElementById('subs-header-sub').textContent = `${SUBS.length} cliente${SUBS.length===1?'':'s'} · $${calcularMRRTotal().toLocaleString('es-MX')} MXN/mes (recurrente)`;
+
+  if (!rows.length) {
+    document.getElementById('tabla-subs').innerHTML = `<tbody><tr><td style="padding:32px;text-align:center;color:var(--ink3);">
+      ${SUBS.length===0 ? 'Sin clientes registrados todavía. Las suscripciones aparecen aquí automáticamente cuando alguien paga en el checkout.' : 'Sin resultados para esa búsqueda.'}
+    </td></tr></tbody>`;
+    return;
+  }
+
+  document.getElementById('tabla-subs').innerHTML = `
+    <thead><tr>
+      <th>Empresa</th><th>Plan</th><th>Periodo</th><th>Cuota</th><th>Trabajadores</th><th>Estado</th><th>Acciones</th>
+    </tr></thead>
+    <tbody>${rows.map(s=>`<tr>
+      <td><div class="empresa-name">${s.empresa}</div><div class="empresa-rfc">${s.rfc}</div></td>
+      <td><span class="badge ${planBadge(s.plan)}">${s.plan}</span></td>
+      <td><span class="badge ${s.periodo==='anual'?'badge-amber':'badge-gray'}">${s.periodo==='anual'?'Anual':'Mensual'}</span></td>
+      <td style="font-weight:700;">$${(s.cuota||0).toLocaleString('es-MX')}</td>
+      <td>${s.trab||'—'}</td>
+      <td><span class="badge badge-green">Activo</span></td>
+      <td><div style="display:flex;gap:6px;">
+        <button class="btn btn-ghost btn-sm" onclick="window.open('portal-cliente.html')">Portal</button>
+        <button class="btn btn-red btn-sm" onclick="cancelarSuscripcion('${s.rfc}','${s.empresa.replace(/'/g,"\\'")}')">Cancelar</button>
+      </div></td>
+    </tr>`).join('')}
+    <tr style="font-weight:700;background:var(--surface);">
+      <td colspan="3">TOTAL MRR (planes mensuales)</td>
+      <td>$${calcularMRRTotal().toLocaleString('es-MX')}</td>
+      <td>${SUBS.reduce((a,s)=>a+(s.trab||0),0)}</td>
+      <td colspan="2"></td>
+    </tr>
+    </tbody>`;
+}
+
+async function cancelarSuscripcion(rfc, empresa){
+  if (!confirm(`¿Cancelar la suscripción de "${empresa}"?\n\nEsto detendrá los cobros recurrentes en Stripe. Esta acción no se puede deshacer desde aquí — tendrías que crear una suscripción nueva si el cliente regresa.`)) return;
+  try {
+    const { data: _ses } = await sbData.auth.getSession();
+    const _tok = _ses?.session?.access_token;
+    if (!_tok) throw new Error('Sesión no válida. Inicie sesión como administrador.');
+    const resp = await fetch('/.netlify/functions/cancelar-suscripcion', {
+      method:'POST',
+      headers:{ 'Content-Type':'application/json', 'Authorization':'Bearer ' + _tok },
+      body: JSON.stringify({ rfc }),
+    });
+    const data = await resp.json();
+    if (!resp.ok) throw new Error(data.error || 'No se pudo cancelar');
+    alert(`✓ Suscripción cancelada para ${empresa}.`);
+    await cargarClientesReales();
+    renderSubs();
+    renderMRR();
+  } catch(e) {
+    alert('Error al cancelar: ' + (e.message || e) + '\n\nVerifica que la función "cancelar-suscripcion" esté desplegada en Netlify.');
+  }
+}
+
+
+function filtrarSubs(v){ renderSubs(v); }
+
+function renderFacturas(){
+  // Sin integración directa al historial de Stripe todavía — se listan los próximos cobros
+  // estimados a partir de los clientes con plan mensual. El historial detallado vive en Stripe.
+  const mensuales = SUBS.filter(s=>s.periodo==='mensual');
+  if (!mensuales.length) {
+    document.getElementById('proximos-cobros').innerHTML = '<div style="text-align:center;padding:20px;color:var(--ink3);font-size:12px;">Sin clientes con plan mensual activo.</div>';
+  } else {
+    document.getElementById('proximos-cobros').innerHTML = mensuales.map(s=>`
+      <div class="factura-row">
+        <div class="factura-icon">🧾</div>
+        <div class="factura-info">
+          <div class="factura-empresa">${s.empresa}</div>
+          <div class="factura-meta">Cobro recurrente mensual</div>
+        </div>
+        <div class="factura-monto">$${(s.cuota||0).toLocaleString('es-MX')}</div>
+      </div>`).join('');
+  }
+  document.getElementById('historial-cobros').innerHTML = `<div style="text-align:center;padding:20px;color:var(--ink3);font-size:12px;">
+    El historial detallado de cobros, facturas y reintentos vive en <a href="https://dashboard.stripe.com/payments" target="_blank" style="color:var(--navy2);font-weight:600;">Stripe → Pagos</a>.<br>Ahí puedes ver el estado real de cada cobro, descargar recibos y reintentar tarjetas rechazadas.
+  </div>`;
+}
+
+function renderRetencion(){
+  document.getElementById('ret-activos').textContent = SUBS.length;
+  document.getElementById('ret-cancelados').textContent = SUBS_CANCELADOS.length;
+  const totalHistorico = SUBS.length + SUBS_CANCELADOS.length;
+  document.getElementById('ret-churn').textContent = totalHistorico ? ((SUBS_CANCELADOS.length/totalHistorico)*100).toFixed(1)+'%' : '0%';
+  document.getElementById('ret-anuales').textContent = SUBS.filter(s=>s.periodo==='anual').length;
+
+  const lista = document.getElementById('lista-cancelados');
+  if (!SUBS_CANCELADOS.length) {
+    lista.innerHTML = '<div style="text-align:center;padding:20px;color:var(--ink3);font-size:12px;">Sin cancelaciones registradas todavía.</div>';
+  } else {
+    lista.innerHTML = SUBS_CANCELADOS.map(c=>`
+      <div style="padding:10px 12px;background:var(--red-bg);border-radius:var(--r-sm);font-size:12px;border:1px solid rgba(220,38,38,.15);">
+        <div style="font-weight:600;color:var(--red);">${c.empresa}</div>
+        <div style="color:var(--ink2);margin-top:2px;">RFC ${c.rfc} · Plan ${c.plan||'—'}</div>
+      </div>`).join('');
+  }
+}
+
+function renderPlanes(){
+  const planes = [
+    {nombre:'Estándar', precio:799, desc:'1-50 trabajadores'},
+    {nombre:'Pro', precio:2399, desc:'51-500 trabajadores'},
+  ];
+  const legacyBasico = SUBS.filter(s=>s.plan==='Básico');
+  if (legacyBasico.length) planes.push({nombre:'Básico', precio:499, desc:'legacy — ya no se ofrece'});
+  const mrr = calcularMRRTotal() || 1;
+  document.getElementById('planes-resumen').innerHTML = planes.map(p=>{
+    const clientesPlan = SUBS.filter(s=>s.plan===p.nombre);
+    const montoPlan = clientesPlan.reduce((a,s)=>a+(s.cuota||0),0);
+    const pct = SUBS.length ? ((montoPlan/mrr)*100).toFixed(1) : 0;
+    return `<div class="card" style="text-align:center;">
+      <div style="font-size:13px;font-weight:700;margin-bottom:8px;">Plan ${p.nombre}</div>
+      <div style="font-size:28px;font-weight:900;color:var(--navy2);margin-bottom:4px;">$${p.precio.toLocaleString('es-MX')}<span style="font-size:13px;font-weight:400;color:var(--ink3);">/mes</span></div>
+      <div style="font-size:11px;color:var(--ink3);margin-bottom:12px;">${clientesPlan.length} cliente${clientesPlan.length===1?'':'s'} activo${clientesPlan.length===1?'':'s'} · ${p.desc}</div>
+      <span class="badge badge-blue">${pct}% del MRR</span>
+    </div>`;
+  }).join('');
+}
+
+function renderOnboarding(){
+  // Clientes registrados en los últimos 14 días — para seguimiento de bienvenida
+  const ahora = new Date();
+  const recientes = SUBS.filter(s=>{
+    if (!s.inicio || s.inicio==='—') return false;
+    const dias = (ahora - new Date(s.inicio)) / 86400000;
+    return dias <= 14;
+  });
+  const cont = document.getElementById('onboarding-clientes');
+  if (!recientes.length) {
+    cont.innerHTML = '<div style="text-align:center;padding:20px;color:var(--ink3);font-size:12px;">Sin clientes nuevos en los últimos 14 días.</div>';
+    return;
+  }
+  cont.innerHTML = recientes.map(c=>`
+    <div style="padding:12px 14px;border:1px solid var(--border);border-radius:var(--r-sm);margin-bottom:8px;display:flex;align-items:center;justify-content:space-between;">
+      <div>
+        <div style="font-size:13px;font-weight:600;">${c.empresa}</div>
+        <div style="font-size:11px;color:var(--ink3);">RFC ${c.rfc} · Plan ${c.plan} · Registrado el ${c.inicio}</div>
+      </div>
+      <button class="btn btn-primary btn-sm" onclick="window.open('paquete-bienvenida.html')">Enviar bienvenida</button>
+    </div>`).join('');
+}
+
+function abrirModalNuevo(){
+  document.getElementById('ns-inicio').value = new Date().toISOString().split('T')[0];
+  document.getElementById('modal-nuevo').style.display='flex';
+}
+function cerrarModal(){ document.getElementById('modal-nuevo').style.display='none'; }
+async function guardarNuevo(){
+  const empresa     = document.getElementById('ns-empresa').value.trim();
+  const rfc         = document.getElementById('ns-rfc').value.trim().toUpperCase();
+  const email       = document.getElementById('ns-email').value.trim();
+  const planSel     = document.getElementById('ns-plan').value;
+  const trabajadores = parseInt(document.getElementById('ns-trab').value)||0;
+
+  if(!empresa||!rfc||!email){alert('Razón social, RFC y email son obligatorios');return;}
+
+  const cuotas = {'Básico':499,'Estándar':799,'Pro':2399};
+  const cuota  = cuotas[planSel]||799;
+  const planMap = {'Básico':'basico','Estándar':'estandar','Pro':'pro'};
+
+  const btn = document.querySelector('#modal-nuevo .btn-green');
+  if(btn){ btn.disabled=true; btn.textContent='Guardando...'; }
+
+  try {
+    // Generar contraseña aleatoria
+    const pass = Math.random().toString(36).slice(2,8).toUpperCase() +
+                 Math.random().toString(36).slice(2,5) + '!';
+
+    const res = await fetch('/.netlify/functions/crear-cliente-admin', {
+      method:'POST',
+      headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({
+        rfc, empresa, email,
+        tel: document.getElementById('ns-tel')?.value?.trim()||'',
+        plan: planMap[planSel]||'estandar',
+        pass,
+        enviarEmail: true,
+      })
+    });
+    const data = await res.json();
+    if(!res.ok||data.error) throw new Error(data.error||'Error al crear cliente');
+
+    cerrarModal();
+    await cargarClientesReales();
+    goPanel('suscripciones');
+    alert(`✅ Cliente creado\n\nEmpresa: ${empresa}\nPlan: ${planSel} · $${cuota.toLocaleString('es-MX')}/mes\nContraseña inicial: ${pass}\n\nSe envió email de bienvenida a ${email}`);
+  } catch(e) {
+    alert('No se pudo crear el cliente: ' + (e.message||e));
+  }
+  if(btn){ btn.disabled=false; btn.textContent='✓ Crear suscripción'; }
+}
+
+// ════════════════════════════════════════════════════════
+// LOGIN GATE (admin) — misma cuenta que dashboard-compliance.html
+// ════════════════════════════════════════════════════════
+async function checkAdminSession2(){
+  const { data } = await sbData.auth.getSession();
+  const session = data?.session;
+  if (session && session.user?.user_metadata?.role === 'admin') {
+    document.getElementById('login-gate').style.display = 'none';
+    document.getElementById('app-shell').style.display = '';
+    await cargarClientesReales();
+    renderMRR();
+    renderSubs();
+  } else {
+    if (session) await sbData.auth.signOut();
+    document.getElementById('login-gate').style.display = 'flex';
+    document.getElementById('app-shell').style.display = 'none';
+  }
+}
+
+async function loginAdmin2(){
+  const email = document.getElementById('la-email').value.trim();
+  const password = document.getElementById('la-password').value;
+  const btn = document.getElementById('login-btn2');
+  const errEl = document.getElementById('login-error2');
+  errEl.style.display = 'none';
+  if (!email || !password) { errEl.textContent = 'Ingrese correo y contraseña.'; errEl.style.display = 'block'; return; }
+  btn.disabled = true; btn.textContent = 'Ingresando...';
+  try {
+    const { data, error } = await sbData.auth.signInWithPassword({ email, password });
+    if (error) throw error;
+    if (data.user?.user_metadata?.role !== 'admin') {
+      await sbData.auth.signOut();
+      throw new Error('Esta cuenta no tiene permisos de administrador.');
+    }
+    await checkAdminSession2();
+  } catch(e) {
+    errEl.textContent = e.message === 'Invalid login credentials' ? 'Correo o contraseña incorrectos.' : e.message;
+    errEl.style.display = 'block';
+  }
+  btn.disabled = false; btn.textContent = 'Ingresar →';
+}
+
+checkAdminSession2();
+</script>
+</body>
+</html>
+
+

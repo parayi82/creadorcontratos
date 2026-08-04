@@ -1,0 +1,565 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<script>
+(function(){
+  var params=new URLSearchParams(window.location.search);
+  var modo=params.get('editar')==='1'?'editar':params.get('recuperar')==='1'?'ver':null;
+  if(!modo) return;
+  var gen=window.location.pathname.split('/').pop();
+  var key=(modo==='editar'?'doc_editar_':'doc_recuperado_')+gen.replace('.html','');
+  var g=null; try{g=JSON.parse(localStorage.getItem(key)||'null');}catch(e){}
+  if(!g||!g.html) return;
+  // Bloquear render() para no sobreescribir el contenido
+  var _bloqueado=false,_orig=null;
+  function bloquear(){
+    if(typeof window.render==='function'&&!_bloqueado){
+      _orig=window.render; window.render=function(){}; _bloqueado=true;
+    }
+  }
+  bloquear(); var _iv=setInterval(bloquear,50);
+  function inyectar(){
+    var pr=document.getElementById('doc-preview');
+    if(!pr){setTimeout(inyectar,80);return;}
+    clearInterval(_iv); bloquear();
+    pr.innerHTML=g.html;
+    // En modo editar: activar contenteditable automáticamente
+    if(modo==='editar'){
+      pr.contentEditable='true';
+      pr.style.outline='2px dashed #0f766e';
+      pr.style.cursor='text';
+    }
+    // Banner
+    var b=document.createElement('div');
+    b.id='banner-doc';
+    b.style.cssText='position:sticky;top:0;z-index:200;background:'+(modo==='editar'?'#f0fdf4':'#eff6ff')+';border-bottom:2px solid '+(modo==='editar'?'#86efac':'#93c5fd')+';padding:10px 16px;font-size:12px;color:'+(modo==='editar'?'#166534':'#1e40af')+';display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap;';
+    var etiq=modo==='editar'?'✏️ Modo edición — edita el documento directamente':'📄 Documento guardado';
+    var sp=document.createElement('span');
+    sp.innerHTML='<strong>'+etiq+'</strong> — '+(g.nombre||'')+' · '+(g.fecha||'');
+    var bt=document.createElement('button');
+    bt.textContent=modo==='editar'?'🔄 Restaurar campos':'✏️ Editar';
+    bt.style.cssText='border:1px solid currentColor;background:transparent;color:inherit;padding:4px 12px;border-radius:6px;font-size:11px;cursor:pointer;white-space:nowrap;';
+    bt.onclick=function(){
+      _bloqueado=false;
+      pr.contentEditable='false';
+      pr.style.outline=''; pr.style.cursor='';
+      if(_orig) window.render=_orig;
+      var bel=document.getElementById('banner-doc');
+      if(bel) bel.remove();
+      localStorage.removeItem(key);
+      if(typeof window.render==='function') window.render();
+    };
+    b.appendChild(sp); b.appendChild(bt);
+    pr.insertBefore(b,pr.firstChild);
+    localStorage.removeItem(key);
+  }
+  document.readyState==='loading'?document.addEventListener('DOMContentLoaded',inyectar):inyectar();
+})();
+</script>
+
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Generador · Modalidades Especiales</title>
+<style>
+  :root{--ink:#1a1a18;--ink2:#4a4a46;--ink3:#8a8a84;--surface:#f7f6f2;--white:#ffffff;--accent:#1a3a5c;--accent2:#e8f0f8;--border:#ddddd6;--danger:#c0392b;--radius:6px;--font-ui:'Segoe UI',system-ui,sans-serif;--font-doc:'Times New Roman',Georgia,serif;}
+  *{box-sizing:border-box;margin:0;padding:0;}
+  body{font-family:var(--font-ui);background:var(--surface);color:var(--ink);min-height:100vh;font-size:14px;}
+  header{background:var(--accent);color:#fff;padding:14px 28px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:100;box-shadow:0 1px 4px rgba(0,0,0,.18);}
+  header h1{font-size:15px;font-weight:600;}header span{font-size:12px;opacity:.7;}
+  .header-actions{display:flex;gap:10px;}
+  .btn{padding:7px 18px;border-radius:var(--radius);font-size:13px;font-weight:500;cursor:pointer;border:1px solid transparent;transition:background .15s;}
+  .btn-outline{background:transparent;border-color:rgba(255,255,255,.45);color:#fff;}.btn-outline:hover{background:rgba(255,255,255,.12);}
+  .btn-primary{background:#fff;color:var(--accent);}.btn-primary:hover{opacity:.88;}
+  .workspace{display:grid;grid-template-columns:400px 1fr;height:calc(100vh - 52px);}
+  .form-panel{background:var(--white);border-right:1px solid var(--border);overflow-y:auto;padding:24px 24px 40px;}
+  .section-label{font-size:10px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:var(--accent);padding:20px 0 10px;border-bottom:1px solid var(--border);margin-bottom:14px;}
+  .section-label:first-child{padding-top:4px;}
+  .field{margin-bottom:13px;}
+  .field label{display:block;font-size:12px;font-weight:500;color:var(--ink2);margin-bottom:4px;}
+  .field label .req{color:var(--danger);margin-left:2px;}
+  .field input,.field select,.field textarea{width:100%;padding:8px 10px;border:1px solid var(--border);border-radius:var(--radius);font-size:13px;font-family:var(--font-ui);color:var(--ink);background:var(--white);}
+  .field input:focus,.field select:focus,.field textarea:focus{outline:none;border-color:var(--accent);box-shadow:0 0 0 3px var(--accent2);}
+  .field textarea{resize:vertical;min-height:68px;}
+  .field-row{display:grid;grid-template-columns:1fr 1fr;gap:10px;}
+  .hint{font-size:11px;color:var(--ink3);margin-top:3px;}
+  .tipo-tabs{display:grid;grid-template-columns:1fr 1fr;gap:0;border:1px solid var(--border);border-radius:var(--radius);overflow:hidden;margin-bottom:16px;}
+  .tipo-tab{padding:12px 8px;text-align:center;font-size:13px;font-weight:500;cursor:pointer;background:var(--white);color:var(--ink2);border:none;transition:all .15s;line-height:1.3;}
+  .tipo-tab:not(:last-child){border-right:1px solid var(--border);}
+  .tipo-tab.active{background:var(--accent);color:#fff;}
+  .alert-box{background:#e8f4fd;border:1px solid #90caf9;border-radius:var(--radius);padding:10px 14px;font-size:12px;color:#0d47a1;margin-bottom:14px;line-height:1.5;}
+  .clause-check{display:flex;align-items:flex-start;gap:8px;margin-bottom:8px;}
+  .clause-check input[type=checkbox]{margin-top:2px;accent-color:var(--accent);}
+  .clause-check label{font-size:12px;color:var(--ink2);cursor:pointer;line-height:1.4;}
+  .preview-panel{background:#e8e7e0;overflow-y:auto;padding:32px 40px;display:flex;flex-direction:column;align-items:center;}
+  .doc-sheet{background:var(--white);width:100%;max-width:760px;min-height:1060px;padding:72px 80px;box-shadow:0 2px 16px rgba(0,0,0,.12);font-family:var(--font-doc);font-size:12pt;line-height:1.75;color:#111;}
+  
+  .doc-logo-empresa{font-size:14pt;font-weight:bold;color:var(--accent);font-family:var(--font-ui);max-width:340px;}
+  .doc-folio{font-size:9pt;color:var(--ink3);font-family:var(--font-ui);text-align:right;line-height:1.4;}
+  .doc-title{text-align:center;font-size:13pt;font-weight:bold;text-transform:uppercase;letter-spacing:.04em;margin-bottom:6px;}
+  .doc-subtitle{text-align:center;font-size:10pt;color:var(--ink3);font-family:var(--font-ui);margin-bottom:28px;}
+  .doc-p{margin-bottom:14px;text-align:justify;}
+  .doc-p .blank{font-weight:bold;color:var(--accent);border-bottom:1px solid var(--accent);padding:0 2px;}
+  .doc-p .blank.empty{color:#c0392b;border-bottom-color:#c0392b;font-style:italic;font-weight:normal;}
+  .doc-clause-title{font-weight:bold;text-transform:uppercase;font-size:10.5pt;margin:22px 0 8px;}
+  .comision-table{width:100%;border-collapse:collapse;margin:12px 0;font-size:10.5pt;}
+  .comision-table th{background:#f0f0ea;padding:8px 12px;text-align:left;font-size:10pt;border:1px solid #ddd;}
+  .comision-table td{padding:8px 12px;border:1px solid #ddd;}
+  .doc-firma-grid{display:grid;grid-template-columns:1fr 1fr;gap:40px;margin-top:60px;}
+  .firma-box{border-top:1px solid #888;padding-top:8px;font-size:10pt;text-align:center;line-height:1.5;}
+  .firma-box strong{display:block;font-size:9pt;color:var(--ink3);font-family:var(--font-ui);}
+  .watermark-empty{text-align:center;color:var(--ink3);font-family:var(--font-ui);font-size:13px;padding:80px 0;}
+  @media print{header,.form-panel{display:none!important;}.workspace{display:block;height:auto;}.preview-panel{padding:0;background:white;}.doc-sheet{box-shadow:none;max-width:100%;padding:40px;}body{background:white;}}
+
+#auth-gate-loading{position:fixed;inset:0;background:#fff;z-index:9999;display:flex;align-items:center;justify-content:center;font-family:'Segoe UI',system-ui,sans-serif;color:#999;font-size:13px;}
+#auth-gate-blocked{position:fixed;inset:0;background:#0f2640;z-index:9999;display:none;align-items:center;justify-content:center;padding:24px;}
+#auth-gate-blocked .agb-box{background:#fff;border-radius:16px;padding:40px 36px;max-width:420px;text-align:center;font-family:'Segoe UI',system-ui,sans-serif;}
+#auth-gate-blocked .agb-box h2{font-size:18px;margin-bottom:10px;color:#0f2640;}
+#auth-gate-blocked .agb-box p{font-size:13px;color:#666;margin-bottom:20px;line-height:1.6;}
+#auth-gate-blocked .agb-btns{display:flex;gap:10px;justify-content:center;flex-wrap:wrap;}
+#auth-gate-blocked .agb-btns a{padding:10px 18px;border-radius:8px;font-size:13px;font-weight:600;text-decoration:none;}
+#auth-gate-blocked .agb-btns a.agb-primary{background:#1a3a5c;color:#fff;}
+#auth-gate-blocked .agb-btns a.agb-secondary{background:#f0f0ec;color:#1a3a5c;}
+body.modo-demo .doc-sheet{position:relative;user-select:none;-webkit-user-select:none;-moz-user-select:none;}
+body.modo-demo .doc-sheet::after{content:'MUESTRA — CUENTA DEMO, NO VÁLIDO PARA USO LEGAL';position:absolute;top:46%;left:-15%;right:-15%;text-align:center;font-size:26px;font-weight:900;color:rgba(220,38,38,.16);transform:rotate(-18deg);pointer-events:none;font-family:'Segoe UI',system-ui,sans-serif;z-index:50;}
+@media print{ body.modo-demo .doc-sheet::after{display:block!important;color:rgba(220,38,38,.35)!important;} }
+  .cl-nav-logo{display:flex;align-items:center;font-size:15px;font-weight:800;color:#fff;letter-spacing:-.01em;line-height:1;text-decoration:none;}
+  .cl-nav-logo .cl-laboral{color:#5eead4;font-weight:400;}
+</style>
+<script src="membrete.js?v=3.7"></script>
+</head>
+<body>
+<div id="auth-gate-loading">Verificando acceso…</div>
+<div id="auth-gate-blocked">
+  <div class="agb-box">
+    <h2>🔒 Esta herramienta requiere una suscripción activa</h2>
+    <p>Inicie sesión desde su portal de cliente para usar este generador, o conozca nuestros planes si todavía no es cliente de ClickLaboral.mx.</p>
+    <div class="agb-btns">
+      <a class="agb-primary" href="portal-cliente.html">Iniciar sesión →</a>
+      <a class="agb-secondary" href="index.html#precios">Ver planes</a>
+    </div>
+  </div>
+</div>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
+<script src="expediente-helper.js?v=3.7"></script>
+<script>
+(async()=>{
+  const _sb = supabase.createClient('https://hpzgqaplrywwjuvrzhcp.supabase.co','sb_publishable_1g8US8iFJ8CxnSaF_4MHgA_gqyyAr3W');
+  try {
+    const { data } = await _sb.auth.getSession();
+    document.getElementById('auth-gate-loading').style.display = 'none';
+    if (!data?.session?.user) {
+      document.getElementById('auth-gate-blocked').style.display = 'flex';
+    }
+  } catch(e) {
+    document.getElementById('auth-gate-loading').style.display = 'none';
+    document.getElementById('auth-gate-blocked').style.display = 'flex';
+  }
+})();
+
+</script>
+
+<header>
+  <div class="cl-nav-logo" style="flex-shrink:0;"><svg width="26" height="26" viewBox="0 0 100 100" style="vertical-align:-7px;margin-right:6px;flex-shrink:0;">
+        <defs><linearGradient id="clGrad" x1="10" y1="10" x2="90" y2="95" gradientUnits="userSpaceOnUse">
+          <stop offset="0%" stop-color="#1a3a5c"/><stop offset="55%" stop-color="#1e6f6c"/><stop offset="100%" stop-color="#2dd4bf"/>
+        </linearGradient></defs>
+        <path d="M50 7 L83 20 V51 C83 73 68 87 50 95 C32 87 17 73 17 51 V20 Z" fill="none" stroke="url(#clGrad)" stroke-width="6" stroke-linejoin="round"/>
+        <circle cx="40" cy="38" r="8.5" fill="#5eead4"/>
+        <path d="M25 63 C25 51 31 45 40 45 C49 45 55 51 55 63 Z" fill="#5eead4"/>
+        <circle cx="55" cy="33" r="9.5" fill="#14b8a6"/>
+        <path d="M38 61 C38 48 45.5 41 55 41 C64.5 41 72 48 72 61 Z" fill="#14b8a6"/>
+        <path d="M29 61 L45 77 L78 40" fill="none" stroke="#e8f2fc" stroke-width="9" stroke-linecap="round" stroke-linejoin="round"/>
+      </svg>Click<span class="cl-laboral">Laboral.mx</span></div>
+  <div>
+    <h1>Generador · Modalidades Especiales</h1>
+    <span>Comisionista · Asimilados a Salarios — LFT / LISR</span>
+  </div>
+  <div class="header-actions">
+    <button class="btn btn-outline" onclick="limpiar()">Limpiar</button>
+    <button class="btn btn-primary" onclick="window.print()">Imprimir / PDF</button>
+  </div>
+</header>
+<div class="workspace">
+  <div class="form-panel">
+    <!-- ── MEMBRETE DEL CLIENTE ── -->
+    <div style="border-bottom:1px solid var(--border);margin-bottom:0;">
+      <div class="section-label" style="display:flex;align-items:center;justify-content:space-between;cursor:pointer;user-select:none;"
+           onclick="this.nextElementSibling.style.display=this.nextElementSibling.style.display==='none'?'block':'none'">
+        <span>🏢 Logo y pie de página</span>
+        <span style="font-size:10px;font-weight:400;color:var(--ink3);">▲ clic para colapsar</span>
+      </div>
+      <div id="mem-panel-wrap" style="display:block;padding:12px 0 14px;">
+        <div id="mem-logo-container"></div>
+      </div>
+    </div>
+    <!-- ── / MEMBRETE ── -->
+    <div class="section-label">Modalidad</div>
+    <div class="tipo-tabs">
+      <div class="tipo-tab active" id="tab-com" onclick="setTipo('com')">💼 Comisionista</div>
+      <div class="tipo-tab" id="tab-asim" onclick="setTipo('asim')">📋 Asimilados a salarios</div>
+    </div>
+    <div id="alert-box"></div>
+
+    <div class="section-label">Datos de la empresa</div>
+    <div class="field"><label>Razón social <span class="req">*</span></label><input type="text" id="empresa" oninput="render()" placeholder="Ej. Comercializadora Norte, S.A. de C.V."></div>
+    <div class="field-row">
+      <div class="field"><label>RFC del patrón / empresa</label><input type="text" id="rfc_patron" oninput="render()" maxlength="13" placeholder="CNO800101AAA"></div>
+      <div class="field"><label>Registro IMSS</label><input type="text" id="imss_patron" oninput="render()" placeholder="11 dígitos"></div>
+    </div>
+    <div class="field"><label>Domicilio <span class="req">*</span></label><input type="text" id="domicilio_empresa" oninput="render()" placeholder="Calle, No., Colonia, Ciudad, Estado, C.P."></div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;">
+        <div class="field"><label>Teléfono</label><input type="text" id="mem-tel" oninput="render()" placeholder="33 1234 5678"></div>
+        <div class="field"><label>Email</label><input type="text" id="mem-email" oninput="render()" placeholder="contacto@empresa.mx"></div>
+      </div>
+      <div class="field"><label>Sitio web</label><input type="text" id="mem-web" oninput="render()" placeholder="www.empresa.mx"></div>
+    <div class="field"><label>Representante legal</label><input type="text" id="rep_legal" oninput="render()" placeholder="Nombre completo"></div>
+
+    <div class="section-label">Datos de la persona</div>
+    <div class="field"><label>Nombre completo <span class="req">*</span></label><input type="text" id="trabajador" oninput="render()" placeholder="Nombre(s) Apellido Paterno Apellido Materno"></div>
+    <div class="field-row">
+      <div class="field"><label>RFC <span class="req">*</span></label><input type="text" id="rfc_trab" oninput="render()" maxlength="13"></div>
+      <div class="field"><label>CURP</label><input type="text" id="curp" oninput="render()" maxlength="18"></div>
+    </div>
+    <div class="field"><label>Domicilio <span class="req">*</span></label><input type="text" id="domicilio_trab" oninput="render()" placeholder="Calle, No., Colonia, Ciudad, Estado, C.P."></div>
+
+    <!-- COMISIONISTA -->
+    <div id="seccion-com">
+      <div class="section-label">Configuración de comisiones</div>
+      <div class="field"><label>Zona / territorio de trabajo <span class="req">*</span></label><input type="text" id="zona" oninput="render()" placeholder="Ej. Zona Metropolitana de Guadalajara, Estado de Jalisco"></div>
+      <div class="field"><label>Productos / servicios a comercializar</label><textarea id="productos" oninput="render()" placeholder="Describa los productos o servicios que el comisionista promoverá o venderá..."></textarea></div>
+      <div class="field"><label>Tipo de comisión</label>
+        <select id="tipo_comision" onchange="render()">
+          <option value="porcentaje">Porcentaje sobre venta neta</option>
+          <option value="monto_fijo">Monto fijo por venta cerrada</option>
+          <option value="mixta">Sueldo base + porcentaje</option>
+          <option value="escalonada">Escalonada por volumen</option>
+        </select>
+      </div>
+      <div id="config-porcentaje">
+        <div class="field-row">
+          <div class="field"><label>Porcentaje de comisión (%)</label><input type="number" id="pct_comision" oninput="render()" min="0" step="0.1" placeholder="Ej. 5"></div>
+          <div class="field"><label>Base de cálculo</label>
+            <select id="base_calculo" onchange="render()">
+              <option value="venta_neta">Venta neta (sin IVA)</option>
+              <option value="venta_total">Venta total (con IVA)</option>
+              <option value="utilidad">Utilidad bruta</option>
+            </select>
+          </div>
+        </div>
+      </div>
+      <div id="config-mixta" style="display:none">
+        <div class="field-row">
+          <div class="field"><label>Sueldo base mensual ($)</label><input type="number" id="sueldo_base" oninput="render()" min="0" placeholder="0.00"></div>
+          <div class="field"><label>Porcentaje adicional (%)</label><input type="number" id="pct_adicional" oninput="render()" min="0" step="0.1" placeholder="Ej. 3"></div>
+        </div>
+      </div>
+      <div id="config-escalonada" style="display:none">
+        <div class="field"><label>Tabla escalonada (describa los tramos)</label><textarea id="tabla_escalonada" oninput="render()" placeholder="Ej. Ventas de $0 a $50,000: 3%&#10;Ventas de $50,001 a $100,000: 5%&#10;Ventas mayores a $100,000: 7%"></textarea></div>
+      </div>
+      <div class="field"><label>Periodicidad de pago de comisiones</label>
+        <select id="period_com" onchange="render()">
+          <option value="semanal">Semanal</option>
+          <option value="quincenal">Quincenal</option>
+          <option value="mensual">Mensual</option>
+          <option value="al_cobro">Al momento del cobro efectivo de la venta</option>
+        </select>
+      </div>
+      <div class="field"><label>Gastos de representación (si aplica)</label><input type="text" id="gastos_rep" oninput="render()" placeholder="Ej. $2,000 MXN mensuales para viáticos y gasolina"></div>
+      <div class="field-row">
+        <div class="field"><label>Fecha de inicio <span class="req">*</span></label><input type="date" id="fecha_inicio_com" oninput="render()"></div>
+        <div class="field"><label>Vigencia</label>
+          <select id="vigencia_com" onchange="render()">
+            <option value="indeterminada">Tiempo indeterminado</option>
+            <option value="determinada">Tiempo determinado</option>
+          </select>
+        </div>
+      </div>
+      <div class="field" id="fecha_fin_com_field" style="display:none"><label>Fecha de término</label><input type="date" id="fecha_fin_com" oninput="render()"></div>
+
+      <div class="section-label">Cláusulas opcionales (comisionista)</div>
+      <div class="clause-check"><input type="checkbox" id="com_exclusividad" onchange="render()"><label for="com_exclusividad">Exclusividad en el territorio</label></div>
+      <div class="clause-check"><input type="checkbox" id="com_meta" onchange="render()"><label for="com_meta">Meta mínima mensual obligatoria</label></div>
+      <div class="clause-check"><input type="checkbox" id="com_gastos" onchange="render()"><label for="com_gastos">Rendición de cuentas y comprobación de gastos</label></div>
+      <div class="clause-check"><input type="checkbox" id="com_confidencial" onchange="render()"><label for="com_confidencial">Confidencialidad y no competencia</label></div>
+      <div class="clause-check"><input type="checkbox" id="com_redes" onchange="render()"><label for="com_redes">Conducta en redes sociales y protección de reputación</label></div>
+      <div class="alert-box" style="background:#eef7f0;border-color:rgba(22,163,74,.25);color:#14532d;margin-top:10px;font-size:11px;padding:8px 12px;">
+        💡 ¿Necesita una cláusula distinta a estas? Su suscripción incluye asesoría legal real — pídala desde "Solicitar asesoría" en su portal.
+      </div>
+      <div class="field" id="campo_meta" style="display:none"><label>Monto de meta mínima mensual</label><input type="number" id="meta_minima" oninput="render()" placeholder="$0.00 MXN"></div>
+    </div>
+
+    <!-- ASIMILADOS -->
+    <div id="seccion-asim" style="display:none">
+      <div class="section-label">Configuración de asimilados</div>
+      <div class="field"><label>Tipo de asimilado (art. 94 LISR)</label>
+        <select id="tipo_asimilado" onchange="render()">
+          <option value="directivos">Directivos, gerentes, administradores</option>
+          <option value="comisarios">Comisarios, consejeros, miembros de consejos</option>
+          <option value="honorarios_asim">Honorarios a personas físicas de personas morales de las que son socios</option>
+          <option value="actividades_empresariales">Personas físicas con actividades empresariales (copropiedad)</option>
+        </select>
+      </div>
+      <div class="field"><label>Puesto / cargo</label><input type="text" id="puesto_asim" oninput="render()" placeholder="Ej. Director de Ventas, Consejero Independiente"></div>
+      <div class="field"><label>Descripción de servicios / funciones</label><textarea id="servicios_asim" oninput="render()" placeholder="Describa los servicios profesionales o funciones directivas que prestará..."></textarea></div>
+      <div class="field-row">
+        <div class="field"><label>Honorario / remuneración mensual <span class="req">*</span></label><input type="number" id="honorario" oninput="render()" min="0" step="0.01" placeholder="0.00"></div>
+        <div class="field"><label>Periodicidad</label>
+          <select id="period_asim" onchange="render()">
+            <option value="mensual">Mensual</option>
+            <option value="quincenal">Quincenal</option>
+            <option value="por_sesion">Por sesión / reunión</option>
+          </select>
+        </div>
+      </div>
+      <div class="field-row">
+        <div class="field"><label>Fecha de inicio <span class="req">*</span></label><input type="date" id="fecha_inicio_asim" oninput="render()"></div>
+        <div class="field"><label>Vigencia</label>
+          <select id="vigencia_asim" onchange="render()">
+            <option value="indeterminada">Indefinida</option>
+            <option value="determinada">Determinada</option>
+          </select>
+        </div>
+      </div>
+      <div class="field" id="fecha_fin_asim_field" style="display:none"><label>Fecha de término</label><input type="date" id="fecha_fin_asim" oninput="render()"></div>
+      <div class="field"><label>Retención de ISR (%)</label><input type="number" id="retencion_isr" value="35" oninput="render()" min="0" max="35"><div class="hint">Tasa máxima: 35% para asimilados a salarios (tarifa art. 96 LISR)</div></div>
+
+      <div class="section-label">Cláusulas opcionales (asimilados)</div>
+      <div class="clause-check"><input type="checkbox" id="asim_confidencial" onchange="render()"><label for="asim_confidencial">Confidencialidad</label></div>
+      <div class="clause-check"><input type="checkbox" id="asim_no_competencia" onchange="render()"><label for="asim_no_competencia">No competencia durante la vigencia</label></div>
+      <div class="clause-check"><input type="checkbox" id="asim_propiedad_int" onchange="render()"><label for="asim_propiedad_int">Propiedad intelectual — derechos cedidos a la empresa</label></div>
+      <div class="clause-check"><input type="checkbox" id="asim_redes" onchange="render()"><label for="asim_redes">Conducta en redes sociales y protección de reputación</label></div>
+      <div class="alert-box" style="background:#eef7f0;border-color:rgba(22,163,74,.25);color:#14532d;margin-top:10px;font-size:11px;padding:8px 12px;">
+        💡 ¿Necesita una cláusula distinta a estas? Su suscripción incluye asesoría legal real — pídala desde "Solicitar asesoría" en su portal.
+      </div>
+    </div>
+
+    <div class="section-label">Lugar y fecha</div>
+    <div class="field-row">
+      <div class="field"><label>Ciudad <span class="req">*</span></label><input type="text" id="ciudad_firma" oninput="render()" placeholder="Ciudad, Estado"></div>
+      <div class="field"><label>Fecha de firma <span class="req">*</span></label><input type="date" id="fecha_firma" oninput="render()"></div>
+    </div>
+    <div class="field-row">
+      <div class="field"><label>Testigo 1</label><input type="text" id="testigo1" oninput="render()" placeholder="Nombre completo"></div>
+      <div class="field"><label>Testigo 2</label><input type="text" id="testigo2" oninput="render()" placeholder="Nombre completo"></div>
+    </div>
+  </div>
+
+  <div class="preview-panel">
+    <div class="doc-sheet" id="doc-preview">
+      <div class="watermark-empty">Seleccione la modalidad y complete los datos.</div>
+    </div>
+  </div>
+</div>
+
+<script>
+let tipo='com';
+function v(id){return(document.getElementById(id)||{}).value||'';}
+function chk(id){return document.getElementById(id)?.checked||false;}
+function b(txt,fb){if(!txt||!txt.trim())return`<span class="blank empty">[${fb}]</span>`;return`<span class="blank">${txt}</span>`;}
+function fmtFecha(iso){if(!iso)return'';const[y,m,d]=iso.split('-');const M=['enero','febrero','marzo','abril','mayo','junio','julio','agosto','septiembre','octubre','noviembre','diciembre'];return`${parseInt(d)} de ${M[parseInt(m)-1]} de ${y}`;}
+function fmtMXN(n){if(!n)return'';return'$'+parseFloat(n).toLocaleString('es-MX',{minimumFractionDigits:2})+' MXN';}
+function numRomano(n){const r=['','I','II','III','IV','V','VI','VII','VIII','IX','X','XI','XII'];return r[n]||n;}
+function limpiar(){if(!confirm('¿Limpiar?'))return;document.querySelectorAll('input:not([readonly]),select,textarea').forEach(el=>{if(el.type==='checkbox')el.checked=false;else el.value=el.defaultValue||'';});render();}
+
+function setTipo(t){
+  tipo=t;
+  document.getElementById('tab-com').className='tipo-tab'+(t==='com'?' active':'');
+  document.getElementById('tab-asim').className='tipo-tab'+(t==='asim'?' active':'');
+  document.getElementById('seccion-com').style.display=t==='com'?'':'none';
+  document.getElementById('seccion-asim').style.display=t==='asim'?'':'none';
+  const alertas={
+    com:'💼 <strong>Comisionista (art. 285-289 LFT):</strong> El comisionista es un trabajador cuya remuneración consiste total o parcialmente en una comisión sobre operaciones en que intervenga. Debe inscribirse al IMSS con el salario integrado (incluidas comisiones). No es lo mismo que un agente independiente.',
+    asim:'📋 <strong>Asimilados a salarios (art. 94 LISR):</strong> Esta modalidad aplica a directivos, consejeros y socios de personas morales. <strong>No crea relación laboral</strong>; el pagador retiene ISR como si fueran salarios. No proceden prestaciones laborales ni IMSS en esta modalidad. Úselo solo en los casos que expresamente señala el art. 94 LISR.'
+  };
+  document.getElementById('alert-box').innerHTML=`<div class="alert-box">${alertas[t]}</div>`;
+  render();
+}
+
+document.getElementById('tipo_comision').addEventListener('change',function(){
+  document.getElementById('config-porcentaje').style.display=this.value==='porcentaje'?'':'none';
+  document.getElementById('config-mixta').style.display=this.value==='mixta'?'':'none';
+  document.getElementById('config-escalonada').style.display=this.value==='escalonada'?'':'none';
+  render();
+});
+document.getElementById('vigencia_com').addEventListener('change',function(){document.getElementById('fecha_fin_com_field').style.display=this.value==='determinada'?'':'none';render();});
+document.getElementById('vigencia_asim').addEventListener('change',function(){document.getElementById('fecha_fin_asim_field').style.display=this.value==='determinada'?'':'none';render();});
+document.getElementById('com_meta').addEventListener('change',function(){document.getElementById('campo_meta').style.display=this.checked?'':'none';render();});
+
+// Expediente del trabajador — vincular este documento al roster
+if (window.ExpedienteHelper) {
+  ExpedienteHelper.init({
+    inputNombreId: 'trabajador',
+    tipoDocumento: 'contrato_especial',
+    nombreDocumentoFn: () => tipo==='com' ? 'Contrato comisionista' : 'Contrato asimilados a salarios',
+  });
+}
+
+function renderComisionista(){
+  const empresa=v('empresa'),rfc_p=v('rfc_patron'),imss_p=v('imss_patron'),dom_emp=v('domicilio_empresa'),rep=v('rep_legal');
+  const trab=v('trabajador'),rfc_t=v('rfc_trab'),curp=v('curp'),dom_t=v('domicilio_trab');
+  const zona=v('zona'),productos=v('productos'),tipoC=v('tipo_comision'),pctC=v('pct_comision'),baseC=v('base_calculo');
+  const sueldoBase=v('sueldo_base'),pctAd=v('pct_adicional'),tablaEsc=v('tabla_escalonada');
+  const periodC=v('period_com'),gastosRep=v('gastos_rep');
+  const fiC=v('fecha_inicio_com'),vigC=v('vigencia_com'),ffC=v('fecha_fin_com');
+  const meta=v('meta_minima');
+  const cf=v('ciudad_firma'),ff=v('fecha_firma'),t1=v('testigo1'),t2=v('testigo2');
+
+  const folio=`CCO-${new Date().getFullYear()}-${Math.floor(Math.random()*10000).toString().padStart(4,'0')}`;
+  let remuneracion='';
+  if(tipoC==='porcentaje') remuneracion=`una comisión del ${b(pctC,'porcentaje')}% sobre la ${b(baseC==='venta_neta'?'venta neta (sin IVA)':baseC==='venta_total'?'venta total':b('utilidad bruta','base'),'base de cálculo')}`;
+  else if(tipoC==='monto_fijo') remuneracion='un monto fijo acordado por operación cerrada';
+  else if(tipoC==='mixta') remuneracion=`un sueldo base de ${b(fmtMXN(sueldoBase),'sueldo base')} mensuales más una comisión del ${b(pctAd,'porcentaje')}%`;
+  else if(tipoC==='escalonada') remuneracion='comisiones escalonadas por volumen de ventas conforme a la tabla acordada';
+
+  let cn=1;
+  let html=generarMembrete({...getDatosMembrete(),
+    empresa:   v('empresa'),
+    rfc:       v('rfc_patron'),
+    domicilio: v('domicilio_empresa'),
+    folio,
+    logoDataUrl: window._logoClienteDataUrl,
+  }) + `
+  <div class="doc-title">Contrato Individual de Trabajo<br>de Agente o Representante Comisionista</div>
+  <div class="doc-subtitle">Artículos 285 a 289 de la Ley Federal del Trabajo</div>
+
+  <div class="doc-p">En ${b(cf,'ciudad')}, el ${b(fmtFecha(ff),'fecha')}, comparecen: ${b(empresa,'empresa')}, representada por ${b(rep,'representante')}, domicilio ${b(dom_emp,'domicilio')}, como <strong>COMITENTE</strong>; y el (la) C. ${b(trab,'nombre')}, RFC ${b(rfc_t,'RFC')}${curp?', CURP '+b(curp,'CURP'):''}, domicilio ${b(dom_t,'domicilio')}, como <strong>COMISIONISTA</strong>. Celebran el presente contrato conforme a los artículos 285 a 289 de la LFT, al tenor de:</div>
+
+  <div class="doc-clause-title">${numRomano(cn++)}. — Objeto</div>
+  <div class="doc-p">El COMISIONISTA prestará servicios al COMITENTE como agente de ventas y representante comercial, promoviendo y concertando operaciones en nombre del COMITENTE en la ${b(zona,'zona o territorio')}${productos?', para la comercialización de: '+productos:''}. La relación de trabajo es de naturaleza laboral subordinada, por lo que el COMISIONISTA queda inscrito al IMSS desde el primer día conforme a la LSS.</div>
+
+  <div class="doc-clause-title">${numRomano(cn++)}. — Vigencia</div>
+  <div class="doc-p">El presente contrato ${vigC==='determinada'?'tendrá vigencia del '+b(fmtFecha(fiC),'fecha inicio')+' al '+b(fmtFecha(ffC),'fecha término'):'inicia el '+b(fmtFecha(fiC),'fecha inicio')+' y es por tiempo indeterminado'}.</div>
+
+  <div class="doc-clause-title">${numRomano(cn++)}. — Remuneración</div>
+  <div class="doc-p">El COMITENTE pagará al COMISIONISTA ${b(remuneracion,'descripción de la comisión')}, con pago ${b(periodC==='al_cobro'?'al momento del cobro efectivo de cada operación':periodC,'periodicidad')}. En ningún caso la remuneración podrá ser inferior al salario mínimo general vigente en la zona geográfica correspondiente por el tiempo trabajado, conforme al artículo 288 de la LFT.</div>
+
+  ${tipoC==='escalonada'&&tablaEsc?`<div class="doc-clause-title">${numRomano(cn++)}. — Tabla de comisiones escalonadas</div><div class="doc-p"><table class="comision-table"><tr><th>Rango de ventas</th><th>Porcentaje de comisión</th></tr>${tablaEsc.split('\n').map(l=>`<tr><td colspan="2">${l}</td></tr>`).join('')}</table></div>`:''}
+
+  <div class="doc-clause-title">${numRomano(cn++)}. — Gastos de representación</div>
+  <div class="doc-p">${gastosRep?`El COMITENTE cubrirá gastos de representación por: ${gastosRep}, previa comprobación con documentos fiscales, los cuales no forman parte del salario.`:'Los gastos en que incurra el COMISIONISTA para el desempeño de sus funciones serán cubiertos previa autorización y comprobación documentada conforme a las políticas internas del COMITENTE.'}</div>
+
+  <div class="doc-clause-title">${numRomano(cn++)}. — Obligaciones del comisionista</div>
+  <div class="doc-p">El COMISIONISTA se obliga a: (a) desempeñar personalmente las comisiones encomendadas; (b) observar en el desempeño de sus comisiones todas las instrucciones recibidas del COMITENTE; (c) rendir cuenta detallada y justificada de su gestión; (d) entregar al COMITENTE todo lo que reciba con motivo de las comisiones encomendadas; (e) no transferir a terceros las comisiones sin autorización escrita del COMITENTE.</div>
+
+  ${chk('com_exclusividad')?`<div class="doc-clause-title">${numRomano(cn++)}. — Exclusividad territorial</div><div class="doc-p">El COMISIONISTA operará con exclusividad en el territorio señalado en la Cláusula Primera. El COMITENTE se abstendrá de contratar a otros agentes en dicho territorio durante la vigencia del presente contrato, y el COMISIONISTA no podrá representar a empresas competidoras del COMITENTE sin autorización escrita.</div>`:''}
+
+  ${chk('com_meta')?`<div class="doc-clause-title">${numRomano(cn++)}. — Meta mínima</div><div class="doc-p">El COMISIONISTA se compromete a alcanzar una meta mínima mensual de ventas de ${b(fmtMXN(meta),'monto de la meta')}. El incumplimiento reiterado (por más de dos meses consecutivos) de la meta pactada podrá ser causa de rescisión sin responsabilidad para el COMITENTE, una vez agotado el procedimiento previsto en el artículo 47 de la LFT.</div>`:''}
+
+  ${chk('com_gastos')?`<div class="doc-clause-title">${numRomano(cn++)}. — Rendición de cuentas</div><div class="doc-p">El COMISIONISTA rendirá informe mensual de su gestión y comprobará los gastos autorizados mediante documentos fiscales en los 5 días hábiles siguientes al cierre de cada mes. Los gastos no comprobados dentro del plazo serán descontados conforme al artículo 110, fracción III, de la LFT.</div>`:''}
+
+  ${chk('com_confidencial')?`<div class="doc-clause-title">${numRomano(cn++)}. — Confidencialidad y no competencia</div><div class="doc-p">El COMISIONISTA mantendrá confidencialidad sobre la información del COMITENTE y sus clientes. Durante la vigencia del contrato no representará a empresas competidoras en el mismo territorio. La violación constituirá causa de rescisión (art. 47, fracc. VIII, LFT).</div>`:''}
+  ${chk('com_redes')?`<div class="doc-clause-title">${numRomano(cn++)}. — Conducta en redes sociales</div><div class="doc-p">El COMISIONISTA se obliga a hacer un uso responsable de redes sociales y medios digitales en relación con su actividad comercial, evitando divulgar información confidencial del COMITENTE o realizar publicaciones que dañen su reputación o la de sus clientes.</div>`:''}
+
+  <div class="doc-clause-title">${numRomano(cn++)}. — Prestaciones de ley</div>
+  <div class="doc-p">El COMISIONISTA tendrá derecho a todas las prestaciones mínimas de ley: vacaciones (art. 76 LFT), prima vacacional del 25% (art. 80 LFT), aguinaldo equivalente a 15 días (art. 87 LFT) e inscripción al IMSS, INFONAVIT y AFORE desde el inicio de la relación. Para el cálculo de prestaciones se tomará el salario integrado conforme al artículo 84 de la LFT, incluyendo el promedio de comisiones percibidas.</div>
+
+  <div class="doc-clause-title">${numRomano(cn++)}. — Jurisdicción</div>
+  <div class="doc-p">Las partes se someten al Tribunal Laboral del domicilio del centro de trabajo para la resolución de cualquier controversia derivada del presente contrato.</div>
+
+  <div class="doc-p" style="margin-top:24px;">Firman en ${b(cf,'ciudad')}, el ${b(fmtFecha(ff),'fecha de firma')}.</div>
+
+  <div class="doc-firma-grid">
+    <div class="firma-box"><br><br>${empresa||'__________________________'}<br>${rep?rep+'<br>':''}<strong>EL COMITENTE</strong></div>
+    <div class="firma-box"><br><br>${trab||'__________________________'}<br><strong>EL COMISIONISTA</strong>${rfc_t?'<span style="font-size:9pt;color:#666;"> RFC: '+rfc_t+'</span>':''}</div>
+  </div>
+  <div class="doc-firma-grid" style="margin-top:32px;">
+    <div class="firma-box"><br><br>${t1||'__________________________'}<br><strong>TESTIGO 1</strong></div>
+    <div class="firma-box"><br><br>${t2||'__________________________'}<br><strong>TESTIGO 2</strong></div>
+  </div>
+  <div style="margin-top:32px;font-size:9pt;color:#888;font-family:var(--font-ui);border-top:1px solid #ddd;padding-top:10px;">Documento generado mediante plataforma de compliance laboral · Folio ${folio} · Arts. 285-289 LFT</div>`;
+
+  html += generarFooterDoc({...getDatosMembrete(), folio});
+  return html;
+}
+
+function renderAsimilados(){
+  const empresa=v('empresa'),rfc_p=v('rfc_patron'),dom_emp=v('domicilio_empresa'),rep=v('rep_legal');
+  const trab=v('trabajador'),rfc_t=v('rfc_trab'),curp=v('curp'),dom_t=v('domicilio_trab');
+  const tipoAsim=v('tipo_asimilado'),puesto=v('puesto_asim'),servicios=v('servicios_asim');
+  const honorario=v('honorario'),period=v('period_asim'),vigAsim=v('vigencia_asim');
+  const fiA=v('fecha_inicio_asim'),ffA=v('fecha_fin_asim'),isr=v('retencion_isr')||'35';
+  const cf=v('ciudad_firma'),ff=v('fecha_firma'),t1=v('testigo1'),t2=v('testigo2');
+
+  const folio=`CAS-${new Date().getFullYear()}-${Math.floor(Math.random()*10000).toString().padStart(4,'0')}`;
+  const tipoTextos={
+    directivos:'Directivo, gerente y administrador de la empresa',
+    comisarios:'Comisario / miembro del Consejo de Administración o Vigilancia',
+    honorarios_asim:'Persona física prestadora de servicios a persona moral de la que es socio o accionista',
+    actividades_empresariales:'Persona física con actividades empresariales en régimen de copropiedad'
+  };
+  let cn=1;
+
+  let html=generarMembrete({...getDatosMembrete(), empresa, rfc:rfc_p, domicilio:dom_emp, folio}) + `
+  <div class="doc-title">Contrato de Prestación de Servicios<br>con Ingresos Asimilados a Salarios</div>
+  <div class="doc-subtitle">Artículo 94 de la Ley del Impuesto sobre la Renta</div>
+
+  <div style="background:#fff8e1;border:1px solid #c8830a;border-radius:4px;padding:12px 16px;margin-bottom:20px;font-size:10pt;font-family:var(--font-ui);color:#7a5c00;line-height:1.6;"><strong>Aviso importante:</strong> El presente instrumento NO constituye una relación laboral. Los ingresos derivados de este contrato se asimilan a salarios exclusivamente para efectos fiscales (art. 94 LISR). No generan prestaciones laborales bajo la LFT ni obligaciones patronales ante el IMSS, salvo las que expresamente establezca la ley para los supuestos específicos del artículo 94 LISR.</div>
+
+  <div class="doc-p">En ${b(cf,'ciudad')}, el ${b(fmtFecha(ff),'fecha')}, comparecen: ${b(empresa,'empresa')}, representada por ${b(rep,'representante')}, con domicilio en ${b(dom_emp,'domicilio')}, como <strong>PAGADOR</strong>; y el (la) C. ${b(trab,'nombre')}, RFC ${b(rfc_t,'RFC')}${curp?', CURP '+b(curp,'CURP'):''}, domicilio ${b(dom_t,'domicilio')}, en su calidad de <strong>${tipoTextos[tipoAsim]||'PRESTADOR'}</strong>, de conformidad con el artículo 94, fracción ${tipoAsim==='directivos'?'II':tipoAsim==='comisarios'?'III':tipoAsim==='honorarios_asim'?'IV':'V'}, de la Ley del Impuesto sobre la Renta. Ambas partes celebran el presente contrato conforme a las siguientes:</div>
+
+  <div class="doc-clause-title">${numRomano(cn++)}. — Objeto</div>
+  <div class="doc-p">El PRESTADOR desempeñará el cargo de ${b(puesto,'puesto o cargo')}${servicios?', realizando las siguientes funciones: '+servicios:''}, en beneficio del PAGADOR. Se deja constancia expresa de que la presente relación es de naturaleza civil / mercantil y no laboral, en atención a que los ingresos percibidos se ubican en el supuesto del artículo 94, fracción correspondiente, de la LISR.</div>
+
+  <div class="doc-clause-title">${numRomano(cn++)}. — Vigencia</div>
+  <div class="doc-p">El presente contrato ${vigAsim==='determinada'?'tendrá vigencia del '+b(fmtFecha(fiA),'fecha inicio')+' al '+b(fmtFecha(ffA),'fecha término'):'inicia el '+b(fmtFecha(fiA),'fecha inicio')+' y continuará vigente por tiempo indefinido'}, pudiendo darse por terminado por cualquiera de las partes mediante aviso por escrito con 30 días de anticipación.</div>
+
+  <div class="doc-clause-title">${numRomano(cn++)}. — Remuneración y retención de ISR</div>
+  <div class="doc-p">El PAGADOR cubrirá al PRESTADOR la cantidad de ${b(fmtMXN(honorario),'monto')} de forma ${b(period==='por_sesion'?'por sesión o reunión':period,'periodicidad')}. El PAGADOR efectuará la retención de ISR aplicando la tarifa del artículo 96 de la LISR, sin exceder el ${isr}%, y enterará dicha retención a la autoridad fiscal en términos del artículo 99 de la LISR. El PRESTADOR recibirá el CFDI de nómina correspondiente en términos del artículo 94 de la LISR.</div>
+
+  <div class="doc-clause-title">${numRomano(cn++)}. — Independencia y autonomía</div>
+  <div class="doc-p">El PRESTADOR desempeñará sus funciones con plena independencia técnica y metodológica, sin que medie relación de subordinación respecto del PAGADOR. No existirá jornada de trabajo fija, exclusividad, ni control de asistencia, salvo los casos en que la naturaleza del cargo o la legislación aplicable lo requieran.</div>
+
+  ${chk('asim_confidencial')?`<div class="doc-clause-title">${numRomano(cn++)}. — Confidencialidad</div><div class="doc-p">El PRESTADOR guardará confidencialidad sobre la información del PAGADOR, sus socios, clientes y estrategias, durante y con posterioridad a la vigencia del contrato.</div>`:''}
+  ${chk('asim_no_competencia')?`<div class="doc-clause-title">${numRomano(cn++)}. — No competencia</div><div class="doc-p">Durante la vigencia del contrato, el PRESTADOR no prestará servicios similares a empresas que sean competencia directa del PAGADOR, sin su autorización escrita previa.</div>`:''}
+  ${chk('asim_propiedad_int')?`<div class="doc-clause-title">${numRomano(cn++)}. — Propiedad intelectual</div><div class="doc-p">Los trabajos, desarrollos, informes y resultados producidos por el PRESTADOR en el marco del presente contrato serán propiedad del PAGADOR, quien podrá explotarlos libremente, sin que el PRESTADOR reclame derechos adicionales a la remuneración pactada.</div>`:''}
+  ${chk('asim_redes')?`<div class="doc-clause-title">${numRomano(cn++)}. — Conducta en redes sociales</div><div class="doc-p">El PRESTADOR se obliga a hacer un uso responsable de redes sociales y medios digitales, evitando divulgar información confidencial del PAGADOR o realizar publicaciones que dañen su reputación.</div>`:''}
+
+  <div class="doc-clause-title">${numRomano(cn++)}. — Disposiciones fiscales</div>
+  <div class="doc-p">El PRESTADOR declara conocer que los ingresos percibidos por este contrato se acumulan a sus demás ingresos para efectos de la declaración anual del ISR, y que es su responsabilidad presentarla en los términos de los artículos 150 y siguientes de la LISR. El PAGADOR expedirá los CFDI de nómina correspondientes a más tardar el último día del mes en que se realice el pago.</div>
+
+  <div class="doc-clause-title">${numRomano(cn++)}. — Jurisdicción</div>
+  <div class="doc-p">Para la interpretación y cumplimiento del presente instrumento, las partes se someten a la jurisdicción de los Tribunales civiles del domicilio del PAGADOR, renunciando a cualquier otro fuero.</div>
+
+  <div class="doc-p" style="margin-top:24px;">Firman en ${b(cf,'ciudad')}, el ${b(fmtFecha(ff),'fecha de firma')}.</div>
+
+  <div class="doc-firma-grid">
+    <div class="firma-box"><br><br>${empresa||'__________________________'}<br>${rep?rep+'<br>':''}<strong>EL PAGADOR</strong></div>
+    <div class="firma-box"><br><br>${trab||'__________________________'}<br><strong>EL PRESTADOR</strong>${rfc_t?'<span style="font-size:9pt;color:#666;"> RFC: '+rfc_t+'</span>':''}</div>
+  </div>
+  <div class="doc-firma-grid" style="margin-top:32px;">
+    <div class="firma-box"><br><br>${t1||'__________________________'}<br><strong>TESTIGO 1</strong></div>
+    <div class="firma-box"><br><br>${t2||'__________________________'}<br><strong>TESTIGO 2</strong></div>
+  </div>
+  <div style="margin-top:32px;font-size:9pt;color:#888;font-family:var(--font-ui);border-top:1px solid #ddd;padding-top:10px;">Documento generado mediante plataforma de compliance laboral · Folio ${folio} · Art. 94 LISR</div>`;
+
+  html += generarFooterDoc({...getDatosMembrete(), folio});
+  return html;
+}
+
+function render(){
+  const empresa=v('empresa'),trab=v('trabajador');
+  // Mostrar preview aunque falten datos (los campos vacíos se marcan en rojo)
+  const _htmlFinal=(tipo==='com'?renderComisionista():renderAsimilados()); document.getElementById('doc-preview').innerHTML=_htmlFinal;
+}
+
+// ── INIT ──
+renderPanelMembrete('mem-logo-container');
+(async()=>{
+  try{
+    const _sb = supabase.createClient(
+      'https://hpzgqaplrywwjuvrzhcp.supabase.co',
+      'sb_publishable_1g8US8iFJ8CxnSaF_4MHgA_gqyyAr3W'
+    );
+    await precargarMembreteDesdePortal(_sb);
+  }catch(e){}
+})();
+setTipo('com');
+render();
+</script>
+<script src="edicion-libre.js?v=4.6"></script>
+
+
+
+
+</body>
+</html>

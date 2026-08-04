@@ -1,0 +1,617 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<script>
+(function(){
+  var params=new URLSearchParams(window.location.search);
+  var modo=params.get('editar')==='1'?'editar':params.get('recuperar')==='1'?'ver':null;
+  if(!modo) return;
+  var gen=window.location.pathname.split('/').pop();
+  var key=(modo==='editar'?'doc_editar_':'doc_recuperado_')+gen.replace('.html','');
+  var g=null; try{g=JSON.parse(localStorage.getItem(key)||'null');}catch(e){}
+  if(!g||!g.html) return;
+  // Bloquear render() para no sobreescribir el contenido
+  var _bloqueado=false,_orig=null;
+  function bloquear(){
+    if(typeof window.render==='function'&&!_bloqueado){
+      _orig=window.render; window.render=function(){}; _bloqueado=true;
+    }
+  }
+  bloquear(); var _iv=setInterval(bloquear,50);
+  function inyectar(){
+    var pr=document.getElementById('doc-preview');
+    if(!pr){setTimeout(inyectar,80);return;}
+    clearInterval(_iv); bloquear();
+    pr.innerHTML=g.html;
+    // En modo editar: activar contenteditable automáticamente
+    if(modo==='editar'){
+      pr.contentEditable='true';
+      pr.style.outline='2px dashed #0f766e';
+      pr.style.cursor='text';
+    }
+    // Banner
+    var b=document.createElement('div');
+    b.id='banner-doc';
+    b.style.cssText='position:sticky;top:0;z-index:200;background:'+(modo==='editar'?'#f0fdf4':'#eff6ff')+';border-bottom:2px solid '+(modo==='editar'?'#86efac':'#93c5fd')+';padding:10px 16px;font-size:12px;color:'+(modo==='editar'?'#166534':'#1e40af')+';display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap;';
+    var etiq=modo==='editar'?'✏️ Modo edición — edita el documento directamente':'📄 Documento guardado';
+    var sp=document.createElement('span');
+    sp.innerHTML='<strong>'+etiq+'</strong> — '+(g.nombre||'')+' · '+(g.fecha||'');
+    var bt=document.createElement('button');
+    bt.textContent=modo==='editar'?'🔄 Restaurar campos':'✏️ Editar';
+    bt.style.cssText='border:1px solid currentColor;background:transparent;color:inherit;padding:4px 12px;border-radius:6px;font-size:11px;cursor:pointer;white-space:nowrap;';
+    bt.onclick=function(){
+      _bloqueado=false;
+      pr.contentEditable='false';
+      pr.style.outline=''; pr.style.cursor='';
+      if(_orig) window.render=_orig;
+      var bel=document.getElementById('banner-doc');
+      if(bel) bel.remove();
+      localStorage.removeItem(key);
+      if(typeof window.render==='function') window.render();
+    };
+    b.appendChild(sp); b.appendChild(bt);
+    pr.insertBefore(b,pr.firstChild);
+    localStorage.removeItem(key);
+  }
+  document.readyState==='loading'?document.addEventListener('DOMContentLoaded',inyectar):inyectar();
+})();
+</script>
+
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Generador · Acta Administrativa</title>
+<style>
+  :root{--ink:#1a1a18;--ink2:#4a4a46;--ink3:#8a8a84;--surface:#f7f6f2;--white:#ffffff;--accent:#1a3a5c;--accent2:#e8f0f8;--border:#ddddd6;--danger:#c0392b;--warning:#c8830a;--success:#1a6b3a;--radius:6px;--font-ui:'Segoe UI',system-ui,sans-serif;--font-doc:'Times New Roman',Georgia,serif;}
+  *{box-sizing:border-box;margin:0;padding:0;}
+  body{font-family:var(--font-ui);background:var(--surface);color:var(--ink);min-height:100vh;font-size:14px;}
+  header{background:var(--accent);color:#fff;padding:14px 28px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:100;box-shadow:0 1px 4px rgba(0,0,0,.18);}
+  header h1{font-size:15px;font-weight:600;}header span{font-size:12px;opacity:.7;}
+  .header-actions{display:flex;gap:10px;}
+  .btn{padding:7px 18px;border-radius:var(--radius);font-size:13px;font-weight:500;cursor:pointer;border:1px solid transparent;transition:background .15s;}
+  .btn-outline{background:transparent;border-color:rgba(255,255,255,.45);color:#fff;}.btn-outline:hover{background:rgba(255,255,255,.12);}
+  .btn-primary{background:#fff;color:var(--accent);}.btn-primary:hover{opacity:.88;}
+  .workspace{display:grid;grid-template-columns:400px 1fr;height:calc(100vh - 52px);}
+  .form-panel{background:var(--white);border-right:1px solid var(--border);overflow-y:auto;padding:24px 24px 40px;}
+  .section-label{font-size:10px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:var(--accent);padding:20px 0 10px;border-bottom:1px solid var(--border);margin-bottom:14px;}
+  .section-label:first-child{padding-top:4px;}
+  .field{margin-bottom:13px;}
+  .field label{display:block;font-size:12px;font-weight:500;color:var(--ink2);margin-bottom:4px;}
+  .field label .req{color:var(--danger);margin-left:2px;}
+  .field input,.field select,.field textarea{width:100%;padding:8px 10px;border:1px solid var(--border);border-radius:var(--radius);font-size:13px;font-family:var(--font-ui);color:var(--ink);background:var(--white);}
+  .field input:focus,.field select:focus,.field textarea:focus{outline:none;border-color:var(--accent);box-shadow:0 0 0 3px var(--accent2);}
+  .field textarea{resize:vertical;min-height:80px;}
+  .field-row{display:grid;grid-template-columns:1fr 1fr;gap:10px;}
+  .field-row3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;}
+  .hint{font-size:11px;color:var(--ink3);margin-top:3px;}
+
+  /* Tipo de acta tabs */
+  .tipo-tabs{display:grid;grid-template-columns:1fr 1fr 1fr;gap:0;border:1px solid var(--border);border-radius:var(--radius);overflow:hidden;margin-bottom:16px;}
+  .tipo-tab{padding:10px 6px;text-align:center;font-size:12px;font-weight:500;cursor:pointer;background:var(--white);color:var(--ink2);border:none;transition:all .15s;line-height:1.3;}
+  .tipo-tab:not(:last-child){border-right:1px solid var(--border);}
+  .tipo-tab.active-aperc{background:#fff8e1;color:#7a5c00;border-bottom:2px solid #c8830a;}
+  .tipo-tab.active-susp{background:#e8f0ff;color:#1a2f7a;border-bottom:2px solid #3a5fc0;}
+  .tipo-tab.active-resc{background:#fdecea;color:#7a1a1a;border-bottom:2px solid #c0392b;}
+
+  .alert-aperc{background:#fff8e1;border:1px solid #f0c040;border-radius:var(--radius);padding:10px 14px;font-size:12px;color:#7a5c00;margin-bottom:14px;line-height:1.5;}
+  .alert-susp{background:#e8f0ff;border:1px solid #90a8f0;border-radius:var(--radius);padding:10px 14px;font-size:12px;color:#1a2f7a;margin-bottom:14px;line-height:1.5;}
+  .alert-resc{background:#fdecea;border:1px solid #f0a0a0;border-radius:var(--radius);padding:10px 14px;font-size:12px;color:#7a1a1a;margin-bottom:14px;line-height:1.5;}
+
+  .clause-check{display:flex;align-items:flex-start;gap:8px;margin-bottom:8px;}
+  .clause-check input[type=checkbox]{margin-top:2px;accent-color:var(--accent);}
+  .clause-check label{font-size:12px;color:var(--ink2);cursor:pointer;line-height:1.4;}
+  .falta-grid{display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-bottom:8px;}
+  .falta-opt{padding:6px 10px;border:1px solid var(--border);border-radius:var(--radius);font-size:11px;cursor:pointer;color:var(--ink2);transition:all .15s;line-height:1.3;}
+  .falta-opt.active{background:var(--accent);border-color:var(--accent);color:#fff;}
+
+  .preview-panel{background:#e8e7e0;overflow-y:auto;padding:32px 40px;display:flex;flex-direction:column;align-items:center;}
+  .doc-sheet{background:var(--white);width:100%;max-width:760px;min-height:1060px;padding:72px 80px;box-shadow:0 2px 16px rgba(0,0,0,.12);font-family:var(--font-doc);font-size:12pt;line-height:1.75;color:#111;}
+  
+  .doc-logo-empresa{font-size:14pt;font-weight:bold;font-family:var(--font-ui);max-width:340px;}
+  .doc-logo-empresa.aperc{color:#7a5c00;border-bottom:2px solid #c8830a;}
+  .doc-logo-empresa.susp{color:#1a2f7a;border-bottom:2px solid #3a5fc0;}
+  .doc-logo-empresa.resc{color:#7a1a1a;border-bottom:2px solid #c0392b;}
+  .doc-folio{font-size:9pt;color:var(--ink3);font-family:var(--font-ui);text-align:right;line-height:1.4;}
+  .doc-title{text-align:center;font-size:13pt;font-weight:bold;text-transform:uppercase;letter-spacing:.04em;margin-bottom:4px;}
+  .doc-title.aperc{color:#7a5c00;}
+  .doc-title.susp{color:#1a2f7a;}
+  .doc-title.resc{color:#7a1a1a;}
+  .doc-badge{display:inline-block;padding:3px 14px;border-radius:20px;font-size:9pt;font-family:var(--font-ui);margin:0 auto 24px;text-align:center;}
+  .doc-badge.aperc{background:#fff8e1;color:#7a5c00;border:1px solid #c8830a;}
+  .doc-badge.susp{background:#e8f0ff;color:#1a2f7a;border:1px solid #3a5fc0;}
+  .doc-badge.resc{background:#fdecea;color:#7a1a1a;border:1px solid #c0392b;}
+  .doc-p{margin-bottom:14px;text-align:justify;}
+  .doc-p .blank{font-weight:bold;color:var(--accent);border-bottom:1px solid var(--accent);padding:0 2px;}
+  .doc-p .blank.empty{color:#c0392b;border-bottom-color:#c0392b;font-style:italic;font-weight:normal;}
+  .doc-clause-title{font-weight:bold;text-transform:uppercase;font-size:10.5pt;margin:22px 0 8px;}
+  .hechos-box{background:#fafafa;border:1px solid #e0e0e0;border-left:3px solid #888;padding:14px 18px;margin:14px 0;font-size:11pt;line-height:1.7;}
+  .firma-grid-3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:24px;margin-top:48px;}
+  .firma-grid-2{display:grid;grid-template-columns:1fr 1fr;gap:40px;margin-top:32px;}
+  .firma-box{border-top:1px solid #888;padding-top:8px;font-size:10pt;text-align:center;line-height:1.5;}
+  .firma-box strong{display:block;font-size:9pt;color:var(--ink3);font-family:var(--font-ui);}
+  .watermark-empty{text-align:center;color:var(--ink3);font-family:var(--font-ui);font-size:13px;padding:80px 0;}
+  @media print{header,.form-panel{display:none!important;}.workspace{display:block;height:auto;}.preview-panel{padding:0;background:white;}.doc-sheet{box-shadow:none;max-width:100%;padding:40px;}body{background:white;}}
+
+#auth-gate-loading{position:fixed;inset:0;background:#fff;z-index:9999;display:flex;align-items:center;justify-content:center;font-family:'Segoe UI',system-ui,sans-serif;color:#999;font-size:13px;}
+#auth-gate-blocked{position:fixed;inset:0;background:#0f2640;z-index:9999;display:none;align-items:center;justify-content:center;padding:24px;}
+#auth-gate-blocked .agb-box{background:#fff;border-radius:16px;padding:40px 36px;max-width:420px;text-align:center;font-family:'Segoe UI',system-ui,sans-serif;}
+#auth-gate-blocked .agb-box h2{font-size:18px;margin-bottom:10px;color:#0f2640;}
+#auth-gate-blocked .agb-box p{font-size:13px;color:#666;margin-bottom:20px;line-height:1.6;}
+#auth-gate-blocked .agb-btns{display:flex;gap:10px;justify-content:center;flex-wrap:wrap;}
+#auth-gate-blocked .agb-btns a{padding:10px 18px;border-radius:8px;font-size:13px;font-weight:600;text-decoration:none;}
+#auth-gate-blocked .agb-btns a.agb-primary{background:#1a3a5c;color:#fff;}
+#auth-gate-blocked .agb-btns a.agb-secondary{background:#f0f0ec;color:#1a3a5c;}
+body.modo-demo .doc-sheet{position:relative;user-select:none;-webkit-user-select:none;-moz-user-select:none;}
+body.modo-demo .doc-sheet::after{content:'MUESTRA — CUENTA DEMO, NO VÁLIDO PARA USO LEGAL';position:absolute;top:46%;left:-15%;right:-15%;text-align:center;font-size:26px;font-weight:900;color:rgba(220,38,38,.16);transform:rotate(-18deg);pointer-events:none;font-family:'Segoe UI',system-ui,sans-serif;z-index:50;}
+@media print{ body.modo-demo .doc-sheet::after{display:block!important;color:rgba(220,38,38,.35)!important;} }
+  .cl-nav-logo{display:flex;align-items:center;font-size:15px;font-weight:800;color:#fff;letter-spacing:-.01em;line-height:1;text-decoration:none;}
+  .cl-nav-logo .cl-laboral{color:#5eead4;font-weight:400;}
+
+/* Guía legal de faltas (módulo de actas guiadas) */
+.guia-faltas{background:#f0f7f5;border:1px solid #bfe0d8;border-left:3px solid #0d9488;border-radius:8px;padding:12px 14px;margin-bottom:14px;font-size:12.5px;}
+.guia-faltas .guia-head{font-weight:700;color:#0b5f57;margin-bottom:8px;}
+.guia-faltas .guia-row{padding:7px 0;border-top:1px solid #d7ebe6;}
+.guia-faltas .guia-row:first-of-type{border-top:none;}
+.guia-faltas .guia-falta{font-weight:700;color:#1a3a5c;}
+.guia-faltas .guia-map{color:#33484f;margin-top:2px;}
+.guia-faltas .guia-fr{display:inline-block;background:#0d9488;color:#fff;border-radius:4px;padding:1px 7px;font-weight:700;font-size:11px;}
+.guia-faltas .guia-fr-none{background:#94a3b8;}
+.guia-faltas .guia-tip{color:#6b5b00;background:#fffbe8;border-radius:5px;padding:5px 8px;margin-top:4px;font-size:11.5px;}
+.guia-faltas .guia-actions{display:flex;gap:8px;flex-wrap:wrap;margin-top:10px;}
+.guia-faltas .guia-btn{background:#0d9488;color:#fff;border:none;border-radius:6px;padding:7px 12px;font-size:11.5px;font-weight:600;cursor:pointer;}
+.guia-faltas .guia-btn:hover{background:#0b5f57;}
+.guia-faltas .guia-foot{font-size:10.5px;color:#7a8b91;margin-top:8px;}
+</style>
+<script src="membrete.js?v=3.7"></script>
+</head>
+<body>
+<div id="auth-gate-loading">Verificando acceso…</div>
+<div id="auth-gate-blocked">
+  <div class="agb-box">
+    <h2>🔒 Esta herramienta requiere una suscripción activa</h2>
+    <p>Inicie sesión desde su portal de cliente para usar este generador, o conozca nuestros planes si todavía no es cliente de ClickLaboral.mx.</p>
+    <div class="agb-btns">
+      <a class="agb-primary" href="portal-cliente.html">Iniciar sesión →</a>
+      <a class="agb-secondary" href="index.html#precios">Ver planes</a>
+    </div>
+  </div>
+</div>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
+<script src="expediente-helper.js?v=3.7"></script>
+<script>
+(async()=>{
+  const _sb = supabase.createClient('https://hpzgqaplrywwjuvrzhcp.supabase.co','sb_publishable_1g8US8iFJ8CxnSaF_4MHgA_gqyyAr3W');
+  try {
+    const { data } = await _sb.auth.getSession();
+    document.getElementById('auth-gate-loading').style.display = 'none';
+    if (!data?.session?.user) {
+      document.getElementById('auth-gate-blocked').style.display = 'flex';
+    }
+  } catch(e) {
+    document.getElementById('auth-gate-loading').style.display = 'none';
+    document.getElementById('auth-gate-blocked').style.display = 'flex';
+  }
+})();
+
+</script>
+
+<header>
+  <div class="cl-nav-logo" style="flex-shrink:0;"><svg width="26" height="26" viewBox="0 0 100 100" style="vertical-align:-7px;margin-right:6px;flex-shrink:0;">
+        <defs><linearGradient id="clGrad" x1="10" y1="10" x2="90" y2="95" gradientUnits="userSpaceOnUse">
+          <stop offset="0%" stop-color="#1a3a5c"/><stop offset="55%" stop-color="#1e6f6c"/><stop offset="100%" stop-color="#2dd4bf"/>
+        </linearGradient></defs>
+        <path d="M50 7 L83 20 V51 C83 73 68 87 50 95 C32 87 17 73 17 51 V20 Z" fill="none" stroke="url(#clGrad)" stroke-width="6" stroke-linejoin="round"/>
+        <circle cx="40" cy="38" r="8.5" fill="#5eead4"/>
+        <path d="M25 63 C25 51 31 45 40 45 C49 45 55 51 55 63 Z" fill="#5eead4"/>
+        <circle cx="55" cy="33" r="9.5" fill="#14b8a6"/>
+        <path d="M38 61 C38 48 45.5 41 55 41 C64.5 41 72 48 72 61 Z" fill="#14b8a6"/>
+        <path d="M29 61 L45 77 L78 40" fill="none" stroke="#e8f2fc" stroke-width="9" stroke-linecap="round" stroke-linejoin="round"/>
+      </svg>Click<span class="cl-laboral">Laboral.mx</span></div>
+  <div>
+    <h1>Generador de Actas Administrativas · ClickLaboral.mx</h1>
+    <span>Apercibimiento · Suspensión · Rescisión — LFT</span>
+  </div>
+  <div class="header-actions">
+    <button class="btn btn-outline" onclick="limpiar()">Limpiar</button>
+    <button class="btn btn-primary" onclick="window.print()">Imprimir / PDF</button>
+  </div>
+</header>
+<div class="workspace">
+  <div class="form-panel">
+    <!-- ── MEMBRETE DEL CLIENTE ── -->
+    <div style="border-bottom:1px solid var(--border);margin-bottom:0;">
+      <div class="section-label" style="display:flex;align-items:center;justify-content:space-between;cursor:pointer;user-select:none;"
+           onclick="this.nextElementSibling.style.display=this.nextElementSibling.style.display==='none'?'block':'none'">
+        <span>🏢 Logo y pie de página</span>
+        <span style="font-size:10px;font-weight:400;color:var(--ink3);">▲ clic para colapsar</span>
+      </div>
+      <div id="mem-panel-wrap" style="display:block;padding:12px 0 14px;">
+        <div id="mem-logo-container"></div>
+      </div>
+    </div>
+    <!-- ── / MEMBRETE ── -->
+    <div class="section-label">Tipo de acta</div>
+    <div class="tipo-tabs">
+      <div class="tipo-tab active-aperc" id="tab-aperc" onclick="setTipo('aperc')">⚠️ Apercibimiento</div>
+      <div class="tipo-tab" id="tab-susp" onclick="setTipo('susp')">⏸ Suspensión</div>
+      <div class="tipo-tab" id="tab-resc" onclick="setTipo('resc')">✖ Rescisión</div>
+    </div>
+    <div id="alert-box"></div>
+
+    <div class="section-label">Datos de la empresa (membrete)</div>
+    <div class="field"><label>Razón social <span class="req">*</span></label><input type="text" id="empresa" oninput="render()" placeholder="Comercializadora Norte, S.A. de C.V."></div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;">
+      <div class="field"><label>RFC</label><input type="text" id="mem-rfc-acta" oninput="render()" placeholder="EMP010101AAA"></div>
+      <div class="field"><label>Teléfono</label><input type="text" id="mem-tel-acta" oninput="render()" placeholder="33 1234 5678"></div>
+    </div>
+    <div class="field"><label>Domicilio del centro de trabajo</label><input type="text" id="domicilio_empresa" oninput="render()" placeholder="Calle, No., Colonia, Ciudad, Estado, C.P."></div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;">
+      <div class="field"><label>Email</label><input type="text" id="mem-email-acta" oninput="render()" placeholder="contacto@empresa.mx"></div>
+      <div class="field"><label>Sitio web</label><input type="text" id="mem-web-acta" oninput="render()" placeholder="www.empresa.mx"></div>
+    </div>
+    <div class="field"><label>Nombre del representante / jefe inmediato</label><input type="text" id="representante" oninput="render()" placeholder="Nombre completo y puesto"></div>
+
+    <div class="section-label">Datos del trabajador</div>
+    <div class="field"><label>Nombre completo <span class="req">*</span></label><input type="text" id="trabajador" oninput="render()" placeholder="Nombre(s) Apellido Paterno Apellido Materno"></div>
+    <div class="field-row">
+      <div class="field"><label>Puesto</label><input type="text" id="puesto" oninput="render()" placeholder="Puesto / cargo"></div>
+      <div class="field"><label>Departamento / área</label><input type="text" id="area" oninput="render()" placeholder="Área de adscripción"></div>
+    </div>
+    <div class="field-row">
+      <div class="field"><label>Antigüedad</label><input type="text" id="antiguedad" oninput="render()" placeholder="Ej. 2 años 3 meses"></div>
+      <div class="field"><label>No. de empleado</label><input type="text" id="num_empleado" oninput="render()" placeholder="Opcional"></div>
+    </div>
+
+    <div class="section-label">Hechos y conducta</div>
+    <div class="field">
+      <label>Tipo de falta <span class="req">*</span> (seleccione todas las que apliquen)</label>
+      <div class="falta-grid" id="falta-grid">
+        <div class="falta-opt" onclick="toggleFalta(this)">Inasistencia injustificada</div>
+        <div class="falta-opt" onclick="toggleFalta(this)">Impuntualidad reiterada</div>
+        <div class="falta-opt" onclick="toggleFalta(this)">Desobediencia a órdenes</div>
+        <div class="falta-opt" onclick="toggleFalta(this)">Mal trato a compañeros</div>
+        <div class="falta-opt" onclick="toggleFalta(this)">Daño a bienes de la empresa</div>
+        <div class="falta-opt" onclick="toggleFalta(this)">Incumplimiento de funciones</div>
+        <div class="falta-opt" onclick="toggleFalta(this)">Violación al reglamento</div>
+        <div class="falta-opt" onclick="toggleFalta(this)">Uso indebido de recursos</div>
+        <div class="falta-opt" onclick="toggleFalta(this)">Presentarse en estado inconveniente</div>
+        <div class="falta-opt" onclick="toggleFalta(this)">Acoso / hostigamiento</div>
+        <div class="falta-opt" onclick="toggleFalta(this)">Revelación de información confidencial</div>
+        <div class="falta-opt" onclick="toggleFalta(this)">Robo / fraude</div>
+      </div>
+    </div>
+    <div id="guia-faltas" class="guia-faltas" style="display:none;"></div>
+    <div class="field"><label>Descripción detallada de los hechos <span class="req">*</span></label><textarea id="hechos" oninput="render()" placeholder="Describa con precisión: fecha(s), hora(s), lugar, testigos, circunstancias, evidencia disponible. Ejemplo: El día 10 de enero de 2025 a las 09:30 horas, el trabajador se presentó al área de producción con aliento alcohólico, siendo notificado por el supervisor Sr. Juan García, quien solicitó que se retirara a descansar. Esta conducta se repite por tercera ocasión en el mes."></textarea></div>
+    <div class="field-row">
+      <div class="field"><label>Fecha de los hechos <span class="req">*</span></label><input type="date" id="fecha_hechos" oninput="render()"></div>
+      <div class="field"><label>Hora aproximada</label><input type="time" id="hora_hechos" oninput="render()"></div>
+    </div>
+    <div class="field"><label>Artículo(s) del Reglamento Interior violado(s)</label><input type="text" id="art_reglamento" oninput="render()" placeholder="Ej. Art. 15, fracción III del Reglamento Interior de Trabajo"></div>
+
+    <div id="seccion-suspension" style="display:none">
+      <div class="section-label">Configuración de la suspensión</div>
+      <div class="field-row">
+        <div class="field"><label>Días de suspensión <span class="req">*</span></label><input type="number" id="dias_suspension" oninput="calcSusp()" min="1" max="8" placeholder="1–8 días"><div class="hint">Máx. 8 días por falta — art. 110 fracc. I LFT</div></div>
+        <div class="field"><label>Fecha inicio suspensión</label><input type="date" id="fecha_susp_inicio" oninput="calcSusp()"></div>
+      </div>
+      <div class="field"><label>Fecha término suspensión (calculada)</label><input type="date" id="fecha_susp_fin" readonly style="background:#f5f5f0;"></div>
+    </div>
+
+    <div id="seccion-rescision" style="display:none">
+      <div class="section-label">Configuración de la rescisión</div>
+      <div class="field"><label>Fracción del art. 47 LFT aplicable <span class="req">*</span></label>
+        <select id="fraccion_47" onchange="render()">
+          <option value="">Seleccione la causal...</option>
+          <option value="I">Fracc. I — Engaño con certificados o referencias falsas</option>
+          <option value="II">Fracc. II — Faltas de probidad/honradez, violencia, injurias o malos tratos contra el patrón, familiares, personal, clientes o proveedores</option>
+          <option value="III">Fracc. III — Violencia o injurias contra compañeros que altere la disciplina</option>
+          <option value="IV">Fracc. IV — Los actos de la fracc. II fuera del servicio, si son graves</option>
+          <option value="V">Fracc. V — Ocasionar intencionalmente daños materiales</option>
+          <option value="VI">Fracc. VI — Daños materiales graves por negligencia (sin dolo)</option>
+          <option value="VII">Fracc. VII — Comprometer la seguridad por imprudencia o descuido inexcusable</option>
+          <option value="VIII">Fracc. VIII — Actos inmorales u hostigamiento y/o acoso sexual</option>
+          <option value="IX">Fracc. IX — Revelar secretos de fabricación o asuntos reservados</option>
+          <option value="X">Fracc. X — Más de 3 faltas de asistencia en 30 días</option>
+          <option value="XI">Fracc. XI — Desobedecer al patrón sin causa justificada (trabajo contratado)</option>
+          <option value="XII">Fracc. XII — Negarse a medidas preventivas o procedimientos de seguridad</option>
+          <option value="XIII">Fracc. XIII — Concurrir en estado de embriaguez o bajo influencia de enervantes</option>
+          <option value="XIV">Fracc. XIV — Sentencia ejecutoriada de prisión que impida el trabajo</option>
+          <option value="XIV Bis">Fracc. XIV Bis — Falta de documentos migratorios exigidos por ley</option>
+          <option value="XV">Fracc. XV — Análogas de igual gravedad</option>
+        </select>
+      </div>
+      <div class="field"><label>Fecha efectiva de la rescisión <span class="req">*</span></label><input type="date" id="fecha_rescision" oninput="render()"></div>
+      <div class="field"><label>¿Se ofrecen prestaciones proporcionales?</label>
+        <select id="prestaciones_resc" onchange="render()">
+          <option value="no">No — rescisión sin responsabilidad para el patrón</option>
+          <option value="si">Sí — se cubrirán partes proporcionales (buenas prácticas)</option>
+        </select>
+      </div>
+    </div>
+
+    <div class="section-label">Defensa y descargo del trabajador</div>
+    <div class="field"><label>¿Se concedió al trabajador oportunidad de dar explicaciones?</label>
+      <select id="descargo" onchange="render()">
+        <option value="si">Sí — el trabajador fue escuchado</option>
+        <option value="no_quiso">El trabajador se negó a declarar</option>
+        <option value="no_presente">El trabajador no estuvo presente</option>
+      </select>
+    </div>
+    <div class="field"><label>Manifestación / descargo del trabajador</label><textarea id="manifestacion" oninput="render()" placeholder="Transcriba lo que manifestó el trabajador, o deje en blanco si se negó a declarar..."></textarea></div>
+    <div class="field"><label>¿Es trabajador sindicalizado?</label>
+      <select id="sindicalizado" onchange="render()">
+        <option value="no">No</option>
+        <option value="si">Sí — se notificó al sindicato</option>
+      </select>
+    </div>
+
+    <div class="section-label">Testigos del acta</div>
+    <div class="field-row">
+      <div class="field"><label>Testigo 1 (nombre y puesto)</label><input type="text" id="testigo1" oninput="render()" placeholder="Nombre — Puesto"></div>
+      <div class="field"><label>Testigo 2 (nombre y puesto)</label><input type="text" id="testigo2" oninput="render()" placeholder="Nombre — Puesto"></div>
+    </div>
+
+    <div class="section-label">Fecha y lugar del acta</div>
+    <div class="field-row">
+      <div class="field"><label>Ciudad <span class="req">*</span></label><input type="text" id="ciudad_firma" oninput="render()" placeholder="Ciudad, Estado"></div>
+      <div class="field"><label>Fecha del acta <span class="req">*</span></label><input type="date" id="fecha_acta" oninput="render()"></div>
+    </div>
+    <div class="field"><label>Hora del acta</label><input type="time" id="hora_acta" oninput="render()"></div>
+
+    <div class="section-label">Antecedentes disciplinarios</div>
+    <div class="clause-check"><input type="checkbox" id="tiene_antecedentes" onchange="render()"><label for="tiene_antecedentes">El trabajador tiene actas previas (reincidencia)</label></div>
+    <div class="field" id="campo_antecedentes" style="display:none"><label>Descripción de antecedentes</label><textarea id="antecedentes" oninput="render()" placeholder="Ej. Acta de apercibimiento del 15/01/2025 por inasistencia injustificada..."></textarea></div>
+  </div>
+
+  <div class="preview-panel">
+    <div class="doc-sheet" id="doc-preview">
+      <div class="watermark-empty">Seleccione el tipo de acta y complete los datos para generar el documento.</div>
+    </div>
+  </div>
+</div>
+
+<script>
+let tipoActa = 'aperc';
+const faltas = new Set();
+
+function v(id){return(document.getElementById(id)||{}).value||'';}
+function chk(id){return document.getElementById(id)?.checked||false;}
+function b(txt,fb){if(!txt||!txt.trim())return`<span class="blank empty">[${fb}]</span>`;return`<span class="blank">${txt}</span>`;}
+function fmtFecha(iso){if(!iso)return'';const[y,m,d]=iso.split('-');const M=['enero','febrero','marzo','abril','mayo','junio','julio','agosto','septiembre','octubre','noviembre','diciembre'];return`${parseInt(d)} de ${M[parseInt(m)-1]} de ${y}`;}
+
+function setTipo(tipo){
+  tipoActa=tipo;
+  ['aperc','susp','resc'].forEach(t=>{
+    const tab=document.getElementById('tab-'+t);
+    tab.className='tipo-tab'+(t===tipo?' active-'+t:'');
+  });
+  document.getElementById('seccion-suspension').style.display=tipo==='susp'?'':'none';
+  document.getElementById('seccion-rescision').style.display=tipo==='resc'?'':'none';
+  const alertas={
+    aperc:'⚠️ <strong>Apercibimiento:</strong> Primera sanción formal. Queda en expediente del trabajador. Sirve como antecedente para futuras medidas disciplinarias. No implica descuento de salario.',
+    susp:'⏸ <strong>Suspensión:</strong> Sin goce de salario, máx. 8 días por falta (art. 110 fracc. I LFT). Debe guardar proporcionalidad con la falta. Recomendable agotar apercibimiento previo.',
+    resc:'✖ <strong>Rescisión:</strong> Termina la relación sin responsabilidad para el patrón cuando se actualiza causal del art. 47 LFT. Notificar por escrito dentro de los <strong>30 días naturales</strong> siguientes a que el patrón tuvo conocimiento de la falta (art. 517 LFT).'
+  };
+  const clases={aperc:'alert-aperc',susp:'alert-susp',resc:'alert-resc'};
+  document.getElementById('alert-box').innerHTML=`<div class="${clases[tipo]}">${alertas[tipo]}</div>`;
+  render();
+  actualizarGuiaFaltas();
+}
+
+const FRACC47_DESC={I:'Engaño con certificados o referencias falsas',II:'Faltas de probidad/honradez, violencia, injurias o malos tratos contra el patrón, familiares, personal, clientes o proveedores',III:'Violencia o injurias contra compañeros que alteren la disciplina',IV:'Los actos de la fracc. II fuera del servicio, si son graves',V:'Ocasionar intencionalmente daños materiales',VI:'Daños materiales graves por negligencia sin dolo',VII:'Comprometer la seguridad por imprudencia o descuido inexcusable',VIII:'Actos inmorales u hostigamiento y/o acoso sexual',IX:'Revelar secretos de fabricación o asuntos reservados',X:'Más de 3 faltas de asistencia en 30 días',XI:'Desobedecer al patrón sin causa justificada',XII:'Negarse a medidas preventivas o procedimientos de seguridad',XIII:'Concurrir en estado de embriaguez o bajo influencia de enervantes',XIV:'Sentencia ejecutoriada de prisión que impida el trabajo','XIV Bis':'Falta de documentos migratorios exigidos por ley',XV:'Análogas de igual gravedad'};
+const CATALOGO_FALTAS={
+ 'Inasistencia injustificada':{fracc:'X',tip:'1–2 faltas: apercibimiento. Más de 3 en 30 días: rescisión por fracc. X.',hechos:'El/los día(s) [fecha(s)] el trabajador no se presentó a laborar sin permiso previo ni causa justificada. Constituye la [número] inasistencia injustificada dentro de un periodo de 30 días.'},
+ 'Impuntualidad reiterada':{fracc:'',tip:'No es causal directa del art. 47; se sanciona por el Reglamento Interior (apercibimiento → suspensión).',hechos:'El día [fecha] el trabajador ingresó a las [hora], con [min] minutos de retraso respecto a su horario de entrada. Es la [número] impuntualidad registrada en el mes.'},
+ 'Desobediencia a órdenes':{fracc:'XI',tip:'Rescisión por fracc. XI si es sin causa justificada y sobre el trabajo contratado.',hechos:'El día [fecha] el trabajador desobedeció, sin causa justificada, la instrucción de [describir la orden] girada por [nombre/puesto], relativa al trabajo para el que fue contratado.'},
+ 'Mal trato a compañeros':{fracc:'III',tip:'Rescisión por fracc. III cuando altera la disciplina del centro de trabajo.',hechos:'El día [fecha] el trabajador incurrió en actos de violencia/injurias/malos tratos contra su compañero [nombre], alterando la disciplina del área de [área].'},
+ 'Daño a bienes de la empresa':{fracc:'V',tip:'Elija según la intención: fracc. V si el daño fue intencional; fracc. VI si fue por negligencia grave sin dolo.',hechos:'El día [fecha] el trabajador ocasionó daños a [bien/maquinaria/equipo], consistentes en [describir]. El daño se produjo de manera [intencional / por negligencia grave].'},
+ 'Incumplimiento de funciones':{fracc:'',tip:'Se sanciona por el Reglamento Interior; reiterado y grave puede encuadrar en fracc. XV (análogas).',hechos:'El día [fecha] el trabajador incumplió las funciones inherentes a su puesto de [puesto], consistentes en [describir la obligación incumplida].'},
+ 'Violación al reglamento':{fracc:'XII',tip:'Depende de la regla: si es de seguridad → fracc. XII; otras → apercibimiento/suspensión por Reglamento Interior.',hechos:'El día [fecha] el trabajador violó el [Art. __] del Reglamento Interior de Trabajo, al [describir la conducta].'},
+ 'Uso indebido de recursos':{fracc:'II',tip:'Si implica deshonestidad, encuadra en fracc. II (faltas de probidad u honradez); si es menor, se sanciona por Reglamento.',hechos:'El día [fecha] el trabajador utilizó indebidamente [recurso/herramienta/vehículo/fondos] de la empresa para [describir], sin autorización.'},
+ 'Presentarse en estado inconveniente':{fracc:'XIII',tip:'Rescisión por fracc. XIII (embriaguez o influencia de narcótico/enervante), salvo prescripción médica avisada.',hechos:'El día [fecha] a las [hora] el trabajador se presentó a laborar en aparente estado de embriaguez / bajo la influencia de [sustancia], siendo advertido por [nombre/puesto].'},
+ 'Acoso / hostigamiento':{fracc:'VIII',tip:'Rescisión por fracc. VIII (actos inmorales u hostigamiento y/o acoso sexual). Documente con testigos y, si aplica, active el protocolo NOM-035.',hechos:'El día [fecha] el trabajador cometió actos de hostigamiento/acoso sexual contra [persona], consistentes en [describir], en el establecimiento o lugar de trabajo.'},
+ 'Revelación de información confidencial':{fracc:'IX',tip:'Rescisión por fracc. IX (revelar secretos de fabricación o asuntos reservados con perjuicio de la empresa).',hechos:'El día [fecha] el trabajador reveló a [tercero] información de carácter reservado de la empresa, consistente en [describir], con perjuicio para la misma.'},
+ 'Robo / fraude':{fracc:'II',tip:'Rescisión por fracc. II (faltas de probidad u honradez). Documente la evidencia y, de ser posible, la denuncia correspondiente.',hechos:'El día [fecha] el trabajador incurrió en falta de probidad/honradez al [sustraer/disponer indebidamente de] [bien/monto], según consta en [evidencia].'}
+};
+function actualizarGuiaFaltas(){
+  const panel=document.getElementById('guia-faltas'); if(!panel) return;
+  const sel=[...faltas];
+  if(!sel.length){ panel.style.display='none'; panel.innerHTML=''; return; }
+  const rows=sel.map(function(fl){
+    const c=CATALOGO_FALTAS[fl]||{};
+    const fr=c.fracc?('<span class="guia-fr">Art. 47 fracc. '+c.fracc+'</span> — '+(FRACC47_DESC[c.fracc]||'')):'<span class="guia-fr guia-fr-none">Sin causal directa del 47</span> — vía Reglamento Interior';
+    return '<div class="guia-row"><div class="guia-falta">'+fl+'</div><div class="guia-map">'+fr+'</div>'+(c.tip?'<div class="guia-tip">'+c.tip+'</div>':'')+'</div>';
+  }).join('');
+  const btnFracc=(tipoActa==='resc')?'<button type="button" class="guia-btn" onclick="aplicarFraccionSugerida()">Aplicar fracción sugerida</button>':'';
+  panel.innerHTML='<div class="guia-head">🧭 Guía legal (según lo que seleccionó)</div>'+rows+
+    '<div class="guia-actions"><button type="button" class="guia-btn" onclick="insertarPlantillaHechos()">Insertar plantilla de hechos</button>'+btnFracc+'</div>'+
+    '<div class="guia-foot">Sugerencia orientativa; revise y complete la redacción antes de firmar. La numeración corresponde al art. 47 LFT vigente.</div>';
+  panel.style.display='';
+}
+function insertarPlantillaHechos(){
+  const ta=document.getElementById('hechos');
+  const tpl=[...faltas].map(function(fl){return (CATALOGO_FALTAS[fl]||{}).hechos;}).filter(Boolean).join('\n\n');
+  if(!tpl) return;
+  if(ta.value.trim() && !confirm('¿Reemplazar el texto actual de "hechos" con la plantilla? (Cancelar la agrega al final)')){ ta.value+=(ta.value.trim()?'\n\n':'')+tpl; }
+  else { ta.value=tpl; }
+  render();
+}
+function aplicarFraccionSugerida(){
+  const first=[...faltas].map(function(fl){return (CATALOGO_FALTAS[fl]||{}).fracc;}).find(Boolean);
+  if(first){ document.getElementById('fraccion_47').value=first; render(); }
+}
+
+function toggleFalta(el){
+  el.classList.toggle('active');
+  const txt=el.textContent.trim();
+  if(el.classList.contains('active'))faltas.add(txt);
+  else faltas.delete(txt);
+  render();
+  actualizarGuiaFaltas();
+}
+
+function calcSusp(){
+  const fi=v('fecha_susp_inicio'),d=parseInt(v('dias_suspension'));
+  if(fi&&d>0){const dt=new Date(fi+'T12:00:00');dt.setDate(dt.getDate()+d-1);document.getElementById('fecha_susp_fin').value=dt.toISOString().split('T')[0];}
+  else document.getElementById('fecha_susp_fin').value='';
+  render();
+}
+
+function limpiar(){
+  if(!confirm('¿Limpiar todos los campos?'))return;
+  document.querySelectorAll('input:not([readonly]),select,textarea').forEach(el=>{if(el.type==='checkbox')el.checked=false;else el.value='';});
+  faltas.clear();
+  document.querySelectorAll('.falta-opt').forEach(e=>e.classList.remove('active'));
+  render();
+  actualizarGuiaFaltas();
+}
+
+document.getElementById('tiene_antecedentes').addEventListener('change',function(){
+  document.getElementById('campo_antecedentes').style.display=this.checked?'':'none';
+});
+
+function titulos(){return{aperc:{titulo:'ACTA ADMINISTRATIVA DE APERCIBIMIENTO',badge:'Sanción disciplinaria — Primera instancia'},susp:{titulo:'ACTA ADMINISTRATIVA DE SUSPENSIÓN',badge:'Suspensión temporal sin goce de salario'},resc:{titulo:'ACTA DE RESCISIÓN DE CONTRATO INDIVIDUAL DE TRABAJO',badge:'Rescisión por causa justificada — Art. 47 LFT'}}[tipoActa];}
+
+function render(){
+  const empresa=v('empresa'),dom_emp=v('domicilio_empresa'),rep=v('representante');
+  const trab=v('trabajador'),puesto=v('puesto'),area=v('area'),antig=v('antiguedad'),numEmp=v('num_empleado');
+  const hechos=v('hechos'),fHechos=v('fecha_hechos'),hHechos=v('hora_hechos'),artRegl=v('art_reglamento');
+  const descargo=v('descargo'),manif=v('manifestacion'),sind=v('sindicalizado');
+  const t1=v('testigo1'),t2=v('testigo2'),ciudad=v('ciudad_firma'),fActa=v('fecha_acta'),hActa=v('hora_acta');
+  const antec=chk('tiene_antecedentes');
+
+  if(!empresa&&!trab){document.getElementById('doc-preview').innerHTML='<div class="watermark-empty">Complete los datos para generar el acta.</div>';return;}
+
+  const folio=`AA-${tipoActa.toUpperCase()}-${new Date().getFullYear()}-${Math.floor(Math.random()*10000).toString().padStart(4,'0')}`;
+  window.__folioActaActual = folio;
+  const {titulo,badge}=titulos();
+  const cl=tipoActa;
+  const faltasList=[...faltas];
+
+  let descTexto='';
+  if(descargo==='si') descTexto=manif?`El TRABAJADOR manifestó en su descargo: "${manif}"`:' El TRABAJADOR fue escuchado pero no realizó manifestación alguna.';
+  else if(descargo==='no_quiso') descTexto=' El TRABAJADOR fue invitado a manifestar su descargo, negándose a hacerlo, lo que se hace constar en la presente acta.';
+  else descTexto=' El TRABAJADOR no se encontraba presente al momento del levantamiento del acta, habiéndosele notificado la existencia de la misma a través de los medios disponibles.';
+
+  let html = generarMembrete({
+    empresa,
+    rfc:       v('mem-rfc-acta'),
+    tel:       v('mem-tel-acta'),
+    domicilio: dom_emp,
+    emailEmp:  v('mem-email-acta'),
+    web:       v('mem-web-acta'),
+    folio,
+    logoDataUrl: window._logoClienteDataUrl,
+  });
+
+  html += `
+  <div class="doc-title ${cl}">${titulo}</div>
+  <div style="text-align:center;margin-bottom:24px;"><span class="doc-badge ${cl}">${badge}</span></div>
+
+  <div class="doc-p">En la ciudad de ${b(ciudad,'ciudad')}, siendo las ${b(hActa||'__:__','hora')} horas del día ${b(fmtFecha(fActa),'fecha del acta')}, en las instalaciones de ${b(empresa,'razón social')}, ubicadas en ${b(dom_emp,'domicilio')}, se procede al levantamiento de la presente acta administrativa por ${b(rep,'nombre y cargo del representante')} en su carácter de representante del patrón, con la presencia del TRABAJADOR ${b(trab,'nombre del trabajador')}${puesto?', quien desempeña el puesto de '+b(puesto,'puesto'):''}${area?', adscrito al área de '+b(area,'área'):''}${antig?', con una antigüedad de '+antig:''}${numEmp?', número de empleado '+numEmp:''}.</div>
+
+  <div class="doc-clause-title">I. — Antecedentes y hechos</div>
+  <div class="doc-p">Se hace constar que en fecha ${b(fmtFecha(fHechos),'fecha de los hechos')}${hHechos?' a las '+hHechos+' horas':''}, se suscitaron los siguientes hechos que dan motivo al presente instrumento:</div>
+  <div class="hechos-box">${b(hechos,'descripción detallada de los hechos')}</div>
+  ${faltasList.length>0?`<div class="doc-p">Las conductas descritas se clasifican como: <strong>${faltasList.join('; ')}</strong>.</div>`:''}
+  ${artRegl?`<div class="doc-p">Las conductas referidas constituyen violación a lo establecido en el ${artRegl}.</div>`:''}
+  ${antec?`<div class="doc-p"><strong>Antecedentes disciplinarios:</strong> ${v('antecedentes')||'[describa los antecedentes]'}. La presente falta constituye un caso de reincidencia.</div>`:''}`;
+
+  if(tipoActa==='aperc'){
+    html+=`
+  <div class="doc-clause-title">II. — Apercibimiento formal</div>
+  <div class="doc-p">En virtud de los hechos descritos y considerando las atribuciones disciplinarias del patrón reconocidas por los artículos 134 y 135 de la LFT, así como lo previsto en el Reglamento Interior de Trabajo, se hace del conocimiento formal del TRABAJADOR que la conducta descrita <strong>no será tolerada</strong> por la empresa. El presente apercibimiento queda asentado en el expediente laboral del TRABAJADOR y servirá como antecedente para la aplicación de medidas disciplinarias de mayor gravedad en caso de reincidencia, las cuales podrán incluir suspensión sin goce de salario o rescisión de la relación laboral conforme al artículo 47 de la LFT.</div>
+
+  <div class="doc-clause-title">III. — Compromisos del trabajador</div>
+  <div class="doc-p">Se exhorta al TRABAJADOR a: (a) abstenerse de incurrir nuevamente en la conducta señalada; (b) cumplir puntualmente con sus obligaciones laborales y el Reglamento Interior de Trabajo; (c) mantener un desempeño adecuado a los estándares de la empresa. El incumplimiento de lo anterior será motivo de sanción más severa.${descTexto}</div>`;
+  }
+
+  if(tipoActa==='susp'){
+    const dSusp=v('dias_suspension'),fiSusp=v('fecha_susp_inicio'),ffSusp=v('fecha_susp_fin');
+    html+=`
+  <div class="doc-clause-title">II. — Sanción: suspensión sin goce de salario</div>
+  <div class="doc-p">En virtud de los hechos descritos, y conforme a lo establecido en el artículo 110, fracción I, de la LFT, se impone al TRABAJADOR una <strong>suspensión sin goce de salario de ${b(dSusp,'número de días')} día(s)</strong>, comprendida del ${b(fmtFecha(fiSusp),'fecha inicio')} al ${b(fmtFecha(ffSusp),'fecha término')} inclusive. La sanción guarda proporcionalidad con la gravedad de la falta cometida. Durante el período de suspensión el TRABAJADOR deberá abstenerse de presentarse a laborar; su reincorporación será el día hábil siguiente a la fecha de término.${descTexto}</div>
+
+  <div class="doc-clause-title">III. — Advertencia de consecuencias</div>
+  <div class="doc-p">Se hace saber al TRABAJADOR que la reincidencia en conductas similares o la comisión de faltas de mayor gravedad podrá ser causa de rescisión de la relación laboral sin responsabilidad para el patrón, de conformidad con el artículo 47 de la LFT.</div>`;
+  }
+
+  if(tipoActa==='resc'){
+    const fracc=v('fraccion_47'),fResc=v('fecha_rescision'),prestResc=v('prestaciones_resc');
+    html+=`
+  <div class="doc-clause-title">II. — Rescisión de la relación laboral</div>
+  <div class="doc-p">En virtud de los hechos narrados, que actualizan la causal de rescisión prevista en el artículo 47, fracción ${b(fracc,'fracción')} de la LFT, y toda vez que la conducta del TRABAJADOR hace imposible la continuación de la relación laboral, se le comunica que a partir del día ${b(fmtFecha(fResc),'fecha de rescisión')} queda <strong>rescindida la relación individual de trabajo</strong> que lo unía con ${b(empresa,'empresa')}, sin responsabilidad para el patrón.${descTexto}</div>
+
+  <div class="doc-clause-title">III. — Notificación y aviso</div>
+  <div class="doc-p">Conforme al artículo 47, último párrafo, de la LFT, se entrega al TRABAJADOR el presente aviso de rescisión por escrito, haciendo del conocimiento expreso la fecha y las causas que lo motivaron. Copia de la presente acta será remitida a la Junta o Tribunal Laboral competente dentro del término establecido por la ley.${prestResc==='si'?` No obstante lo anterior y a fin de mantener una relación cordial, el patrón cubrirá las partes proporcionales de prestaciones generadas (aguinaldo, vacaciones y prima vacacional), sin que ello implique reconocimiento de responsabilidad alguna.`:''}</div>`;
+  }
+
+  const romannNum=['I','II','III','IV','V','VI'];
+  let secNum=tipoActa==='aperc'?3:tipoActa==='susp'?3:3;
+
+  html+=`
+  <div class="doc-clause-title">${romannNum[secNum]}. — Descargo del trabajador</div>
+  <div class="doc-p">${descTexto||'[manifestación del trabajador]'}</div>`;secNum++;
+
+  if(sind==='si'){
+    html+=`
+  <div class="doc-clause-title">${romannNum[secNum]}. — Notificación al sindicato</div>
+  <div class="doc-p">Se hace constar que, en virtud de ser el TRABAJADOR miembro del sindicato correspondiente, se notificó a la representación sindical del presente procedimiento disciplinario, conforme a las disposiciones del contrato colectivo de trabajo y la LFT.</div>`;secNum++;
+  }
+
+  html+=`
+  <div class="doc-clause-title">${romannNum[secNum]}. — Cierre del acta</div>
+  <div class="doc-p">Habiendo concluido el levantamiento del presente instrumento, las partes y testigos que en él intervinieron lo firman al margen y al calce para constancia legal, en la ciudad de ${b(ciudad,'ciudad')}, el ${b(fmtFecha(fActa),'fecha del acta')}.</div>
+
+  <div class="firma-grid-3" style="margin-top:48px;">
+    <div class="firma-box"><br><br>${rep||'__________________________'}<br><strong>PATRÓN / REPRESENTANTE</strong></div>
+    <div class="firma-box"><br><br>${trab||'__________________________'}<br><strong>TRABAJADOR</strong><br><span style="font-size:9pt;color:#888;">${tipoActa==='resc'?'(Recibí notificación de rescisión)':'(De enterado)'}</span></div>
+    <div class="firma-box"><br><br>__________________________<br><strong>FIRMA DEL TRABAJADOR</strong><br><span style="font-size:9pt;color:#888;">O NEGATIVA DE FIRMA</span></div>
+  </div>
+
+  <div class="firma-grid-2">
+    <div class="firma-box"><br><br>${t1||'__________________________'}<br><strong>TESTIGO 1</strong></div>
+    <div class="firma-box"><br><br>${t2||'__________________________'}<br><strong>TESTIGO 2</strong></div>
+  </div>
+
+  <div style="margin-top:32px;padding:12px;background:#fafafa;border:1px solid #e0e0e0;border-radius:4px;font-size:9pt;font-family:var(--font-ui);color:#666;">
+    <strong>Nota legal:</strong> En caso de que el trabajador se niegue a firmar, el representante del patrón y los testigos deberán hacer constar dicha negativa al pie de la presente acta. La negativa a firmar no invalida el instrumento. Folio: ${folio}
+  </div>`;
+
+  html += generarFooterDoc({...getDatosMembrete(), folio});
+  document.getElementById('doc-preview').innerHTML=html;
+}
+
+// Init
+renderCampoLogo('mem-logo-container');
+(async()=>{ const sbTmp=supabase.createClient('https://hpzgqaplrywwjuvrzhcp.supabase.co','sb_publishable_1g8US8iFJ8CxnSaF_4MHgA_gqyyAr3W'); await precargarMembreteDesdePortal(sbTmp); })();
+setTipo('aperc');
+
+// Expediente del trabajador — vincular este documento al roster
+if (window.ExpedienteHelper) {
+  ExpedienteHelper.init({
+    inputNombreId: 'trabajador',
+    tipoDocumento: 'acta_administrativa',
+    nombreDocumentoFn: () => `Acta de ${tipoActa==='aperc'?'apercibimiento':tipoActa==='susp'?'suspensión':'rescisión'} — ${window.__folioActaActual||''}`,
+    metadataFn: () => ({ tipoActa, folio: window.__folioActaActual, fecha: v('fecha_hechos') }),
+  });
+}
+// ── INIT ──
+renderPanelMembrete('mem-logo-container');
+(async()=>{
+  try{
+    const _sb = supabase.createClient(
+      'https://hpzgqaplrywwjuvrzhcp.supabase.co',
+      'sb_publishable_1g8US8iFJ8CxnSaF_4MHgA_gqyyAr3W'
+    );
+    await precargarMembreteDesdePortal(_sb);
+  }catch(e){}
+})();
+setTipo('aperc');
+</script>
+<script src="edicion-libre.js?v=4.6"></script>
+
+
+
+
+</body>
+</html>

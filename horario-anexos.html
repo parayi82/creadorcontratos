@@ -1,0 +1,401 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<script>
+(function(){
+  var params=new URLSearchParams(window.location.search);
+  var modo=params.get('editar')==='1'?'editar':params.get('recuperar')==='1'?'ver':null;
+  if(!modo) return;
+  var gen=window.location.pathname.split('/').pop();
+  var key=(modo==='editar'?'doc_editar_':'doc_recuperado_')+gen.replace('.html','');
+  var g=null; try{g=JSON.parse(localStorage.getItem(key)||'null');}catch(e){}
+  if(!g||!g.html) return;
+  // Bloquear render() para no sobreescribir el contenido
+  var _bloqueado=false,_orig=null;
+  function bloquear(){
+    if(typeof window.render==='function'&&!_bloqueado){
+      _orig=window.render; window.render=function(){}; _bloqueado=true;
+    }
+  }
+  bloquear(); var _iv=setInterval(bloquear,50);
+  function inyectar(){
+    var pr=document.getElementById('doc-preview');
+    if(!pr){setTimeout(inyectar,80);return;}
+    clearInterval(_iv); bloquear();
+    pr.innerHTML=g.html;
+    // En modo editar: activar contenteditable automáticamente
+    if(modo==='editar'){
+      pr.contentEditable='true';
+      pr.style.outline='2px dashed #0f766e';
+      pr.style.cursor='text';
+    }
+    // Banner
+    var b=document.createElement('div');
+    b.id='banner-doc';
+    b.style.cssText='position:sticky;top:0;z-index:200;background:'+(modo==='editar'?'#f0fdf4':'#eff6ff')+';border-bottom:2px solid '+(modo==='editar'?'#86efac':'#93c5fd')+';padding:10px 16px;font-size:12px;color:'+(modo==='editar'?'#166534':'#1e40af')+';display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap;';
+    var etiq=modo==='editar'?'✏️ Modo edición — edita el documento directamente':'📄 Documento guardado';
+    var sp=document.createElement('span');
+    sp.innerHTML='<strong>'+etiq+'</strong> — '+(g.nombre||'')+' · '+(g.fecha||'');
+    var bt=document.createElement('button');
+    bt.textContent=modo==='editar'?'🔄 Restaurar campos':'✏️ Editar';
+    bt.style.cssText='border:1px solid currentColor;background:transparent;color:inherit;padding:4px 12px;border-radius:6px;font-size:11px;cursor:pointer;white-space:nowrap;';
+    bt.onclick=function(){
+      _bloqueado=false;
+      pr.contentEditable='false';
+      pr.style.outline=''; pr.style.cursor='';
+      if(_orig) window.render=_orig;
+      var bel=document.getElementById('banner-doc');
+      if(bel) bel.remove();
+      localStorage.removeItem(key);
+      if(typeof window.render==='function') window.render();
+    };
+    b.appendChild(sp); b.appendChild(bt);
+    pr.insertBefore(b,pr.firstChild);
+    localStorage.removeItem(key);
+  }
+  document.readyState==='loading'?document.addEventListener('DOMContentLoaded',inyectar):inyectar();
+})();
+</script>
+
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Generador · Horario y Anexos al Contrato</title>
+<style>
+  :root{--ink:#1a1a18;--ink2:#4a4a46;--ink3:#8a8a84;--surface:#f7f6f2;--white:#ffffff;--accent:#1a3a5c;--accent2:#e8f0f8;--border:#ddddd6;--danger:#c0392b;--green:#16a34a;--radius:6px;--font-ui:'Segoe UI',system-ui,sans-serif;--font-doc:'Times New Roman',Georgia,serif;}
+  *{box-sizing:border-box;margin:0;padding:0;}
+  body{font-family:var(--font-ui);background:var(--surface);color:var(--ink);min-height:100vh;font-size:14px;}
+  header{background:var(--accent);color:#fff;padding:14px 28px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:100;box-shadow:0 1px 4px rgba(0,0,0,.18);}
+  header h1{font-size:15px;font-weight:600;}
+  header span{font-size:12px;opacity:.7;}
+  .header-actions{display:flex;gap:10px;}
+  .btn{padding:7px 18px;border-radius:var(--radius);font-size:13px;font-weight:500;cursor:pointer;border:1px solid transparent;transition:background .15s,opacity .15s;}
+  .btn-outline{background:transparent;border-color:rgba(255,255,255,.45);color:#fff;}.btn-outline:hover{background:rgba(255,255,255,.12);}
+  .btn-primary{background:#fff;color:var(--accent);}.btn-primary:hover{opacity:.88;}
+  .workspace{display:grid;grid-template-columns:380px 1fr;height:calc(100vh - 52px);}
+  .form-panel{background:var(--white);border-right:1px solid var(--border);overflow-y:auto;padding:24px 24px 40px;}
+  .section-label{font-size:10px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:var(--accent);padding:20px 0 10px;border-bottom:1px solid var(--border);margin-bottom:14px;}
+  .section-label:first-child{padding-top:4px;}
+  .field{margin-bottom:13px;}
+  .field label{display:block;font-size:12px;font-weight:500;color:var(--ink2);margin-bottom:4px;}
+  .field label .req{color:var(--danger);margin-left:2px;}
+  .field input,.field select,.field textarea{width:100%;padding:8px 10px;border:1px solid var(--border);border-radius:var(--radius);font-size:13px;font-family:var(--font-ui);color:var(--ink);background:var(--white);transition:border-color .15s;}
+  .field input:focus,.field select:focus,.field textarea:focus{outline:none;border-color:var(--accent);box-shadow:0 0 0 3px var(--accent2);}
+  .field textarea{resize:vertical;min-height:60px;}
+  .field-row{display:grid;grid-template-columns:1fr 1fr;gap:10px;}
+  .hint{font-size:11px;color:var(--ink3);margin-top:3px;}
+  .toggle-group{display:flex;gap:8px;flex-wrap:wrap;}
+  .toggle-opt{padding:5px 12px;border:1px solid var(--border);border-radius:20px;font-size:12px;cursor:pointer;transition:all .15s;user-select:none;color:var(--ink2);}
+  .toggle-opt.active{background:var(--accent);border-color:var(--accent);color:#fff;font-weight:500;}
+  .clause-check{display:flex;align-items:flex-start;gap:8px;margin-bottom:8px;}
+  .clause-check input[type=checkbox]{margin-top:2px;accent-color:var(--accent);}
+  .clause-check label{font-size:12px;color:var(--ink2);cursor:pointer;line-height:1.4;}
+  .tipo-tabs{display:grid;grid-template-columns:1fr 1fr;gap:0;border:1px solid var(--border);border-radius:var(--radius);overflow:hidden;margin-bottom:16px;}
+  .tipo-tab{padding:10px 4px;text-align:center;font-size:12px;font-weight:500;cursor:pointer;background:var(--white);color:var(--ink2);border:none;transition:all .15s;line-height:1.3;}
+  .tipo-tab:not(:last-child){border-right:1px solid var(--border);}
+  .tipo-tab.active{background:var(--accent);color:#fff;}
+  .preview-panel{background:#e8e7e0;overflow-y:auto;padding:32px 40px;display:flex;flex-direction:column;align-items:center;}
+  .doc-sheet{background:var(--white);width:100%;max-width:760px;min-height:1060px;padding:72px 80px;box-shadow:0 2px 16px rgba(0,0,0,.12);font-family:var(--font-doc);font-size:12pt;line-height:1.75;color:#111;}
+  
+  .doc-logo-empresa{font-size:14pt;font-weight:bold;color:var(--accent);font-family:var(--font-ui);max-width:340px;}
+  .doc-folio{font-size:9pt;color:var(--ink3);font-family:var(--font-ui);text-align:right;line-height:1.4;}
+  .doc-title{text-align:center;font-size:13pt;font-weight:bold;text-transform:uppercase;letter-spacing:.04em;margin-bottom:6px;}
+  .doc-subtitle{text-align:center;font-size:10pt;color:var(--ink3);font-family:var(--font-ui);margin-bottom:28px;}
+  .doc-p{margin-bottom:14px;text-align:justify;}
+  .doc-p .blank{font-weight:bold;color:var(--accent);border-bottom:1px solid var(--accent);padding:0 2px;}
+  .doc-p .blank.empty{color:#c0392b;border-bottom-color:#c0392b;font-style:italic;font-weight:normal;}
+  .doc-clause-title{font-weight:bold;text-transform:uppercase;font-size:10.5pt;margin:22px 0 8px;}
+  .doc-table{width:100%;border-collapse:collapse;margin:14px 0;font-size:10.5pt;}
+  .doc-table td,.doc-table th{border:1px solid #999;padding:6px 10px;text-align:left;}
+  .doc-table th{background:#f0f0ec;font-family:var(--font-ui);font-size:9pt;text-transform:uppercase;}
+  .doc-firma-grid{display:grid;grid-template-columns:1fr 1fr;gap:40px;margin-top:48px;}
+  .firma-box{border-top:1px solid #888;padding-top:8px;font-size:10pt;text-align:center;line-height:1.5;}
+  .firma-box strong{display:block;font-size:9pt;color:var(--ink3);font-family:var(--font-ui);}
+  .watermark-empty{text-align:center;color:var(--ink3);font-family:var(--font-ui);font-size:13px;padding:80px 0;}
+  @media print{header,.form-panel{display:none!important;}.workspace{display:block;height:auto;}.preview-panel{padding:0;background:white;}.doc-sheet{box-shadow:none;max-width:100%;padding:40px;}body{background:white;}}
+
+#auth-gate-loading{position:fixed;inset:0;background:#fff;z-index:9999;display:flex;align-items:center;justify-content:center;font-family:'Segoe UI',system-ui,sans-serif;color:#999;font-size:13px;}
+#auth-gate-blocked{position:fixed;inset:0;background:#0f2640;z-index:9999;display:none;align-items:center;justify-content:center;padding:24px;}
+#auth-gate-blocked .agb-box{background:#fff;border-radius:16px;padding:40px 36px;max-width:420px;text-align:center;font-family:'Segoe UI',system-ui,sans-serif;}
+#auth-gate-blocked .agb-box h2{font-size:18px;margin-bottom:10px;color:#0f2640;}
+#auth-gate-blocked .agb-box p{font-size:13px;color:#666;margin-bottom:20px;line-height:1.6;}
+#auth-gate-blocked .agb-btns{display:flex;gap:10px;justify-content:center;flex-wrap:wrap;}
+#auth-gate-blocked .agb-btns a{padding:10px 18px;border-radius:8px;font-size:13px;font-weight:600;text-decoration:none;}
+#auth-gate-blocked .agb-btns a.agb-primary{background:#1a3a5c;color:#fff;}
+#auth-gate-blocked .agb-btns a.agb-secondary{background:#f0f0ec;color:#1a3a5c;}
+body.modo-demo .doc-sheet{position:relative;user-select:none;-webkit-user-select:none;-moz-user-select:none;}
+body.modo-demo .doc-sheet::after{content:'MUESTRA — CUENTA DEMO, NO VÁLIDO PARA USO LEGAL';position:absolute;top:46%;left:-15%;right:-15%;text-align:center;font-size:26px;font-weight:900;color:rgba(220,38,38,.16);transform:rotate(-18deg);pointer-events:none;font-family:'Segoe UI',system-ui,sans-serif;z-index:50;}
+@media print{ body.modo-demo .doc-sheet::after{display:block!important;color:rgba(220,38,38,.35)!important;} }
+  .cl-nav-logo{display:flex;align-items:center;font-size:15px;font-weight:800;color:#fff;letter-spacing:-.01em;line-height:1;text-decoration:none;}
+  .cl-nav-logo .cl-laboral{color:#5eead4;font-weight:400;}
+</style>
+<script src="membrete.js?v=3.7"></script>
+</head>
+<body>
+<div id="auth-gate-loading">Verificando acceso…</div>
+<div id="auth-gate-blocked">
+  <div class="agb-box">
+    <h2>🔒 Esta herramienta requiere una suscripción activa</h2>
+    <p>Inicie sesión desde su portal de cliente para usar este generador, o conozca nuestros planes si todavía no es cliente de ClickLaboral.mx.</p>
+    <div class="agb-btns">
+      <a class="agb-primary" href="portal-cliente.html">Iniciar sesión →</a>
+      <a class="agb-secondary" href="index.html#precios">Ver planes</a>
+    </div>
+  </div>
+</div>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
+<script src="expediente-helper.js?v=3.7"></script>
+<script>
+(async()=>{
+  const _sb = supabase.createClient('https://hpzgqaplrywwjuvrzhcp.supabase.co','sb_publishable_1g8US8iFJ8CxnSaF_4MHgA_gqyyAr3W');
+  try {
+    const { data } = await _sb.auth.getSession();
+    document.getElementById('auth-gate-loading').style.display = 'none';
+    if (!data?.session?.user) {
+      document.getElementById('auth-gate-blocked').style.display = 'flex';
+    }
+  } catch(e) {
+    document.getElementById('auth-gate-loading').style.display = 'none';
+    document.getElementById('auth-gate-blocked').style.display = 'flex';
+  }
+})();
+
+</script>
+
+<header>
+  <div class="cl-nav-logo" style="flex-shrink:0;"><svg width="26" height="26" viewBox="0 0 100 100" style="vertical-align:-7px;margin-right:6px;flex-shrink:0;">
+        <defs><linearGradient id="clGrad" x1="10" y1="10" x2="90" y2="95" gradientUnits="userSpaceOnUse">
+          <stop offset="0%" stop-color="#1a3a5c"/><stop offset="55%" stop-color="#1e6f6c"/><stop offset="100%" stop-color="#2dd4bf"/>
+        </linearGradient></defs>
+        <path d="M50 7 L83 20 V51 C83 73 68 87 50 95 C32 87 17 73 17 51 V20 Z" fill="none" stroke="url(#clGrad)" stroke-width="6" stroke-linejoin="round"/>
+        <circle cx="40" cy="38" r="8.5" fill="#5eead4"/>
+        <path d="M25 63 C25 51 31 45 40 45 C49 45 55 51 55 63 Z" fill="#5eead4"/>
+        <circle cx="55" cy="33" r="9.5" fill="#14b8a6"/>
+        <path d="M38 61 C38 48 45.5 41 55 41 C64.5 41 72 48 72 61 Z" fill="#14b8a6"/>
+        <path d="M29 61 L45 77 L78 40" fill="none" stroke="#e8f2fc" stroke-width="9" stroke-linecap="round" stroke-linejoin="round"/>
+      </svg>Click<span class="cl-laboral">Laboral.mx</span></div>
+  <div>
+    <h1>Generador de Horario y Anexos · ClickLaboral.mx</h1>
+    <span>Cambio de horario laboral · Anexo modificatorio al contrato</span>
+  </div>
+  <div class="header-actions">
+    <button class="btn btn-outline" onclick="limpiar()">Limpiar</button>
+    <button class="btn btn-primary" onclick="window.print()">Imprimir / PDF</button>
+  </div>
+</header>
+<div class="workspace">
+  <div class="form-panel">
+    <!-- ── MEMBRETE DEL CLIENTE ── -->
+    <div style="border-bottom:1px solid var(--border);margin-bottom:0;">
+      <div class="section-label" style="display:flex;align-items:center;justify-content:space-between;cursor:pointer;user-select:none;"
+           onclick="this.nextElementSibling.style.display=this.nextElementSibling.style.display==='none'?'block':'none'">
+        <span>🏢 Logo y pie de página</span>
+        <span style="font-size:10px;font-weight:400;color:var(--ink3);">▲ clic para colapsar</span>
+      </div>
+      <div id="mem-panel-wrap" style="display:block;padding:12px 0 14px;">
+        <div id="mem-logo-container"></div>
+      </div>
+    </div>
+    <!-- ── / MEMBRETE ── -->
+    <div class="section-label">Tipo de documento</div>
+    <div class="tipo-tabs">
+      <div class="tipo-tab active" id="tab-horario" onclick="setTipo('horario')">⏰ Cambio de horario</div>
+      <div class="tipo-tab" id="tab-anexo" onclick="setTipo('anexo')">📎 Anexo al contrato</div>
+    </div>
+
+    <div class="section-label">Datos de la empresa</div>
+    <div class="field"><label>Razón social <span class="req">*</span></label><input type="text" id="empresa" oninput="render()" placeholder="Ej. Comercializadora Norte, S.A. de C.V."></div>
+    <div class="field"><label>Representante legal</label><input type="text" id="representante" oninput="render()" placeholder="Nombre completo y puesto"></div>
+
+    <div class="section-label">Datos del trabajador</div>
+    <div class="field"><label>Nombre completo <span class="req">*</span></label><input type="text" id="trabajador" oninput="render()" placeholder="Nombre(s) Apellido Paterno Apellido Materno"></div>
+    <div class="field"><label>Puesto</label><input type="text" id="puesto" oninput="render()" placeholder="Puesto / cargo"></div>
+
+    <!-- ── HORARIO ── -->
+    <div id="bloque-horario">
+      <div class="section-label">Horario actual</div>
+      <div class="field-row">
+        <div class="field"><label>Entrada</label><input type="time" id="h_entrada_actual" oninput="render()"></div>
+        <div class="field"><label>Salida</label><input type="time" id="h_salida_actual" oninput="render()"></div>
+      </div>
+      <div class="field"><label>Días de descanso (actual)</label><input type="text" id="h_descanso_actual" oninput="render()" placeholder="Ej. Domingo"></div>
+
+      <div class="section-label">Horario nuevo</div>
+      <div class="field-row">
+        <div class="field"><label>Entrada <span class="req">*</span></label><input type="time" id="h_entrada_nuevo" oninput="render()"></div>
+        <div class="field"><label>Salida <span class="req">*</span></label><input type="time" id="h_salida_nuevo" oninput="render()"></div>
+      </div>
+      <div class="field"><label>Días de descanso (nuevo)</label><input type="text" id="h_descanso_nuevo" oninput="render()" placeholder="Ej. Sábado y domingo"></div>
+      <div class="field"><label>Fecha de vigencia del cambio <span class="req">*</span></label><input type="date" id="h_vigencia" oninput="render()"></div>
+      <div class="field"><label>Motivo del cambio</label><textarea id="h_motivo" oninput="render()" placeholder="Ej. Necesidades de operación, ajuste de turnos..."></textarea></div>
+      <div class="clause-check"><input type="checkbox" id="h_acepta" checked onchange="render()"><label for="h_acepta">El trabajador manifiesta su conformidad con el nuevo horario</label></div>
+    </div>
+
+    <!-- ── ANEXO ── -->
+    <div id="bloque-anexo" style="display:none;">
+      <div class="section-label">Contrato original</div>
+      <div class="field-row">
+        <div class="field"><label>Fecha de firma del contrato original</label><input type="date" id="a_fecha_contrato" oninput="render()"></div>
+        <div class="field"><label>Tipo de contrato original</label><input type="text" id="a_tipo_contrato" oninput="render()" placeholder="Ej. Tiempo indeterminado"></div>
+      </div>
+      <div class="section-label">Cláusula(s) que se modifican</div>
+      <div class="field">
+        <div class="toggle-group" id="a_clausulas" style="flex-wrap:wrap;">
+          <div class="toggle-opt" onclick="toggleMulti(this)">Puesto</div>
+          <div class="toggle-opt" onclick="toggleMulti(this)">Salario</div>
+          <div class="toggle-opt" onclick="toggleMulti(this)">Horario</div>
+          <div class="toggle-opt" onclick="toggleMulti(this)">Domicilio del centro de trabajo</div>
+          <div class="toggle-opt" onclick="toggleMulti(this)">Otra</div>
+        </div>
+      </div>
+      <div class="field"><label>Texto anterior (cláusula vigente)</label><textarea id="a_texto_anterior" oninput="render()" placeholder="Describa la condición que se está modificando, tal como aparece en el contrato original..."></textarea></div>
+      <div class="field"><label>Texto nuevo (cláusula modificada) <span class="req">*</span></label><textarea id="a_texto_nuevo" oninput="render()" placeholder="Describa la nueva condición pactada..."></textarea></div>
+      <div class="field"><label>Fecha de vigencia del anexo <span class="req">*</span></label><input type="date" id="a_vigencia" oninput="render()"></div>
+    </div>
+
+    <div class="section-label">Lugar y fecha de firma</div>
+    <div class="field-row">
+      <div class="field"><label>Ciudad <span class="req">*</span></label><input type="text" id="ciudad_firma" oninput="render()" placeholder="Guadalajara, Jal."></div>
+      <div class="field"><label>Fecha de firma <span class="req">*</span></label><input type="date" id="fecha_firma" oninput="render()"></div>
+    </div>
+  </div>
+
+  <div class="preview-panel">
+    <div class="doc-sheet" id="doc-preview">
+      <div class="watermark-empty">Seleccione el tipo de documento y complete los datos para generar el formato.</div>
+    </div>
+  </div>
+</div>
+
+<script>
+let tipoDoc = 'horario';
+
+function v(id){return(document.getElementById(id)||{}).value||'';}
+function chk(id){return document.getElementById(id)?.checked||false;}
+function b(txt,fb){if(!txt||!txt.toString().trim())return`<span class="blank empty">[${fb}]</span>`;return`<span class="blank">${txt}</span>`;}
+function fmtFecha(iso){if(!iso)return'';const[y,m,d]=iso.split('-');const M=['enero','febrero','marzo','abril','mayo','junio','julio','agosto','septiembre','octubre','noviembre','diciembre'];return`${parseInt(d)} de ${M[parseInt(m)-1]} de ${y}`;}
+function getActive(gid){const g=document.getElementById(gid);if(!g)return'';const e=g.querySelector('.toggle-opt.active');return e?e.textContent:'';}
+function selToggle(el,gid){document.querySelectorAll(`#${gid} .toggle-opt`).forEach(e=>e.classList.remove('active'));el.classList.add('active');render();}
+function toggleMulti(el){el.classList.toggle('active');render();}
+function getMulti(gid){return Array.from(document.querySelectorAll(`#${gid} .toggle-opt.active`)).map(e=>e.textContent);}
+function limpiar(){if(!confirm('¿Limpiar todos los campos?'))return;document.querySelectorAll('input:not([readonly]),select,textarea').forEach(el=>{if(el.type==='checkbox')el.checked=(el.id==='h_acepta');else el.value='';});document.querySelectorAll('.toggle-opt.active').forEach(e=>e.classList.remove('active'));render();}
+
+function setTipo(t){
+  tipoDoc = t;
+  document.querySelectorAll('.tipo-tab').forEach(e=>e.classList.remove('active'));
+  document.getElementById('tab-'+t).classList.add('active');
+  ['horario','anexo'].forEach(b=>{
+    document.getElementById('bloque-'+b).style.display = (b===t)?'block':'none';
+  });
+  render();
+}
+
+function render(){
+  const empresa=v('empresa'),rep=v('representante');
+  const trab=v('trabajador'),puesto=v('puesto');
+  const cf=v('ciudad_firma'),ff=v('fecha_firma');
+
+  if(!empresa&&!trab){document.getElementById('doc-preview').innerHTML='<div class="watermark-empty">Seleccione el tipo de documento y complete los datos para generar el formato.</div>';return;}
+  const prefijos={horario:'HOR',anexo:'ANX'};
+  const folio=`${prefijos[tipoDoc]}-${new Date().getFullYear()}-${Math.floor(Math.random()*10000).toString().padStart(4,'0')}`;
+
+  let titulo='', subtitulo='', cuerpo='';
+
+  if(tipoDoc==='horario'){
+    titulo='Aviso de Asignación / Cambio de Horario';
+    subtitulo='Modificación de jornada laboral — Arts. 58–68 LFT';
+    const ea=v('h_entrada_actual'), sa=v('h_salida_actual'), da=v('h_descanso_actual');
+    const en=v('h_entrada_nuevo'), sn=v('h_salida_nuevo'), dn=v('h_descanso_nuevo');
+    const vig=v('h_vigencia'), motivo=v('h_motivo');
+    cuerpo = `
+    <div class="doc-p">En ${b(cf,'ciudad')}, el ${b(fmtFecha(ff),'fecha de firma')}, ${b(empresa,'razón social')} notifica al (a la) trabajador(a) ${b(trab,'nombre del trabajador')}, con puesto de ${b(puesto,'puesto')}, la asignación de un nuevo horario de trabajo, conforme a lo siguiente:</div>
+    <table class="doc-table">
+      <tr><th>Concepto</th><th>Horario actual</th><th>Horario nuevo</th></tr>
+      <tr><td>Entrada</td><td>${ea||'—'}</td><td>${b(en,'hora de entrada')}</td></tr>
+      <tr><td>Salida</td><td>${sa||'—'}</td><td>${b(sn,'hora de salida')}</td></tr>
+      <tr><td>Día(s) de descanso</td><td>${da||'—'}</td><td>${dn||'—'}</td></tr>
+    </table>
+    <div class="doc-p">El nuevo horario entrará en vigor a partir del ${b(fmtFecha(vig),'fecha de vigencia')}.</div>
+    ${motivo?`<div class="doc-p"><strong>Motivo del cambio:</strong> ${esc(motivo)}.</div>`:''}
+    <div class="doc-p">Lo anterior conforme a los artículos 58 al 68 de la Ley Federal del Trabajo, respetando en todo momento la jornada máxima legal y el día de descanso obligatorio.</div>
+    ${chk('h_acepta')?`<div class="doc-p">El trabajador manifiesta su <strong>conformidad expresa</strong> con el nuevo horario asignado.</div>`:`<div class="doc-p" style="color:#c0392b;">⚠️ Pendiente de manifestar conformidad del trabajador.</div>`}
+    <div class="doc-firma-grid">
+      <div class="firma-box"><br><br>${rep||'__________________________'}<br><strong>POR ${empresa||'LA EMPRESA'}</strong></div>
+      <div class="firma-box"><br><br>${trab||'__________________________'}<br><strong>EL TRABAJADOR</strong></div>
+    </div>`;
+  }
+
+  if(tipoDoc==='anexo'){
+    titulo='Anexo Modificatorio al Contrato Individual de Trabajo';
+    subtitulo='Modificación de condiciones pactadas';
+    const fc=v('a_fecha_contrato'), tc=v('a_tipo_contrato'), clausulas=getMulti('a_clausulas').join(', '),
+          anterior=v('a_texto_anterior'), nuevo=v('a_texto_nuevo'), vig=v('a_vigencia');
+    cuerpo = `
+    <div class="doc-p">En ${b(cf,'ciudad')}, el ${b(fmtFecha(ff),'fecha de firma')}, ${b(empresa,'razón social')}, representada por ${b(rep,'representante legal')}, y el (la) trabajador(a) ${b(trab,'nombre del trabajador')}, con puesto de ${b(puesto,'puesto')}, celebran el presente <strong>ANEXO MODIFICATORIO</strong> al contrato individual de trabajo de fecha ${fc?fmtFecha(fc):b('','fecha del contrato original')}${tc?` (${tc})`:''}, conforme a las siguientes cláusulas:</div>
+
+    <div class="doc-clause-title">Primera. — Cláusula(s) objeto de modificación</div>
+    <div class="doc-p">Las partes acuerdan modificar la(s) siguiente(s) cláusula(s) del contrato original: <strong>${clausulas||'[seleccione las cláusulas a modificar]'}</strong>.</div>
+
+    <div class="doc-clause-title">Segunda. — Condición anterior</div>
+    <div class="doc-p">${anterior?anterior:'<span class="blank empty">[descripción de la condición anterior]</span>'}</div>
+
+    <div class="doc-clause-title">Tercera. — Condición nueva</div>
+    <div class="doc-p">A partir del ${b(fmtFecha(vig),'fecha de vigencia')}, la condición pactada será la siguiente: ${b(nuevo,'nueva condición pactada')}</div>
+
+    <div class="doc-clause-title">Cuarta. — Vigencia de las demás cláusulas</div>
+    <div class="doc-p">Las partes ratifican que el resto de las cláusulas del contrato individual de trabajo original permanecen <strong>vigentes y sin modificación alguna</strong>, formando el presente anexo parte integrante del mismo.</div>
+
+    <div class="doc-firma-grid">
+      <div class="firma-box"><br><br>${empresa||'__________________________'}<br>${rep?rep+'<br>':''}<strong>LA EMPRESA</strong></div>
+      <div class="firma-box"><br><br>${trab||'__________________________'}<br><strong>EL TRABAJADOR</strong></div>
+    </div>`;
+  }
+
+  document.getElementById('doc-preview').innerHTML = generarMembrete({
+    empresa:   v('empresa'),
+    rfc:       v('rfc_emp'),
+    domicilio: v('domicilio_emp'),
+    tel:       v('mem-tel'),
+    emailEmp:  v('mem-email'),
+    web:       v('mem-web'),
+    folio,
+    logoDataUrl: window._logoClienteDataUrl,
+  }) + `
+      <div class="doc-folio">Folio: ${folio}</div>
+    </div>
+    <div class="doc-title">${titulo}</div>
+    <div class="doc-subtitle">${subtitulo}</div>
+    ${cuerpo}
+    <div style="margin-top:32px;font-size:9pt;color:#888;font-family:var(--font-ui);border-top:1px solid #ddd;padding-top:10px;">Documento generado mediante plataforma de compliance laboral · Folio ${folio}</div>
+    ${generarFooterDoc({...getDatosMembrete(), folio})}`;
+}
+render();
+
+// Expediente del trabajador — vincular este documento al roster
+if (window.ExpedienteHelper) {
+  ExpedienteHelper.init({
+    inputNombreId: 'trabajador',
+    tipoDocumento: 'horario_anexo',
+    nombreDocumentoFn: () => 'Anexo de horario',
+  });
+}
+
+// ── INIT ──
+renderPanelMembrete('mem-logo-container');
+(async()=>{
+  try{
+    const _sb = supabase.createClient(
+      'https://hpzgqaplrywwjuvrzhcp.supabase.co',
+      'sb_publishable_1g8US8iFJ8CxnSaF_4MHgA_gqyyAr3W'
+    );
+    await precargarMembreteDesdePortal(_sb);
+  }catch(e){}
+})();
+render();
+</script>
+<script src="edicion-libre.js?v=4.6"></script>
+
+
+
+
+</body>
+</html>

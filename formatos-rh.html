@@ -1,0 +1,516 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<script>
+(function(){
+  var params=new URLSearchParams(window.location.search);
+  var modo=params.get('editar')==='1'?'editar':params.get('recuperar')==='1'?'ver':null;
+  if(!modo) return;
+  var gen=window.location.pathname.split('/').pop();
+  var key=(modo==='editar'?'doc_editar_':'doc_recuperado_')+gen.replace('.html','');
+  var g=null; try{g=JSON.parse(localStorage.getItem(key)||'null');}catch(e){}
+  if(!g||!g.html) return;
+  // Bloquear render() para no sobreescribir el contenido
+  var _bloqueado=false,_orig=null;
+  function bloquear(){
+    if(typeof window.render==='function'&&!_bloqueado){
+      _orig=window.render; window.render=function(){}; _bloqueado=true;
+    }
+  }
+  bloquear(); var _iv=setInterval(bloquear,50);
+  function inyectar(){
+    var pr=document.getElementById('doc-preview');
+    if(!pr){setTimeout(inyectar,80);return;}
+    clearInterval(_iv); bloquear();
+    pr.innerHTML=g.html;
+    // En modo editar: activar contenteditable automáticamente
+    if(modo==='editar'){
+      pr.contentEditable='true';
+      pr.style.outline='2px dashed #0f766e';
+      pr.style.cursor='text';
+    }
+    // Banner
+    var b=document.createElement('div');
+    b.id='banner-doc';
+    b.style.cssText='position:sticky;top:0;z-index:200;background:'+(modo==='editar'?'#f0fdf4':'#eff6ff')+';border-bottom:2px solid '+(modo==='editar'?'#86efac':'#93c5fd')+';padding:10px 16px;font-size:12px;color:'+(modo==='editar'?'#166534':'#1e40af')+';display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap;';
+    var etiq=modo==='editar'?'✏️ Modo edición — edita el documento directamente':'📄 Documento guardado';
+    var sp=document.createElement('span');
+    sp.innerHTML='<strong>'+etiq+'</strong> — '+(g.nombre||'')+' · '+(g.fecha||'');
+    var bt=document.createElement('button');
+    bt.textContent=modo==='editar'?'🔄 Restaurar campos':'✏️ Editar';
+    bt.style.cssText='border:1px solid currentColor;background:transparent;color:inherit;padding:4px 12px;border-radius:6px;font-size:11px;cursor:pointer;white-space:nowrap;';
+    bt.onclick=function(){
+      _bloqueado=false;
+      pr.contentEditable='false';
+      pr.style.outline=''; pr.style.cursor='';
+      if(_orig) window.render=_orig;
+      var bel=document.getElementById('banner-doc');
+      if(bel) bel.remove();
+      localStorage.removeItem(key);
+      if(typeof window.render==='function') window.render();
+    };
+    b.appendChild(sp); b.appendChild(bt);
+    pr.insertBefore(b,pr.firstChild);
+    localStorage.removeItem(key);
+  }
+  document.readyState==='loading'?document.addEventListener('DOMContentLoaded',inyectar):inyectar();
+})();
+</script>
+
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Generador · Formatos de RH</title>
+<style>
+:root{--ink:#1a1a18;--ink2:#4a4a46;--ink3:#8a8a84;--surface:#f7f6f2;--white:#ffffff;--accent:#1a3a5c;--accent2:#e8f0f8;--border:#ddddd6;--danger:#c0392b;--green:#16a34a;--amber:#c8830a;--radius:6px;--font-ui:'Segoe UI',system-ui,sans-serif;--font-doc:'Times New Roman',Georgia,serif;}
+*{box-sizing:border-box;margin:0;padding:0;}
+body{font-family:var(--font-ui);background:var(--surface);color:var(--ink);font-size:14px;}
+header{background:var(--accent);color:#fff;padding:14px 28px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:100;box-shadow:0 1px 4px rgba(0,0,0,.18);}
+header h1{font-size:15px;font-weight:600;}
+.header-actions{display:flex;gap:10px;}
+.btn{padding:7px 18px;border-radius:var(--radius);font-size:13px;font-weight:500;cursor:pointer;border:1px solid transparent;transition:background .15s;}
+.btn-outline{background:transparent;border-color:rgba(255,255,255,.45);color:#fff;}.btn-outline:hover{background:rgba(255,255,255,.12);}
+.btn-primary{background:#fff;color:var(--accent);}.btn-primary:hover{opacity:.88;}
+.workspace{display:grid;grid-template-columns:420px 1fr;height:calc(100vh - 52px);}
+.form-panel{background:var(--white);border-right:1px solid var(--border);overflow-y:auto;padding:0 0 60px;}
+.section-label{font-size:10px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:var(--accent);padding:14px 20px 10px;border-bottom:1px solid var(--border);margin-bottom:14px;background:var(--surface);}
+.form-inner{padding:0 20px;}
+.field{margin-bottom:12px;}
+.field label{display:block;font-size:12px;font-weight:500;color:var(--ink2);margin-bottom:4px;}
+.field input,.field select,.field textarea{width:100%;padding:8px 10px;border:1px solid var(--border);border-radius:var(--radius);font-size:13px;font-family:var(--font-ui);color:var(--ink);background:var(--white);}
+.field input:focus,.field select:focus,.field textarea:focus{outline:none;border-color:var(--accent);box-shadow:0 0 0 3px var(--accent2);}
+.field textarea{resize:vertical;min-height:64px;}
+.field-row{display:grid;grid-template-columns:1fr 1fr;gap:10px;}
+.hint{font-size:11px;color:var(--ink3);margin-top:3px;}
+.doc-tabs{display:flex;flex-wrap:wrap;gap:0;border-bottom:2px solid var(--border);padding:0 20px;background:var(--white);}
+.doc-tab{padding:10px 14px;font-size:12px;font-weight:500;cursor:pointer;color:var(--ink3);border-bottom:2px solid transparent;margin-bottom:-2px;transition:all .15s;white-space:nowrap;}
+.doc-tab.active{color:var(--accent);border-bottom-color:var(--accent);font-weight:600;}
+.preview-panel{background:#e8e7e0;overflow-y:auto;padding:32px 40px;display:flex;flex-direction:column;align-items:center;}
+.doc-sheet{background:var(--white);width:100%;max-width:760px;min-height:900px;padding:60px 72px;box-shadow:0 2px 16px rgba(0,0,0,.12);font-family:var(--font-doc);font-size:11.5pt;line-height:1.75;color:#111;}
+
+.doc-empresa{font-size:13pt;font-weight:bold;color:#1a3a5c;font-family:var(--font-ui);}
+.doc-folio{font-size:9pt;color:#666;font-family:var(--font-ui);text-align:right;line-height:1.4;}
+.doc-title{text-align:center;font-size:13pt;font-weight:bold;text-transform:uppercase;letter-spacing:.04em;margin:0 0 6px;color:#1a3a5c;}
+.doc-subtitle{text-align:center;font-size:10.5pt;color:#444;margin-bottom:18px;}
+.doc-p{margin-bottom:14px;text-align:justify;}
+.blank{font-weight:bold;color:#1a3a5c;border-bottom:1px solid #1a3a5c;padding:0 3px;min-width:30px;display:inline-block;}
+.blank.empty{color:#c0392b;border-bottom-color:#c0392b;font-style:italic;font-weight:normal;}
+.doc-clause-title{font-weight:bold;text-transform:uppercase;font-size:10.5pt;margin:18px 0 8px;color:#1a3a5c;}
+.tabla-form{width:100%;border-collapse:collapse;margin:12px 0;font-size:10.5pt;}
+.tabla-form th{background:#1a3a5c;color:#fff;padding:7px 12px;text-align:left;font-size:9.5pt;}
+.tabla-form td{padding:8px 12px;border-bottom:1px solid #eee;min-height:36px;vertical-align:top;}
+.tabla-form tr:nth-child(even) td{background:#f7f6f2;}
+.tabla-form td.lbl{font-weight:600;font-family:var(--font-ui);font-size:10pt;color:#444;width:38%;}
+.tabla-form td.val{font-size:10.5pt;}
+.check-grid{display:grid;grid-template-columns:1fr 1fr;gap:6px;margin:10px 0;}
+.check-item{display:flex;align-items:flex-start;gap:8px;font-size:10.5pt;line-height:1.4;}
+.check-box{width:14px;height:14px;border:1.5px solid #888;flex-shrink:0;margin-top:2px;}
+.firma-grid-2{display:grid;grid-template-columns:1fr 1fr;gap:40px;margin-top:40px;}
+.firma-grid-3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:24px;margin-top:40px;}
+.firma-box{border-top:1.5px solid #888;padding-top:8px;font-size:10pt;text-align:center;line-height:1.5;}
+.firma-box strong{display:block;font-size:9pt;color:#666;font-family:var(--font-ui);text-transform:uppercase;}
+.nota-legal{background:#f7f6f2;border:1px solid var(--border);border-left:3px solid #1a3a5c;padding:10px 14px;font-size:10.5pt;margin:14px 0;line-height:1.6;}
+.scale-row{display:flex;gap:0;margin:10px 0;}
+.scale-item{flex:1;text-align:center;padding:10px 4px;border:1px solid #ddd;font-size:10pt;cursor:pointer;}
+.scale-item:first-child{border-radius:4px 0 0 4px;}
+.scale-item:last-child{border-radius:0 4px 4px 0;}
+.watermark-empty{text-align:center;color:var(--ink3);font-family:var(--font-ui);font-size:13px;padding:80px 0;}
+@media print{header,.form-panel{display:none!important;}.workspace{display:block;height:auto;}.preview-panel{padding:0;background:white;}.doc-sheet{box-shadow:none;max-width:100%;padding:40px;}body{background:white;}}
+#auth-gate-loading{position:fixed;inset:0;background:#fff;z-index:9999;display:flex;align-items:center;justify-content:center;font-family:var(--font-ui);color:#999;font-size:13px;}
+#auth-gate-blocked{position:fixed;inset:0;background:#0f2640;z-index:9999;display:none;align-items:center;justify-content:center;padding:24px;}
+#auth-gate-blocked .agb-box{background:#fff;border-radius:16px;padding:40px 36px;max-width:420px;text-align:center;font-family:var(--font-ui);}
+  .cl-nav-logo{display:flex;align-items:center;font-size:15px;font-weight:800;color:#fff;letter-spacing:-.01em;line-height:1;text-decoration:none;}
+  .cl-nav-logo .cl-laboral{color:#5eead4;font-weight:400;}
+</style>
+<script src="membrete.js?v=3.7"></script>
+<script src="expediente-helper.js?v=3.7"></script>
+</head>
+<body>
+<div id="auth-gate-loading">Verificando acceso…</div>
+<div id="auth-gate-blocked">
+  <div class="agb-box"><div style="font-size:40px;margin-bottom:16px;">🔒</div><div style="font-size:18px;font-weight:700;color:#0f2640;margin-bottom:8px;">Acceso restringido</div><div style="font-size:13px;color:#666;margin-bottom:24px;">Requiere suscripción activa a ClickLaboral.mx.</div><a href="portal-cliente.html" style="display:inline-block;background:#0f2640;color:#fff;padding:11px 28px;border-radius:8px;text-decoration:none;font-weight:600;">Ir al portal</a></div>
+</div>
+
+<header>
+  <div class="cl-nav-logo" style="flex-shrink:0;"><svg width="26" height="26" viewBox="0 0 100 100" style="vertical-align:-7px;margin-right:6px;flex-shrink:0;">
+        <defs><linearGradient id="clGrad" x1="10" y1="10" x2="90" y2="95" gradientUnits="userSpaceOnUse">
+          <stop offset="0%" stop-color="#1a3a5c"/><stop offset="55%" stop-color="#1e6f6c"/><stop offset="100%" stop-color="#2dd4bf"/>
+        </linearGradient></defs>
+        <path d="M50 7 L83 20 V51 C83 73 68 87 50 95 C32 87 17 73 17 51 V20 Z" fill="none" stroke="url(#clGrad)" stroke-width="6" stroke-linejoin="round"/>
+        <circle cx="40" cy="38" r="8.5" fill="#5eead4"/>
+        <path d="M25 63 C25 51 31 45 40 45 C49 45 55 51 55 63 Z" fill="#5eead4"/>
+        <circle cx="55" cy="33" r="9.5" fill="#14b8a6"/>
+        <path d="M38 61 C38 48 45.5 41 55 41 C64.5 41 72 48 72 61 Z" fill="#14b8a6"/>
+        <path d="M29 61 L45 77 L78 40" fill="none" stroke="#e8f2fc" stroke-width="9" stroke-linecap="round" stroke-linejoin="round"/>
+      </svg>Click<span class="cl-laboral">Laboral.mx</span></div>
+  <div>
+    <h1>📋 Generador · Formatos de RH</h1>
+    <span style="font-size:11px;opacity:.65;">Solicitud de empleo · Oferta · Aviso privacidad · Evaluación · Protocolo acoso · Encuesta salida</span>
+  </div>
+  <div class="header-actions">
+    <button class="btn btn-outline" onclick="window.open('portal-cliente.html')">← Portal</button>
+    <button class="btn btn-primary" onclick="window.print()">🖨 Imprimir / PDF</button>
+  </div>
+</header>
+
+<div class="workspace">
+  <div class="form-panel">
+    <!-- ── MEMBRETE DEL CLIENTE ── -->
+    <div style="border-bottom:1px solid var(--border);margin-bottom:0;">
+      <div class="section-label" style="display:flex;align-items:center;justify-content:space-between;cursor:pointer;user-select:none;"
+           onclick="this.nextElementSibling.style.display=this.nextElementSibling.style.display==='none'?'block':'none'">
+        <span>🏢 Logo y pie de página</span>
+        <span style="font-size:10px;font-weight:400;color:var(--ink3);">▲ clic para colapsar</span>
+      </div>
+      <div id="mem-panel-wrap" style="display:block;padding:12px 0 14px;">
+        <div id="mem-logo-container"></div>
+      </div>
+    </div>
+    <!-- ── / MEMBRETE ── -->
+    <div class="doc-tabs">
+      <div class="doc-tab active" id="tab-solicitud"   onclick="setTab('solicitud')">📝 Solicitud de empleo</div>
+      <div class="doc-tab" id="tab-oferta"             onclick="setTab('oferta')">✉️ Carta oferta</div>
+      <div class="doc-tab" id="tab-privacidad"         onclick="setTab('privacidad')">🔒 Aviso de privacidad</div>
+      <div class="doc-tab" id="tab-evaluacion"         onclick="setTab('evaluacion')">⭐ Evaluación desempeño</div>
+      <div class="doc-tab" id="tab-acoso"              onclick="setTab('acoso')">🛡 Protocolo acoso</div>
+      <div class="doc-tab" id="tab-salida"             onclick="setTab('salida')">🚪 Encuesta de salida</div>
+    </div>
+
+    <div class="section-label">Datos de la empresa</div>
+    <div class="form-inner">
+      <div class="field"><label>Empresa / Razón social</label><input type="text" id="f-empresa" oninput="render()" placeholder="Empresa S.A. de C.V."></div>
+      <div class="field-row">
+        <div class="field"><label>RFC</label><input type="text" id="f-rfc" oninput="render()" placeholder="EMP010101AAA"></div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;">
+        <div class="field"><label>Teléfono</label><input type="text" id="mem-tel" oninput="render()" placeholder="33 1234 5678"></div>
+        <div class="field"><label>Email</label><input type="text" id="mem-email" oninput="render()" placeholder="contacto@empresa.mx"></div>
+      </div>
+      <div class="field"><label>Domicilio fiscal</label><input type="text" id="mem-domicilio" oninput="render()" placeholder="Calle, No., Col., Ciudad, C.P."></div>
+      <div class="field">
+        <label>Logo de la empresa (opcional)</label>
+        <div id="mem-logo-preview" style="display:none;margin-bottom:6px;display:flex;align-items:center;gap:8px;">
+          <img id="mem-logo-img" style="max-height:56px;max-width:140px;object-fit:contain;border:1px solid var(--border);border-radius:4px;padding:3px;">
+          <button onclick="removerLogo()" style="font-size:11px;color:#c0392b;background:none;border:none;cursor:pointer;">✕ Quitar</button>
+        </div>
+        <input type="file" id="mem-logo-file" accept="image/png,image/jpeg,image/svg+xml,image/webp" style="font-size:12px;width:100%;" onchange="cargarLogoMembrete(this)">
+        <div style="font-size:10px;color:var(--ink3);margin-top:3px;">PNG o JPG · máx. 2MB · aparece en el encabezado del documento impreso</div>
+      </div>
+        <div class="field"><label>Ciudad de firma</label><input type="text" id="ciudad_firma" oninput="render()" placeholder="Zapopan, Jalisco"></div>
+        <div class="field"><label>Fecha de firma</label><input type="date" id="fecha_firma" oninput="render()"></div>
+      </div>
+    </div>
+
+    <div id="campos-doc"></div>
+  </div>
+
+  <div class="preview-panel">
+    <div class="doc-sheet" id="doc-preview">
+      <div class="watermark-empty">Complete los datos del formulario</div>
+    </div>
+  </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
+<script>
+const sb=supabase.createClient('https://hpzgqaplrywwjuvrzhcp.supabase.co','sb_publishable_1g8US8iFJ8CxnSaF_4MHgA_gqyyAr3W');
+(async()=>{
+  const _sb = supabase.createClient('https://hpzgqaplrywwjuvrzhcp.supabase.co','sb_publishable_1g8US8iFJ8CxnSaF_4MHgA_gqyyAr3W');
+  try {
+    const { data } = await _sb.auth.getSession();
+    document.getElementById('auth-gate-loading').style.display = 'none';
+    if (!data?.session?.user) {
+      document.getElementById('auth-gate-blocked').style.display = 'flex';
+    }
+  } catch(e) {
+    document.getElementById('auth-gate-loading').style.display = 'none';
+    document.getElementById('auth-gate-blocked').style.display = 'flex';
+  }
+})();
+
+let docTab='solicitud';
+function v(id){return(document.getElementById(id)||{}).value||'';}
+function b(val,fb){return val&&val.trim()?`<span class="blank">${val}</span>`:`<span class="blank empty">${fb||'___________'}</span>`;}
+function fmtFecha(f){if(!f)return'___________';const d=new Date(f+'T12:00:00');return d.toLocaleDateString('es-MX',{day:'numeric',month:'long',year:'numeric'});}
+
+function setTab(tab){
+  docTab=tab;
+  ['solicitud','oferta','privacidad','evaluacion','acoso','salida'].forEach(t=>document.getElementById('tab-'+t).classList.toggle('active',t===tab));
+  renderCampos();render();
+}
+
+function renderCampos(){
+  const w=document.getElementById('campos-doc');
+  if(docTab==='solicitud'){
+    w.innerHTML=`
+      <div class="section-label">Datos del puesto</div>
+      <div class="form-inner">
+        <div class="field"><label>Puesto solicitado</label><input type="text" id="s-puesto" oninput="render()" placeholder="Nombre del puesto"></div>
+        <div class="field"><label>Fecha del documento</label><input type="date" id="s-fecha" oninput="render()"></div>
+      </div>`;
+  } else if(docTab==='oferta'){
+    w.innerHTML=`
+      <div class="section-label">Datos del candidato y oferta</div>
+      <div class="form-inner">
+        <div class="field"><label>Nombre del candidato</label><input type="text" id="o-nombre" oninput="render()" placeholder="Nombre completo"></div>
+        <div class="field"><label>Puesto ofrecido</label><input type="text" id="o-puesto" oninput="render()" placeholder="Gerente de Ventas"></div>
+        <div class="field-row">
+          <div class="field"><label>Salario mensual bruto (MXN)</label><input type="number" id="o-salario" oninput="render()" placeholder="18000"></div>
+          <div class="field"><label>Fecha de inicio</label><input type="date" id="o-inicio" oninput="render()"></div>
+        </div>
+        <div class="field"><label>Lugar de trabajo</label><input type="text" id="o-lugar" oninput="render()" placeholder="Oficinas principales / Remoto"></div>
+        <div class="field"><label>Horario</label><input type="text" id="o-horario" oninput="render()" placeholder="Lunes a viernes 09:00-18:00 hrs"></div>
+        <div class="field"><label>Prestaciones adicionales</label><textarea id="o-prestaciones" oninput="render()" placeholder="Seguro de gastos médicos&#10;Fondo de ahorro&#10;Vales de despensa $1,500/mes"></textarea></div>
+        <div class="field-row">
+          <div class="field"><label>Válida hasta</label><input type="date" id="o-vigencia" oninput="render()"></div>
+          <div class="field"><label>Fecha de la carta</label><input type="date" id="o-fecha" oninput="render()"></div>
+        </div>
+        <div class="field"><label>Nombre del firmante (RH/Director)</label><input type="text" id="o-firmante" oninput="render()" placeholder="Nombre del responsable de RH"></div>
+        <div class="field"><label>Cargo del firmante</label><input type="text" id="o-cargo-firm" oninput="render()" placeholder="Gerente de Recursos Humanos"></div>
+      </div>`;
+  } else if(docTab==='privacidad'){
+    w.innerHTML=`
+      <div class="section-label">Datos del responsable</div>
+      <div class="form-inner">
+        <div class="field"><label>Domicilio fiscal de la empresa</label><input type="text" id="p-domicilio" oninput="render()" placeholder="Calle, No., Col., Ciudad, C.P."></div>
+        <div class="field"><label>Email de contacto para datos personales</label><input type="text" id="p-email" oninput="render()" placeholder="privacidad@empresa.mx"></div>
+        <div class="field"><label>Fecha del aviso</label><input type="date" id="p-fecha" oninput="render()"></div>
+      </div>`;
+  } else if(docTab==='evaluacion'){
+    w.innerHTML=`
+      <div class="section-label">Datos del evaluado</div>
+      <div class="form-inner">
+        <div class="field"><label>Nombre del trabajador</label><input type="text" id="e-nombre" oninput="render()" placeholder="Nombre completo"></div>
+        <div class="field-row">
+          <div class="field"><label>Puesto</label><input type="text" id="e-puesto" oninput="render()" placeholder="Puesto actual"></div>
+          <div class="field"><label>Departamento</label><input type="text" id="e-depto" oninput="render()" placeholder="Área / Depto."></div>
+        </div>
+        <div class="field-row">
+          <div class="field"><label>Evaluador</label><input type="text" id="e-evaluador" oninput="render()" placeholder="Nombre del jefe directo"></div>
+          <div class="field"><label>Período evaluado</label><input type="text" id="e-periodo" oninput="render()" placeholder="Enero - Junio 2025"></div>
+        </div>
+        <div class="field"><label>Fecha de evaluación</label><input type="date" id="e-fecha" oninput="render()"></div>
+      </div>`;
+  } else if(docTab==='acoso'){
+    w.innerHTML=`
+      <div class="section-label">Datos de la queja</div>
+      <div class="form-inner">
+        <div class="field"><label>Nombre del denunciante (opcional)</label><input type="text" id="a-denunciante" oninput="render()" placeholder="Nombre o 'Anónimo'"></div>
+        <div class="field"><label>Nombre del denunciado</label><input type="text" id="a-denunciado" oninput="render()" placeholder="Nombre del presunto responsable"></div>
+        <div class="field"><label>Área / Departamento del denunciado</label><input type="text" id="a-area" oninput="render()" placeholder="Área donde trabaja el denunciado"></div>
+        <div class="field"><label>Tipo de conducta denunciada</label><select id="a-tipo" oninput="render()"><option value="hostigamiento_sexual">Hostigamiento sexual</option><option value="acoso_sexual">Acoso sexual</option><option value="acoso_laboral">Acoso laboral (mobbing)</option><option value="discriminacion">Discriminación</option><option value="otro">Otro</option></select></div>
+        <div class="field"><label>Descripción de los hechos</label><textarea id="a-hechos" oninput="render()" placeholder="Describir los hechos, fechas aproximadas y testigos si los hay..."></textarea></div>
+        <div class="field"><label>Fecha de presentación</label><input type="date" id="a-fecha" oninput="render()"></div>
+      </div>`;
+  } else {
+    w.innerHTML=`
+      <div class="section-label">Datos del colaborador que se retira</div>
+      <div class="form-inner">
+        <div class="field"><label>Nombre del colaborador</label><input type="text" id="sal-nombre" oninput="render()" placeholder="Nombre completo"></div>
+        <div class="field-row">
+          <div class="field"><label>Puesto</label><input type="text" id="sal-puesto" oninput="render()" placeholder="Puesto que desempeñaba"></div>
+          <div class="field"><label>Área</label><input type="text" id="sal-area" oninput="render()" placeholder="Departamento"></div>
+        </div>
+        <div class="field-row">
+          <div class="field"><label>Fecha de ingreso</label><input type="date" id="sal-ingreso" oninput="render()"></div>
+          <div class="field"><label>Fecha de baja</label><input type="date" id="sal-baja" oninput="render()"></div>
+        </div>
+        <div class="field"><label>Motivo de la separación</label><select id="sal-motivo" oninput="render()"><option>Renuncia voluntaria</option><option>Mutuo acuerdo</option><option>Rescisión por parte del patrón</option><option>Término de contrato</option><option>Otro</option></select></div>
+      </div>`;
+  }
+}
+
+function fmtMxn(n){ return '$'+(parseFloat(n)||0).toLocaleString('es-MX',{minimumFractionDigits:2}); }
+
+function render(){
+  const empresa = v('f-empresa'), rfc = v('f-rfc'), dom = v('mem-domicilio');
+  const tel = v('mem-tel'), email = v('mem-email'), web = v('mem-web');
+  const ciudad = v('ciudad_firma');
+  const fecha_firma_fmt = v('fecha_firma');
+  const d = getDatosMembrete();
+  const membrete = generarMembrete({...d, empresa:empresa||d.empresa, folio:''});
+  const footer   = generarFooterDoc({...d, empresa:empresa||d.empresa});
+  const preview  = document.getElementById('doc-preview');
+  if(!preview) return;
+
+  let cuerpo = '';
+  const folio = docTab.toUpperCase().slice(0,3) + '-' + new Date().getFullYear() + '-' + String(Math.floor(Math.random()*9000)+1000);
+
+  if(docTab === 'solicitud'){
+    const puesto = v('s-puesto'), fecha = v('s-fecha');
+    cuerpo = `
+      <div class="doc-title">SOLICITUD DE EMPLEO</div>
+      <div class="doc-subtitle">Puesto: ${b(puesto,'[puesto solicitado]')} · Fecha: ${b(fecha?fmtFecha(fecha):'','_______________')}</div>
+      <div style="margin:18px 0;font-size:10pt;color:#444;font-family:var(--font-ui);">Empresa: <strong>${empresa||'[Empresa]'}</strong>${ciudad?' · '+ciudad:''}</div>
+      <table class="tabla-form">
+        <tr><td class="lbl">Nombre completo</td><td class="val"></td></tr>
+        <tr><td class="lbl">Fecha de nacimiento</td><td class="val"></td></tr>
+        <tr><td class="lbl">RFC / CURP</td><td class="val"></td></tr>
+        <tr><td class="lbl">NSS (IMSS)</td><td class="val"></td></tr>
+        <tr><td class="lbl">Domicilio</td><td class="val"></td></tr>
+        <tr><td class="lbl">Teléfono / Email</td><td class="val"></td></tr>
+        <tr><td class="lbl">Escolaridad</td><td class="val"></td></tr>
+        <tr><td class="lbl">Experiencia laboral previa</td><td class="val"></td></tr>
+        <tr><td class="lbl">Puesto solicitado</td><td class="val">${b(puesto,'___________')}</td></tr>
+        <tr><td class="lbl">Pretensión económica</td><td class="val"></td></tr>
+        <tr><td class="lbl">Disponibilidad para iniciar</td><td class="val"></td></tr>
+        <tr><td class="lbl">¿Tiene vehículo propio?</td><td class="val">☐ Sí &nbsp; ☐ No</td></tr>
+        <tr><td class="lbl">Referencias personales</td><td class="val" style="height:50px;"></td></tr>
+      </table>
+      <div style="margin-top:24px;font-size:10pt;font-family:var(--font-ui);color:#444;">Declaro que los datos proporcionados son verídicos y autorizo su verificación.</div>
+      <div class="doc-firma-grid" style="margin-top:36px;">
+        <div class="firma-box"><br><br><strong>Firma del candidato</strong></div>
+        <div class="firma-box"><br><br><strong>Recibió — Recursos Humanos</strong><br>${empresa||''}</div>
+      </div>`;
+  } else if(docTab === 'oferta'){
+    const nombre=v('o-nombre'),puesto=v('o-puesto'),salario=v('o-salario');
+    const inicio=v('o-inicio'),lugar=v('o-lugar'),horario=v('o-horario');
+    const prestaciones=v('o-prestaciones'),vigencia=v('o-vigencia'),fecha=v('o-fecha');
+    const firmante=v('o-firmante'),cargo=v('o-cargo-firm');
+    cuerpo = `
+      <div class="doc-title">CARTA OFERTA DE TRABAJO</div>
+      <div class="doc-subtitle">Oferta formal de empleo · Art. 25 LFT</div>
+      <p class="doc-p">${ciudad||'___________'}, a ${b(fecha?fmtFecha(fecha):'','__ de __ de ____')}.</p>
+      <p class="doc-p">Estimado(a) <strong>${b(nombre,'[Nombre del candidato]')}</strong>:</p>
+      <p class="doc-p">Es para nosotros un gusto extenderle la presente <strong>carta oferta de trabajo</strong> por parte de <strong>${empresa||'[Empresa]'}</strong>, para ocupar el puesto de <strong>${b(puesto,'[puesto]')}</strong> bajo las siguientes condiciones:</p>
+      <table class="tabla-form">
+        <tr><td class="lbl">Puesto</td><td class="val">${b(puesto,'___________')}</td></tr>
+        <tr><td class="lbl">Salario mensual bruto</td><td class="val">${salario?fmtMxn(salario):'___________'}</td></tr>
+        <tr><td class="lbl">Fecha de inicio</td><td class="val">${inicio?fmtFecha(inicio):'___________'}</td></tr>
+        <tr><td class="lbl">Lugar de trabajo</td><td class="val">${b(lugar,'___________')}</td></tr>
+        <tr><td class="lbl">Horario</td><td class="val">${b(horario,'___________')}</td></tr>
+        ${prestaciones?`<tr><td class="lbl">Prestaciones adicionales</td><td class="val">${prestaciones}</td></tr>`:''}
+        ${vigencia?`<tr><td class="lbl">Vigencia de la oferta</td><td class="val">${fmtFecha(vigencia)}</td></tr>`:''}
+      </table>
+      <p class="doc-p" style="margin-top:16px;">Esta oferta está sujeta a la firma del contrato individual de trabajo correspondiente y a la verificación de la documentación solicitada.</p>
+      <div class="doc-firma-grid" style="margin-top:36px;">
+        <div class="firma-box"><br><br><strong>${b(firmante,'Nombre del firmante')}</strong><br>${b(cargo,'Cargo')} · ${empresa||'[Empresa]'}</div>
+        <div class="firma-box"><br><br><strong>Acepto la oferta</strong><br>${b(nombre,'Candidato')}</div>
+      </div>`;
+  } else if(docTab === 'privacidad'){
+    const domPriv=v('p-domicilio')||dom, emailPriv=v('p-email')||email, fechaPriv=v('p-fecha');
+    cuerpo = `
+      <div class="doc-title">AVISO DE PRIVACIDAD</div>
+      <div class="doc-subtitle">Datos personales de colaboradores · Art. 17 LFPDPPP</div>
+      <p class="doc-p"><strong>${empresa||'[Empresa]'}</strong>${rfc?', RFC '+rfc:''}, con domicilio en ${b(domPriv,'[domicilio]')}, es responsable del tratamiento de sus datos personales.</p>
+      <div class="doc-clause-title">Datos personales recabados</div>
+      <p class="doc-p">Nombre completo, RFC, CURP, NSS, domicilio, teléfono, correo electrónico, escolaridad, historial laboral, datos bancarios para pago de nómina, y datos biométricos (huella digital) para control de asistencia.</p>
+      <div class="doc-clause-title">Finalidades del tratamiento</div>
+      <p class="doc-p">Los datos personales serán utilizados para: (a) gestión de la relación laboral; (b) cumplimiento de obligaciones fiscales y de seguridad social (IMSS, INFONAVIT, SAT); (c) pago de nómina y prestaciones; (d) control de asistencia y productividad; (e) capacitación y desarrollo profesional.</p>
+      <div class="doc-clause-title">Transferencias</div>
+      <p class="doc-p">Sus datos podrán ser transferidos a: IMSS, INFONAVIT, SAT, STPS y demás autoridades competentes, en cumplimiento de obligaciones legales, sin requerir su consentimiento conforme al Art. 37 LFPDPPP.</p>
+      <div class="doc-clause-title">Derechos ARCO</div>
+      <p class="doc-p">Usted tiene derecho de Acceso, Rectificación, Cancelación y Oposición (ARCO) al tratamiento de sus datos. Para ejercerlos contacte a: ${b(emailPriv,'[email de contacto]')}.</p>
+      <p class="doc-p">Fecha: ${fechaPriv?fmtFecha(fechaPriv):'_______________'}</p>
+      <div class="doc-firma-grid" style="margin-top:36px;">
+        <div class="firma-box"><br><br><strong>Responsable de datos</strong><br>${empresa||'[Empresa]'}</div>
+        <div class="firma-box"><br><br><strong>Enterado y conforme</strong><br>Colaborador</div>
+      </div>`;
+  } else if(docTab === 'evaluacion'){
+    const nombre=v('e-nombre'),puesto=v('e-puesto'),depto=v('e-depto');
+    const evaluador=v('e-evaluador'),periodo=v('e-periodo'),fecha=v('e-fecha');
+    const cats=['Calidad del trabajo','Productividad','Trabajo en equipo','Puntualidad y asistencia','Iniciativa','Comunicación','Conocimiento del puesto','Actitud ante el trabajo'];
+    cuerpo = `
+      <div class="doc-title">EVALUACIÓN DE DESEMPEÑO</div>
+      <div class="doc-subtitle">Período: ${b(periodo,'[período]')} · Fecha: ${b(fecha?fmtFecha(fecha):'','___________')}</div>
+      <table class="tabla-form" style="margin-bottom:16px;">
+        <tr><td class="lbl">Colaborador</td><td class="val">${b(nombre,'___________')}</td></tr>
+        <tr><td class="lbl">Puesto</td><td class="val">${b(puesto,'___________')}</td></tr>
+        <tr><td class="lbl">Departamento</td><td class="val">${b(depto,'___________')}</td></tr>
+        <tr><td class="lbl">Evaluador</td><td class="val">${b(evaluador,'___________')}</td></tr>
+      </table>
+      <table class="tabla-form">
+        <thead><tr><th>Competencia</th><th>1-Deficiente</th><th>2-Regular</th><th>3-Bueno</th><th>4-Muy bueno</th><th>5-Excelente</th></tr></thead>
+        <tbody>${cats.map(cat=>`<tr><td class="lbl">${cat}</td><td>☐</td><td>☐</td><td>☐</td><td>☐</td><td>☐</td></tr>`).join('')}</tbody>
+      </table>
+      <div style="margin-top:14px;"><strong>Comentarios del evaluador:</strong><br><div style="border:1px solid #ddd;min-height:60px;margin-top:6px;padding:8px;"></div></div>
+      <div class="doc-firma-grid" style="margin-top:36px;">
+        <div class="firma-box"><br><br><strong>Evaluador</strong><br>${b(evaluador,'Nombre')}</div>
+        <div class="firma-box"><br><br><strong>Colaborador evaluado</strong><br>${b(nombre,'Nombre')}</div>
+      </div>`;
+  } else if(docTab === 'acoso'){
+    const denunciante=v('a-denunciante'),denunciado=v('a-denunciado');
+    const area=v('a-area'),tipo=v('a-tipo'),hechos=v('a-hechos'),fecha=v('a-fecha');
+    cuerpo = `
+      <div class="doc-title">QUEJA / DENUNCIA</div>
+      <div class="doc-subtitle">Protocolo contra el hostigamiento y acoso · NOM-035-STPS-2018</div>
+      <p class="doc-p">En las instalaciones de <strong>${empresa||'[Empresa]'}</strong>, siendo el ${fecha?fmtFecha(fecha):'_______________'}, se recibe la siguiente queja formal:</p>
+      <table class="tabla-form">
+        <tr><td class="lbl">Nombre del denunciante</td><td class="val">${b(denunciante,'Confidencial / Anónima')}</td></tr>
+        <tr><td class="lbl">Nombre del denunciado</td><td class="val">${b(denunciado,'___________')}</td></tr>
+        <tr><td class="lbl">Área / Departamento</td><td class="val">${b(area,'___________')}</td></tr>
+        <tr><td class="lbl">Tipo de conducta</td><td class="val">${b(tipo,'___________')}</td></tr>
+      </table>
+      <div class="doc-clause-title">Descripción de los hechos</div>
+      <p class="doc-p">${b(hechos,'[Describa detalladamente los hechos, fechas, lugares y testigos]')}</p>
+      <div class="doc-clause-title">Compromiso de confidencialidad</div>
+      <p class="doc-p">La empresa se compromete a mantener la confidencialidad de esta queja y a investigar los hechos de manera imparcial, conforme al procedimiento establecido en el Protocolo de Actuación de la Comisión Mixta de Seguridad e Higiene.</p>
+      <div class="doc-firma-grid" style="margin-top:36px;">
+        <div class="firma-box"><br><br><strong>Recibió</strong><br>Comisión Mixta · ${empresa||''}</div>
+        <div class="firma-box"><br><br><strong>Denunciante</strong><br>(firma opcional)</div>
+      </div>`;
+  } else { // salida
+    const nombre=v('sal-nombre'),puesto=v('sal-puesto'),area=v('sal-area');
+    const ingreso=v('sal-ingreso'),baja=v('sal-baja'),motivo=v('sal-motivo');
+    const pregs=[
+      '¿Recibió capacitación suficiente para su puesto?',
+      '¿Cómo califica el ambiente de trabajo?',
+      '¿Su carga de trabajo fue razonable?',
+      '¿Cómo fue su relación con su jefe inmediato?',
+      '¿Recomendaría a la empresa como lugar de trabajo?',
+      '¿Consideraría regresar a trabajar con nosotros?',
+    ];
+    cuerpo = `
+      <div class="doc-title">ENCUESTA DE SALIDA</div>
+      <div class="doc-subtitle">Entrevista de desvinculación laboral</div>
+      <table class="tabla-form" style="margin-bottom:16px;">
+        <tr><td class="lbl">Nombre</td><td class="val">${b(nombre,'___________')}</td></tr>
+        <tr><td class="lbl">Puesto</td><td class="val">${b(puesto,'___________')}</td></tr>
+        <tr><td class="lbl">Área</td><td class="val">${b(area,'___________')}</td></tr>
+        <tr><td class="lbl">Fecha de ingreso</td><td class="val">${ingreso?fmtFecha(ingreso):'___________'}</td></tr>
+        <tr><td class="lbl">Fecha de baja</td><td class="val">${baja?fmtFecha(baja):'___________'}</td></tr>
+        <tr><td class="lbl">Motivo de salida</td><td class="val">${b(motivo,'___________')}</td></tr>
+      </table>
+      <table class="tabla-form">
+        <thead><tr><th>Pregunta</th><th>Muy malo</th><th>Malo</th><th>Regular</th><th>Bueno</th><th>Muy bueno</th></tr></thead>
+        <tbody>${pregs.map(p=>`<tr><td class="lbl" style="font-size:9.5pt;">${p}</td><td>☐</td><td>☐</td><td>☐</td><td>☐</td><td>☐</td></tr>`).join('')}</tbody>
+      </table>
+      <div style="margin-top:14px;"><strong>Comentarios y sugerencias:</strong><br><div style="border:1px solid #ddd;min-height:70px;margin-top:6px;padding:8px;"></div></div>
+      <div class="doc-firma-grid" style="margin-top:36px;">
+        <div class="firma-box"><br><br><strong>Entrevistador</strong><br>Recursos Humanos · ${empresa||''}</div>
+        <div class="firma-box"><br><br><strong>${b(nombre,'Colaborador')}</strong></div>
+      </div>`;
+  }
+
+  preview.innerHTML = membrete + `
+    <div style="text-align:right;font-size:8.5pt;color:#aaa;font-family:var(--font-ui);margin-bottom:16px;">Folio: ${folio}</div>
+    ${cuerpo}
+    ${footer}`;
+}
+
+
+renderPanelMembrete('mem-logo-container');
+(async()=>{
+  try{
+    const _sb = supabase.createClient(
+      'https://hpzgqaplrywwjuvrzhcp.supabase.co',
+      'sb_publishable_1g8US8iFJ8CxnSaF_4MHgA_gqyyAr3W'
+    );
+    await precargarMembreteDesdePortal(_sb);
+  }catch(e){}
+})();
+setTab('solicitud');
+// ── Expediente del trabajador ──
+if (window.ExpedienteHelper) {
+  ExpedienteHelper.init({
+    inputNombreId: 'o-nombre',
+    tipoDocumento: 'formato_rh',
+    nombreDocumentoFn: () => ({ solicitud:'Solicitud de empleo', oferta:'Carta oferta', privacidad:'Aviso de privacidad', evaluacion:'Evaluación de desempeño', acoso:'Queja/Denuncia', salida:'Encuesta de salida' }[docTab] || 'Formato RH'),
+  });
+}
+</script>
+<script src="edicion-libre.js?v=4.6"></script>
+
+
+
+
+</body>
+</html>

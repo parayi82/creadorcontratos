@@ -1,0 +1,857 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<script>
+(function(){
+  var params=new URLSearchParams(window.location.search);
+  var modo=params.get('editar')==='1'?'editar':params.get('recuperar')==='1'?'ver':null;
+  if(!modo) return;
+  var gen=window.location.pathname.split('/').pop();
+  var key=(modo==='editar'?'doc_editar_':'doc_recuperado_')+gen.replace('.html','');
+  var g=null; try{g=JSON.parse(localStorage.getItem(key)||'null');}catch(e){}
+  if(!g||!g.html) return;
+  // Bloquear render() para no sobreescribir el contenido
+  var _bloqueado=false,_orig=null;
+  function bloquear(){
+    if(typeof window.render==='function'&&!_bloqueado){
+      _orig=window.render; window.render=function(){}; _bloqueado=true;
+    }
+  }
+  bloquear(); var _iv=setInterval(bloquear,50);
+  function inyectar(){
+    var pr=document.getElementById('doc-preview');
+    if(!pr){setTimeout(inyectar,80);return;}
+    clearInterval(_iv); bloquear();
+    pr.innerHTML=g.html;
+    // En modo editar: activar contenteditable automáticamente
+    if(modo==='editar'){
+      pr.contentEditable='true';
+      pr.style.outline='2px dashed #0f766e';
+      pr.style.cursor='text';
+    }
+    // Banner
+    var b=document.createElement('div');
+    b.id='banner-doc';
+    b.style.cssText='position:sticky;top:0;z-index:200;background:'+(modo==='editar'?'#f0fdf4':'#eff6ff')+';border-bottom:2px solid '+(modo==='editar'?'#86efac':'#93c5fd')+';padding:10px 16px;font-size:12px;color:'+(modo==='editar'?'#166534':'#1e40af')+';display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap;';
+    var etiq=modo==='editar'?'✏️ Modo edición — edita el documento directamente':'📄 Documento guardado';
+    var sp=document.createElement('span');
+    sp.innerHTML='<strong>'+etiq+'</strong> — '+(g.nombre||'')+' · '+(g.fecha||'');
+    var bt=document.createElement('button');
+    bt.textContent=modo==='editar'?'🔄 Restaurar campos':'✏️ Editar';
+    bt.style.cssText='border:1px solid currentColor;background:transparent;color:inherit;padding:4px 12px;border-radius:6px;font-size:11px;cursor:pointer;white-space:nowrap;';
+    bt.onclick=function(){
+      _bloqueado=false;
+      pr.contentEditable='false';
+      pr.style.outline=''; pr.style.cursor='';
+      if(_orig) window.render=_orig;
+      var bel=document.getElementById('banner-doc');
+      if(bel) bel.remove();
+      localStorage.removeItem(key);
+      if(typeof window.render==='function') window.render();
+    };
+    b.appendChild(sp); b.appendChild(bt);
+    pr.insertBefore(b,pr.firstChild);
+    localStorage.removeItem(key);
+  }
+  document.readyState==='loading'?document.addEventListener('DOMContentLoaded',inyectar):inyectar();
+})();
+</script>
+
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Generador · Cartas Laborales</title>
+<style>
+  :root{--ink:#1a1a18;--ink2:#4a4a46;--ink3:#8a8a84;--surface:#f7f6f2;--white:#ffffff;--accent:#1a3a5c;--accent2:#e8f0f8;--border:#ddddd6;--danger:#c0392b;--green:#16a34a;--radius:6px;--font-ui:'Segoe UI',system-ui,sans-serif;--font-doc:'Times New Roman',Georgia,serif;}
+  *{box-sizing:border-box;margin:0;padding:0;}
+  body{font-family:var(--font-ui);background:var(--surface);color:var(--ink);min-height:100vh;font-size:14px;}
+  header{background:var(--accent);color:#fff;padding:14px 28px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:100;box-shadow:0 1px 4px rgba(0,0,0,.18);}
+  header h1{font-size:15px;font-weight:600;}
+  header span{font-size:12px;opacity:.7;}
+  .header-actions{display:flex;gap:10px;}
+  .btn{padding:7px 18px;border-radius:var(--radius);font-size:13px;font-weight:500;cursor:pointer;border:1px solid transparent;transition:background .15s,opacity .15s;}
+  .btn-outline{background:transparent;border-color:rgba(255,255,255,.45);color:#fff;}.btn-outline:hover{background:rgba(255,255,255,.12);}
+  .btn-primary{background:#fff;color:var(--accent);}.btn-primary:hover{opacity:.88;}
+  .workspace{display:grid;grid-template-columns:380px 1fr;height:calc(100vh - 52px);}
+  .form-panel{background:var(--white);border-right:1px solid var(--border);overflow-y:auto;padding:24px 24px 40px;}
+  .section-label{font-size:10px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:var(--accent);padding:20px 0 10px;border-bottom:1px solid var(--border);margin-bottom:14px;}
+  .section-label:first-child{padding-top:4px;}
+  .field{margin-bottom:13px;}
+  .field label{display:block;font-size:12px;font-weight:500;color:var(--ink2);margin-bottom:4px;}
+  .field label .req{color:var(--danger);margin-left:2px;}
+  .field input,.field select,.field textarea{width:100%;padding:8px 10px;border:1px solid var(--border);border-radius:var(--radius);font-size:13px;font-family:var(--font-ui);color:var(--ink);background:var(--white);transition:border-color .15s;}
+  .field input:focus,.field select:focus,.field textarea:focus{outline:none;border-color:var(--accent);box-shadow:0 0 0 3px var(--accent2);}
+  .field textarea{resize:vertical;min-height:60px;}
+  .field-row{display:grid;grid-template-columns:1fr 1fr;gap:10px;}
+  .hint{font-size:11px;color:var(--ink3);margin-top:3px;}
+  .alert-box{background:#fff8e1;border:1px solid #f0c040;border-radius:var(--radius);padding:10px 14px;font-size:12px;color:#7a5f00;margin-bottom:14px;line-height:1.5;}
+  .toggle-group{display:flex;gap:8px;flex-wrap:wrap;}
+  .toggle-opt{padding:5px 12px;border:1px solid var(--border);border-radius:20px;font-size:12px;cursor:pointer;transition:all .15s;user-select:none;color:var(--ink2);}
+  .toggle-opt.active{background:var(--accent);border-color:var(--accent);color:#fff;font-weight:500;}
+  .clause-check{display:flex;align-items:flex-start;gap:8px;margin-bottom:8px;}
+  .clause-check input[type=checkbox]{margin-top:2px;accent-color:var(--accent);}
+  .clause-check label{font-size:12px;color:var(--ink2);cursor:pointer;line-height:1.4;}
+  .tipo-tabs{display:grid;grid-template-columns:1fr 1fr 1fr 1fr;gap:0;border:1px solid var(--border);border-radius:var(--radius);overflow:hidden;margin-bottom:16px;}
+  .tipo-tab{padding:10px 4px;text-align:center;font-size:11px;font-weight:500;cursor:pointer;background:var(--white);color:var(--ink2);border:none;transition:all .15s;line-height:1.3;}
+  .tipo-tab:not(:last-child){border-right:1px solid var(--border);}
+  .tipo-tab.active{background:var(--accent);color:#fff;}
+  .calc-box{background:#f0f6ff;border:1px solid #b8d0ee;border-radius:var(--radius);padding:12px 14px;margin:10px 0;font-size:12px;color:var(--accent);}
+  .calc-row{display:flex;justify-content:space-between;padding:3px 0;}
+  .calc-row.total{border-top:1px solid #b8d0ee;margin-top:6px;padding-top:8px;font-weight:700;font-size:13px;}
+  .preview-panel{background:#e8e7e0;overflow-y:auto;padding:32px 40px;display:flex;flex-direction:column;align-items:center;}
+  .doc-sheet{background:var(--white);width:100%;max-width:760px;min-height:1060px;padding:72px 80px;box-shadow:0 2px 16px rgba(0,0,0,.12);font-family:var(--font-doc);font-size:12pt;line-height:1.75;color:#111;}
+  
+  .doc-logo-empresa{font-size:14pt;font-weight:bold;color:var(--accent);font-family:var(--font-ui);max-width:340px;}
+  .doc-folio{font-size:9pt;color:var(--ink3);font-family:var(--font-ui);text-align:right;line-height:1.4;}
+  .doc-title{text-align:center;font-size:13pt;font-weight:bold;text-transform:uppercase;letter-spacing:.04em;margin-bottom:6px;}
+  .doc-subtitle{text-align:center;font-size:10pt;color:var(--ink3);font-family:var(--font-ui);margin-bottom:28px;}
+  .doc-p{margin-bottom:14px;text-align:justify;}
+  .doc-p .blank{font-weight:bold;color:var(--accent);border-bottom:1px solid var(--accent);padding:0 2px;}
+  .doc-p .blank.empty{color:#c0392b;border-bottom-color:#c0392b;font-style:italic;font-weight:normal;}
+  .doc-clause-title{font-weight:bold;text-transform:uppercase;font-size:10.5pt;margin:22px 0 8px;}
+  .doc-table{width:100%;border-collapse:collapse;margin:14px 0;font-size:10.5pt;}
+  .doc-table td,.doc-table th{border:1px solid #999;padding:6px 10px;text-align:left;}
+  .doc-table th{background:#f0f0ec;font-family:var(--font-ui);font-size:9pt;text-transform:uppercase;}
+  .doc-table td.num{text-align:right;}
+  .doc-table tr.total td{font-weight:bold;background:#f7f7f2;}
+  .doc-firma-grid{display:grid;grid-template-columns:1fr 1fr;gap:40px;margin-top:60px;}
+  .firma-box{border-top:1px solid #888;padding-top:8px;font-size:10pt;text-align:center;line-height:1.5;}
+  .firma-box strong{display:block;font-size:9pt;color:var(--ink3);font-family:var(--font-ui);}
+  .watermark-empty{text-align:center;color:var(--ink3);font-family:var(--font-ui);font-size:13px;padding:80px 0;}
+  @media print{header,.form-panel{display:none!important;}.workspace{display:block;height:auto;}.preview-panel{padding:0;background:white;}.doc-sheet{box-shadow:none;max-width:100%;padding:40px;}body{background:white;}}
+
+#auth-gate-loading{position:fixed;inset:0;background:#fff;z-index:9999;display:flex;align-items:center;justify-content:center;font-family:'Segoe UI',system-ui,sans-serif;color:#999;font-size:13px;}
+#auth-gate-blocked{position:fixed;inset:0;background:#0f2640;z-index:9999;display:none;align-items:center;justify-content:center;padding:24px;}
+#auth-gate-blocked .agb-box{background:#fff;border-radius:16px;padding:40px 36px;max-width:420px;text-align:center;font-family:'Segoe UI',system-ui,sans-serif;}
+#auth-gate-blocked .agb-box h2{font-size:18px;margin-bottom:10px;color:#0f2640;}
+#auth-gate-blocked .agb-box p{font-size:13px;color:#666;margin-bottom:20px;line-height:1.6;}
+#auth-gate-blocked .agb-btns{display:flex;gap:10px;justify-content:center;flex-wrap:wrap;}
+#auth-gate-blocked .agb-btns a{padding:10px 18px;border-radius:8px;font-size:13px;font-weight:600;text-decoration:none;}
+#auth-gate-blocked .agb-btns a.agb-primary{background:#1a3a5c;color:#fff;}
+#auth-gate-blocked .agb-btns a.agb-secondary{background:#f0f0ec;color:#1a3a5c;}
+body.modo-demo .doc-sheet{position:relative;user-select:none;-webkit-user-select:none;-moz-user-select:none;}
+body.modo-demo .doc-sheet::after{content:'MUESTRA — CUENTA DEMO, NO VÁLIDO PARA USO LEGAL';position:absolute;top:46%;left:-15%;right:-15%;text-align:center;font-size:26px;font-weight:900;color:rgba(220,38,38,.16);transform:rotate(-18deg);pointer-events:none;font-family:'Segoe UI',system-ui,sans-serif;z-index:50;}
+@media print{ body.modo-demo .doc-sheet::after{display:block!important;color:rgba(220,38,38,.35)!important;} }
+  .cl-nav-logo{display:flex;align-items:center;font-size:15px;font-weight:800;color:#fff;letter-spacing:-.01em;line-height:1;text-decoration:none;}
+  .cl-nav-logo .cl-laboral{color:#5eead4;font-weight:400;}
+</style>
+<script src="membrete.js?v=3.7"></script>
+</head>
+<body>
+<div id="auth-gate-loading">Verificando acceso…</div>
+<div id="auth-gate-blocked">
+  <div class="agb-box">
+    <h2>🔒 Esta herramienta requiere una suscripción activa</h2>
+    <p>Inicie sesión desde su portal de cliente para usar este generador, o conozca nuestros planes si todavía no es cliente de ClickLaboral.mx.</p>
+    <div class="agb-btns">
+      <a class="agb-primary" href="portal-cliente.html">Iniciar sesión →</a>
+      <a class="agb-secondary" href="index.html#precios">Ver planes</a>
+    </div>
+  </div>
+</div>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
+<script src="expediente-helper.js?v=3.7"></script>
+<script>
+(async()=>{
+  const _sb = supabase.createClient('https://hpzgqaplrywwjuvrzhcp.supabase.co','sb_publishable_1g8US8iFJ8CxnSaF_4MHgA_gqyyAr3W');
+  try {
+    const { data } = await _sb.auth.getSession();
+    document.getElementById('auth-gate-loading').style.display = 'none';
+    if (!data?.session?.user) {
+      document.getElementById('auth-gate-blocked').style.display = 'flex';
+    }
+  } catch(e) {
+    document.getElementById('auth-gate-loading').style.display = 'none';
+    document.getElementById('auth-gate-blocked').style.display = 'flex';
+  }
+})();
+
+</script>
+
+<header>
+  <div class="cl-nav-logo" style="flex-shrink:0;"><svg width="26" height="26" viewBox="0 0 100 100" style="vertical-align:-7px;margin-right:6px;flex-shrink:0;">
+        <defs><linearGradient id="clGrad" x1="10" y1="10" x2="90" y2="95" gradientUnits="userSpaceOnUse">
+          <stop offset="0%" stop-color="#1a3a5c"/><stop offset="55%" stop-color="#1e6f6c"/><stop offset="100%" stop-color="#2dd4bf"/>
+        </linearGradient></defs>
+        <path d="M50 7 L83 20 V51 C83 73 68 87 50 95 C32 87 17 73 17 51 V20 Z" fill="none" stroke="url(#clGrad)" stroke-width="6" stroke-linejoin="round"/>
+        <circle cx="40" cy="38" r="8.5" fill="#5eead4"/>
+        <path d="M25 63 C25 51 31 45 40 45 C49 45 55 51 55 63 Z" fill="#5eead4"/>
+        <circle cx="55" cy="33" r="9.5" fill="#14b8a6"/>
+        <path d="M38 61 C38 48 45.5 41 55 41 C64.5 41 72 48 72 61 Z" fill="#14b8a6"/>
+        <path d="M29 61 L45 77 L78 40" fill="none" stroke="#e8f2fc" stroke-width="9" stroke-linecap="round" stroke-linejoin="round"/>
+      </svg>Click<span class="cl-laboral">Laboral.mx</span></div>
+  <div>
+    <h1>Generador de Cartas Laborales · ClickLaboral.mx</h1>
+    <span>Renuncia · Recomendación · Constancia · Finiquito · Liquidación</span>
+  </div>
+  <div class="header-actions">
+    <button class="btn btn-outline" onclick="limpiar()">Limpiar</button>
+    <button class="btn btn-outline" id="btn-guardar-exp" onclick="guardarEnExpediente()" style="background:rgba(255,255,255,.15);border-color:rgba(255,255,255,.5);">💾 Guardar en expediente</button>
+    <button class="btn btn-primary" onclick="window.print()">🖨 Imprimir / PDF</button>
+  </div>
+</header>
+<div class="workspace">
+  <div class="form-panel">
+    <!-- ── MEMBRETE DEL CLIENTE ── -->
+    <div style="border-bottom:1px solid var(--border);margin-bottom:0;">
+      <div class="section-label" style="display:flex;align-items:center;justify-content:space-between;cursor:pointer;user-select:none;"
+           onclick="this.nextElementSibling.style.display=this.nextElementSibling.style.display==='none'?'block':'none'">
+        <span>🏢 Logo y pie de página</span>
+        <span style="font-size:10px;font-weight:400;color:var(--ink3);">▲ clic para colapsar</span>
+      </div>
+      <div id="mem-panel-wrap" style="display:block;padding:12px 0 14px;">
+        <div id="mem-logo-container"></div>
+      </div>
+    </div>
+    <!-- ── / MEMBRETE ── -->
+    <div class="section-label">Tipo de documento</div>
+    <div class="tipo-tabs">
+      <div class="tipo-tab active" id="tab-renuncia" onclick="setTipo('renuncia')">📤 Renuncia</div>
+      <div class="tipo-tab" id="tab-recomendacion" onclick="setTipo('recomendacion')">⭐ Recomendación</div>
+      <div class="tipo-tab" id="tab-constancia" onclick="setTipo('constancia')">📑 Constancia</div>
+      <div class="tipo-tab" id="tab-finiquito" onclick="setTipo('finiquito')">💰 Finiquito</div>
+      <div class="tipo-tab" id="tab-liquidacion" onclick="setTipo('liquidacion')">⚖️ Liquidación</div>
+    </div>
+
+    <div class="section-label">Datos de la empresa</div>
+    <div class="field"><label>Razón social <span class="req">*</span></label><input type="text" id="empresa" oninput="render()" placeholder="Ej. Comercializadora Norte, S.A. de C.V."></div>
+    <div class="field"><label>Domicilio del centro de trabajo</label><input type="text" id="domicilio_empresa" oninput="render()" placeholder="Calle, No., Colonia, Ciudad, Estado, C.P."></div>
+    <div class="field"><label>Representante / firmante (RRHH)</label><input type="text" id="representante" oninput="render()" placeholder="Nombre completo y puesto"></div>
+
+    <div class="section-label">Datos del trabajador</div>
+    <div class="field"><label>Nombre completo <span class="req">*</span></label><input type="text" id="trabajador" oninput="render()" placeholder="Nombre(s) Apellido Paterno Apellido Materno"></div>
+    <div class="field-row">
+      <div class="field"><label>Puesto</label><input type="text" id="puesto" oninput="render()" placeholder="Puesto / cargo"></div>
+      <div class="field"><label>CURP</label><input type="text" id="curp" oninput="render()" maxlength="18"></div>
+    </div>
+    <div class="field-row">
+      <div class="field"><label>Fecha de ingreso</label><input type="date" id="fecha_ingreso" oninput="render()"></div>
+      <div class="field"><label>NSS</label><input type="text" id="nss" oninput="render()" placeholder="11 dígitos"></div>
+    </div>
+
+    <!-- ── RENUNCIA ── -->
+    <div id="bloque-renuncia">
+      <div class="section-label">Detalle de la renuncia</div>
+      <div class="field"><label>Fecha efectiva de renuncia <span class="req">*</span></label><input type="date" id="r_fecha_renuncia" oninput="render()"></div>
+      <div class="field"><label>Motivo (opcional, no obligatorio declararlo)</label><textarea id="r_motivo" oninput="render()" placeholder="Ej. Razones personales, nueva oportunidad profesional..."></textarea></div>
+      <div class="clause-check"><input type="checkbox" id="r_finiquito" checked onchange="render()"><label for="r_finiquito">Declara haber recibido o estar de acuerdo en recibir su finiquito correspondiente</label></div>
+      <div class="clause-check"><input type="checkbox" id="r_sin_adeudo" checked onchange="render()"><label for="r_sin_adeudo">Manifiesta no tener reclamación alguna pendiente con la empresa</label></div>
+    </div>
+
+    <!-- ── RECOMENDACIÓN ── -->
+    <div id="bloque-recomendacion" style="display:none;">
+      <div class="section-label">Periodo y funciones</div>
+      <div class="field-row">
+        <div class="field"><label>Fecha de baja / fin de relación</label><input type="date" id="rec_fecha_baja" oninput="render()"></div>
+        <div class="field">
+          <label>Motivo de salida</label>
+          <div class="toggle-group" id="rec_motivo_salida">
+            <div class="toggle-opt active" onclick="selToggle(this,'rec_motivo_salida')">Renuncia voluntaria</div>
+            <div class="toggle-opt" onclick="selToggle(this,'rec_motivo_salida')">Conclusión de contrato</div>
+            <div class="toggle-opt" onclick="selToggle(this,'rec_motivo_salida')">Reducción de personal</div>
+          </div>
+        </div>
+      </div>
+      <div class="field"><label>Funciones principales desempeñadas</label><textarea id="rec_funciones" oninput="render()" placeholder="Describa brevemente las responsabilidades del puesto..."></textarea></div>
+      <div class="field"><label>Desempeño y cualidades a destacar <span class="req">*</span></label><textarea id="rec_desempeno" oninput="render()" placeholder="Ej. Mostró excelente capacidad de trabajo en equipo, cumplimiento de metas y responsabilidad..."></textarea></div>
+      <div class="field"><label>Nombre y puesto de quien recomienda</label><input type="text" id="rec_recomendante" oninput="render()" placeholder="Ej. Lic. Ana Ruiz, Gerente de RH"></div>
+      <div class="field"><label>Datos de contacto para referencias (opcional)</label><input type="text" id="rec_contacto" oninput="render()" placeholder="Teléfono o email"></div>
+    </div>
+
+    <!-- ── CONSTANCIA ── -->
+    <div id="bloque-constancia" style="display:none;">
+      <div class="section-label">Detalle de la constancia</div>
+      <div class="field">
+        <label>Tipo de contrato</label>
+        <div class="toggle-group" id="con_tipo_contrato">
+          <div class="toggle-opt active" onclick="selToggle(this,'con_tipo_contrato')">Tiempo indeterminado</div>
+          <div class="toggle-opt" onclick="selToggle(this,'con_tipo_contrato')">Tiempo determinado</div>
+        </div>
+      </div>
+      <div class="field-row">
+        <div class="field"><label>Jornada</label><input type="text" id="con_jornada" oninput="render()" placeholder="Ej. Lunes a viernes, 9:00 a 18:00 hrs"></div>
+        <div class="field"><label>Salario (opcional mostrar)</label><input type="number" id="con_salario" oninput="render()" placeholder="0.00"></div>
+      </div>
+      <div class="field">
+        <label>Propósito del trámite</label>
+        <select id="con_proposito" onchange="render()">
+          <option>Trámite bancario / crédito</option>
+          <option>Trámite migratorio</option>
+          <option>Trámite escolar</option>
+          <option>Comprobante general de empleo</option>
+          <option>Otro</option>
+        </select>
+      </div>
+      <div class="clause-check"><input type="checkbox" id="con_vigente" checked onchange="render()"><label for="con_vigente">La relación laboral se encuentra vigente a la fecha de expedición</label></div>
+    </div>
+
+    <!-- ── FINIQUITO ── -->
+    <div id="bloque-finiquito" style="display:none;">
+      <div class="section-label">Datos de terminación</div>
+      <div class="field-row">
+        <div class="field"><label>Fecha de baja <span class="req">*</span></label><input type="date" id="f_fecha_baja" oninput="calcFiniquito()"></div>
+        <div class="field">
+          <label>Causa de terminación</label>
+          <select id="f_causa" onchange="render()">
+            <option>Renuncia voluntaria</option>
+            <option>Mutuo acuerdo</option>
+            <option>Terminación de contrato por tiempo/obra determinada</option>
+            <option>Rescisión sin responsabilidad para el patrón</option>
+          </select>
+        </div>
+      </div>
+      <div class="section-label">Cálculo del finiquito</div>
+      <div class="field"><label>Salario diario <span class="req">*</span></label><input type="number" id="f_salario_diario" step="0.01" oninput="calcFiniquito()" placeholder="0.00"></div>
+      <div class="field-row">
+        <div class="field"><label>Días de salario pendiente de pago</label><input type="number" id="f_dias_salario" value="0" oninput="calcFiniquito()"></div>
+        <div class="field"><label>Días de vacaciones pendientes</label><input type="number" id="f_dias_vacaciones" value="0" oninput="calcFiniquito()"><div class="hint">Mínimo legal: 12 días desde el 1er año (reforma "vacaciones dignas")</div></div>
+      </div>
+      <div class="field"><label>Otras percepciones (textarea, se suman al total)</label><textarea id="f_otras_percepciones" oninput="calcFiniquito()" placeholder="Ej. Bono pendiente $2,000.00 — se suma al cálculo de abajo manualmente si aplica"></textarea></div>
+      <div class="field"><label>Deducciones (préstamos, ISR adicional, etc.)</label><input type="number" id="f_deducciones" value="0" step="0.01" oninput="calcFiniquito()"></div>
+      <div class="calc-box" id="finiquito-calc"></div>
+      <div class="clause-check"><input type="checkbox" id="f_finiquito_total" checked onchange="render()"><label for="f_finiquito_total">Las partes declaran que el presente convenio cubre la totalidad de las prestaciones generadas (finiquito total)</label></div>
+    </div><!-- /bloque-finiquito -->
+
+    <!-- ── LIQUIDACIÓN ── -->
+    <div id="bloque-liquidacion" style="display:none;">
+      <div class="section-label">Datos de terminación</div>
+      <div class="field-row">
+        <div class="field"><label>Fecha de despido / baja <span class="req">*</span></label><input type="date" id="lq_fecha_baja" oninput="calcLiquidacion()"></div>
+        <div class="field">
+          <label>Tipo de terminación</label>
+          <select id="lq_tipo" onchange="calcLiquidacion()">
+            <option value="injustificado">Despido injustificado (Art. 48 LFT)</option>
+            <option value="art51">Rescisión imputable al patrón (Art. 51 LFT)</option>
+            <option value="mutuo">Mutuo acuerdo (Art. 53 frac. I LFT)</option>
+          </select>
+        </div>
+      </div>
+      <div class="field"><label>Motivo / hechos que originan la terminación</label><textarea id="lq_motivo" oninput="render()" placeholder="Describir brevemente la causa que origina la liquidación..."></textarea></div>
+
+      <div class="section-label">Cálculo de la liquidación (Arts. 48 y 162 LFT)</div>
+      <div class="field"><label>Salario diario integrado (SDI) <span class="req">*</span></label>
+        <input type="number" id="lq_sdi" step="0.01" oninput="calcLiquidacion()" placeholder="0.00">
+        <div class="hint">SDI = salario diario + partes proporcionales de prestaciones (Art. 89 LFT)</div>
+      </div>
+      <div class="field-row">
+        <div class="field"><label>Días de salario pendiente</label><input type="number" id="lq_dias_sal" value="0" oninput="calcLiquidacion()"></div>
+        <div class="field"><label>Días de vacaciones pendientes</label><input type="number" id="lq_dias_vac" value="0" oninput="calcLiquidacion()"></div>
+      </div>
+      <div class="field-row">
+        <div class="field"><label>Salario mínimo vigente (MXN/día)</label><input type="number" id="lq_salmin" value="248.93" step="0.01" oninput="calcLiquidacion()"></div>
+        <div class="field"><label>Deducciones (préstamos, etc.)</label><input type="number" id="lq_deducciones" value="0" step="0.01" oninput="calcLiquidacion()"></div>
+      </div>
+      <div class="field">
+        <label><input type="checkbox" id="lq_inc_antiguedad" checked onchange="calcLiquidacion()"> Incluir prima de antigüedad (Art. 162 LFT)</label>
+        <div class="hint">Aplica siempre en despido; en renuncia solo si el trabajador tiene 15+ años</div>
+      </div>
+      <div class="calc-box" id="liquidacion-calc"></div>
+      <div class="clause-check"><input type="checkbox" id="lq_total" checked onchange="render()"><label for="lq_total">Las partes declaran que este convenio cubre la totalidad de las prestaciones generadas (liquidación total)</label></div>
+    </div>
+    <div class="field-row">
+      <div class="field"><label>Ciudad de firma <span class="req">*</span></label><input type="text" id="ciudad_firma" oninput="render()" placeholder="Guadalajara, Jal."></div>
+      <div class="field"><label>Fecha de firma <span class="req">*</span></label><input type="date" id="fecha_firma" oninput="render()"></div>
+    </div>
+    <div class="field-row">
+      <div class="field"><label>Testigo 1</label><input type="text" id="testigo1" oninput="render()" placeholder="Nombre completo"></div>
+      <div class="field"><label>Testigo 2</label><input type="text" id="testigo2" oninput="render()" placeholder="Nombre completo"></div>
+    </div>
+  </div>
+
+  <div class="preview-panel">
+    <div class="doc-sheet" id="doc-preview">
+      <div class="watermark-empty">Seleccione el tipo de documento y complete los datos para generar la carta.</div>
+    </div>
+  </div>
+</div>
+
+<script>
+let tipoDoc = 'renuncia';
+
+function v(id){return(document.getElementById(id)||{}).value||'';}
+function chk(id){return document.getElementById(id)?.checked||false;}
+function b(txt,fb){if(!txt||!txt.toString().trim())return`<span class="blank empty">[${fb}]</span>`;return`<span class="blank">${txt}</span>`;}
+function fmtFecha(iso){if(!iso)return'';const[y,m,d]=iso.split('-');const M=['enero','febrero','marzo','abril','mayo','junio','julio','agosto','septiembre','octubre','noviembre','diciembre'];return`${parseInt(d)} de ${M[parseInt(m)-1]} de ${y}`;}
+function fmtMoneda(num){if(num===''||num===null||isNaN(num))return'';return`$${parseFloat(num).toLocaleString('es-MX',{minimumFractionDigits:2})} MXN`;}
+function getActive(gid){const g=document.getElementById(gid);if(!g)return'';const e=g.querySelector('.toggle-opt.active');return e?e.textContent:'';}
+function selToggle(el,gid){document.querySelectorAll(`#${gid} .toggle-opt`).forEach(e=>e.classList.remove('active'));el.classList.add('active');render();}
+function limpiar(){if(!confirm('¿Limpiar todos los campos?'))return;document.querySelectorAll('input:not([readonly]),select,textarea').forEach(el=>{if(el.type==='checkbox')el.checked=el.id==='r_finiquito'||el.id==='r_sin_adeudo'||el.id==='con_vigente'||el.id==='f_finiquito_total';else el.value='';});render();}
+
+function setTipo(t){
+  tipoDoc = t;
+  document.querySelectorAll('.tipo-tab').forEach(e=>e.classList.remove('active'));
+  document.getElementById('tab-'+t).classList.add('active');
+  ['renuncia','recomendacion','constancia','finiquito','liquidacion'].forEach(b=>{
+    const el=document.getElementById('bloque-'+b);
+    if(el) el.style.display=(b===t)?'block':'none';
+  });
+  render();
+}
+
+function diasEntre(f1,f2){
+  if(!f1||!f2)return 0;
+  const d1=new Date(f1+'T12:00:00'), d2=new Date(f2+'T12:00:00');
+  return Math.max(0,Math.round((d2-d1)/86400000));
+}
+
+function calcFiniquito(){
+  const sal=parseFloat(v('f_salario_diario'))||0;
+  const diasSal=parseFloat(v('f_dias_salario'))||0;
+  const diasVac=parseFloat(v('f_dias_vacaciones'))||0;
+  const deducciones=parseFloat(v('f_deducciones'))||0;
+  const ingreso=v('fecha_ingreso'), baja=v('f_fecha_baja');
+
+  let aniversario=null, diasAnio=0, aguinaldoProp=0;
+  if(ingreso && baja){
+    const di=new Date(ingreso+'T12:00:00'), db=new Date(baja+'T12:00:00');
+    let ult=new Date(db.getFullYear(),di.getMonth(),di.getDate());
+    if(ult>db) ult=new Date(db.getFullYear()-1,di.getMonth(),di.getDate());
+    diasAnio=Math.max(0,Math.round((db-ult)/86400000));
+    aguinaldoProp = (15*sal)*(diasAnio/365);
+  }
+  const primaVacacional = diasVac*sal*0.25;
+  const salarioPendiente = diasSal*sal;
+  const vacacionesPagar = diasVac*sal;
+  const subtotal = salarioPendiente+vacacionesPagar+primaVacacional+aguinaldoProp;
+  const total = Math.max(0,subtotal-deducciones);
+
+  document.getElementById('finiquito-calc').innerHTML = `
+    <div class="calc-row"><span>Salario pendiente (${diasSal} días)</span><span>${fmtMoneda(salarioPendiente)}</span></div>
+    <div class="calc-row"><span>Vacaciones pendientes (${diasVac} días)</span><span>${fmtMoneda(vacacionesPagar)}</span></div>
+    <div class="calc-row"><span>Prima vacacional (25%)</span><span>${fmtMoneda(primaVacacional)}</span></div>
+    <div class="calc-row"><span>Aguinaldo proporcional (${diasAnio} días del año)</span><span>${fmtMoneda(aguinaldoProp)}</span></div>
+    <div class="calc-row"><span>Deducciones</span><span>-${fmtMoneda(deducciones)}</span></div>
+    <div class="calc-row total"><span>TOTAL A PAGAR</span><span>${fmtMoneda(total)}</span></div>
+    <div style="margin-top:6px;font-size:10px;color:#5a7a9a;">* Cálculo de referencia. No incluye otras percepciones escritas en el campo de texto — agréguelas manualmente al convenio si aplica. Verifique siempre la tabla de vacaciones aplicable a la antigüedad del trabajador.</div>`;
+  render();
+}
+
+// ── CÁLCULO DE LIQUIDACIÓN ──
+function calcLiquidacion(){
+  const sdi     = parseFloat(v('lq_sdi'))||0;
+  const diasSal = parseFloat(v('lq_dias_sal'))||0;
+  const diasVac = parseFloat(v('lq_dias_vac'))||0;
+  const salMin  = parseFloat(v('lq_salmin'))||248.93;
+  const deduc   = parseFloat(v('lq_deducciones'))||0;
+  const incAnt  = document.getElementById('lq_inc_antiguedad')?.checked;
+  const ingreso = v('fecha_ingreso'), baja = v('lq_fecha_baja');
+
+  // Antigüedad en años completos
+  let anios=0, diasAnio=0, aguinaldoProp=0;
+  if(ingreso && baja){
+    const di=new Date(ingreso+'T12:00:00'), db=new Date(baja+'T12:00:00');
+    let ult=new Date(db.getFullYear(),di.getMonth(),di.getDate());
+    if(ult>db) ult=new Date(db.getFullYear()-1,di.getMonth(),di.getDate());
+    anios=Math.max(0,Math.floor((db-new Date(ingreso+'T12:00:00'))/(365.25*86400000)));
+    diasAnio=Math.max(0,Math.round((db-ult)/86400000));
+    aguinaldoProp=(15*sdi)*(diasAnio/365);
+  }
+
+  // Prestaciones de liquidación (Art. 48 LFT)
+  const tresMeses = sdi*90;
+  const veinteDias = sdi*20*Math.max(anios,1);
+
+  // Partes proporcionales (finiquito)
+  const salPend  = diasSal*sdi;
+  const vacPagar = diasVac*sdi;
+  const primaVac = vacPagar*0.25;
+
+  // Prima de antigüedad (Art. 162)
+  const salAnt   = Math.min(sdi, salMin*2);
+  const primaAnt = incAnt ? salAnt*12*Math.max(anios,1) : 0;
+
+  const subtotal = tresMeses+veinteDias+salPend+vacPagar+primaVac+aguinaldoProp+primaAnt;
+  const total    = Math.max(0,subtotal-deduc);
+
+  // Guardar totales para el render del documento
+  window._lqTotal    = total;
+  window._lqAnios    = anios;
+  window._lqTresMes  = tresMeses;
+  window._lqVeinte   = veinteDias;
+  window._lqAnt      = primaAnt;
+  window._lqAguinaldo= aguinaldoProp;
+
+  const box = document.getElementById('liquidacion-calc');
+  if(!box) return;
+  box.innerHTML=`
+    <div class="calc-row" style="font-weight:600;border-bottom:1px solid #c8ddf0;margin-bottom:4px;padding-bottom:6px;"><span>Prestaciones de liquidación (Art. 48 LFT)</span><span></span></div>
+    <div class="calc-row"><span>3 meses de salario (90 días × SDI)</span><span>${fmtMoneda(tresMeses)}</span></div>
+    <div class="calc-row"><span>20 días × año (${anios} año${anios===1?'':'s'} × SDI)</span><span>${fmtMoneda(veinteDias)}</span></div>
+    <div class="calc-row" style="font-weight:600;border-bottom:1px solid #c8ddf0;margin:6px 0 4px;padding-bottom:6px;"><span>Partes proporcionales (finiquito)</span><span></span></div>
+    <div class="calc-row"><span>Salario pendiente (${diasSal} días)</span><span>${fmtMoneda(salPend)}</span></div>
+    <div class="calc-row"><span>Vacaciones pendientes (${diasVac} días)</span><span>${fmtMoneda(vacPagar)}</span></div>
+    <div class="calc-row"><span>Prima vacacional (25%)</span><span>${fmtMoneda(primaVac)}</span></div>
+    <div class="calc-row"><span>Aguinaldo proporcional (${diasAnio} días del año)</span><span>${fmtMoneda(aguinaldoProp)}</span></div>
+    ${incAnt?`<div class="calc-row"><span>Prima de antigüedad (12 días × ${anios} años × SDI tope)</span><span>${fmtMoneda(primaAnt)}</span></div>`:''}
+    ${deduc?`<div class="calc-row" style="color:#c0392b;"><span>Deducciones</span><span>-${fmtMoneda(deduc)}</span></div>`:''}
+    <div class="calc-row total"><span>TOTAL LIQUIDACIÓN</span><span>${fmtMoneda(total)}</span></div>
+    <div style="margin-top:6px;font-size:10px;color:#5a7a9a;">SDI utilizado: ${fmtMoneda(sdi)}/día · Tope prima antigüedad: ${fmtMoneda(salMin*2)}/día · Salario mín. vigente: ${fmtMoneda(salMin)}</div>`;
+  render();
+}
+
+function render(){
+  const empresa=v('empresa'),dom_emp=v('domicilio_empresa'),rep=v('representante');
+  const trab=v('trabajador'),puesto=v('puesto'),curp=v('curp'),nss=v('nss'),ingreso=v('fecha_ingreso');
+  const cf=v('ciudad_firma'),ff=v('fecha_firma'),t1=v('testigo1'),t2=v('testigo2');
+
+  if(!empresa&&!trab){document.getElementById('doc-preview').innerHTML='<div class="watermark-empty">Seleccione el tipo de documento y complete los datos para generar la carta.</div>';return;}
+  const prefijos={renuncia:'REN',recomendacion:'REC',constancia:'CON',finiquito:'FIN',liquidacion:'LIQ'};
+  const folio=`${prefijos[tipoDoc]||tipoDoc.toUpperCase().slice(0,3)}-${new Date().getFullYear()}-${Math.floor(Math.random()*10000).toString().padStart(4,'0')}`;
+
+  let titulo='', subtitulo='', cuerpo='';
+
+  if(tipoDoc==='renuncia'){
+    titulo='Carta de Renuncia Voluntaria';
+    subtitulo='Terminación de la relación de trabajo por voluntad del trabajador';
+    const fr=v('r_fecha_renuncia'), motivo=v('r_motivo');
+    cuerpo = `
+    <div class="doc-p">${b(cf,'ciudad')}, a ${b(fmtFecha(ff),'fecha')}.</div>
+    <div class="doc-p" style="margin-top:18px;">A quien corresponda — ${b(empresa,'razón social')}:</div>
+    <div class="doc-p">Por medio de la presente, el (la) suscrito(a) ${b(trab,'nombre del trabajador')}, quien labora en el puesto de ${b(puesto,'puesto')} desde el ${b(fmtFecha(ingreso),'fecha de ingreso')}, manifiesto de manera <strong>libre, voluntaria y sin coacción de ninguna especie</strong>, mi decisión de presentar renuncia al puesto que desempeño, surtiendo efectos a partir del día ${b(fmtFecha(fr),'fecha efectiva de renuncia')}.</div>
+    ${motivo?`<div class="doc-p">Motivo de la renuncia (declaración voluntaria del trabajador, no constituye requisito legal): ${esc(motivo)}.</div>`:''}
+    ${chk('r_finiquito')?`<div class="doc-p">Manifiesto estar de acuerdo en recibir el pago de finiquito correspondiente a las prestaciones que tenga derecho conforme a la Ley Federal del Trabajo (salarios devengados, vacaciones pendientes, prima vacacional y aguinaldo proporcional).</div>`:''}
+    ${chk('r_sin_adeudo')?`<div class="doc-p">Declaro no tener reclamación o adeudo alguno pendiente en contra de la empresa derivado de la relación laboral, sin perjuicio de los derechos irrenunciables que me asisten conforme a la ley.</div>`:''}
+    <div class="doc-p" style="margin-top:24px;">Sin más por el momento, agradezco las facilidades otorgadas durante mi periodo laboral.</div>
+    <div class="doc-firma-grid" style="margin-top:48px;">
+      <div class="firma-box"><br><br>${trab||'__________________________'}<br><strong>EL TRABAJADOR (RENUNCIANTE)</strong>${curp?'<span style="font-size:9pt;color:#666;"><br>CURP: '+curp+'</span>':''}</div>
+      <div class="firma-box"><br><br>${rep||'__________________________'}<br><strong>RECIBE — ${empresa||'LA EMPRESA'}</strong></div>
+    </div>`;
+  }
+
+  if(tipoDoc==='recomendacion'){
+    titulo='Carta de Recomendación Laboral';
+    subtitulo='A quien corresponda';
+    const fb_baja=v('rec_fecha_baja'), motivoSalida=getActive('rec_motivo_salida'), funciones=v('rec_funciones'),
+          desempeno=v('rec_desempeno'), recomendante=v('rec_recomendante'), contacto=v('rec_contacto');
+    cuerpo = `
+    <div class="doc-p">${b(cf,'ciudad')}, a ${b(fmtFecha(ff),'fecha')}.</div>
+    <div class="doc-p" style="margin-top:18px;"><strong>A QUIEN CORRESPONDA:</strong></div>
+    <div class="doc-p">Por medio de la presente se hace constar que el (la) C. ${b(trab,'nombre del trabajador')} laboró en ${b(empresa,'razón social')} desempeñando el puesto de ${b(puesto,'puesto')}, desde el ${b(fmtFecha(ingreso),'fecha de ingreso')}${fb_baja?` hasta el ${fmtFecha(fb_baja)}`:''}, concluyendo la relación laboral por motivo de: ${b(motivoSalida,'motivo de salida')}.</div>
+    ${funciones?`<div class="doc-p"><strong>Funciones principales desempeñadas:</strong> ${funciones}.</div>`:''}
+    <div class="doc-p"><strong>Desempeño:</strong> ${b(desempeno,'descripción del desempeño')}.</div>
+    <div class="doc-p">Se expide la presente recomendación a solicitud del interesado(a), para los fines que a su derecho convengan, sin que medie obligación legal alguna de expedirla.</div>
+    ${contacto?`<div class="doc-p" style="font-size:10pt;color:#666;">Para mayores referencias, puede comunicarse al: ${contacto}.</div>`:''}
+    <div class="doc-firma-grid" style="margin-top:60px;grid-template-columns:1fr;">
+      <div class="firma-box" style="max-width:340px;margin:0 auto;"><br><br>${recomendante||'__________________________'}<br><strong>POR ${empresa||'LA EMPRESA'}</strong></div>
+    </div>`;
+  }
+
+  if(tipoDoc==='constancia'){
+    titulo='Constancia Laboral';
+    subtitulo='Comprobante de empleo — A quien corresponda';
+    const tipoContrato=getActive('con_tipo_contrato'), jornada=v('con_jornada'), salario=v('con_salario'), proposito=v('con_proposito');
+    cuerpo = `
+    <div class="doc-p">${b(cf,'ciudad')}, a ${b(fmtFecha(ff),'fecha')}.</div>
+    <div class="doc-p" style="margin-top:18px;"><strong>A QUIEN CORRESPONDA:</strong></div>
+    <div class="doc-p">${b(empresa,'razón social')} hace constar que el (la) C. ${b(trab,'nombre del trabajador')}${curp?', CURP '+curp:''}${nss?', NSS '+nss:''}, presta sus servicios en esta empresa desde el ${b(fmtFecha(ingreso),'fecha de ingreso')}, desempeñando el puesto de ${b(puesto,'puesto')}, bajo un contrato de ${b(tipoContrato,'tipo de contrato')}${jornada?`, con jornada de ${jornada}`:''}.</div>
+    ${salario?`<div class="doc-p">Percibe un salario de ${fmtMoneda(salario)}.</div>`:''}
+    ${chk('con_vigente')?`<div class="doc-p">Se hace constar que la relación laboral se encuentra <strong>vigente</strong> a la fecha de expedición de la presente constancia.</div>`:''}
+    <div class="doc-p">La presente se expide para fines de: <strong>${proposito}</strong>, a solicitud del interesado(a).</div>
+    <div class="doc-firma-grid" style="margin-top:60px;grid-template-columns:1fr;">
+      <div class="firma-box" style="max-width:340px;margin:0 auto;"><br><br>${rep||'__________________________'}<br><strong>POR ${empresa||'LA EMPRESA'}</strong></div>
+    </div>`;
+  }
+
+  if(tipoDoc==='finiquito'){
+    titulo='Convenio de Terminación de la Relación Laboral';
+    subtitulo='Finiquito — Arts. 33, 53 y 162 LFT';
+    const fbaja=v('f_fecha_baja'), causa=v('f_causa'), sal=parseFloat(v('f_salario_diario'))||0,
+          diasSal=v('f_dias_salario'), diasVac=v('f_dias_vacaciones'), otras=v('f_otras_percepciones'),
+          deducciones=parseFloat(v('f_deducciones'))||0;
+    const primaVacacional=diasVac*sal*0.25, salarioPendiente=diasSal*sal, vacacionesPagar=diasVac*sal;
+    let diasAnio=0, aguinaldoProp=0;
+    if(ingreso && fbaja){
+      const di=new Date(ingreso+'T12:00:00'), db=new Date(fbaja+'T12:00:00');
+      let ult=new Date(db.getFullYear(),di.getMonth(),di.getDate());
+      if(ult>db) ult=new Date(db.getFullYear()-1,di.getMonth(),di.getDate());
+      diasAnio=Math.max(0,Math.round((db-ult)/86400000));
+      aguinaldoProp=(15*sal)*(diasAnio/365);
+    }
+    const subtotal=salarioPendiente+vacacionesPagar+primaVacacional+aguinaldoProp;
+    const total=Math.max(0,subtotal-deducciones);
+    cuerpo = `
+    <div class="doc-p">En ${b(cf,'ciudad')}, el ${b(fmtFecha(ff),'fecha de firma')}, celebran el presente <strong>CONVENIO DE TERMINACIÓN DE LA RELACIÓN LABORAL</strong> por una parte ${b(empresa,'razón social')}, representada por ${b(rep,'representante')}, a quien en lo sucesivo se le denominará <strong>"LA EMPRESA"</strong>; y por la otra el (la) C. ${b(trab,'nombre del trabajador')}, a quien se le denominará <strong>"EL TRABAJADOR"</strong>, quienes acuerdan sujetarse a las siguientes cláusulas:</div>
+
+    <div class="doc-clause-title">Primera. — Antecedentes</div>
+    <div class="doc-p">EL TRABAJADOR prestó sus servicios para LA EMPRESA en el puesto de ${b(puesto,'puesto')}, desde el ${b(fmtFecha(ingreso),'fecha de ingreso')} hasta el ${b(fmtFecha(fbaja),'fecha de baja')}, fecha en que concluye la relación laboral por causa de: <strong>${causa}</strong>.</div>
+
+    <div class="doc-clause-title">Segunda. — Liquidación de prestaciones</div>
+    <div class="doc-p">Las partes determinan de común acuerdo el pago de las siguientes prestaciones devengadas:</div>
+    <table class="doc-table">
+      <tr><th>Concepto</th><th style="text-align:right;">Importe</th></tr>
+      <tr><td>Salario pendiente de pago (${diasSal} días)</td><td class="num">${fmtMoneda(salarioPendiente)}</td></tr>
+      <tr><td>Vacaciones pendientes (${diasVac} días)</td><td class="num">${fmtMoneda(vacacionesPagar)}</td></tr>
+      <tr><td>Prima vacacional (25%)</td><td class="num">${fmtMoneda(primaVacacional)}</td></tr>
+      <tr><td>Aguinaldo proporcional (${diasAnio} días del año en curso)</td><td class="num">${fmtMoneda(aguinaldoProp)}</td></tr>
+      ${otras?`<tr><td>Otras percepciones</td><td class="num">${otras}</td></tr>`:''}
+      <tr><td>Deducciones</td><td class="num">-${fmtMoneda(deducciones)}</td></tr>
+      <tr class="total"><td>TOTAL NETO A PAGAR</td><td class="num">${fmtMoneda(total)}</td></tr>
+    </table>
+
+    <div class="doc-clause-title">Tercera. — Forma de pago</div>
+    <div class="doc-p">LA EMPRESA se obliga a pagar a EL TRABAJADOR la cantidad señalada en la cláusula anterior, dentro de los términos previstos por el artículo 33 de la Ley Federal del Trabajo, mediante transferencia bancaria o cheque nominativo.</div>
+
+    ${chk('f_finiquito_total')?`<div class="doc-clause-title">Cuarta. — Finiquito total</div><div class="doc-p">Recibida la cantidad pactada, EL TRABAJADOR declara que el presente convenio cubre la <strong>totalidad de las prestaciones</strong> generadas durante la relación laboral, sin que tenga acción o derecho alguno que reclamar a LA EMPRESA por ningún concepto relacionado con dicha relación de trabajo, salvo derechos irrenunciables conforme a la ley.</div>`:''}
+
+    <div class="doc-clause-title">Quinta. — Ratificación</div>
+    <div class="doc-p">Ambas partes manifiestan que el presente convenio se firma de manera libre y voluntaria, sin dolo, error, mala fe, ni vicio alguno del consentimiento, por lo que solicitan, en su caso, su ratificación ante la autoridad laboral competente conforme al artículo 33 de la LFT.</div>
+
+    <div class="doc-firma-grid" style="margin-top:48px;">
+      <div class="firma-box"><br><br>${empresa||'__________________________'}<br>${rep?rep+'<br>':''}<strong>LA EMPRESA</strong></div>
+      <div class="firma-box"><br><br>${trab||'__________________________'}<br><strong>EL TRABAJADOR</strong></div>
+    </div>
+    <div class="doc-firma-grid" style="margin-top:32px;">
+      <div class="firma-box"><br><br>${t1||'__________________________'}<br><strong>TESTIGO 1</strong></div>
+      <div class="firma-box"><br><br>${t2||'__________________________'}<br><strong>TESTIGO 2</strong></div>
+    </div>`;
+  }
+
+  if(tipoDoc==='liquidacion'){
+    const tipo      = v('lq_tipo');
+    const fbaja     = v('lq_fecha_baja');
+    const motivo    = v('lq_motivo');
+    const sdi       = parseFloat(v('lq_sdi'))||0;
+    const incAnt    = document.getElementById('lq_inc_antiguedad')?.checked;
+    const total     = window._lqTotal||0;
+    const anios     = window._lqAnios||0;
+    const tresMeses = window._lqTresMes||0;
+    const veinte    = window._lqVeinte||0;
+    const primaAnt  = window._lqAnt||0;
+    const tipoLabel = {injustificado:'Despido injustificado (Art. 48 LFT)',art51:'Rescisión imputable al patrón (Art. 51 LFT)',mutuo:'Mutuo acuerdo (Art. 53 fracción I LFT)'}[tipo]||tipo;
+
+    titulo    = 'Convenio de Liquidación';
+    subtitulo = `${tipoLabel} · Arts. 33, 47, 48 y 162 LFT`;
+
+    cuerpo = `
+    <div class="doc-p">En ${b(cf,'ciudad')}, el ${b(fmtFecha(ff),'fecha de firma')}, comparecen de una parte ${b(empresa,'razón social')}, representada por ${b(rep,'representante')}, en lo sucesivo <strong>"LA EMPRESA"</strong>; y de la otra el C. ${b(trab,'nombre del trabajador')}, quien prestó sus servicios como ${b(puesto,'puesto')}, en lo sucesivo <strong>"EL TRABAJADOR"</strong>, quienes convienen en celebrar el presente <strong>CONVENIO DE LIQUIDACIÓN</strong> al tenor de las siguientes cláusulas:</div>
+
+    <div class="doc-clause-title">Primera. — Antecedentes de la relación laboral</div>
+    <div class="doc-p">EL TRABAJADOR prestó sus servicios a LA EMPRESA en el puesto de ${b(puesto,'puesto')} desde el ${b(fmtFecha(ingreso),'fecha de ingreso')} hasta el ${b(fmtFecha(fbaja),'fecha de baja')}, acumulando una antigüedad de <strong>${anios} año${anios===1?'':'s'}</strong>. La relación laboral concluye por: <strong>${tipoLabel}</strong>.${motivo?` Circunstancias: ${esc(motivo)}.`:''}</div>
+
+    <div class="doc-clause-title">Segunda. — Liquidación e indemnización</div>
+    <div class="doc-p">Las partes convienen que LA EMPRESA pagará a EL TRABAJADOR las siguientes cantidades por concepto de liquidación e indemnización legal:</div>
+    <table class="doc-table">
+      <tr><th>Concepto</th><th>Fundamento</th><th style="text-align:right;">Importe</th></tr>
+      <tr><td><strong>3 meses de salario (indemnización constitucional)</strong></td><td style="font-size:9pt;">Art. 48 LFT</td><td class="num">${fmtMoneda(tresMeses)}</td></tr>
+      <tr><td><strong>20 días de SDI por año trabajado (${anios} años)</strong></td><td style="font-size:9pt;">Art. 48 LFT</td><td class="num">${fmtMoneda(veinte)}</td></tr>
+      <tr><td>Salario pendiente de pago (${v('lq_dias_sal')} días)</td><td style="font-size:9pt;">Art. 88 LFT</td><td class="num">${fmtMoneda(parseFloat(v('lq_dias_sal'))||0 * sdi)}</td></tr>
+      <tr><td>Vacaciones pendientes (${v('lq_dias_vac')} días)</td><td style="font-size:9pt;">Art. 76 LFT</td><td class="num">${fmtMoneda(parseFloat(v('lq_dias_vac'))||0 * sdi)}</td></tr>
+      <tr><td>Prima vacacional (25%)</td><td style="font-size:9pt;">Art. 80 LFT</td><td class="num">${fmtMoneda((parseFloat(v('lq_dias_vac'))||0)*sdi*0.25)}</td></tr>
+      <tr><td>Aguinaldo proporcional</td><td style="font-size:9pt;">Art. 87 LFT</td><td class="num">${fmtMoneda(window._lqAguinaldo||0)}</td></tr>
+      ${incAnt?`<tr><td>Prima de antigüedad (12 días × ${anios} años)</td><td style="font-size:9pt;">Art. 162 LFT</td><td class="num">${fmtMoneda(primaAnt)}</td></tr>`:''}
+      ${parseFloat(v('lq_deducciones'))?`<tr><td>Deducciones</td><td></td><td class="num" style="color:#c0392b;">-${fmtMoneda(parseFloat(v('lq_deducciones')))}</td></tr>`:''}
+      <tr class="total"><td colspan="2">TOTAL NETO A PAGAR</td><td class="num">${fmtMoneda(total)}</td></tr>
+    </table>
+
+    <div class="doc-clause-title">Tercera. — Forma y plazo de pago</div>
+    <div class="doc-p">LA EMPRESA se obliga a liquidar la cantidad total señalada en la Cláusula Segunda mediante transferencia bancaria, cheque nominativo o efectivo, a más tardar en la fecha de firma del presente convenio o dentro de los plazos que establece el artículo 48 de la LFT.</div>
+
+    <div class="doc-clause-title">Cuarta. — Entrega de documentación</div>
+    <div class="doc-p">LA EMPRESA se obliga a entregar a EL TRABAJADOR, en un plazo no mayor a 5 días hábiles: (a) carta de trabajo o constancia laboral, (b) baja ante el IMSS e INFONAVIT, (c) constancias de percepciones y retenciones.</div>
+
+    ${chk('lq_total')?`<div class="doc-clause-title">Quinta. — Liquidación total y finiquito</div><div class="doc-p">Con el pago de la cantidad convenida en la Cláusula Segunda, EL TRABAJADOR declara recibir <strong>a su entera y completa satisfacción</strong> el pago de todas y cada una de las prestaciones que le corresponden por la relación laboral habida entre las partes, por lo que no tiene acción ni derecho alguno que reclamar a LA EMPRESA por ningún concepto derivado de dicha relación, sin perjuicio de los derechos irrenunciables conforme a la LFT.</div>`:''}
+
+    <div class="doc-clause-title">${chk('lq_total')?'Sexta':'Quinta'}. — Ratificación ante autoridad</div>
+    <div class="doc-p">Las partes se obligan a presentar el presente convenio ante la Junta Federal de Conciliación y Arbitraje o el Centro Federal de Conciliación y Registro Laboral para su ratificación conforme al artículo 33 de la LFT, dándole plena eficacia jurídica.</div>
+
+    <div class="doc-firma-grid" style="margin-top:48px;">
+      <div class="firma-box"><br><br>${empresa||'__________________________'}<br>${rep?rep+'<br>':''}<strong>LA EMPRESA</strong></div>
+      <div class="firma-box"><br><br>${trab||'__________________________'}<br><strong>EL TRABAJADOR</strong></div>
+    </div>
+    <div class="doc-firma-grid" style="margin-top:32px;">
+      <div class="firma-box"><br><br>${t1||'__________________________'}<br><strong>TESTIGO 1</strong></div>
+      <div class="firma-box"><br><br>${t2||'__________________________'}<br><strong>TESTIGO 2</strong></div>
+    </div>`;
+  }
+
+  document.getElementById('doc-preview').innerHTML = generarMembrete({
+    empresa:    v('empresa'),
+    rfc:        v('f-rfc-cl'),
+    domicilio:  v('f-domicilio-cl'),
+    tel:        v('f-tel-cl'),
+    emailEmp:   v('f-email-cl'),
+    folio,
+    logoDataUrl: window._logoClienteDataUrl,
+  }) + `
+    <div class="doc-title">${titulo}</div>
+    <div class="doc-subtitle">${subtitulo}</div>
+    ${cuerpo}
+    ${generarFooterDoc({...getDatosMembrete(), folio})}`;
+}
+render();
+
+// ── GUARDAR EN EXPEDIENTE (Supabase) ──
+const sb = typeof supabase !== 'undefined'
+  ? supabase.createClient('https://hpzgqaplrywwjuvrzhcp.supabase.co','sb_publishable_1g8US8iFJ8CxnSaF_4MHgA_gqyyAr3W')
+  : null;
+
+async function guardarEnExpediente(){
+  const trab = v('trabajador').trim();
+  if(!trab){ alert('Ingrese el nombre del trabajador antes de guardar.'); return; }
+  if(!sb){ alert('No se pudo conectar con Supabase.'); return; }
+
+  const btn = document.getElementById('btn-guardar-exp');
+  btn.textContent='Guardando…'; btn.disabled=true;
+
+  try {
+    const {data: sesion} = await sb.auth.getSession();
+    let rfc = sesion?.session?.user?.user_metadata?.rfc;
+    // Modo despacho: usar el cliente en gestión si está autorizado
+    const _meta = sesion?.session?.user?.user_metadata || {};
+    if (_meta.tipo === 'despacho') {
+      let _g = null;
+      try { _g = JSON.parse(sessionStorage.getItem('cl_gestion')||'null'); } catch(_){}
+      const _aut = (_meta.despacho_clientes||[]).map(c=>String(c.rfc||'').toUpperCase());
+      if (_g && _aut.includes(String(_g.rfc||'').toUpperCase())) rfc = _g.rfc;
+      else { location.href = 'panel-despacho.html'; return; }
+    }
+    if(!rfc){ alert('Debe iniciar sesión en el portal para guardar documentos en el expediente.'); return; }
+
+    // Buscar al trabajador en la tabla
+    const {data: trabData} = await sb.from('trabajadores')
+      .select('id').eq('cliente_rfc', rfc).ilike('nombre', `%${trab}%`).maybeSingle();
+
+    if(!trabData){
+      alert(`No se encontró a "${trab}" en el expediente.\n\nVerifique que el nombre coincida exactamente con el registrado en "Expedientes de trabajadores".`);
+      return;
+    }
+
+    const nombreDoc = {
+      renuncia:'Carta de renuncia voluntaria', recomendacion:'Carta de recomendación',
+      constancia:'Constancia laboral', finiquito:'Convenio de finiquito',
+      liquidacion:'Convenio de liquidación'
+    }[tipoDoc] || 'Documento laboral';
+
+    // Guardar en tabla de documentos del expediente
+    // Via función Netlify para evitar RLS cuando opera un despacho
+    const _token = sesion?.session?.access_token || '';
+    let guardadoOk = false;
+    if(_token){
+      try {
+        const _resp = await fetch('/api/guardar-documento-expediente', {
+          method:'POST',
+          headers:{'Content-Type':'application/json','Authorization':'Bearer '+_token},
+          body: JSON.stringify({
+            tabla: 'documentos_expediente',
+            cliente_rfc: rfc,
+            tipo: tipoDoc,
+            nombre: nombreDoc,
+            trabajador_id: trabData.id,
+            fecha: new Date().toISOString().split('T')[0],
+            generador: 'cartas-laborales',
+            metadata: { empresa:v('empresa'), puesto:v('puesto'), fecha_firma:v('fecha_firma'),
+              total: tipoDoc==='liquidacion' ? (window._lqTotal||0) : undefined },
+          }),
+        });
+        const _r = await _resp.json();
+        if(_resp.ok && _r.ok) guardadoOk = true;
+        else if(_resp.status !== 404 && _resp.status !== 502) console.warn('guardar-doc error:', _r.error);
+      } catch(e){ console.warn('guardar-doc fetch error:', e.message); }
+    }
+    const error = guardadoOk ? null : (await sb.from('documentos_expediente').insert({
+      trabajador_id: trabData.id, cliente_rfc: rfc, tipo: tipoDoc, nombre: nombreDoc,
+      fecha: new Date().toISOString().split('T')[0], generado_en: 'cartas-laborales',
+      metadata: { empresa:v('empresa'), puesto:v('puesto'), fecha_firma:v('fecha_firma'),
+        total: tipoDoc==='liquidacion' ? (window._lqTotal||0) : undefined },
+    })).error;
+
+    if(error){
+      if(error.code==='42P01'){
+        alert('La tabla de documentos del expediente aún no existe en Supabase.\n\nEjecute el SQL de migración en el panel de Supabase para habilitarla.');
+      } else {
+        throw error;
+      }
+      return;
+    }
+
+    btn.textContent='✓ Guardado';
+    btn.style.background='rgba(22,163,74,.25)';
+    setTimeout(()=>{ btn.textContent='💾 Guardar en expediente'; btn.style.background=''; btn.disabled=false; }, 3000);
+  } catch(e){
+    alert('Error al guardar: '+(e.message||e));
+    btn.textContent='💾 Guardar en expediente'; btn.disabled=false;
+  }
+}
+
+// ── INIT ──
+renderPanelMembrete('mem-logo-container');
+(async()=>{
+  try{
+    const _sb = supabase.createClient(
+      'https://hpzgqaplrywwjuvrzhcp.supabase.co',
+      'sb_publishable_1g8US8iFJ8CxnSaF_4MHgA_gqyyAr3W'
+    );
+    await precargarMembreteDesdePortal(_sb);
+  }catch(e){}
+})();
+
+// ── Precargar datos desde la calculadora (URL params) ──
+(function precargarDesdeCalculadora() {
+  const p = new URLSearchParams(window.location.search);
+  if (!p.has('tipo')) return; // no viene de la calculadora
+
+  const tipo = p.get('tipo'); // 'renuncia' | 'recomendacion' | 'constancia' | 'finiquito' | 'liquidacion'
+
+  // Seleccionar la pestaña correcta (UI de pestañas con setTipo)
+  const tiposValidos = ['renuncia','recomendacion','constancia','finiquito','liquidacion'];
+  if (tiposValidos.includes(tipo) && typeof setTipo === 'function') {
+    setTipo(tipo);
+  }
+
+  // Precargar membrete con datos de la empresa
+  const setV = (id, val) => {
+    const el = document.getElementById(id);
+    if (el && val) { el.value = val; el.dispatchEvent(new Event('input')); }
+  };
+
+  // Datos del membrete
+  setV('mem-empresa', p.get('empresa'));
+  setV('mem-rfc', p.get('rfc'));
+
+  // Datos del trabajador
+  setV('trabajador', p.get('trabajador'));
+  setV('puesto', p.get('puesto'));
+  setV('salario', p.get('salario'));
+  setV('fecha_ingreso', p.get('ingreso'));
+  setV('fecha_baja', p.get('baja'));
+
+  // Si hay total calculado, mostrarlo como referencia
+  const totalCalc = p.get('total_calc');
+  if (totalCalc) {
+    setTimeout(() => {
+      const existing = document.getElementById('calc-ref-banner');
+      if (!existing) {
+        const banner = document.createElement('div');
+        banner.id = 'calc-ref-banner';
+        banner.style.cssText = 'background:#f0fdf4;border:1px solid #86efac;border-radius:8px;padding:10px 14px;margin-bottom:14px;font-size:12px;color:#065f46;';
+        banner.innerHTML = `✅ Datos precargados desde la calculadora. Total calculado: <strong>${totalCalc}</strong>. Revise y ajuste los campos antes de imprimir.`;
+        const workspace = document.querySelector('.workspace') || document.querySelector('.form-panel');
+        if (workspace) workspace.insertBefore(banner, workspace.firstChild);
+      }
+    }, 500);
+  }
+
+  // Render inicial
+  setTimeout(() => render(), 300);
+})();
+
+render();
+// ── Expediente del trabajador ──
+if (window.ExpedienteHelper) {
+  ExpedienteHelper.init({
+    inputNombreId: 'trabajador',
+    tipoDocumento: 'carta_laboral',
+    nombreDocumentoFn: () => ({
+      finiquito:'Finiquito', liquidacion:'Liquidación',
+      carta:'Carta laboral', constancia:'Constancia de trabajo'
+    })[document.getElementById('tipo-carta')?.value] || 'Carta laboral',
+  });
+}
+
+</script>
+<script src="edicion-libre.js?v=4.6"></script>
+
+
+
+
+</body>
+</html>

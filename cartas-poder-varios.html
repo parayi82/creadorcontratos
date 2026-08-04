@@ -1,0 +1,483 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="robots" content="noindex,nofollow">
+<title>Generador · Cartas Poder, Beneficiarios y Mutuo</title>
+<style>
+  :root{--ink:#1a1a18;--ink2:#4a4a46;--ink3:#8a8a84;--surface:#f7f6f2;--white:#ffffff;--accent:#1a3a5c;--accent2:#e8f0f8;--border:#ddddd6;--danger:#c0392b;--green:#16a34a;--radius:6px;--font-ui:'Segoe UI',system-ui,sans-serif;--font-doc:'Times New Roman',Georgia,serif;}
+  *{box-sizing:border-box;margin:0;padding:0;}
+  body{font-family:var(--font-ui);background:var(--surface);color:var(--ink);min-height:100vh;font-size:14px;}
+  header{background:var(--accent);color:#fff;padding:14px 28px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:100;box-shadow:0 1px 4px rgba(0,0,0,.18);}
+  header h1{font-size:15px;font-weight:600;}
+  header span{font-size:12px;opacity:.7;}
+  .header-actions{display:flex;gap:10px;}
+  .btn{padding:7px 18px;border-radius:var(--radius);font-size:13px;font-weight:500;cursor:pointer;border:1px solid transparent;transition:background .15s,opacity .15s;}
+  .btn-outline{background:transparent;border-color:rgba(255,255,255,.45);color:#fff;}.btn-outline:hover{background:rgba(255,255,255,.12);}
+  .btn-primary{background:#fff;color:var(--accent);}.btn-primary:hover{opacity:.88;}
+  .btn-sm{padding:4px 12px;font-size:12px;background:var(--accent2);color:var(--accent);border:1px solid #b8d0ee;}
+  .workspace{display:grid;grid-template-columns:390px 1fr;height:calc(100vh - 52px);}
+  .form-panel{background:var(--white);border-right:1px solid var(--border);overflow-y:auto;padding:24px 24px 40px;}
+  .section-label{font-size:10px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:var(--accent);padding:20px 0 10px;border-bottom:1px solid var(--border);margin-bottom:14px;}
+  .section-label:first-child{padding-top:4px;}
+  .field{margin-bottom:13px;}
+  .field label{display:block;font-size:12px;font-weight:500;color:var(--ink2);margin-bottom:4px;}
+  .field label .req{color:var(--danger);margin-left:2px;}
+  .field input,.field select,.field textarea{width:100%;padding:8px 10px;border:1px solid var(--border);border-radius:var(--radius);font-size:13px;font-family:var(--font-ui);color:var(--ink);background:var(--white);transition:border-color .15s;}
+  .field input:focus,.field select:focus,.field textarea:focus{outline:none;border-color:var(--accent);box-shadow:0 0 0 3px var(--accent2);}
+  .field textarea{resize:vertical;min-height:60px;}
+  .field-row{display:grid;grid-template-columns:1fr 1fr;gap:10px;}
+  .field-row-3{display:grid;grid-template-columns:2fr 1.2fr .8fr;gap:8px;}
+  .hint{font-size:11px;color:var(--ink3);margin-top:3px;}
+  .alert-box{background:#fff8e1;border:1px solid #f0c040;border-radius:var(--radius);padding:10px 14px;font-size:12px;color:#7a5f00;margin-bottom:14px;line-height:1.5;}
+  .clause-check{display:flex;align-items:flex-start;gap:8px;margin-bottom:8px;}
+  .clause-check input[type=checkbox]{margin-top:2px;accent-color:var(--accent);}
+  .clause-check label{font-size:12px;color:var(--ink2);cursor:pointer;line-height:1.4;}
+  .tipo-tabs{display:grid;grid-template-columns:1fr 1fr;gap:0;border:1px solid var(--border);border-radius:var(--radius);overflow:hidden;margin-bottom:16px;}
+  .tipo-tab{padding:10px 4px;text-align:center;font-size:12px;font-weight:500;cursor:pointer;background:var(--white);color:var(--ink2);border:none;transition:all .15s;line-height:1.3;}
+  .tipo-tab:nth-child(odd){border-right:1px solid var(--border);}
+  .tipo-tab:nth-child(-n+2){border-bottom:1px solid var(--border);}
+  .tipo-tab.active{background:var(--accent);color:#fff;}
+  .calc-box{background:#f0f6ff;border:1px solid #b8d0ee;border-radius:var(--radius);padding:12px 14px;margin:10px 0;font-size:12px;color:var(--accent);}
+  .calc-row{display:flex;justify-content:space-between;padding:3px 0;}
+  .calc-row.total{border-top:1px solid #b8d0ee;margin-top:6px;padding-top:8px;font-weight:700;font-size:13px;}
+  .preview-panel{background:#e8e7e0;overflow-y:auto;padding:32px 40px;display:flex;flex-direction:column;align-items:center;gap:24px;}
+  .doc-sheet{background:var(--white);width:100%;max-width:760px;min-height:900px;padding:64px 74px;box-shadow:0 2px 16px rgba(0,0,0,.12);font-family:var(--font-doc);font-size:12pt;line-height:1.75;color:#111;}
+  .doc-title{text-align:center;font-size:13pt;font-weight:bold;text-transform:uppercase;letter-spacing:.04em;margin-bottom:6px;}
+  .doc-subtitle{text-align:center;font-size:10pt;color:var(--ink3);font-family:var(--font-ui);margin-bottom:28px;}
+  .doc-p{margin-bottom:14px;text-align:justify;}
+  .doc-p .blank{font-weight:bold;color:var(--accent);border-bottom:1px solid var(--accent);padding:0 2px;}
+  .doc-p .blank.empty{color:#c0392b;border-bottom-color:#c0392b;font-style:italic;font-weight:normal;}
+  .doc-clause-title{font-weight:bold;text-transform:uppercase;font-size:10.5pt;margin:22px 0 8px;}
+  .doc-table{width:100%;border-collapse:collapse;margin:14px 0;font-size:10.5pt;}
+  .doc-table td,.doc-table th{border:1px solid #999;padding:6px 10px;text-align:left;}
+  .doc-table th{background:#f0f0ec;font-family:var(--font-ui);font-size:9pt;text-transform:uppercase;}
+  .doc-firma-grid{display:grid;grid-template-columns:1fr 1fr;gap:40px;margin-top:48px;}
+  .doc-firma-solo{max-width:320px;margin:48px auto 0;}
+  .firma-box{border-top:1px solid #888;padding-top:8px;font-size:10pt;text-align:center;line-height:1.5;}
+  .firma-box strong{display:block;font-size:9pt;color:var(--ink3);font-family:var(--font-ui);}
+  @media print{header,.form-panel{display:none!important;}.workspace{display:block;height:auto;}.preview-panel{padding:0;background:white;gap:0;}.doc-sheet{box-shadow:none;max-width:100%;page-break-after:always;}body{background:white;}}
+#auth-gate-loading{position:fixed;inset:0;background:#fff;z-index:9999;display:flex;align-items:center;justify-content:center;font-family:'Segoe UI',system-ui,sans-serif;color:#999;font-size:13px;}
+#auth-gate-blocked{position:fixed;inset:0;background:#0f2640;z-index:9999;display:none;align-items:center;justify-content:center;padding:24px;}
+#auth-gate-blocked .agb-box{background:#fff;border-radius:16px;padding:40px 36px;max-width:420px;text-align:center;font-family:'Segoe UI',system-ui,sans-serif;}
+#auth-gate-blocked .agb-box h2{font-size:18px;margin-bottom:10px;color:#0f2640;}
+#auth-gate-blocked .agb-box p{font-size:13px;color:#666;margin-bottom:20px;line-height:1.6;}
+#auth-gate-blocked .agb-btns{display:flex;gap:10px;justify-content:center;flex-wrap:wrap;}
+#auth-gate-blocked .agb-btns a{padding:10px 18px;border-radius:8px;font-size:13px;font-weight:600;text-decoration:none;}
+#auth-gate-blocked .agb-btns a.agb-primary{background:#1a3a5c;color:#fff;}
+#auth-gate-blocked .agb-btns a.agb-secondary{background:#f0f0ec;color:#1a3a5c;}
+body.modo-demo .doc-sheet{position:relative;user-select:none;-webkit-user-select:none;-moz-user-select:none;}
+body.modo-demo .doc-sheet::after{content:'MUESTRA — CUENTA DEMO, NO VÁLIDO PARA USO LEGAL';position:absolute;top:46%;left:-15%;right:-15%;text-align:center;font-size:26px;font-weight:900;color:rgba(220,38,38,.16);transform:rotate(-18deg);pointer-events:none;font-family:'Segoe UI',system-ui,sans-serif;z-index:50;}
+@media print{ body.modo-demo .doc-sheet::after{display:block!important;color:rgba(220,38,38,.35)!important;} }
+  .cl-nav-logo{display:flex;align-items:center;font-size:15px;font-weight:800;color:#fff;letter-spacing:-.01em;line-height:1;text-decoration:none;}
+  .cl-nav-logo .cl-laboral{color:#5eead4;font-weight:400;}
+</style>
+<script src="membrete.js?v=3.7"></script>
+</head>
+<body>
+<div id="auth-gate-loading">Verificando acceso…</div>
+<div id="auth-gate-blocked">
+  <div class="agb-box">
+    <h2>🔒 Esta herramienta requiere una suscripción activa</h2>
+    <p>Inicie sesión desde su portal de cliente para usar este generador, o conozca nuestros planes si todavía no es cliente de ClickLaboral.mx.</p>
+    <div class="agb-btns">
+      <a class="agb-primary" href="portal-cliente.html">Iniciar sesión →</a>
+      <a class="agb-secondary" href="index.html#precios">Ver planes</a>
+    </div>
+  </div>
+</div>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
+<script src="expediente-helper.js?v=3.7"></script>
+<script>
+(async()=>{
+  const _sb = supabase.createClient('https://hpzgqaplrywwjuvrzhcp.supabase.co','sb_publishable_1g8US8iFJ8CxnSaF_4MHgA_gqyyAr3W');
+  try {
+    const { data } = await _sb.auth.getSession();
+    document.getElementById('auth-gate-loading').style.display = 'none';
+    if (!data?.session?.user) document.getElementById('auth-gate-blocked').style.display = 'flex';
+  } catch(e) {
+    document.getElementById('auth-gate-loading').style.display = 'none';
+    document.getElementById('auth-gate-blocked').style.display = 'flex';
+  }
+})();
+</script>
+
+<header>
+  <div class="cl-nav-logo" style="flex-shrink:0;"><svg width="26" height="26" viewBox="0 0 100 100" style="vertical-align:-7px;margin-right:6px;flex-shrink:0;">
+        <defs><linearGradient id="clGrad" x1="10" y1="10" x2="90" y2="95" gradientUnits="userSpaceOnUse">
+          <stop offset="0%" stop-color="#1a3a5c"/><stop offset="55%" stop-color="#1e6f6c"/><stop offset="100%" stop-color="#2dd4bf"/>
+        </linearGradient></defs>
+        <path d="M50 7 L83 20 V51 C83 73 68 87 50 95 C32 87 17 73 17 51 V20 Z" fill="none" stroke="url(#clGrad)" stroke-width="6" stroke-linejoin="round"/>
+        <circle cx="40" cy="38" r="8.5" fill="#5eead4"/>
+        <path d="M25 63 C25 51 31 45 40 45 C49 45 55 51 55 63 Z" fill="#5eead4"/>
+        <circle cx="55" cy="33" r="9.5" fill="#14b8a6"/>
+        <path d="M38 61 C38 48 45.5 41 55 41 C64.5 41 72 48 72 61 Z" fill="#14b8a6"/>
+        <path d="M29 61 L45 77 L78 40" fill="none" stroke="#e8f2fc" stroke-width="9" stroke-linecap="round" stroke-linejoin="round"/>
+      </svg>Click<span class="cl-laboral">Laboral.mx</span></div>
+  <div>
+    <h1>Cartas Poder, Beneficiarios y Mutuo · ClickLaboral.mx</h1>
+    <span>Carta poder simple · Beneficiarios Art. 501 LFT · Carta patronal · Contrato de mutuo</span>
+  </div>
+  <div class="header-actions">
+    <button class="btn btn-outline" onclick="location.reload()">Limpiar</button>
+    <button class="btn btn-primary" onclick="window.print()">Imprimir / PDF</button>
+  </div>
+</header>
+
+<div class="workspace">
+  <div class="form-panel">
+    <div class="tipo-tabs">
+      <button class="tipo-tab active" id="tab-poder" onclick="setTipo('poder')">✍️ Carta poder</button>
+      <button class="tipo-tab" id="tab-beneficiarios" onclick="setTipo('beneficiarios')">👪 Beneficiarios Art. 501</button>
+      <button class="tipo-tab" id="tab-patronal" onclick="setTipo('patronal')">🏢 Carta patronal</button>
+      <button class="tipo-tab" id="tab-mutuo" onclick="setTipo('mutuo')">💰 Contrato de mutuo</button>
+    </div>
+
+    <div class="alert-box" id="alerta-tipo"></div>
+
+    <div class="field-row">
+      <div class="field"><label>Lugar</label><input id="f-lugar" value="Guadalajara, Jalisco" oninput="render()"></div>
+      <div class="field"><label>Fecha</label><input id="f-fecha" type="date" oninput="render()"></div>
+    </div>
+
+    <!-- ═══ CARTA PODER ═══ -->
+    <div id="campos-poder">
+      <div class="section-label">Otorgante (quien da el poder)</div>
+      <div class="field"><label>Nombre completo <span class="req">*</span></label><input id="f-otorgante" oninput="render()"></div>
+      <div class="section-label">Apoderado (quien recibe el poder)</div>
+      <div class="field"><label>Nombre completo <span class="req">*</span></label><input id="f-apoderado" oninput="render()"></div>
+      <div class="section-label">Alcance del poder</div>
+      <div class="field"><label>Tipo</label><select id="f-tipo-poder" onchange="render()">
+        <option value="especifico">Para trámite(s) específico(s)</option>
+        <option value="amplio">Amplio, cuanto en derecho sea necesario</option>
+      </select></div>
+      <div class="field"><label>Facultades / trámites <span class="req">*</span></label><textarea id="f-facultades" oninput="render()" placeholder="Ej. Recoger en mi nombre el finiquito y documentos laborales que me correspondan ante la empresa X; firmar de recibido."></textarea></div>
+      <div class="field-row">
+        <div class="field"><label>Testigo 1</label><input id="f-testigo1" oninput="render()"></div>
+        <div class="field"><label>Testigo 2</label><input id="f-testigo2" oninput="render()"></div>
+      </div>
+    </div>
+
+    <!-- ═══ BENEFICIARIOS ═══ -->
+    <div id="campos-beneficiarios" style="display:none;">
+      <div class="section-label">Trabajador</div>
+      <div class="field"><label>Empresa</label><input id="f-empresa-ben" oninput="render()"></div>
+      <div class="field"><label>Nombre del trabajador <span class="req">*</span></label><input id="f-trabajador-ben" oninput="render()"></div>
+      <div class="field-row">
+        <div class="field"><label>Puesto</label><input id="f-puesto-ben" oninput="render()"></div>
+        <div class="field"><label>NSS (opcional)</label><input id="f-nss" oninput="render()"></div>
+      </div>
+      <div class="section-label">Beneficiarios designados</div>
+      <div class="hint" style="margin-bottom:8px;">Los porcentajes deben sumar 100%.</div>
+      <div id="lista-beneficiarios"></div>
+      <button class="btn btn-sm" onclick="agregarBeneficiario()">+ Agregar beneficiario</button>
+      <div class="calc-box" id="calc-ben" style="margin-top:10px;"></div>
+    </div>
+
+    <!-- ═══ CARTA PATRONAL ═══ -->
+    <div id="campos-patronal" style="display:none;">
+      <div class="section-label">Empresa</div>
+      <div class="field"><label>Razón social <span class="req">*</span></label><input id="f-empresa-pat" oninput="render()"></div>
+      <div class="field"><label>Quien firma (RH / representante)</label><input id="f-firma-pat" oninput="render()"></div>
+      <div class="field"><label>Teléfono / email de verificación</label><input id="f-contacto-pat" oninput="render()" placeholder="Para que el destinatario pueda confirmar la información"></div>
+      <div class="section-label">Trabajador</div>
+      <div class="field"><label>Nombre <span class="req">*</span></label><input id="f-trabajador-pat" oninput="render()"></div>
+      <div class="field-row">
+        <div class="field"><label>Puesto</label><input id="f-puesto-pat" oninput="render()"></div>
+        <div class="field"><label>Fecha de ingreso</label><input id="f-ingreso-pat" type="date" oninput="render()"></div>
+      </div>
+      <div class="field-row">
+        <div class="field"><label>Salario mensual bruto</label><input id="f-salario-pat" type="number" min="0" step="0.01" oninput="render()"></div>
+        <div class="field"><label>Tipo de contrato</label><select id="f-contrato-pat" onchange="render()"><option>Tiempo indeterminado</option><option>Tiempo determinado</option><option>Por obra determinada</option></select></div>
+      </div>
+      <div class="field"><label>Destinatario / motivo</label><input id="f-motivo-pat" oninput="render()" placeholder="Ej. Trámite de crédito Infonavit / arrendamiento / visa"></div>
+    </div>
+
+    <!-- ═══ MUTUO ═══ -->
+    <div id="campos-mutuo" style="display:none;">
+      <div class="section-label">Mutuante (quien presta)</div>
+      <div class="field"><label>Nombre o razón social <span class="req">*</span></label><input id="f-mutuante" oninput="render()"></div>
+      <div class="section-label">Mutuario (quien recibe)</div>
+      <div class="field"><label>Nombre o razón social <span class="req">*</span></label><input id="f-mutuario" oninput="render()"></div>
+      <div class="field"><label>Domicilio del mutuario</label><input id="f-mutuario-dom" oninput="render()"></div>
+      <div class="section-label">Términos del préstamo</div>
+      <div class="field-row">
+        <div class="field"><label>Monto prestado <span class="req">*</span></label><input id="f-monto-mutuo" type="number" min="0" step="0.01" oninput="render()"></div>
+        <div class="field"><label>Interés ordinario (% mensual)</label><input id="f-interes-ord" type="number" min="0" step="0.1" value="1.5" oninput="render()"></div>
+      </div>
+      <div class="field-row">
+        <div class="field"><label>Interés moratorio (% mensual)</label><input id="f-interes-mor" type="number" min="0" step="0.1" value="3" oninput="render()"></div>
+        <div class="field"><label>Parcialidades mensuales</label><input id="f-parc-mutuo" type="number" min="1" max="60" value="12" oninput="render()"></div>
+      </div>
+      <div class="field"><label>Fecha del primer pago</label><input id="f-primer-pago-mutuo" type="date" oninput="render()"></div>
+      <div class="calc-box" id="calc-mutuo" style="display:none;"></div>
+      <div class="clause-check"><input type="checkbox" id="f-mutuo-pagares" checked onchange="render()"><label for="f-mutuo-pagares">Documentar parcialidades con pagarés (título ejecutivo)</label></div>
+      <div class="hint">⚖️ Tip: mantenga el interés dentro de rangos de mercado; un interés notoriamente desproporcionado puede reducirse judicialmente por lesión/usura (criterios SCJN sobre el Art. 174 LGTOC).</div>
+    </div>
+  </div>
+
+  <div class="preview-panel" id="preview"></div>
+</div>
+
+<script>
+const qs = new URLSearchParams(location.search);
+document.getElementById('f-fecha').value = new Date().toISOString().slice(0,10);
+document.getElementById('f-empresa-ben').value = qs.get('empresa') || '';
+document.getElementById('f-empresa-pat').value = qs.get('empresa') || '';
+document.getElementById('f-mutuante').value = qs.get('empresa') || '';
+
+let tipoActual = 'poder';
+function setTipo(t){
+  tipoActual = t;
+  document.querySelectorAll('.tipo-tab').forEach(x=>x.classList.remove('active'));
+  document.getElementById('tab-'+t).classList.add('active');
+  ['poder','beneficiarios','patronal','mutuo'].forEach(x=>{
+    document.getElementById('campos-'+x).style.display = x===t ? 'block' : 'none';
+  });
+  const alertas = {
+    poder: '✍️ La carta poder simple ante dos testigos sirve para trámites y gestiones ordinarias. Para actos de dominio, pleitos y cobranzas judiciales o trámites que la ley reserve, se requiere poder notarial.',
+    beneficiarios: '👪 La designación de beneficiarios (Arts. 25 fr. X y 501 LFT) agiliza la entrega de salarios y prestaciones pendientes en caso de fallecimiento del trabajador. Guárdela firmada en el expediente y actualícela ante cambios familiares.',
+    patronal: '🏢 Constancia laboral con salario para trámites externos (Infonavit, arrendamiento, visa). Incluya un medio de verificación: los destinatarios suelen llamar para confirmar.',
+    mutuo: '💰 El mutuo con interés (Arts. 2384–2397 CCF y correlativos estatales) documenta préstamos civiles entre particulares o empresas. Combínelo con pagarés para tener título ejecutivo.',
+  };
+  document.getElementById('alerta-tipo').innerHTML = alertas[t];
+  render();
+}
+
+// ═══ Beneficiarios dinámicos ═══
+let beneficiarios = [{nombre:'',parentesco:'',pct:100}];
+function agregarBeneficiario(){
+  if (beneficiarios.length >= 6) return;
+  beneficiarios.push({nombre:'',parentesco:'',pct:0});
+  renderListaBeneficiarios();
+  render();
+}
+function quitarBeneficiario(i){
+  beneficiarios.splice(i,1);
+  if(!beneficiarios.length) beneficiarios = [{nombre:'',parentesco:'',pct:100}];
+  renderListaBeneficiarios();
+  render();
+}
+function updBen(i, campo, val){
+  beneficiarios[i][campo] = campo==='pct' ? (parseFloat(val)||0) : val;
+  render();
+}
+function renderListaBeneficiarios(){
+  document.getElementById('lista-beneficiarios').innerHTML = beneficiarios.map((b,i)=>`
+    <div class="field-row-3" style="margin-bottom:8px;align-items:center;">
+      <input placeholder="Nombre completo" value="${b.nombre}" oninput="updBen(${i},'nombre',this.value)" style="padding:7px 9px;border:1px solid var(--border);border-radius:var(--radius);font-size:12px;">
+      <input placeholder="Parentesco" value="${b.parentesco}" oninput="updBen(${i},'parentesco',this.value)" style="padding:7px 9px;border:1px solid var(--border);border-radius:var(--radius);font-size:12px;">
+      <div style="display:flex;gap:4px;align-items:center;">
+        <input type="number" min="0" max="100" value="${b.pct}" oninput="updBen(${i},'pct',this.value)" style="padding:7px 6px;border:1px solid var(--border);border-radius:var(--radius);font-size:12px;width:100%;">
+        <span style="font-size:11px;color:var(--ink3);">%</span>
+        ${beneficiarios.length>1 ? `<button onclick="quitarBeneficiario(${i})" style="border:none;background:none;color:var(--danger);cursor:pointer;font-size:14px;">✕</button>` : ''}
+      </div>
+    </div>`).join('');
+}
+renderListaBeneficiarios();
+
+// ═══ Utilerías ═══
+function numeroALetras(n){
+  if (isNaN(n) || n === null) return '';
+  const UNI = ['','UNO','DOS','TRES','CUATRO','CINCO','SEIS','SIETE','OCHO','NUEVE','DIEZ','ONCE','DOCE','TRECE','CATORCE','QUINCE','DIECISÉIS','DIECISIETE','DIECIOCHO','DIECINUEVE','VEINTE'];
+  const DEC = ['','','VEINTI','TREINTA','CUARENTA','CINCUENTA','SESENTA','SETENTA','OCHENTA','NOVENTA'];
+  const CEN = ['','CIENTO','DOSCIENTOS','TRESCIENTOS','CUATROCIENTOS','QUINIENTOS','SEISCIENTOS','SETECIENTOS','OCHOCIENTOS','NOVECIENTOS'];
+  function tresDigitos(x){
+    if (x === 0) return '';
+    if (x === 100) return 'CIEN';
+    let s = '';
+    const c = Math.floor(x/100), r = x%100;
+    if (c) s += CEN[c] + ' ';
+    if (r <= 20) s += UNI[r];
+    else {
+      const d = Math.floor(r/10), u = r%10;
+      if (d === 2) s += u ? 'VEINTI' + UNI[u] : 'VEINTE';
+      else { s += DEC[d]; if (u) s += ' Y ' + UNI[u]; }
+    }
+    return s.trim();
+  }
+  const entero = Math.floor(n);
+  const centavos = Math.round((n - entero) * 100);
+  let letras = '';
+  if (entero === 0) letras = 'CERO';
+  else {
+    const millones = Math.floor(entero/1000000);
+    const miles    = Math.floor((entero%1000000)/1000);
+    const resto    = entero%1000;
+    const apoc = s => s.replace(/VEINTIUNO$/,'VEINTIÚN').replace(/UNO$/,'UN');
+    if (millones) letras += (millones===1 ? 'UN MILLÓN' : apoc(tresDigitos(millones))+' MILLONES') + ' ';
+    if (miles)    letras += (miles===1 ? 'MIL' : apoc(tresDigitos(miles))+' MIL') + ' ';
+    if (resto)    letras += tresDigitos(resto);
+    letras = letras.trim();
+  }
+  return `${letras} PESOS ${String(centavos).padStart(2,'0')}/100 M.N.`;
+}
+const fmt = n => '$' + Number(n||0).toLocaleString('es-MX',{minimumFractionDigits:2,maximumFractionDigits:2});
+const B = (v, ph) => v ? `<span class="blank">${v}</span>` : `<span class="blank empty">[${ph}]</span>`;
+function v(id){ return (document.getElementById(id)?.value || '').trim(); }
+function num(id){ return parseFloat(document.getElementById(id)?.value) || 0; }
+function fechaLarga(iso){
+  if(!iso) return '';
+  return new Date(iso+'T12:00:00').toLocaleDateString('es-MX',{day:'numeric',month:'long',year:'numeric'});
+}
+function sumarMeses(iso, m){
+  const d = new Date(iso+'T12:00:00'); d.setMonth(d.getMonth()+m);
+  return d.toISOString().slice(0,10);
+}
+function antiguedadTexto(iso){
+  if(!iso) return '';
+  const ini = new Date(iso+'T12:00:00'), hoy = new Date();
+  let anios = hoy.getFullYear()-ini.getFullYear();
+  let meses = hoy.getMonth()-ini.getMonth();
+  if (meses < 0) { anios--; meses += 12; }
+  const p = [];
+  if (anios>0) p.push(anios + (anios===1?' año':' años'));
+  if (meses>0) p.push(meses + (meses===1?' mes':' meses'));
+  return p.join(' y ') || 'menos de un mes';
+}
+
+// ═══ RENDER ═══
+function render(){
+  const lugar = v('f-lugar'), fecha = v('f-fecha');
+  const prev = document.getElementById('preview');
+  if (tipoActual==='poder') prev.innerHTML = renderPoder(lugar, fecha);
+  else if (tipoActual==='beneficiarios') prev.innerHTML = renderBeneficiarios(lugar, fecha);
+  else if (tipoActual==='patronal') prev.innerHTML = renderPatronal(lugar, fecha);
+  else prev.innerHTML = renderMutuo(lugar, fecha);
+}
+
+function renderPoder(lugar, fecha){
+  const amplio = document.getElementById('f-tipo-poder').value === 'amplio';
+  return `
+  <div class="doc-sheet" style="min-height:auto;">
+    <div class="doc-title">Carta Poder</div>
+    <div class="doc-subtitle">${B(lugar,'lugar')}, a ${fechaLarga(fecha)||'[fecha]'}</div>
+    <div class="doc-p">
+      Por la presente, yo, ${B(v('f-otorgante'),'nombre del otorgante')}, otorgo a ${B(v('f-apoderado'),'nombre del apoderado')} poder ${amplio ? 'amplio, cumplido y bastante, cuanto en derecho sea necesario,' : 'especial, limitado a lo que en seguida se expresa,'} para que en mi nombre y representación realice lo siguiente:
+    </div>
+    <div class="doc-p" style="white-space:pre-wrap;">${v('f-facultades') ? `<span class="blank" style="border:none;">${v('f-facultades')}</span>` : '<span class="blank empty">[Describa las facultades o trámites]</span>'}</div>
+    <div class="doc-p">
+      El apoderado podrá firmar cuantos documentos sean necesarios para el debido cumplimiento del presente mandato, el cual acepto en todos sus términos. La presente carta poder se otorga ante los dos testigos que la suscriben.
+    </div>
+    <div class="doc-firma-grid">
+      <div class="firma-box">${B(v('f-otorgante'),'otorgante')}<strong>OTORGA EL PODER (firma)</strong></div>
+      <div class="firma-box">${B(v('f-apoderado'),'apoderado')}<strong>ACEPTA EL PODER (firma)</strong></div>
+    </div>
+    <div class="doc-firma-grid" style="margin-top:36px;">
+      <div class="firma-box">${v('f-testigo1')||'Nombre y firma'}<strong>TESTIGO 1</strong></div>
+      <div class="firma-box">${v('f-testigo2')||'Nombre y firma'}<strong>TESTIGO 2</strong></div>
+    </div>
+  </div>`;
+}
+
+function renderBeneficiarios(lugar, fecha){
+  const suma = beneficiarios.reduce((a,b)=>a+(b.pct||0),0);
+  const calc = document.getElementById('calc-ben');
+  calc.innerHTML = `<div class="calc-row total"><span>Suma de porcentajes</span><strong style="color:${Math.abs(suma-100)<0.01?'var(--green)':'var(--danger)'};">${suma}%</strong></div>` + (Math.abs(suma-100)>=0.01 ? '<div style="font-size:11px;color:var(--danger);margin-top:4px;">⚠️ Debe sumar exactamente 100%</div>' : '');
+  const filas = beneficiarios.map((b,i)=>`<tr><td style="text-align:center;">${i+1}</td><td>${b.nombre||'—'}</td><td>${b.parentesco||'—'}</td><td style="text-align:right;">${b.pct}%</td></tr>`).join('');
+  return `
+  <div class="doc-sheet" style="min-height:auto;">
+    <div class="doc-title">Designación de beneficiarios</div>
+    <div class="doc-subtitle">Artículos 25, fracción X, y 501 de la Ley Federal del Trabajo</div>
+    <div class="doc-p">
+      En ${B(lugar,'lugar')}, a ${fechaLarga(fecha)||'[fecha]'}, el suscrito trabajador ${B(v('f-trabajador-ben'),'nombre del trabajador')}${v('f-puesto-ben') ? ', con puesto de '+`<span class="blank">${v('f-puesto-ben')}</span>` : ''}${v('f-nss') ? ', NSS '+`<span class="blank">${v('f-nss')}</span>` : ''}, al servicio de ${B(v('f-empresa-ben'),'empresa')}, con fundamento en los artículos 25, fracción X, y 501 de la Ley Federal del Trabajo, <strong>designo como beneficiario(s)</strong> para el pago de los salarios, prestaciones devengadas e indemnizaciones que pudieran corresponderme en caso de fallecimiento o desaparición derivada de un acto delincuencial, a la(s) siguiente(s) persona(s) y en las proporciones que se indican:
+    </div>
+    <table class="doc-table">
+      <thead><tr><th style="width:44px;">No.</th><th>Nombre completo</th><th>Parentesco</th><th style="text-align:right;width:80px;">%</th></tr></thead>
+      <tbody>${filas}</tbody>
+      <tfoot><tr><td colspan="3" style="text-align:right;font-weight:bold;">TOTAL</td><td style="text-align:right;font-weight:bold;">${suma}%</td></tr></tfoot>
+    </table>
+    <div class="doc-p">
+      Esta designación sustituye a cualquier otra realizada con anterioridad y permanecerá vigente hasta que el suscrito la modifique por escrito. Solicito que el presente documento se integre a mi expediente laboral.
+    </div>
+    <div class="doc-firma-solo">
+      <div class="firma-box">${B(v('f-trabajador-ben'),'trabajador')}<strong>EL TRABAJADOR — nombre y firma</strong></div>
+    </div>
+    <div class="doc-firma-grid" style="margin-top:36px;">
+      <div class="firma-box">Nombre y firma<strong>TESTIGO 1</strong></div>
+      <div class="firma-box">Nombre y firma<strong>TESTIGO 2</strong></div>
+    </div>
+  </div>`;
+}
+
+function renderPatronal(lugar, fecha){
+  const sal = num('f-salario-pat');
+  return `
+  <div class="doc-sheet" style="min-height:auto;">
+    <div style="text-align:right;font-family:var(--font-ui);font-size:10pt;color:#666;margin-bottom:20px;">${B(lugar,'lugar')}, a ${fechaLarga(fecha)||'[fecha]'}</div>
+    <div class="doc-p" style="font-weight:bold;">A QUIEN CORRESPONDA${v('f-motivo-pat') ? `<br><span style="font-weight:normal;font-size:10.5pt;">Asunto: ${v('f-motivo-pat')}</span>` : ''}</div>
+    <div class="doc-title" style="margin-top:20px;">Carta patronal / Constancia laboral</div>
+    <div class="doc-p" style="margin-top:20px;">
+      Por medio de la presente, ${B(v('f-empresa-pat'),'empresa')} hace constar que el C. ${B(v('f-trabajador-pat'),'trabajador')} labora en esta empresa desempeñando el puesto de ${B(v('f-puesto-pat'),'puesto')}, bajo contrato por ${v('f-contrato-pat')||'tiempo indeterminado'}${v('f-ingreso-pat') ? `, desde el ${B(fechaLarga(v('f-ingreso-pat')),'')} (antigüedad de ${antiguedadTexto(v('f-ingreso-pat'))})` : ''}.
+    </div>
+    <div class="doc-p">
+      ${sal ? `Percibe actualmente un salario mensual bruto de <span class="blank">${fmt(sal)} (${numeroALetras(sal)})</span>.` : '<span class="blank empty">[Indique el salario mensual]</span>'}
+    </div>
+    <div class="doc-p">
+      La presente se extiende a solicitud del interesado, para los fines legales y administrativos que a éste convengan, sin que constituya carta de recomendación ni genere responsabilidad adicional para la empresa.
+    </div>
+    ${v('f-contacto-pat') ? `<div class="doc-p">Para verificar la presente información: <span class="blank">${v('f-contacto-pat')}</span>.</div>` : ''}
+    <div class="doc-firma-solo">
+      <div class="firma-box">${B(v('f-empresa-pat'),'empresa')}${v('f-firma-pat') ? '<br>'+v('f-firma-pat') : ''}<strong>NOMBRE Y FIRMA — RECURSOS HUMANOS</strong></div>
+    </div>
+  </div>`;
+}
+
+function renderMutuo(lugar, fecha){
+  const monto = num('f-monto-mutuo'), iOrd = num('f-interes-ord'), iMor = num('f-interes-mor');
+  const nPar = Math.max(1, Math.min(60, num('f-parc-mutuo')||1));
+  const primerPago = v('f-primer-pago-mutuo');
+  const conPagares = document.getElementById('f-mutuo-pagares').checked;
+  const parcialidad = monto ? monto/nPar : 0;
+
+  const calc = document.getElementById('calc-mutuo');
+  if (monto) {
+    calc.style.display = 'block';
+    calc.innerHTML = `<div class="calc-row"><span>Capital</span><strong>${fmt(monto)}</strong></div>
+      <div class="calc-row total"><span>${nPar} parcialidad(es) de capital de</span><strong>${fmt(parcialidad)}</strong></div>
+      <div style="font-size:11px;color:var(--ink3);margin-top:4px;">+ interés ordinario del ${iOrd}% mensual sobre saldos insolutos</div>`;
+  } else calc.style.display = 'none';
+
+  let filas = '';
+  for (let i=1; i<=nPar; i++){
+    const f = primerPago ? fechaLarga(sumarMeses(primerPago, i-1)) : '—';
+    filas += `<tr><td style="text-align:center;">${i}</td><td>${f}</td><td style="text-align:right;">${fmt(parcialidad)}</td></tr>`;
+  }
+
+  return `
+  <div class="doc-sheet">
+    <div class="doc-title">Contrato de mutuo con interés</div>
+    <div class="doc-subtitle">Que celebran ${v('f-mutuante')||'[mutuante]'} ("EL MUTUANTE") y ${v('f-mutuario')||'[mutuario]'} ("EL MUTUARIO")</div>
+    <div class="doc-clause-title">Declaraciones</div>
+    <div class="doc-p"><strong>I.</strong> Declara EL MUTUANTE que cuenta con recursos propios y lícitos suficientes para otorgar el préstamo objeto de este contrato, y que es su voluntad celebrarlo.</div>
+    <div class="doc-p"><strong>II.</strong> Declara EL MUTUARIO, con domicilio en ${B(v('f-mutuario-dom'),'domicilio')}, que es su voluntad recibir la cantidad objeto del mutuo, obligándose a restituirla con sus intereses conforme a las cláusulas siguientes.</div>
+    <div class="doc-clause-title">Cláusulas</div>
+    <div class="doc-p"><strong>PRIMERA — Objeto.</strong> EL MUTUANTE entrega en este acto a EL MUTUARIO, quien recibe a su entera satisfacción, la cantidad de ${monto ? `<span class="blank">${fmt(monto)} (${numeroALetras(monto)})</span>` : '<span class="blank empty">[monto]</span>'}, en calidad de <strong>mutuo con interés</strong>, sirviendo el presente como el recibo más eficaz que en derecho proceda.</div>
+    <div class="doc-p"><strong>SEGUNDA — Interés ordinario.</strong> El capital devengará un interés ordinario del <span class="blank">${iOrd}% (${iOrd} por ciento) mensual</span> sobre saldos insolutos, pagadero junto con cada parcialidad de capital.</div>
+    <div class="doc-p"><strong>TERCERA — Forma de pago.</strong> EL MUTUARIO restituirá el capital en ${nPar} parcialidad(es) mensual(es) y consecutiva(s), conforme al siguiente calendario:</div>
+    <table class="doc-table">
+      <thead><tr><th style="width:60px;">No.</th><th>Fecha límite</th><th style="text-align:right;">Capital</th></tr></thead>
+      <tbody>${filas}</tbody>
+      <tfoot><tr><td colspan="2" style="text-align:right;font-weight:bold;">TOTAL CAPITAL</td><td style="text-align:right;font-weight:bold;">${fmt(monto)}</td></tr></tfoot>
+    </table>
+    <div class="doc-p"><strong>CUARTA — Interés moratorio.</strong> La falta de pago puntual causará un interés moratorio del <span class="blank">${iMor}% mensual</span> sobre las cantidades vencidas y no pagadas, desde su exigibilidad y hasta su total liquidación, en sustitución del ordinario respecto de las cantidades en mora.</div>
+    <div class="doc-p"><strong>QUINTA — Vencimiento anticipado.</strong> El incumplimiento de una parcialidad dará derecho a EL MUTUANTE a exigir anticipadamente la totalidad del saldo insoluto, intereses y accesorios.</div>
+    ${conPagares ? `<div class="doc-p"><strong>SEXTA — Títulos de crédito.</strong> Para documentar las parcialidades, EL MUTUARIO suscribe en este acto ${nPar} pagaré(s) a la orden de EL MUTUANTE, que le serán devueltos conforme sean pagados. Su suscripción no constituye novación de la obligación de origen.</div>` : ''}
+    <div class="doc-p"><strong>${conPagares?'SÉPTIMA':'SEXTA'} — Jurisdicción.</strong> Para todo lo relativo a la interpretación y cumplimiento de este contrato, las partes se someten a las leyes y tribunales competentes de ${B(lugar,'ciudad')}, renunciando al fuero de sus domicilios presentes o futuros.</div>
+    <div class="doc-p" style="margin-top:20px;">Leído que fue el presente y enteradas las partes de su contenido y alcance, lo firman por duplicado en ${B(lugar,'lugar')}, a ${fechaLarga(fecha)||'[fecha]'}.</div>
+    <div class="doc-firma-grid">
+      <div class="firma-box">${B(v('f-mutuante'),'mutuante')}<strong>EL MUTUANTE</strong></div>
+      <div class="firma-box">${B(v('f-mutuario'),'mutuario')}<strong>EL MUTUARIO</strong></div>
+    </div>
+    <div class="doc-firma-grid" style="margin-top:36px;">
+      <div class="firma-box">Nombre y firma<strong>TESTIGO 1</strong></div>
+      <div class="firma-box">Nombre y firma<strong>TESTIGO 2</strong></div>
+    </div>
+  </div>`;
+}
+
+setTipo('poder');
+</script>
+</body>
+</html>

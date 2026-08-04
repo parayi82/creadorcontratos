@@ -1,0 +1,904 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Reportes Gerenciales · ClickLaboral.mx</title>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
+:root{
+  --navy:#0f2640;--navy2:#1a3a5c;--teal:#0f766e;
+  --red:#dc2626;--amber:#d97706;--green:#16a34a;
+  --ink:#111;--ink2:#444;--ink3:#888;
+  --border:rgba(0,0,0,.09);--surface:#f8f7f4;--white:#fff;
+  --r:12px;--font:'Segoe UI',system-ui,-apple-system,sans-serif;
+}
+body{font-family:var(--font);background:var(--surface);color:var(--ink);min-height:100vh;}
+/* Topbar */
+.topbar{background:var(--navy);height:56px;display:flex;align-items:center;justify-content:space-between;padding:0 24px;position:sticky;top:0;z-index:100;}
+.topbar-logo{font-size:14px;font-weight:800;color:#fff;}
+.topbar-logo span{color:#c5dcf5;font-weight:400;}
+.topbar-actions{display:flex;gap:8px;align-items:center;}
+.btn{padding:8px 16px;border-radius:7px;font-size:12px;font-weight:700;cursor:pointer;border:none;font-family:var(--font);}
+.btn-white{background:#fff;color:var(--navy);}
+.btn-ghost{background:rgba(255,255,255,.12);color:#fff;border:1px solid rgba(255,255,255,.25);}
+.btn-ghost:hover{background:rgba(255,255,255,.2);}
+/* Layout */
+.layout{display:grid;grid-template-columns:220px 1fr;min-height:calc(100vh - 56px);}
+.sidebar{background:var(--white);border-right:1px solid var(--border);padding:20px 16px;}
+.main{padding:24px;overflow-y:auto;}
+/* Sidebar */
+.sidebar-empresa{margin-bottom:20px;padding-bottom:16px;border-bottom:1px solid var(--border);}
+.sidebar-empresa-name{font-size:13px;font-weight:700;color:var(--navy);}
+.sidebar-empresa-rfc{font-size:11px;color:var(--ink3);}
+.sidebar-menu{list-style:none;}
+.sidebar-menu li{margin-bottom:4px;}
+.sidebar-menu a{display:flex;align-items:center;gap:8px;padding:8px 10px;border-radius:8px;font-size:13px;color:var(--ink2);text-decoration:none;transition:.15s;}
+.sidebar-menu a:hover,.sidebar-menu a.activa{background:#eff6ff;color:var(--navy2);font-weight:600;}
+.sidebar-menu .ico{font-size:15px;width:20px;text-align:center;}
+.sidebar-sep{font-size:10px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--ink3);padding:12px 10px 4px;}
+/* Header sección */
+.sec-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:24px;gap:12px;flex-wrap:wrap;}
+.sec-title{font-size:20px;font-weight:800;color:var(--navy);}
+.periodo-sel{display:flex;gap:8px;align-items:center;}
+.periodo-sel select{padding:7px 12px;border:1.5px solid var(--border);border-radius:8px;font-size:12px;font-family:var(--font);background:var(--white);color:var(--ink);}
+/* KPI Cards */
+.kpi-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:16px;margin-bottom:28px;}
+.kpi-card{background:var(--white);border-radius:var(--r);padding:20px;border:1px solid var(--border);position:relative;}
+.kpi-label{font-size:11px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--ink3);margin-bottom:8px;}
+.kpi-val{font-size:28px;font-weight:800;color:var(--navy);letter-spacing:-.02em;}
+.kpi-sub{font-size:11px;color:var(--ink3);margin-top:4px;}
+.kpi-delta{position:absolute;top:16px;right:16px;font-size:11px;font-weight:700;padding:3px 8px;border-radius:10px;}
+.delta-up{background:#dcfce7;color:#16a34a;}
+.delta-down{background:#fee2e2;color:#dc2626;}
+.delta-flat{background:#f1f5f9;color:#64748b;}
+/* Gráficas simples (barras CSS) */
+.chart-card{background:var(--white);border-radius:var(--r);padding:20px;border:1px solid var(--border);margin-bottom:20px;}
+.chart-title{font-size:13px;font-weight:700;color:var(--navy);margin-bottom:4px;}
+.chart-sub{font-size:11px;color:var(--ink3);margin-bottom:16px;}
+.bar-chart{display:flex;flex-direction:column;gap:10px;}
+.bar-row{display:grid;grid-template-columns:140px 1fr 60px;align-items:center;gap:10px;}
+.bar-label{font-size:12px;color:var(--ink2);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+.bar-track{height:10px;background:#f1f5f9;border-radius:5px;overflow:hidden;}
+.bar-fill{height:100%;border-radius:5px;transition:width .6s ease;}
+.bar-val{font-size:12px;font-weight:700;color:var(--ink2);text-align:right;}
+/* Tabla */
+.tabla-card{background:var(--white);border-radius:var(--r);padding:20px;border:1px solid var(--border);margin-bottom:20px;overflow-x:auto;}
+table{width:100%;border-collapse:collapse;font-size:12px;}
+th{font-size:10px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--ink3);padding:8px 12px;text-align:left;border-bottom:1.5px solid var(--border);}
+td{padding:10px 12px;border-bottom:1px solid var(--border);color:var(--ink2);}
+tr:last-child td{border-bottom:none;}
+.badge-activo{background:#dcfce7;color:#16a34a;font-size:10px;font-weight:700;padding:2px 8px;border-radius:10px;}
+.badge-baja{background:#fee2e2;color:#dc2626;font-size:10px;font-weight:700;padding:2px 8px;border-radius:10px;}
+/* Estado vacío */
+.empty{text-align:center;padding:48px 20px;color:var(--ink3);}
+.empty-ico{font-size:40px;margin-bottom:12px;}
+.spinner{display:inline-block;width:32px;height:32px;border:3px solid var(--border);border-top-color:var(--navy2);border-radius:50%;animation:spin .8s linear infinite;margin:40px auto;display:block;}
+@keyframes spin{to{transform:rotate(360deg);}}
+/* Auth */
+#auth-gate{display:flex;flex-direction:column;align-items:center;justify-content:center;min-height:60vh;text-align:center;padding:40px;}
+#app{display:none;}
+@media(max-width:700px){.layout{grid-template-columns:1fr;}.sidebar{display:none;}}
+@media print{.topbar,.sidebar,.topbar-actions,.periodo-sel button{display:none!important;}.main{padding:0;}.kpi-card,.chart-card,.tabla-card{break-inside:avoid;}}
+</style>
+</head>
+<body>
+
+<div class="topbar">
+  <div class="topbar-logo">Click<span>Laboral</span>.mx — Reportes</div>
+  <div class="topbar-actions">
+    <select id="sel-periodo" onchange="cargarTodo()" style="padding:7px 12px;border:1px solid rgba(255,255,255,.3);border-radius:7px;background:rgba(255,255,255,.1);color:#fff;font-size:12px;font-family:var(--font);">
+      <option value="mes">Este mes</option>
+      <option value="trimestre">Este trimestre</option>
+      <option value="anio">Este año</option>
+      <option value="todo" selected>Todo el tiempo</option>
+    </select>
+    <button class="btn btn-ghost" onclick="exportarPDF()">📄 Exportar PDF</button>
+    <a href="portal-cliente.html" class="btn btn-white">← Portal</a>
+  </div>
+</div>
+
+<!-- Auth gate -->
+<div id="auth-gate">
+  <div style="font-size:36px;margin-bottom:16px;">📊</div>
+  <h2 style="font-size:18px;font-weight:700;color:var(--navy);margin-bottom:8px;">Acceso requerido</h2>
+  <p style="font-size:13px;color:var(--ink3);">Accede desde el portal del cliente para ver tus reportes.</p>
+  <a href="portal-cliente.html" style="margin-top:20px;padding:12px 24px;background:var(--navy2);color:#fff;border-radius:8px;font-weight:700;text-decoration:none;font-size:14px;">Ir al portal →</a>
+</div>
+
+<!-- App -->
+<div id="app">
+  <div class="layout">
+    <!-- Sidebar -->
+    <div class="sidebar">
+      <div class="sidebar-empresa">
+        <div class="sidebar-empresa-name" id="sb-empresa">—</div>
+        <div class="sidebar-empresa-rfc" id="sb-rfc">—</div>
+      </div>
+      <ul class="sidebar-menu">
+        <li class="sidebar-sep">Reportes</li>
+        <li><a href="#resumen" class="activa" onclick="mostrarSeccion('resumen',this)"><span class="ico">📊</span> Resumen ejecutivo</a></li>
+        <li><a href="#semaforo" onclick="mostrarSeccion('semaforo',this)"><span class="ico">🚦</span> Semáforo de expedientes</a></li>
+        <li><a href="#riesgo" onclick="mostrarSeccion('riesgo',this)"><span class="ico">⚖️</span> Exposición de riesgo</a></li>
+        <li><a href="#vacaciones" onclick="mostrarSeccion('vacaciones',this)"><span class="ico">🌴</span> Vacaciones</a></li>
+        <li><a href="#trabajadores" onclick="mostrarSeccion('trabajadores',this)"><span class="ico">👥</span> Trabajadores</a></li>
+        <li><a href="#rotacion" onclick="mostrarSeccion('rotacion',this)"><span class="ico">🔄</span> Rotación y bajas</a></li>
+        <li><a href="#asistencias" onclick="mostrarSeccion('asistencias',this)"><span class="ico">📅</span> Asistencias</a></li>
+        <li><a href="#documentos" onclick="mostrarSeccion('documentos',this)"><span class="ico">📄</span> Documentos</a></li>
+        <li class="sidebar-sep">Acciones</li>
+        <li><a href="checador.html"><span class="ico">⏱</span> Checador digital</a></li>
+        <li><a href="asistencias-vacaciones.html"><span class="ico">🗂️</span> Ir a expedientes</a></li>
+        <li><a href="portal-cliente.html"><span class="ico">⬅️</span> Portal del cliente</a></li>
+      </ul>
+    </div>
+
+    <!-- Main -->
+    <div class="main" id="main-content">
+      <div class="spinner" id="spinner-global"></div>
+    </div>
+  </div>
+</div>
+
+<script>
+const SUPABASE_URL = 'https://hpzgqaplrywwjuvrzhcp.supabase.co';
+const SUPABASE_ANON_KEY = 'sb_publishable_1g8US8iFJ8CxnSaF_4MHgA_gqyyAr3W';
+const sb = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+let clienteRFC = null, clienteEmpresa = null, seccionActual = 'resumen';
+let datos = { trabajadores: [], asistencias: [], documentos: [] };
+
+// ── Auth ──────────────────────────────────────────────────────────────────────
+async function init() {
+  // Retry para resolver race condition de localStorage (igual que asistencias)
+  async function intentar() {
+    const { data } = await sb.auth.getSession();
+    const session = data?.session;
+    if (!session) return false;
+    const meta = session.user?.user_metadata || {};
+    const esDespacho = meta.tipo === 'despacho';
+
+    if (!meta.rfc && !esDespacho) return false;
+
+    if (esDespacho) {
+      // Modo despacho: leer el cliente gestionado desde sessionStorage
+      let _g = null;
+      try { _g = JSON.parse(sessionStorage.getItem('cl_gestion')||'null'); } catch(_){}
+      if (!_g?.rfc) { location.href = 'panel-despacho.html'; return true; }
+      clienteRFC     = _g.rfc;
+      clienteEmpresa = _g.empresa || _g.rfc;
+      // Barra de contexto despacho
+      if (!document.getElementById('barra-desp')) {
+        const b = document.createElement('div');
+        b.id = 'barra-desp';
+        b.style.cssText = 'background:#1e3a5c;color:#fff;padding:8px 20px;font-size:12px;display:flex;justify-content:space-between;';
+        b.innerHTML = '<span>🗂️ Despacho — gestionando: <strong>'+(_g.empresa||_g.rfc)+'</strong></span>'
+          +'<a href="panel-despacho.html" style="color:#fff;font-weight:700;">↩ Cambiar</a>';
+        document.body.prepend(b);
+      }
+    } else {
+      clienteRFC     = meta.rfc;
+      clienteEmpresa = meta.empresa || meta.rfc;
+    }
+
+    document.getElementById('sb-empresa').textContent = clienteEmpresa;
+    document.getElementById('sb-rfc').textContent = clienteRFC;
+    document.getElementById('auth-gate').style.setProperty('display','none','important');
+    document.getElementById('app').style.setProperty('display','block','important');
+    await cargarTodo();
+    return true;
+  }
+
+  const ok = await intentar();
+  if (!ok) {
+    setTimeout(async () => {
+      const ok2 = await intentar();
+      if (!ok2) document.getElementById('auth-gate').style.setProperty('display','flex','important');
+    }, 400);
+  }
+}
+
+// ── Fechas por periodo ────────────────────────────────────────────────────────
+function getFechas() {
+  const hoy = new Date();
+  const periodo = document.getElementById('sel-periodo')?.value || 'todo';
+  let desde;
+  if (periodo === 'mes') desde = new Date(hoy.getFullYear(), hoy.getMonth(), 1);
+  else if (periodo === 'trimestre') desde = new Date(hoy.getFullYear(), Math.floor(hoy.getMonth()/3)*3, 1);
+  else if (periodo === 'anio') desde = new Date(hoy.getFullYear(), 0, 1);
+  else desde = new Date('2020-01-01');
+  return { desde: desde.toISOString().split('T')[0], hasta: hoy.toISOString().split('T')[0] };
+}
+
+// ── Cargar datos ──────────────────────────────────────────────────────────────
+async function cargarTodo() {
+  document.getElementById('main-content').innerHTML = '<div class="spinner" id="spinner-global"></div>';
+  const { desde, hasta } = getFechas();
+
+  // selectProxy: soporta clientes normales (RLS) y despachos (service role via proxy)
+  // Obtener token y hacer queries via fetch REST directo — sin crear segunda instancia
+  const { data: _sesActual } = await sb.auth.getSession();
+  const _tok = _sesActual?.session?.access_token;
+  if (!_tok) {
+    document.getElementById('main-content').innerHTML =
+      '<div style="text-align:center;padding:48px;color:#888;">Sin sesión activa. <a href="portal-cliente.html">Volver al portal</a></div>';
+    return;
+  }
+
+  console.log('[Reportes] Token disponible:', _tok ? _tok.substring(0,20)+'...' : 'VACÍO');
+  console.log('[Reportes] clienteRFC:', clienteRFC);
+
+  const _h = { apikey: SUPABASE_ANON_KEY, Authorization: 'Bearer ' + _tok, 'Content-Type': 'application/json', Accept: 'application/json', Prefer: 'return=representation' };
+  const _get = async (path) => {
+    const url = SUPABASE_URL + '/rest/v1/' + path;
+    const r = await fetch(url, { headers: _h });
+    if (!r.ok) {
+      const txt = await r.text();
+      console.error('[Reportes] ERROR', r.status, path.split('?')[0], txt.substring(0,100));
+      return [];
+    }
+    return r.json();
+  };
+
+  const [_trabs, _asis, _docs, _docsTodos, _docsIdent, _vacs] = await Promise.all([
+    _get('trabajadores?select=*&cliente_rfc=eq.' + clienteRFC + '&order=fecha_ingreso.desc'),
+    _get('asistencias?select=trabajador_id,fecha,status,hora_entrada,hora_salida&cliente_rfc=eq.' + clienteRFC + '&fecha=gte.' + desde + '&fecha=lte.' + hasta),
+    _get('documentos_expediente?select=id,tipo,nombre,fecha,trabajador_id&cliente_rfc=eq.' + clienteRFC + '&fecha=gte.' + desde + '&fecha=lte.' + hasta),
+    // Sin filtro de fecha: el semáforo y el riesgo evalúan el expediente COMPLETO, no el período
+    _get('documentos_expediente?select=id,tipo,trabajador_id&cliente_rfc=eq.' + clienteRFC),
+    _get('documentos_identidad?select=id,tipo,trabajador_id&cliente_rfc=eq.' + clienteRFC),
+    // Vacaciones de los últimos 2 años (sin filtro de período): el saldo se calcula por año de servicio
+    _get('asistencias?select=trabajador_id,fecha&cliente_rfc=eq.' + clienteRFC + '&status=eq.vacaciones&fecha=gte.' + (()=>{const d=new Date();d.setFullYear(d.getFullYear()-2);return d.toISOString().split('T')[0];})()),
+  ]);
+
+  const trabRes = { data: Array.isArray(_trabs) ? _trabs : [] };
+  const asisRes = { data: Array.isArray(_asis)  ? _asis  : [] };
+  const docsRes = { data: Array.isArray(_docs)  ? _docs  : [] };
+
+  datos.trabajadores = trabRes.data || [];
+  datos.asistencias = asisRes.data || [];
+  datos.documentos = docsRes.data || [];
+  datos.documentosTodos = Array.isArray(_docsTodos) ? _docsTodos : [];
+  datos.documentosIdentidad = Array.isArray(_docsIdent) ? _docsIdent : [];
+  datos.vacaciones2a = Array.isArray(_vacs) ? _vacs : [];
+
+  console.log('[Reportes] Trabajadores:', datos.trabajadores.length,
+    '| Asistencias:', datos.asistencias.length,
+    '| Documentos:', datos.documentos.length,
+    '| Período:', desde, 'a', hasta);
+
+  renderSeccion(seccionActual);
+}
+
+// ── Navegación ────────────────────────────────────────────────────────────────
+function mostrarSeccion(sec, el) {
+  event.preventDefault();
+  document.querySelectorAll('.sidebar-menu a').forEach(a => a.classList.remove('activa'));
+  if(el) el.classList.add('activa');
+  seccionActual = sec;
+  renderSeccion(sec);
+}
+
+function renderSeccion(sec) {
+  const main = document.getElementById('main-content');
+  if (sec === 'resumen') main.innerHTML = renderResumen();
+  else if (sec === 'semaforo') main.innerHTML = renderSemaforo();
+  else if (sec === 'riesgo') main.innerHTML = renderRiesgo();
+  else if (sec === 'vacaciones') main.innerHTML = renderVacaciones();
+  else if (sec === 'trabajadores') main.innerHTML = renderTrabajadores();
+  else if (sec === 'rotacion') main.innerHTML = renderRotacion();
+  else if (sec === 'asistencias') main.innerHTML = renderAsistencias();
+  else if (sec === 'documentos') main.innerHTML = renderDocumentos();
+}
+
+// ── RESUMEN EJECUTIVO ─────────────────────────────────────────────────────────
+function renderResumen() {
+  const trab = datos.trabajadores;
+  const activos = trab.filter(t => t.activo !== false && !t.fecha_baja);
+  const bajas = trab.filter(t => t.activo === false || t.fecha_baja);
+  const { desde } = getFechas();
+  const altasPeriodo = trab.filter(t => t.fecha_ingreso >= desde).length;
+  const bajasPeriodo = bajas.filter(t => t.fecha_baja >= desde).length;
+  const rotacion = activos.length > 0 ? Math.round((bajasPeriodo / activos.length) * 100) : 0;
+
+  const asis = datos.asistencias;
+  const presentes = asis.filter(a => a.status === 'presente' || a.status === 'retraso').length;
+  const faltas = asis.filter(a => a.status === 'falta_injustificada').length;
+  const totalDias = asis.length;
+  const pctAsist = totalDias > 0 ? Math.round((presentes/totalDias)*100) : 0;
+
+  const docs = datos.documentos;
+  const contratos = docs.filter(d => d.tipo && /contrato/i.test(d.tipo)).length;
+  const pctContratados = activos.length > 0 ? Math.round((contratos/activos.length)*100) : 0;
+
+  // Puesto más común
+  const puestos = {};
+  activos.forEach(t => { puestos[t.puesto||'Sin puesto'] = (puestos[t.puesto||'Sin puesto']||0)+1; });
+  const topPuesto = Object.entries(puestos).sort((a,b)=>b[1]-a[1])[0];
+
+  return `
+    <div class="sec-header">
+      <div class="sec-title">📊 Resumen ejecutivo</div>
+      <div style="font-size:12px;color:var(--ink3);">${clienteEmpresa} · ${clienteRFC}</div>
+    </div>
+
+    <div class="kpi-grid">
+      <div class="kpi-card">
+        <div class="kpi-label">Trabajadores activos</div>
+        <div class="kpi-val">${activos.length}</div>
+        <div class="kpi-sub">${bajas.length} dados de baja</div>
+        ${altasPeriodo > 0 ? `<span class="kpi-delta delta-up">+${altasPeriodo} nuevos</span>` : ''}
+      </div>
+      <div class="kpi-card">
+        <div class="kpi-label">Índice de asistencia</div>
+        <div class="kpi-val">${pctAsist}%</div>
+        <div class="kpi-sub">${faltas} falta(s) registrada(s)</div>
+        <span class="kpi-delta ${pctAsist>=90?'delta-up':pctAsist>=75?'delta-flat':'delta-down'}">${pctAsist>=90?'Óptimo':pctAsist>=75?'Aceptable':'Crítico'}</span>
+      </div>
+      <div class="kpi-card">
+        <div class="kpi-label">Rotación del período</div>
+        <div class="kpi-val">${rotacion}%</div>
+        <div class="kpi-sub">${bajasPeriodo} baja(s) en el período</div>
+        <span class="kpi-delta ${rotacion<=5?'delta-up':rotacion<=15?'delta-flat':'delta-down'}">${rotacion<=5?'Saludable':rotacion<=15?'Normal':'Elevada'}</span>
+      </div>
+      <div class="kpi-card">
+        <div class="kpi-label">Contratos generados</div>
+        <div class="kpi-val">${docs.length}</div>
+        <div class="kpi-sub">${contratos} contrato(s) · ${docs.length-contratos} otro(s)</div>
+      </div>
+      <div class="kpi-card">
+        <div class="kpi-label">Puesto más frecuente</div>
+        <div class="kpi-val" style="font-size:18px;">${topPuesto?topPuesto[0]:'—'}</div>
+        <div class="kpi-sub">${topPuesto?topPuesto[1]+' persona(s)':''}</div>
+      </div>
+      <div class="kpi-card">
+        <div class="kpi-label">Cobertura de contratos</div>
+        <div class="kpi-val">${pctContratados}%</div>
+        <div class="kpi-sub">de trabajadores activos</div>
+        <span class="kpi-delta ${pctContratados===100?'delta-up':pctContratados>=70?'delta-flat':'delta-down'}">${pctContratados===100?'Completo':'Revisar'}</span>
+      </div>
+      <div class="kpi-card" style="cursor:pointer;" onclick="document.querySelector('a[href=\\'#riesgo\\']')?.click()">
+        <div class="kpi-label">Pasivo contingente</div>
+        <div class="kpi-val" style="font-size:22px;">$${(()=>{const sd=parseFloat(localStorage.getItem('cl_rep_salario_default'))||500;const sm=parseFloat(localStorage.getItem('cl_rep_salmin'))||SALMIN_2026;return activos.reduce((s,t)=>s+calcularPasivo(t,sd,sm).total,0).toLocaleString('es-MX',{maximumFractionDigits:0});})()}</div>
+        <div class="kpi-sub">estimado si toda la plantilla demandara · ver detalle →</div>
+      </div>
+    </div>
+
+    ${renderBarraAsistencias()}
+    ${renderDistribucionPuestos()}
+  `;
+}
+
+function renderBarraAsistencias() {
+  const asis = datos.asistencias;
+  if (!asis.length) return '';
+  const grupos = {
+    'Presente': asis.filter(a=>a.status==='presente').length,
+    'Retraso': asis.filter(a=>a.status==='retraso').length,
+    'Permiso/Vacación': asis.filter(a=>['permiso','vacaciones','incapacidad'].includes(a.status)).length,
+    'Falta injustificada': asis.filter(a=>a.status==='falta_injustificada').length,
+    'Falta justificada': asis.filter(a=>a.status==='falta_justificada').length,
+  };
+  const total = asis.length;
+  const colores = {'Presente':'#16a34a','Retraso':'#d97706','Permiso/Vacación':'#2563eb','Falta injustificada':'#dc2626','Falta justificada':'#7c3aed'};
+  const filas = Object.entries(grupos).filter(([,v])=>v>0).map(([k,v])=>`
+    <div class="bar-row">
+      <div class="bar-label">${k}</div>
+      <div class="bar-track"><div class="bar-fill" style="width:${Math.round(v/total*100)}%;background:${colores[k]||'#94a3b8'};"></div></div>
+      <div class="bar-val">${v} (${Math.round(v/total*100)}%)</div>
+    </div>`).join('');
+  return `<div class="chart-card"><div class="chart-title">Distribución de asistencias</div><div class="chart-sub">Total de registros: ${total}</div><div class="bar-chart">${filas}</div></div>`;
+}
+
+function renderDistribucionPuestos() {
+  const activos = datos.trabajadores.filter(t=>t.activo!==false&&!t.fecha_baja);
+  if (!activos.length) return '';
+  const puestos = {};
+  activos.forEach(t=>{puestos[t.puesto||'Sin puesto']=(puestos[t.puesto||'Sin puesto']||0)+1;});
+  const sorted = Object.entries(puestos).sort((a,b)=>b[1]-a[1]).slice(0,8);
+  const max = sorted[0]?.[1]||1;
+  const filas = sorted.map(([k,v])=>`
+    <div class="bar-row">
+      <div class="bar-label">${k}</div>
+      <div class="bar-track"><div class="bar-fill" style="width:${Math.round(v/max*100)}%;background:var(--navy2);"></div></div>
+      <div class="bar-val">${v}</div>
+    </div>`).join('');
+  return `<div class="chart-card"><div class="chart-title">Distribución por puesto</div><div class="chart-sub">Trabajadores activos: ${activos.length}</div><div class="bar-chart">${filas}</div></div>`;
+}
+
+// ── TRABAJADORES ──────────────────────────────────────────────────────────────
+function renderTrabajadores() {
+  const activos = datos.trabajadores.filter(t=>t.activo!==false&&!t.fecha_baja);
+  const fmt = d => d ? new Date(d+'T12:00:00').toLocaleDateString('es-MX',{day:'numeric',month:'short',year:'numeric'}) : '—';
+  const antiguedad = fi => {
+    if(!fi) return '—';
+    const dias = Math.floor((new Date()-new Date(fi))/86400000);
+    if(dias < 30) return dias + ' días';
+    if(dias < 365) return Math.floor(dias/30) + ' meses';
+    return (dias/365).toFixed(1) + ' años';
+  };
+  const filas = activos.map(t=>`
+    <tr>
+      <td style="font-weight:600;">${t.nombre}</td>
+      <td>${t.puesto||'—'}</td>
+      <td>${fmt(t.fecha_ingreso)}</td>
+      <td>${antiguedad(t.fecha_ingreso)}</td>
+      <td>${t.nss||'—'}</td>
+      <td><span class="badge-activo">Activo</span></td>
+    </tr>`).join('');
+  return `
+    <div class="sec-header"><div class="sec-title">👥 Trabajadores activos (${activos.length})</div></div>
+    <div class="tabla-card">
+      <table>
+        <thead><tr><th>Nombre</th><th>Puesto</th><th>Ingreso</th><th>Antigüedad</th><th>NSS</th><th>Estado</th></tr></thead>
+        <tbody>${filas || '<tr><td colspan="6" style="text-align:center;color:var(--ink3);padding:24px;">Sin trabajadores registrados</td></tr>'}</tbody>
+      </table>
+    </div>`;
+}
+
+// ── ROTACIÓN ──────────────────────────────────────────────────────────────────
+function renderRotacion() {
+  const { desde } = getFechas();
+  const bajas = datos.trabajadores.filter(t=>(t.activo===false||t.fecha_baja)&&(!t.fecha_baja||t.fecha_baja>=desde));
+  const fmt = d => d ? new Date(d+'T12:00:00').toLocaleDateString('es-MX',{day:'numeric',month:'short',year:'numeric'}) : '—';
+  const motivos = {};
+  bajas.forEach(t=>{const m=t.motivo_baja||'No especificado';motivos[m]=(motivos[m]||0)+1;});
+  const max = Math.max(...Object.values(motivos),1);
+  const barrasMotivos = Object.entries(motivos).sort((a,b)=>b[1]-a[1]).map(([k,v])=>`
+    <div class="bar-row">
+      <div class="bar-label">${k}</div>
+      <div class="bar-track"><div class="bar-fill" style="width:${Math.round(v/max*100)}%;background:var(--red);"></div></div>
+      <div class="bar-val">${v}</div>
+    </div>`).join('');
+  const filas = bajas.map(t=>`
+    <tr>
+      <td style="font-weight:600;">${t.nombre}</td>
+      <td>${t.puesto||'—'}</td>
+      <td>${fmt(t.fecha_baja)}</td>
+      <td>${t.motivo_baja||'—'}</td>
+    </tr>`).join('');
+  return `
+    <div class="sec-header"><div class="sec-title">🔄 Rotación y bajas (${bajas.length})</div></div>
+    ${barrasMotivos ? `<div class="chart-card"><div class="chart-title">Motivos de baja</div><div class="bar-chart">${barrasMotivos}</div></div>` : ''}
+    <div class="tabla-card">
+      <table>
+        <thead><tr><th>Nombre</th><th>Puesto</th><th>Fecha baja</th><th>Motivo</th></tr></thead>
+        <tbody>${filas || '<tr><td colspan="4" style="text-align:center;color:var(--ink3);padding:24px;">Sin bajas en el período</td></tr>'}</tbody>
+      </table>
+    </div>`;
+}
+
+// ── ASISTENCIAS ───────────────────────────────────────────────────────────────
+function renderAsistencias() {
+  const activos = datos.trabajadores.filter(t=>t.activo!==false&&!t.fecha_baja);
+  const asis = datos.asistencias;
+  const resumen = activos.map(t=>{
+    const reg = asis.filter(a=>a.trabajador_id===t.id);
+    const pres = reg.filter(a=>a.status==='presente'||a.status==='retraso').length;
+    const faltas = reg.filter(a=>a.status==='falta_injustificada').length;
+    const total = reg.length;
+    const pct = total > 0 ? Math.round(pres/total*100) : null;
+    return {...t, pres, faltas, total, pct};
+  }).sort((a,b)=>(a.pct||0)-(b.pct||0));
+  const filas = resumen.map(t=>`
+    <tr>
+      <td style="font-weight:600;">${t.nombre}</td>
+      <td>${t.puesto||'—'}</td>
+      <td>${t.total}</td>
+      <td>${t.pres}</td>
+      <td style="color:${t.faltas>0?'var(--red)':'inherit'};font-weight:${t.faltas>0?'700':'400'};">${t.faltas}</td>
+      <td><span style="font-weight:700;color:${t.pct===null?'var(--ink3)':t.pct>=90?'var(--green)':t.pct>=75?'var(--amber)':'var(--red)'};">${t.pct!==null?t.pct+'%':'—'}</span></td>
+    </tr>`).join('');
+  return `
+    <div class="sec-header"><div class="sec-title">📅 Asistencias por trabajador</div></div>
+    <div class="tabla-card">
+      <table>
+        <thead><tr><th>Nombre</th><th>Puesto</th><th>Registros</th><th>Presentes</th><th>Faltas</th><th>% Asistencia</th></tr></thead>
+        <tbody>${filas || '<tr><td colspan="6" style="text-align:center;color:var(--ink3);padding:24px;">Sin registros de asistencia en el período</td></tr>'}</tbody>
+      </table>
+    </div>`;
+}
+
+// ── DOCUMENTOS ────────────────────────────────────────────────────────────────
+function renderDocumentos() {
+  const docs = datos.documentos;
+  const tipos = {};
+  docs.forEach(d=>{const t=d.tipo||'otro';tipos[t]=(tipos[t]||0)+1;});
+  const sorted = Object.entries(tipos).sort((a,b)=>b[1]-a[1]);
+  const max = sorted[0]?.[1]||1;
+  const barras = sorted.map(([k,v])=>`
+    <div class="bar-row">
+      <div class="bar-label">${k.replace(/_/g,' ')}</div>
+      <div class="bar-track"><div class="bar-fill" style="width:${Math.round(v/max*100)}%;background:var(--teal);"></div></div>
+      <div class="bar-val">${v}</div>
+    </div>`).join('');
+  const fmt = d => d ? new Date(d+'T12:00:00').toLocaleDateString('es-MX',{day:'numeric',month:'short',year:'numeric'}) : '—';
+  const filas = docs.slice(0,30).map(d=>{
+    const trab = datos.trabajadores.find(t=>t.id===d.trabajador_id);
+    return `<tr>
+      <td style="font-weight:600;">${d.nombre||d.tipo}</td>
+      <td>${d.tipo?.replace(/_/g,' ')||'—'}</td>
+      <td>${trab?.nombre||'—'}</td>
+      <td>${fmt(d.fecha)}</td>
+    </tr>`;}).join('');
+  return `
+    <div class="sec-header"><div class="sec-title">📄 Documentos generados (${docs.length})</div></div>
+    ${barras ? `<div class="chart-card"><div class="chart-title">Documentos por tipo</div><div class="bar-chart">${barras}</div></div>` : ''}
+    <div class="tabla-card">
+      <table>
+        <thead><tr><th>Nombre</th><th>Tipo</th><th>Trabajador</th><th>Fecha</th></tr></thead>
+        <tbody>${filas || '<tr><td colspan="4" style="text-align:center;color:var(--ink3);padding:24px;">Sin documentos en el período</td></tr>'}</tbody>
+      </table>
+    </div>`;
+}
+
+// ── SEMÁFORO DE EXPEDIENTES ───────────────────────────────────────────────────
+// Evalúa la completitud documental de cada trabajador activo.
+// Fuentes: documentos_expediente (docs generados) + documentos_identidad (docs subidos)
+function evaluarExpediente(t) {
+  const docsGen = (datos.documentosTodos || []).filter(d => d.trabajador_id === t.id);
+  const docsId  = (datos.documentosIdentidad || []).filter(d => d.trabajador_id === t.id);
+  const tieneGen = re => docsGen.some(d => d.tipo && re.test(d.tipo));
+  const tieneId  = tipo => docsId.some(d => d.tipo === tipo);
+
+  const checks = [
+    { label: 'Contrato laboral',        ok: tieneGen(/contrato/i),                              peso: 3, critico: true },
+    { label: 'Identificación oficial',  ok: tieneId('identificacion'),                          peso: 2, critico: false },
+    { label: 'CURP',                    ok: tieneId('curp'),                                    peso: 1, critico: false },
+    { label: 'NSS (alta IMSS)',         ok: tieneId('nss') || !!t.nss,                          peso: 3, critico: true },
+    { label: 'RFC',                     ok: tieneId('rfc'),                                     peso: 1, critico: false },
+    { label: 'Comprobante domicilio',   ok: tieneId('comprobante_domicilio'),                   peso: 1, critico: false },
+    { label: 'Acta de nacimiento',      ok: tieneId('acta_nacimiento'),                         peso: 1, critico: false },
+  ];
+  const pesoTotal = checks.reduce((s,c)=>s+c.peso,0);
+  const pesoOk    = checks.filter(c=>c.ok).reduce((s,c)=>s+c.peso,0);
+  const pct = Math.round(pesoOk/pesoTotal*100);
+  const faltantes = checks.filter(c=>!c.ok);
+  const faltaCritico = faltantes.some(c=>c.critico);
+  // Verde: 100%. Ámbar: falta algo no crítico. Rojo: falta contrato o NSS.
+  const nivel = pct===100 ? 'verde' : (faltaCritico ? 'rojo' : 'ambar');
+  return { pct, faltantes, nivel, checks };
+}
+
+function renderSemaforo() {
+  const activos = datos.trabajadores.filter(t=>t.activo!==false&&!t.fecha_baja);
+  if (!activos.length) return `
+    <div class="sec-header"><div class="sec-title">🚦 Semáforo de expedientes</div></div>
+    <div class="empty"><div class="empty-ico">🚦</div>Sin trabajadores activos registrados.</div>`;
+
+  const evaluados = activos.map(t=>({t, ev: evaluarExpediente(t)}));
+  const verdes = evaluados.filter(e=>e.ev.nivel==='verde').length;
+  const ambars = evaluados.filter(e=>e.ev.nivel==='ambar').length;
+  const rojos  = evaluados.filter(e=>e.ev.nivel==='rojo').length;
+  const pctGlobal = Math.round(evaluados.reduce((s,e)=>s+e.ev.pct,0)/evaluados.length);
+
+  const colorNivel = {verde:'var(--green)', ambar:'var(--amber)', rojo:'var(--red)'};
+  const bgNivel    = {verde:'#dcfce7', ambar:'#fef3c7', rojo:'#fee2e2'};
+  const txtNivel   = {verde:'Completo', ambar:'Incompleto', rojo:'Riesgo alto'};
+
+  // Ordenar: rojos primero (lo urgente arriba)
+  const orden = {rojo:0, ambar:1, verde:2};
+  evaluados.sort((a,b)=>orden[a.ev.nivel]-orden[b.ev.nivel] || a.ev.pct-b.ev.pct);
+
+  const filas = evaluados.map(({t,ev})=>`
+    <tr>
+      <td style="font-weight:600;">${t.nombre}</td>
+      <td>${t.puesto||'—'}</td>
+      <td>
+        <div style="display:flex;align-items:center;gap:8px;">
+          <div class="bar-track" style="width:80px;"><div class="bar-fill" style="width:${ev.pct}%;background:${colorNivel[ev.nivel]};"></div></div>
+          <span style="font-weight:700;font-size:12px;">${ev.pct}%</span>
+        </div>
+      </td>
+      <td><span style="background:${bgNivel[ev.nivel]};color:${colorNivel[ev.nivel]};font-size:10px;font-weight:700;padding:2px 8px;border-radius:10px;">${txtNivel[ev.nivel]}</span></td>
+      <td style="font-size:11px;color:${ev.faltantes.length?'var(--ink2)':'var(--ink3)'};">
+        ${ev.faltantes.length ? ev.faltantes.map(f=>f.critico?'<strong style="color:var(--red);">'+f.label+'</strong>':f.label).join(' · ') : '✓ Expediente completo'}
+      </td>
+    </tr>`).join('');
+
+  return `
+    <div class="sec-header">
+      <div class="sec-title">🚦 Semáforo de expedientes</div>
+      <div style="font-size:12px;color:var(--ink3);">Evaluación integral — no depende del período seleccionado</div>
+    </div>
+    <div class="kpi-grid">
+      <div class="kpi-card">
+        <div class="kpi-label">Completitud global</div>
+        <div class="kpi-val">${pctGlobal}%</div>
+        <div class="kpi-sub">promedio de ${evaluados.length} expediente(s)</div>
+        <span class="kpi-delta ${pctGlobal>=90?'delta-up':pctGlobal>=60?'delta-flat':'delta-down'}">${pctGlobal>=90?'Sólido':pctGlobal>=60?'Mejorable':'Crítico'}</span>
+      </div>
+      <div class="kpi-card">
+        <div class="kpi-label">🟢 Completos</div>
+        <div class="kpi-val" style="color:var(--green);">${verdes}</div>
+        <div class="kpi-sub">expedientes al 100%</div>
+      </div>
+      <div class="kpi-card">
+        <div class="kpi-label">🟡 Incompletos</div>
+        <div class="kpi-val" style="color:var(--amber);">${ambars}</div>
+        <div class="kpi-sub">faltan docs no críticos</div>
+      </div>
+      <div class="kpi-card">
+        <div class="kpi-label">🔴 Riesgo alto</div>
+        <div class="kpi-val" style="color:var(--red);">${rojos}</div>
+        <div class="kpi-sub">sin contrato o sin NSS</div>
+      </div>
+    </div>
+    <div class="tabla-card">
+      <table>
+        <thead><tr><th>Trabajador</th><th>Puesto</th><th>Completitud</th><th>Estado</th><th>Documentos faltantes</th></tr></thead>
+        <tbody>${filas}</tbody>
+      </table>
+    </div>
+    <div style="font-size:11px;color:var(--ink3);padding:0 4px;line-height:1.6;">
+      <strong>Criterio:</strong> el contrato laboral y el NSS (alta IMSS) son críticos — su ausencia marca el expediente en rojo por su peso probatorio ante un juicio laboral (Arts. 25 y 804 LFT: la carga de la prueba documental recae en el patrón).
+      Sube los documentos faltantes desde <a href="asistencias-vacaciones.html" style="color:var(--navy2);font-weight:600;">Expedientes</a>.
+    </div>`;
+}
+
+// ── EXPOSICIÓN DE RIESGO ──────────────────────────────────────────────────────
+// Estima el pasivo contingente si cada trabajador activo demandara despido injustificado.
+// Fórmula (consistente con calculadora de liquidación del portal):
+//   3 meses (90 días) + 20 días/año + prima antigüedad (12 días/año, tope 2×sal.mín.)
+//   + partes proporcionales estimadas (vacaciones + prima 25% + aguinaldo, promedio 50% del año)
+const SALMIN_2026 = 315.04; // General. Frontera norte: 419.88 (editable en el reporte)
+
+function diasVacacionesLFT(anios) { // Art. 76 reformado (vacaciones dignas)
+  if (anios < 1) return Math.round(12 * anios);
+  if (anios < 2) return 12;
+  if (anios < 3) return 14;
+  if (anios < 4) return 16;
+  if (anios < 5) return 18;
+  if (anios < 6) return 20;
+  if (anios <= 10) return 22;
+  return 22 + Math.ceil((anios - 10) / 5) * 2; // +2 cada 5 años después de 10
+}
+
+function calcularPasivo(t, salarioDefault, salMin) {
+  const sd = Number(t.salario_diario) > 0 ? Number(t.salario_diario) : salarioDefault;
+  const anios = t.fecha_ingreso ? Math.max((new Date() - new Date(t.fecha_ingreso)) / 31557600000, 0) : 1;
+  const tresMeses   = sd * 90;
+  const veinteDias  = sd * 20 * anios;
+  const sdTope      = Math.min(sd, salMin * 2); // Art. 162 LFT
+  const primaAntig  = sdTope * 12 * anios;
+  const diasVac     = diasVacacionesLFT(anios);
+  const propor      = (diasVac * sd * 1.25 + 15 * sd) * 0.5; // vac + prima 25% + aguinaldo, promedio anual
+  const total       = Math.round(tresMeses + veinteDias + primaAntig + propor);
+  return { sd, anios, tresMeses, veinteDias, primaAntig, propor, total, salarioEstimado: !(Number(t.salario_diario) > 0) };
+}
+
+function renderRiesgo() {
+  const activos = datos.trabajadores.filter(t=>t.activo!==false&&!t.fecha_baja);
+  if (!activos.length) return `
+    <div class="sec-header"><div class="sec-title">⚖️ Exposición de riesgo</div></div>
+    <div class="empty"><div class="empty-ico">⚖️</div>Sin trabajadores activos registrados.</div>`;
+
+  const salarioDefault = parseFloat(localStorage.getItem('cl_rep_salario_default')) || 500;
+  const salMin = parseFloat(localStorage.getItem('cl_rep_salmin')) || SALMIN_2026;
+  const fmt = n => n.toLocaleString('es-MX', {maximumFractionDigits: 0});
+
+  const items = activos.map(t=>{
+    const ev = evaluarExpediente(t);
+    const p = calcularPasivo(t, salarioDefault, salMin);
+    return { t, ev, p };
+  }).sort((a,b)=>b.p.total-a.p.total);
+
+  const totalPasivo = items.reduce((s,i)=>s+i.p.total,0);
+  const enRiesgoAlto = items.filter(i=>i.ev.nivel==='rojo');
+  const pasivoAlto = enRiesgoAlto.reduce((s,i)=>s+i.p.total,0);
+  const conEstimado = items.filter(i=>i.p.salarioEstimado).length;
+
+  const colorNivel = {verde:'var(--green)', ambar:'var(--amber)', rojo:'var(--red)'};
+  const bgNivel    = {verde:'#dcfce7', ambar:'#fef3c7', rojo:'#fee2e2'};
+  const txtNivel   = {verde:'Defendible', ambar:'Parcial', rojo:'Expuesto'};
+
+  const filas = items.map(({t,ev,p})=>`
+    <tr>
+      <td style="font-weight:600;">${t.nombre}${p.salarioEstimado?' <span title="Salario estimado — captura el real para precisión" style="color:var(--amber);cursor:help;">*</span>':''}</td>
+      <td>${t.puesto||'—'}</td>
+      <td>$${fmt(p.sd)}</td>
+      <td>${p.anios.toFixed(1)} años</td>
+      <td style="font-weight:700;">$${fmt(p.total)}</td>
+      <td><span style="background:${bgNivel[ev.nivel]};color:${colorNivel[ev.nivel]};font-size:10px;font-weight:700;padding:2px 8px;border-radius:10px;">${txtNivel[ev.nivel]}</span></td>
+    </tr>`).join('');
+
+  return `
+    <div class="sec-header">
+      <div class="sec-title">⚖️ Exposición de riesgo laboral</div>
+      <div style="font-size:12px;color:var(--ink3);">Pasivo contingente estimado por despido injustificado</div>
+    </div>
+
+    <div class="kpi-grid">
+      <div class="kpi-card">
+        <div class="kpi-label">Pasivo contingente total</div>
+        <div class="kpi-val" style="font-size:24px;">$${fmt(totalPasivo)}</div>
+        <div class="kpi-sub">MXN · ${items.length} trabajador(es) activo(s)</div>
+      </div>
+      <div class="kpi-card" style="border-color:${enRiesgoAlto.length?'var(--red)':'var(--border)'};">
+        <div class="kpi-label">Pasivo con expediente en rojo</div>
+        <div class="kpi-val" style="font-size:24px;color:${enRiesgoAlto.length?'var(--red)':'var(--green)'};">$${fmt(pasivoAlto)}</div>
+        <div class="kpi-sub">${enRiesgoAlto.length} trabajador(es) sin contrato o NSS — mayor probabilidad de condena</div>
+      </div>
+      <div class="kpi-card">
+        <div class="kpi-label">Costo promedio por demanda</div>
+        <div class="kpi-val" style="font-size:24px;">$${fmt(items.length?Math.round(totalPasivo/items.length):0)}</div>
+        <div class="kpi-sub">liquidación completa estimada</div>
+      </div>
+    </div>
+
+    <div class="chart-card">
+      <div class="chart-title">Parámetros del cálculo</div>
+      <div class="chart-sub">Se aplican a trabajadores sin salario capturado (marcados con *)</div>
+      <div style="display:flex;gap:16px;flex-wrap:wrap;align-items:flex-end;">
+        <div>
+          <label style="font-size:11px;color:var(--ink3);display:block;margin-bottom:4px;">Salario diario estimado (MXN)</label>
+          <input type="number" id="rep-sal-default" value="${salarioDefault}" style="padding:7px 12px;border:1.5px solid var(--border);border-radius:8px;font-size:13px;width:140px;font-family:var(--font);">
+        </div>
+        <div>
+          <label style="font-size:11px;color:var(--ink3);display:block;margin-bottom:4px;">Salario mínimo vigente (MXN/día)</label>
+          <input type="number" id="rep-salmin" value="${salMin}" style="padding:7px 12px;border:1.5px solid var(--border);border-radius:8px;font-size:13px;width:140px;font-family:var(--font);">
+        </div>
+        <button class="btn" style="background:var(--navy2);color:#fff;" onclick="
+          localStorage.setItem('cl_rep_salario_default', document.getElementById('rep-sal-default').value);
+          localStorage.setItem('cl_rep_salmin', document.getElementById('rep-salmin').value);
+          renderSeccion('riesgo');">Recalcular</button>
+      </div>
+      ${conEstimado?`<div style="font-size:11px;color:var(--amber);margin-top:10px;">⚠️ ${conEstimado} trabajador(es) sin salario real capturado. Captúralo en su expediente para un cálculo preciso.</div>`:''}
+    </div>
+
+    <div class="tabla-card">
+      <table>
+        <thead><tr><th>Trabajador</th><th>Puesto</th><th>Salario/día</th><th>Antigüedad</th><th>Pasivo estimado</th><th>Posición legal</th></tr></thead>
+        <tbody>${filas}</tbody>
+      </table>
+    </div>
+
+    <div style="font-size:11px;color:var(--ink3);padding:0 4px;line-height:1.7;">
+      <strong>Metodología:</strong> 3 meses de salario (Art. 48 LFT) + 20 días por año (Art. 50) + prima de antigüedad de 12 días por año con tope de 2× salario mínimo (Art. 162) + partes proporcionales estimadas de vacaciones, prima vacacional y aguinaldo.
+      La "posición legal" refleja la completitud del expediente: sin contrato firmado ni alta IMSS documentada, el patrón difícilmente acredita la relación y condiciones de trabajo (Art. 804 LFT), elevando la probabilidad de condena por el monto completo.
+      <strong>Cifras orientativas</strong> — no sustituyen la valoración de un caso concreto por su asesor legal.
+    </div>`;
+}
+
+// ── VACACIONES (saldo por año de servicio) ────────────────────────────────────
+// Arts. 76 (días), 80 (prima 25%), 81 (disfrute en los 6 meses siguientes
+// al aniversario) y 516 LFT (prescripción a los 18 meses del aniversario)
+function saldoVacacionesTrab(t){
+  if(!t.fecha_ingreso) return null;
+  const ingreso = new Date(t.fecha_ingreso+'T12:00:00');
+  const hoy = new Date();
+  const anios = Math.floor((hoy - ingreso) / (365.25*86400000));
+  const fechasVac = (datos.vacaciones2a||[]).filter(v=>v.trabajador_id===t.id).map(v=>v.fecha);
+
+  const sumaA = (d,n)=>{const x=new Date(d);x.setFullYear(x.getFullYear()+n);return x;};
+  const sumaM = (d,n)=>{const x=new Date(d);x.setMonth(x.getMonth()+n);return x;};
+  const iso = d=>d.toISOString().split('T')[0];
+
+  if(anios < 1) return { generado:false, anios, derecho:0, tomadas:0, saldo:0, arrastre:0,
+                         fechaDerecho: iso(sumaA(ingreso,1)), diasParaLimite:null };
+
+  const anivActual = sumaA(ingreso, anios), anivAnt = sumaA(ingreso, anios-1);
+  const derecho    = diasVacacionesLFT(anios) | 0;
+  const derechoAnt = anios>=2 ? diasVacacionesLFT(anios-1)|0 : 0;
+  const tomadas    = fechasVac.filter(f=>f>=iso(anivActual)).length;
+  const tomadasAnt = fechasVac.filter(f=>f>=iso(anivAnt) && f<iso(anivActual)).length;
+  const saldo      = Math.max(0, derecho - tomadas);
+  const arrastre   = (anios>=2 && hoy < sumaM(anivAnt,18)) ? Math.max(0, derechoAnt - tomadasAnt) : 0;
+  const limDisfrute = sumaM(anivActual,6);
+  return { generado:true, anios, derecho, tomadas, saldo, arrastre,
+           limDisfrute: iso(limDisfrute),
+           diasParaLimite: Math.ceil((limDisfrute - hoy)/86400000) };
+}
+
+function renderVacaciones(){
+  const activos = datos.trabajadores.filter(t=>t.activo!==false&&!t.fecha_baja);
+  if(!activos.length) return `
+    <div class="sec-header"><div class="sec-title">🌴 Vacaciones</div></div>
+    <div class="empty"><div class="empty-ico">🌴</div>Sin trabajadores activos registrados.</div>`;
+
+  const salarioDefault = parseFloat(localStorage.getItem('cl_rep_salario_default')) || 500;
+  const fmt = n => n.toLocaleString('es-MX',{maximumFractionDigits:0});
+  const fmtF = d => d ? new Date(d+'T12:00:00').toLocaleDateString('es-MX',{day:'numeric',month:'short',year:'numeric'}) : '—';
+
+  const items = activos.map(t=>({t, s: saldoVacacionesTrab(t)})).filter(i=>i.s);
+  const generados = items.filter(i=>i.s.generado);
+  const totalPendiente = generados.reduce((s,i)=>s+i.s.saldo+i.s.arrastre,0);
+  const vencidos  = generados.filter(i=>(i.s.saldo+i.s.arrastre)>0 && i.s.diasParaLimite<0);
+  const porVencer = generados.filter(i=>(i.s.saldo+i.s.arrastre)>0 && i.s.diasParaLimite>=0 && i.s.diasParaLimite<=60);
+  // Pasivo: días pendientes × salario × 1.25 (día de salario + prima vacacional del 25%)
+  const pasivoVac = generados.reduce((s,i)=>{
+    const sd = Number(i.t.salario_diario)>0 ? Number(i.t.salario_diario) : salarioDefault;
+    return s + (i.s.saldo+i.s.arrastre)*sd*1.25;
+  },0);
+
+  // Orden: vencidos primero, luego por proximidad del límite
+  items.sort((a,b)=>{
+    const pa=(a.s.saldo+a.s.arrastre)>0?(a.s.diasParaLimite??9999):9999;
+    const pb=(b.s.saldo+b.s.arrastre)>0?(b.s.diasParaLimite??9999):9999;
+    return pa-pb;
+  });
+
+  const filas = items.map(({t,s})=>{
+    if(!s.generado) return `
+      <tr>
+        <td style="font-weight:600;">${t.nombre}</td><td>${t.puesto||'—'}</td>
+        <td colspan="4" style="color:var(--ink3);font-size:11px;">🌱 Genera 12 días en su primer aniversario: ${fmtF(s.fechaDerecho)}</td>
+      </tr>`;
+    const pend = s.saldo + s.arrastre;
+    const badge = pend===0
+      ? '<span style="background:#f1f5f9;color:#64748b;font-size:10px;font-weight:700;padding:2px 8px;border-radius:10px;">Al corriente</span>'
+      : s.diasParaLimite<0
+      ? '<span style="background:#fee2e2;color:#dc2626;font-size:10px;font-weight:700;padding:2px 8px;border-radius:10px;">Plazo vencido</span>'
+      : s.diasParaLimite<=60
+      ? `<span style="background:#fef3c7;color:#d97706;font-size:10px;font-weight:700;padding:2px 8px;border-radius:10px;">Vence en ${s.diasParaLimite}d</span>`
+      : '<span style="background:#dcfce7;color:#16a34a;font-size:10px;font-weight:700;padding:2px 8px;border-radius:10px;">En plazo</span>';
+    return `
+      <tr>
+        <td style="font-weight:600;">${t.nombre}</td>
+        <td>${t.puesto||'—'}</td>
+        <td>${s.derecho} <span style="color:var(--ink3);font-size:10px;">(año ${s.anios})</span></td>
+        <td>${s.tomadas}</td>
+        <td style="font-weight:700;color:${pend>0?'var(--navy)':'var(--ink3)'};">${s.saldo}${s.arrastre>0?` <span style="color:var(--amber);font-size:11px;">+${s.arrastre} arrastre</span>`:''}</td>
+        <td>${badge}<div style="font-size:10px;color:var(--ink3);margin-top:2px;">límite ${fmtF(s.limDisfrute)}</div></td>
+      </tr>`;
+  }).join('');
+
+  return `
+    <div class="sec-header">
+      <div class="sec-title">🌴 Vacaciones — saldo por año de servicio</div>
+      <div style="font-size:12px;color:var(--ink3);">Arts. 76, 80 y 81 LFT · no depende del período seleccionado</div>
+    </div>
+    <div class="kpi-grid">
+      <div class="kpi-card">
+        <div class="kpi-label">Días pendientes de otorgar</div>
+        <div class="kpi-val">${totalPendiente}</div>
+        <div class="kpi-sub">en toda la plantilla</div>
+      </div>
+      <div class="kpi-card" style="border-color:${vencidos.length?'var(--red)':'var(--border)'};">
+        <div class="kpi-label">🔴 Con plazo legal vencido</div>
+        <div class="kpi-val" style="color:${vencidos.length?'var(--red)':'var(--green)'};">${vencidos.length}</div>
+        <div class="kpi-sub">trabajador(es) — programar de inmediato</div>
+      </div>
+      <div class="kpi-card">
+        <div class="kpi-label">🟡 Vencen en ≤ 60 días</div>
+        <div class="kpi-val" style="color:${porVencer.length?'var(--amber)':'var(--green)'};">${porVencer.length}</div>
+        <div class="kpi-sub">trabajador(es) por programar</div>
+      </div>
+      <div class="kpi-card">
+        <div class="kpi-label">Pasivo vacacional estimado</div>
+        <div class="kpi-val" style="font-size:22px;">$${fmt(Math.round(pasivoVac))}</div>
+        <div class="kpi-sub">días pendientes × salario × 1.25 (incluye prima)</div>
+      </div>
+    </div>
+    <div class="tabla-card">
+      <table>
+        <thead><tr><th>Trabajador</th><th>Puesto</th><th>Derecho</th><th>Gozadas</th><th>Pendientes</th><th>Plazo de disfrute</th></tr></thead>
+        <tbody>${filas}</tbody>
+      </table>
+    </div>
+    <div style="font-size:11px;color:var(--ink3);padding:0 4px;line-height:1.7;">
+      <strong>Metodología:</strong> el derecho se computa por año de servicio (aniversario a aniversario), no por año calendario.
+      El "arrastre" son días del periodo anterior no gozados que siguen siendo legalmente exigibles.
+      El patrón debe otorgar las vacaciones dentro de los 6 meses siguientes al aniversario (Art. 81) — no otorgarlas es una de las causas más comunes de reclamo en demandas laborales, y la carga de probar su disfrute y pago recae en el patrón (Art. 804 LFT).
+      Los días gozados se toman de los registros marcados como "vacaciones" en el control de asistencias.
+    </div>`;
+}
+
+// ── Exportar PDF ──────────────────────────────────────────────────────────────
+async function exportarPDF() {
+  const el = document.getElementById('main-content');
+  const opt = {
+    margin: [10,10,10,10],
+    filename: `Reporte-${clienteEmpresa?.replace(/\s+/g,'-')}-${new Date().toISOString().split('T')[0]}.pdf`,
+    html2canvas: { scale: 2 },
+    jsPDF: { unit:'mm', format:'a4', orientation:'portrait' },
+  };
+  await html2pdf().set(opt).from(el).save();
+}
+
+// ── Init ──────────────────────────────────────────────────────────────────────
+init();
+</script>
+</body>
+</html>

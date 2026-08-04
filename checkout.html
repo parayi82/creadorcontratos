@@ -1,0 +1,576 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ClickLaboral · Contratar plan — Abogado laboral por suscripción</title>
+<script src="https://js.stripe.com/v3/"></script>
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
+:root{
+  --navy:#0f2640;--navy2:#1a3a5c;--white:#fff;--surface:#f5f4f0;
+  --ink:#111110;--ink2:#444440;--ink3:#888880;
+  --border:rgba(0,0,0,.09);--border2:rgba(0,0,0,.15);
+  --green:#16a34a;--green-bg:#dcfce7;
+  --red:#dc2626;--red-bg:#fee2e2;
+  --r:12px;--r-sm:8px;--font:'Segoe UI',system-ui,sans-serif;
+}
+body{font-family:var(--font);background:var(--surface);color:var(--ink);min-height:100vh;font-size:14px;}
+
+nav{background:var(--navy);padding:0 32px;height:56px;display:flex;align-items:center;justify-content:space-between;}
+.nav-logo{color:#fff;font-size:14px;font-weight:700;}
+.nav-back{color:rgba(255,255,255,.6);font-size:12px;cursor:pointer;text-decoration:none;}
+.nav-back:hover{color:#fff;}
+
+.checkout-shell{display:grid;grid-template-columns:1fr 420px;max-width:1000px;margin:40px auto;gap:28px;padding:0 24px 60px;}
+
+/* Panel izquierdo */
+.checkout-form{background:var(--white);border:1px solid var(--border);border-radius:var(--r);padding:32px;}
+.checkout-step{margin-bottom:28px;}
+.step-header{display:flex;align-items:center;gap:10px;margin-bottom:18px;}
+.step-num{width:28px;height:28px;border-radius:50%;background:var(--navy);color:#fff;font-size:12px;font-weight:700;display:flex;align-items:center;justify-content:center;flex-shrink:0;}
+.step-title{font-size:15px;font-weight:700;}
+.step-divider{height:1px;background:var(--border);margin:24px 0;}
+
+/* Plan selector */
+.plan-options{display:flex;flex-direction:column;gap:10px;}
+.plan-opt{border:2px solid var(--border);border-radius:var(--r-sm);padding:14px 16px;cursor:pointer;transition:all .15s;display:flex;align-items:center;gap:14px;}
+.plan-opt:hover{border-color:var(--navy2);}
+.plan-opt.selected{border-color:var(--navy2);background:#f0f6ff;}
+.plan-radio{width:18px;height:18px;border-radius:50%;border:2px solid var(--border2);display:flex;align-items:center;justify-content:center;transition:all .15s;flex-shrink:0;}
+.plan-opt.selected .plan-radio{border-color:var(--navy2);}
+.plan-radio-dot{width:10px;height:10px;border-radius:50%;background:var(--navy2);display:none;}
+.plan-opt.selected .plan-radio-dot{display:block;}
+.plan-info{flex:1;}
+.plan-name{font-size:13px;font-weight:700;}
+.plan-desc{font-size:11px;color:var(--ink3);margin-top:2px;}
+.plan-price{font-size:16px;font-weight:800;color:var(--navy);white-space:nowrap;}
+.plan-price span{font-size:11px;font-weight:400;color:var(--ink3);}
+.plan-popular{background:var(--navy);color:#fff;font-size:9px;font-weight:700;padding:2px 7px;border-radius:20px;margin-left:6px;letter-spacing:.04em;}
+
+/* Form fields */
+.field{margin-bottom:14px;}
+.field label{display:block;font-size:12px;font-weight:600;color:var(--ink2);margin-bottom:5px;}
+.field input,.field select{width:100%;padding:10px 12px;border:1.5px solid var(--border2);border-radius:var(--r-sm);font-size:13px;font-family:var(--font);color:var(--ink);background:var(--white);transition:border-color .15s;}
+.field input:focus,.field select:focus{outline:none;border-color:var(--navy2);box-shadow:0 0 0 3px rgba(26,58,92,.08);}
+.field input::placeholder{color:var(--ink3);}
+.field-row{display:grid;grid-template-columns:1fr 1fr;gap:12px;}
+
+/* Stripe card mount */
+.stripe-element-wrap{padding:10px 12px;border:1.5px solid var(--border2);border-radius:var(--r-sm);background:var(--white);transition:border-color .15s;min-height:44px;}
+.stripe-element-wrap.focused{border-color:var(--navy2);box-shadow:0 0 0 3px rgba(26,58,92,.08);}
+.stripe-element-wrap.error{border-color:var(--red);}
+.card-error{font-size:12px;color:var(--red);margin-top:5px;display:none;}
+
+/* Botón de pago */
+.pay-btn{width:100%;padding:14px;background:var(--navy);color:#fff;border:none;border-radius:var(--r-sm);font-size:15px;font-weight:700;cursor:pointer;font-family:var(--font);transition:all .15s;display:flex;align-items:center;justify-content:center;gap:10px;margin-top:6px;}
+.pay-btn:hover{background:var(--navy2);}
+.pay-btn:disabled{background:#94a3b8;cursor:not-allowed;}
+.pay-btn .spinner{width:18px;height:18px;border:2px solid rgba(255,255,255,.4);border-top-color:#fff;border-radius:50%;animation:spin .6s linear infinite;display:none;}
+@keyframes spin{to{transform:rotate(360deg)}}
+
+.terms{font-size:11px;color:var(--ink3);text-align:center;margin-top:12px;line-height:1.6;}
+.terms a{color:var(--navy2);text-decoration:none;}
+
+/* Panel derecho: resumen */
+.order-summary{background:var(--white);border:1px solid var(--border);border-radius:var(--r);padding:28px;height:fit-content;position:sticky;top:24px;}
+.summary-title{font-size:15px;font-weight:700;margin-bottom:18px;padding-bottom:14px;border-bottom:1px solid var(--border);}
+.summary-plan-name{font-size:18px;font-weight:800;color:var(--navy);margin-bottom:4px;}
+.summary-plan-desc{font-size:12px;color:var(--ink3);margin-bottom:18px;}
+.summary-features{display:flex;flex-direction:column;gap:8px;margin-bottom:20px;padding-bottom:20px;border-bottom:1px solid var(--border);}
+.summary-feat{display:flex;align-items:center;gap:8px;font-size:12px;color:var(--ink2);}
+.summary-feat::before{content:'✓';color:var(--green);font-weight:700;flex-shrink:0;}
+.summary-line{display:flex;justify-content:space-between;font-size:13px;margin-bottom:8px;color:var(--ink2);}
+.summary-total{display:flex;justify-content:space-between;font-size:15px;font-weight:800;color:var(--ink);padding-top:12px;border-top:1px solid var(--border);margin-top:6px;}
+.summary-iva{font-size:11px;color:var(--ink3);text-align:right;margin-top:4px;}
+.summary-badge{display:flex;align-items:center;gap:6px;background:var(--green-bg);border-radius:8px;padding:10px 12px;margin-top:16px;font-size:12px;color:var(--green);}
+.secure-badges{display:flex;align-items:center;justify-content:center;gap:14px;margin-top:18px;padding-top:16px;border-top:1px solid var(--border);}
+.secure-badge{font-size:11px;color:var(--ink3);display:flex;align-items:center;gap:4px;}
+
+/* Success screen */
+.success-screen{display:none;text-align:center;padding:60px 40px;}
+.success-icon{font-size:56px;margin-bottom:20px;}
+.success-title{font-size:24px;font-weight:800;margin-bottom:8px;color:var(--green);}
+.success-sub{font-size:14px;color:var(--ink3);margin-bottom:28px;line-height:1.6;}
+.success-card{background:var(--green-bg);border:1px solid rgba(22,163,74,.2);border-radius:var(--r);padding:20px;margin-bottom:24px;text-align:left;}
+.success-card-title{font-size:12px;font-weight:700;color:var(--green);margin-bottom:10px;text-transform:uppercase;letter-spacing:.06em;}
+.success-card-row{font-size:13px;color:var(--ink2);margin-bottom:5px;}
+.success-card-row strong{color:var(--ink);}
+.success-actions{display:flex;flex-direction:column;gap:10px;}
+.btn-success{padding:12px 24px;border-radius:var(--r-sm);font-size:13px;font-weight:600;cursor:pointer;border:none;font-family:var(--font);transition:all .15s;}
+.btn-portal{background:var(--navy);color:#fff;}
+.btn-portal:hover{background:var(--navy2);}
+.btn-sec{background:var(--surface);color:var(--ink2);border:1px solid var(--border2);}
+
+/* Stripe simulation notice */
+.sim-notice{background:#fef3c7;border:1px solid rgba(217,119,6,.3);border-radius:var(--r-sm);padding:10px 14px;font-size:12px;color:#92400e;margin-bottom:16px;line-height:1.5;}
+
+::-webkit-scrollbar{width:4px;}::-webkit-scrollbar-track{background:transparent;}::-webkit-scrollbar-thumb{background:var(--border2);border-radius:2px;}
+</style>
+
+<!-- Meta Pixel Code -->
+<script>
+!function(f,b,e,v,n,t,s)
+{if(f.fbq)return;n=f.fbq=function(){n.callMethod?
+n.callMethod.apply(n,arguments):n.queue.push(arguments)};
+if(!f._fbq)f._fbq=n;n.push=n;n.loaded=!0;n.version='2.0';
+n.queue=[];t=b.createElement(e);t.async=!0;
+t.src=v;s=b.getElementsByTagName(e)[0];
+s.parentNode.insertBefore(t,s)}(window, document,'script',
+'https://connect.facebook.net/en_US/fbevents.js');
+fbq('init', '772478098942349');
+fbq('track', 'PageView');
+</script>
+<noscript><img height="1" width="1" style="display:none"
+src="https://www.facebook.com/tr?id=772478098942349&ev=PageView&noscript=1"
+/></noscript>
+<!-- End Meta Pixel Code -->
+
+<meta name="description" content="Contrate su plan de cumplimiento laboral desde $899/mes. Contratos, actas, reglamento interior y NOM-035 para su empresa en México.">
+<meta name="robots" content="index, follow">
+<link rel="canonical" href="https://www.clicklaboral.mx/checkout.html">
+<meta property="og:type" content="website">
+<meta property="og:url" content="https://www.clicklaboral.mx/checkout.html">
+<meta property="og:title" content="ClickLaboral · Contratar plan — Abogado laboral por suscripción">
+<meta property="og:description" content="Contrate su plan de cumplimiento laboral desde $899/mes. Contratos, actas, reglamento interior y NOM-035 para su empresa en México.">
+<meta property="og:site_name" content="ClickLaboral.mx">
+<meta property="og:locale" content="es_MX">
+</head>
+<body>
+
+<nav>
+  <div class="nav-logo">
+    <svg width="22" height="22" viewBox="0 0 100 100" style="vertical-align:-5px;margin-right:5px;">
+      <defs><linearGradient id="navLogoGrad" x1="10" y1="10" x2="90" y2="95" gradientUnits="userSpaceOnUse">
+        <stop offset="0%" stop-color="#1a3a5c"/><stop offset="55%" stop-color="#1e6f6c"/><stop offset="100%" stop-color="#2dd4bf"/>
+      </linearGradient></defs>
+      <path d="M50 7 L83 20 V51 C83 73 68 87 50 95 C32 87 17 73 17 51 V20 Z" fill="none" stroke="url(#navLogoGrad)" stroke-width="6" stroke-linejoin="round"/>
+      <circle cx="40" cy="38" r="8.5" fill="#5eead4"/>
+      <path d="M25 63 C25 51 31 45 40 45 C49 45 55 51 55 63 Z" fill="#5eead4"/>
+      <circle cx="55" cy="33" r="9.5" fill="#14b8a6"/>
+      <path d="M38 61 C38 48 45.5 41 55 41 C64.5 41 72 48 72 61 Z" fill="#14b8a6"/>
+      <path d="M29 61 L45 77 L78 40" fill="none" stroke="#e8f2fc" stroke-width="9" stroke-linecap="round" stroke-linejoin="round"/>
+    </svg>ClickLaboral.mx
+  </div>
+  <a class="nav-back" href="index.html">← Volver a planes</a>
+</nav>
+
+<div class="checkout-shell">
+  <!-- FORMULARIO -->
+  <div class="checkout-form">
+
+    <!-- SUCCESS STATE -->
+    <div class="success-screen" id="success-screen">
+      <div class="success-icon">🎉</div>
+      <div class="success-title">¡Suscripción activada!</div>
+      <div class="success-sub">Su cuenta ya está activa. Estos son sus datos de acceso al portal — guárdelos, no se mostrarán de nuevo:</div>
+      <div class="success-card" id="sc-credenciales" style="display:none;background:#f0f6ff;border:1.5px solid var(--navy2);">
+        <div class="success-card-title">🔐 Acceso a su portal de cliente</div>
+        <div class="success-card-row">Usuario (correo): <strong id="sc-cred-email">—</strong></div>
+        <div class="success-card-row">Contraseña: <strong id="sc-cred-pass" style="font-family:monospace;">—</strong></div>
+      </div>
+      <div class="success-card">
+        <div class="success-card-title">Resumen de su suscripción</div>
+        <div class="success-card-row">Empresa: <strong id="sc-empresa">—</strong></div>
+        <div class="success-card-row">Plan: <strong id="sc-plan">—</strong></div>
+        <div class="success-card-row">Monto mensual: <strong id="sc-monto">—</strong></div>
+        <div class="success-card-row">Próximo cobro: <strong id="sc-fecha">—</strong></div>
+        <div class="success-card-row">No. de confirmación: <strong id="sc-conf">—</strong></div>
+      </div>
+      <div class="success-actions">
+        <button class="btn-success btn-portal" onclick="window.open('portal-cliente.html')">Acceder a mi portal →</button>
+        <button class="btn-success btn-sec" onclick="window.open('paquete-bienvenida.html')">Ver paquete de bienvenida</button>
+        <button class="btn-success btn-sec" onclick="window.open('index.html')">Volver al inicio</button>
+      </div>
+    </div>
+
+    <!-- FORM STATE -->
+    <div id="form-state">
+      <!-- PASO 1: PLAN -->
+      <div class="checkout-step">
+        <div class="step-header">
+          <div class="step-num">1</div>
+          <div class="step-title">Seleccione su plan</div>
+        </div>
+        <div class="plan-options">
+          <div class="plan-opt" id="opt-micro" onclick="selPlan('micro')">
+            <div class="plan-radio"><div class="plan-radio-dot"></div></div>
+            <div class="plan-info">
+              <div class="plan-name">Plan Micro</div>
+              <div class="plan-desc">1 a 15 trabajadores · 1 ticket de asesoría legal / mes</div>
+            </div>
+            <div class="plan-price">$899<span>/mes</span></div>
+          </div>
+          <div class="plan-opt selected" id="opt-pyme" onclick="selPlan('pyme')">
+            <div class="plan-radio"><div class="plan-radio-dot"></div></div>
+            <div class="plan-info">
+              <div class="plan-name">Plan PyME <span class="plan-popular">MÁS POPULAR</span></div>
+              <div class="plan-desc">16 a 50 trabajadores · 3 tickets de asesoría legal / mes</div>
+            </div>
+            <div class="plan-price">$1,999<span>/mes</span></div>
+          </div>
+          <div class="plan-opt" id="opt-mediana" onclick="selPlan('mediana')">
+            <div class="plan-radio"><div class="plan-radio-dot"></div></div>
+            <div class="plan-info">
+              <div class="plan-name">Plan Mediana</div>
+              <div class="plan-desc">51 a 150 trabajadores · 5 tickets de asesoría legal / mes</div>
+            </div>
+            <div class="plan-price">$4,499<span>/mes</span></div>
+          </div>
+          <div class="plan-opt" id="opt-empresa" onclick="selPlan('empresa')">
+            <div class="plan-radio"><div class="plan-radio-dot"></div></div>
+            <div class="plan-info">
+              <div class="plan-name">Plan Empresa</div>
+              <div class="plan-desc">151 a 500 trabajadores · 8 tickets de asesoría legal / mes</div>
+            </div>
+            <div class="plan-price">$9,999<span>/mes</span></div>
+          </div>
+        </div>
+        <p style="font-size:11px;color:var(--ink3);margin-top:8px;">Todos los planes incluyen acceso total al software; cambian los tickets de asesoría legal incluidos cada mes. ¿Más de 500 trabajadores? Contáctenos para un plan a medida.</p>
+      </div>
+
+      <div class="step-divider"></div>
+
+      <!-- PASO 2: DATOS EMPRESA -->
+      <div class="checkout-step">
+        <div class="step-header">
+          <div class="step-num">2</div>
+          <div class="step-title">Datos de su empresa</div>
+        </div>
+        <div class="field">
+          <label>Razón social completa *</label>
+          <input type="text" id="f-empresa" placeholder="Ej. Comercializadora Norte, S.A. de C.V." oninput="actualizarResumen()">
+        </div>
+        <div class="field-row">
+          <div class="field">
+            <label>RFC *</label>
+            <input type="text" id="f-rfc" placeholder="RFC 12 o 13 caracteres" maxlength="13" oninput="this.value=this.value.toUpperCase();actualizarResumen()">
+          </div>
+          <div class="field">
+            <label>No. de trabajadores</label>
+            <input type="number" id="f-trab" placeholder="Ej. 45" min="1">
+          </div>
+        </div>
+        <div class="field-row">
+          <div class="field">
+            <label>Giro o industria</label>
+            <input type="text" id="f-giro" placeholder="Ej. Manufactura, Retail">
+          </div>
+          <div class="field">
+            <label>Ciudad / Estado</label>
+            <input type="text" id="f-ciudad" placeholder="Guadalajara, Jal.">
+          </div>
+        </div>
+        <div class="field">
+          <label>Nombre del responsable RRHH *</label>
+          <input type="text" id="f-contacto" placeholder="Nombre completo">
+        </div>
+        <div class="field-row">
+          <div class="field">
+            <label>Email *</label>
+            <input type="email" id="f-email" placeholder="correo@empresa.mx">
+          </div>
+          <div class="field">
+            <label>Teléfono</label>
+            <input type="tel" id="f-tel" placeholder="+52 33 1234 5678">
+          </div>
+        </div>
+      </div>
+
+      <div class="step-divider"></div>
+
+      <!-- PASO 3: PAGO -->
+      <div class="checkout-step">
+        <div class="step-header">
+          <div class="step-num">3</div>
+          <div class="step-title">Información de pago</div>
+        </div>
+
+        <div class="sim-notice" style="background:#eef7f0;border-color:rgba(22,163,74,.25);color:#14532d;">
+          🔒 <strong>Pago seguro con Stripe.</strong> Los datos de su tarjeta se capturan directamente por Stripe y nunca pasan por nuestros servidores.
+        </div>
+
+        <div class="field">
+          <label>Datos de la tarjeta</label>
+          <div class="stripe-element-wrap" id="card-element"></div>
+          <div class="card-error" id="card-error"></div>
+        </div>
+        <div class="field">
+          <label>Nombre en la tarjeta</label>
+          <input type="text" id="f-nombre-tarjeta" placeholder="Tal como aparece en la tarjeta">
+        </div>
+        <div class="field">
+          <label>Método de facturación</label>
+          <select id="f-facturacion">
+            <option>Factura mensual por email (CFDI)</option>
+            <option>Sin factura</option>
+          </select>
+        </div>
+
+        <button class="pay-btn" id="pay-btn" onclick="procesarPago()">
+          <span id="pay-icon">🔒</span>
+          <span id="pay-text">Suscribirme por <span id="pay-amount">$1,999</span> MXN, IVA incluido</span>
+          <div class="spinner" id="pay-spinner"></div>
+        </button>
+
+        <div class="terms">
+          Al suscribirse acepta los <a href="terminos-de-servicio.html" target="_blank">términos de servicio</a> y <a href="aviso-de-privacidad.html" target="_blank">aviso de privacidad</a>.<br>
+          Puede cancelar en cualquier momento. Sin contratos de permanencia.
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- RESUMEN -->
+  <div class="order-summary">
+    <div class="summary-title">Resumen del pedido</div>
+    <div class="summary-plan-name" id="sum-plan-name">Plan PyME</div>
+    <div class="summary-plan-desc" id="sum-plan-desc">Compliance laboral completo para su empresa</div>
+    <div class="summary-features" id="sum-features"></div>
+    <div class="summary-line"><span>Subtotal</span><span id="sum-base">$1,723.28</span></div>
+    <div class="summary-line"><span>IVA (16%)</span><span id="sum-iva">$275.72</span></div>
+    <div class="summary-total"><span id="sum-label-total">Total mensual (IVA incluido)</span><span id="sum-total">$1,999.00</span></div>
+    <div id="sum-badge-anual" style="display:none;background:#f0fdf4;border:1px solid #86efac;border-radius:6px;padding:6px 10px;font-size:11px;color:#15803d;font-weight:600;margin-top:6px;text-align:center;">✦ Pago único anual — 2 meses gratis incluidos</div>
+    <div class="summary-iva">MXN · Se cobra el <span id="sum-empresa-rfc">RFC de su empresa</span></div>
+    <div class="summary-badge">✓ Primer mes completo garantizado — reembolso si no queda satisfecho</div>
+    <div class="summary-badge" id="ref-badge" style="display:none;background:#fef3c7;color:#92400e;">🤝 Referido por su contador de confianza</div>
+    <div class="secure-badges">
+      <div class="secure-badge">🔒 SSL 256-bit</div>
+      <div class="secure-badge">💳 Stripe</div>
+      <div class="secure-badge">🛡 PCI DSS</div>
+    </div>
+  </div>
+</div>
+
+<script>
+// ════════════════════════════════════════════
+// PLANES — acceso total al software en todos; cambian los tickets de asesoría legal por tamaño
+// ════════════════════════════════════════════
+function calcIvaIncluido(total){
+  return {
+    total,
+    subtotal: Math.round((total/1.16)*100)/100,
+    iva: Math.round((total - (total/1.16))*100)/100,
+  };
+}
+const FEATURES_SOFTWARE = ['Contratos sin límite (8+ modalidades) y por sector','Formatos de RH, actas y finiquitos sin límite','NOM-035, Reglamento Interior y comisiones mixtas','Expedientes digitales y control de asistencias','Registro electrónico de jornada (reforma 2027)','Reportes gerenciales exportables a PDF','Asistente Legal IA + biblioteca de 46+ consultas','Alertas automáticas y asesoría de abogados'];
+function features(tickets){
+  return [tickets+' ticket(s) de asesoría legal / mes', ...FEATURES_SOFTWARE];
+}
+
+const PLANES = {
+  micro:   { nombre:'Plan Micro',   desc:'1 a 15 trabajadores · Acceso total al software',    ...calcIvaIncluido(899),  features:features(1),  periodo:'mensual' },
+  pyme:    { nombre:'Plan PyME',    desc:'16 a 50 trabajadores · Acceso total al software',   ...calcIvaIncluido(1999), features:features(3),  periodo:'mensual' },
+  mediana: { nombre:'Plan Mediana', desc:'51 a 150 trabajadores · Acceso total al software',  ...calcIvaIncluido(4499), features:features(5), periodo:'mensual' },
+  empresa: { nombre:'Plan Empresa', desc:'151 a 500 trabajadores · Acceso total al software', ...calcIvaIncluido(9999), features:features(8), periodo:'mensual' },
+};
+const PLANES_VALIDOS = ['micro','pyme','mediana','empresa'];
+
+// ════════════════════════════════════════════
+// CAPTURA DE CÓDIGO DE REFERIDO (?ref=) Y PLAN (?plan=)
+// ════════════════════════════════════════════
+const params = new URLSearchParams(window.location.search);
+const codigoReferido = params.get('ref') || null;
+if (codigoReferido) { console.log('Checkout iniciado vía referido:', codigoReferido); }
+
+// Compatibilidad con enlaces antiguos.
+const MAPEO_LEGADO = { basico:'micro', estandar:'pyme', pro:'mediana' };
+let planDesdeURL = params.get('plan');
+if (planDesdeURL && MAPEO_LEGADO[planDesdeURL]) planDesdeURL = MAPEO_LEGADO[planDesdeURL];
+let planActual = PLANES_VALIDOS.includes(planDesdeURL) ? planDesdeURL : 'pyme';
+
+function pintarSeleccion(){
+  document.querySelectorAll('.plan-opt').forEach(e=>e.classList.remove('selected'));
+  const opt = document.getElementById('opt-'+planActual);
+  if (opt) opt.classList.add('selected');
+  actualizarResumen();
+}
+
+function selPlan(plan){
+  if (!PLANES[plan]) return;
+  planActual = plan;
+  pintarSeleccion();
+}
+
+function actualizarResumen(){
+  const p = PLANES[planActual];
+  const rfc = document.getElementById('f-rfc')?.value || '';
+  document.getElementById('sum-plan-name').textContent = p.nombre;
+  document.getElementById('sum-plan-desc').textContent = p.desc;
+  document.getElementById('sum-features').innerHTML = p.features.map(f=>'<div class="summary-feat">'+f+'</div>').join('');
+  const labelTotal = document.getElementById('sum-label-total');
+  if (labelTotal) labelTotal.textContent = 'Total mensual';
+  document.getElementById('sum-base').textContent = '$'+p.subtotal.toLocaleString('es-MX',{minimumFractionDigits:2});
+  document.getElementById('sum-iva').textContent = '$'+p.iva.toLocaleString('es-MX',{minimumFractionDigits:2});
+  document.getElementById('sum-total').textContent = '$'+p.total.toLocaleString('es-MX',{minimumFractionDigits:2});
+  document.getElementById('sum-empresa-rfc').textContent = rfc || '—';
+  document.getElementById('pay-amount').textContent = '$'+p.total.toLocaleString('es-MX');
+  if (codigoReferido) {
+    document.getElementById('ref-badge').style.display = 'flex';
+  }
+}
+
+// ════════════════════════════════════════════
+// STRIPE — INTEGRACIÓN REAL
+// ════════════════════════════════════════════
+// ⚠️ Reemplaza esto con tu clave PUBLICABLE de Stripe (empieza con pk_live_ o pk_test_).
+// La clave publicable NO es secreta — es seguro que viva en el código del navegador.
+// La encuentras en: Stripe Dashboard → Desarrolladores → Claves de API.
+const STRIPE_PUBLISHABLE_KEY = 'pk_live_51TmoZSBEbjDXzIvUqFvhcbqXE2g9WPybwzOzJrRolecqKgchcopwlvYP8mvtVtuR7Z7ZscV5rs4R3Jc3gnuM0v0H00nQ5COZtc';
+
+const stripe = Stripe(STRIPE_PUBLISHABLE_KEY);
+const stripeElements = stripe.elements({ locale: 'es' });
+const cardElement = stripeElements.create('card', {
+  style: {
+    base: {
+      fontSize: '13px',
+      color: '#111110',
+      fontFamily: 'Segoe UI, system-ui, sans-serif',
+      '::placeholder': { color: '#aaaaa4' },
+    },
+    invalid: { color: '#c0392b' },
+  },
+});
+cardElement.mount('#card-element');
+
+const cardWrap = document.getElementById('card-element').parentElement;
+cardElement.on('focus', () => cardWrap.classList.add('focused'));
+cardElement.on('blur', () => cardWrap.classList.remove('focused'));
+cardElement.on('change', ({ error, complete }) => {
+  const errEl = document.getElementById('card-error');
+  cardWrap.classList.toggle('error', !!error);
+  if (error) { errEl.textContent = error.message; errEl.style.display = 'block'; }
+  else { errEl.style.display = 'none'; }
+});
+
+function setBotonCargando(cargando, textoError) {
+  const btn = document.getElementById('pay-btn');
+  btn.disabled = cargando;
+  document.getElementById('pay-icon').style.display = cargando ? 'none' : 'inline';
+  document.getElementById('pay-text').style.display = cargando ? 'none' : 'inline';
+  document.getElementById('pay-spinner').style.display = cargando ? 'block' : 'none';
+  if (textoError) alert(textoError);
+}
+
+async function procesarPago(){
+  const empresa = document.getElementById('f-empresa').value.trim();
+  const rfc = document.getElementById('f-rfc').value.trim().toUpperCase();
+  const email = document.getElementById('f-email').value.trim();
+  const contacto = document.getElementById('f-contacto').value.trim();
+  const nombreTarjeta = document.getElementById('f-nombre-tarjeta').value.trim();
+
+  if(!empresa||!rfc||!email||!contacto){ alert('Complete los campos obligatorios (razón social, RFC, email y contacto)'); return; }
+  if(!nombreTarjeta){ alert('Ingrese el nombre tal como aparece en la tarjeta'); return; }
+
+  // Meta Pixel — el cliente ya validó sus datos y va a intentar pagar
+  if (typeof fbq === 'function') {
+    const planInfo = PLANES[planActual];
+    fbq('track', 'InitiateCheckout', {
+      content_name: planInfo.nombre, value: planInfo.total, currency: 'MXN',
+    });
+  }
+
+  setBotonCargando(true);
+
+  // 1. Tokenizar la tarjeta directamente con Stripe (nunca toca nuestro servidor)
+  const { paymentMethod, error: pmError } = await stripe.createPaymentMethod({
+    type: 'card',
+    card: cardElement,
+    billing_details: { name: nombreTarjeta, email },
+  });
+
+  if (pmError) {
+    setBotonCargando(false, pmError.message);
+    return;
+  }
+
+  try {
+    // 2. Nuestro backend (Netlify Function) crea el customer + la suscripción en Stripe
+    const response = await fetch('/api/crear-suscripcion', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        paymentMethodId: paymentMethod.id,
+        plan: planActual,
+        periodo: PLANES[planActual].periodo || 'mensual',
+        empresa, rfc, email, contacto,
+        codigoReferido: codigoReferido || null,
+      }),
+    });
+    const data = await response.json();
+
+    if (!response.ok) {
+      setBotonCargando(false, data.error || 'No se pudo procesar la suscripción. Intente de nuevo.');
+      return;
+    }
+
+    // 3. Si el banco exige autenticación adicional (3D Secure), confirmarla aquí
+    if (data.requiresAction) {
+      const { error: confirmError } = await stripe.confirmCardPayment(data.clientSecret);
+      if (confirmError) {
+        setBotonCargando(false, confirmError.message || 'No se pudo confirmar el pago con su banco.');
+        return;
+      }
+    }
+
+    // 4. Éxito — mostrar pantalla de confirmación
+    mostrarExito({
+      empresa, rfc, email, contacto,
+      confirmacion: data.confirmacion || ('CLM-' + Date.now().toString(36).toUpperCase()),
+      credencialesPortal: data.credencialesPortal || null,
+    });
+
+  } catch (err) {
+    console.error(err);
+    setBotonCargando(false, 'Ocurrió un error de conexión. Verifique su internet e intente de nuevo.');
+  }
+}
+
+function mostrarExito({ empresa, rfc, email, contacto, confirmacion, credencialesPortal }){
+  const plan = PLANES[planActual];
+
+  // Meta Pixel — conversión confirmada con valor real del plan
+  if (typeof fbq === 'function') {
+    fbq('track', 'Purchase', {
+      content_name: plan.nombre, value: plan.total, currency: 'MXN',
+      content_type: 'subscription',
+    });
+  }
+
+  const suscripcion = {
+    empresa, rfc, email, contacto,
+    plan: planActual, planNombre: plan.nombre, cuota: plan.total,
+    inicio: new Date().toISOString(), activo: true,
+    confirmacion, referidoPor: codigoReferido,
+  };
+  try { localStorage.setItem('clm_suscripcion_'+rfc, JSON.stringify(suscripcion)); } catch(e){}
+
+  const proxCobro = new Date();
+  proxCobro.setMonth(proxCobro.getMonth()+1);
+
+  if (credencialesPortal && credencialesPortal.email) {
+    document.getElementById('sc-cred-email').textContent = credencialesPortal.email;
+    document.getElementById('sc-cred-pass').textContent = credencialesPortal.password;
+    document.getElementById('sc-credenciales').style.display = 'block';
+  } else {
+    document.getElementById('sc-credenciales').innerHTML = '<div class="success-card-title">⚠️ Acceso al portal</div><div class="success-card-row" style="font-size:13px;">No pudimos generar su acceso automáticamente. Escríbanos por WhatsApp con su RFC y se lo activamos manualmente.</div>';
+    document.getElementById('sc-credenciales').style.display = 'block';
+  }
+
+  document.getElementById('sc-empresa').textContent = empresa;
+  document.getElementById('sc-plan').textContent = plan.nombre;
+  document.getElementById('sc-monto').textContent = '$'+plan.total.toLocaleString('es-MX')+' MXN, IVA incluido / mes';
+  document.getElementById('sc-fecha').textContent = proxCobro.toLocaleDateString('es-MX',{day:'numeric',month:'long',year:'numeric'});
+  document.getElementById('sc-conf').textContent = confirmacion;
+
+  document.getElementById('form-state').style.display='none';
+  document.getElementById('success-screen').style.display='block';
+  document.querySelector('.order-summary').style.display='none';
+}
+
+// Init
+document.querySelectorAll('.plan-opt').forEach(e=>e.classList.remove('selected'));
+pintarSeleccion();
+</script>
+</body>
+</html>

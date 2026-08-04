@@ -381,7 +381,7 @@ body{font-family:var(--font);background:var(--surface);color:var(--ink);min-heig
       <div class="sb-sec">Personal</div>
       <div class="nav-item" onclick="window.open('asistencias-vacaciones.html');cerrarSidebarMobile()"><span class="nav-icon">🗂</span> Expedientes de trabajadores</div>
       <div class="nav-item" onclick="window.open('pruebas-psicometricas.html');cerrarSidebarMobile()"><span class="nav-icon">🧠</span> Pruebas psicométricas</div>
-      <div class="nav-item" onclick="window.open('nom035-evaluacion.html?empresa='+encodeURIComponent((clienteActual&&clienteActual.empresa)||'')+'&rfc='+encodeURIComponent((clienteActual&&clienteActual.rfc)||''));cerrarSidebarMobile()"><span class="nav-icon">⚕️</span> Evaluación NOM-035</div>
+      <div class="nav-item" onclick="window.open('auditor-virtual.html?empresa='+encodeURIComponent((clienteActual&&clienteActual.empresa)||'')+'&rfc='+encodeURIComponent((clienteActual&&clienteActual.rfc)||''));cerrarSidebarMobile()"><span class="nav-icon">🛡️</span> Auditor Virtual</div>
 
       <div class="sb-sec">Asistente IA</div>
       <div class="nav-item" onclick="goPanel('calculadora')"><span class="nav-icon">🧮</span> Calculadora laboral</div>
@@ -460,6 +460,13 @@ body{font-family:var(--font);background:var(--surface);color:var(--ink);min-heig
             <div class="card" style="margin-bottom:16px;">
               <div class="card-title" style="margin-bottom:12px;">📅 Próximas obligaciones</div>
               <div id="inicio-obligaciones"></div>
+            </div>
+
+            <!-- Exposición por despido -->
+            <div class="card" style="margin-bottom:16px;border-left:3px solid #b45309;">
+              <div class="card-title" style="margin-bottom:6px;">⚖️ Exposición por despido</div>
+              <div style="font-size:12.5px;color:var(--ink2);margin-bottom:10px;">Calcule cuánto tendría que provisionar la empresa ante un despido <strong>injustificado</strong>, según la antigüedad y el salario de cada trabajador. Es una provisión de riesgo, no una recomendación de despedir.</div>
+              <button class="btn btn-primary btn-sm" onclick="window.open('simulador-despido.html?empresa='+encodeURIComponent((clienteActual&&clienteActual.empresa)||'')+'&rfc='+encodeURIComponent((clienteActual&&clienteActual.rfc)||''))">Calcular exposición →</button>
             </div>
 
             <!-- Accesos rápidos -->

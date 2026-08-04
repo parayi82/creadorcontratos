@@ -1,0 +1,170 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Auditor Virtual · Cumplimiento normativo · ClickLaboral.mx</title>
+<style>
+  *{margin:0;padding:0;box-sizing:border-box;}
+  :root{--navy:#0f2640;--navy2:#1a3a5c;--teal:#0d9488;--teal-d:#0b5f57;--ink:#1f2937;--ink2:#475569;--ink3:#64748b;--border:#e2e8f0;--bg:#f1f4f8;}
+  body{font-family:'Segoe UI',system-ui,-apple-system,sans-serif;background:var(--bg);color:var(--ink);line-height:1.5;}
+  .topbar{background:var(--navy);color:#fff;padding:14px 22px;display:flex;align-items:center;justify-content:space-between;gap:12px;position:sticky;top:0;z-index:20;}
+  .topbar h1{font-size:16px;font-weight:700;display:flex;align-items:center;gap:9px;}
+  .btn{padding:9px 14px;border-radius:8px;border:none;font-size:12.5px;font-weight:600;cursor:pointer;text-decoration:none;display:inline-block;}
+  .btn-ghost{background:rgba(255,255,255,.12);color:#fff;}
+  .btn-ghost:hover{background:rgba(255,255,255,.2);}
+  .btn-teal{background:var(--teal);color:#fff;}
+  .btn-teal:hover{background:var(--teal-d);}
+  .btn-out{background:#fff;border:1.5px solid var(--teal);color:var(--teal-d);}
+  .btn-out:hover{background:#eef6f4;}
+  .wrap{max-width:1080px;margin:0 auto;padding:26px 22px 60px;}
+  .intro{margin-bottom:22px;}
+  .intro h2{font-size:22px;color:var(--navy);font-weight:800;margin-bottom:6px;}
+  .intro p{color:var(--ink2);font-size:13.5px;max-width:720px;}
+  .grid{display:grid;grid-template-columns:1fr 1fr;gap:16px;}
+  .card{background:#fff;border:1px solid var(--border);border-radius:12px;overflow:hidden;}
+  .card>summary{list-style:none;cursor:pointer;padding:16px 18px;display:flex;align-items:flex-start;gap:12px;}
+  .card>summary::-webkit-details-marker{display:none;}
+  .card .ic{font-size:24px;line-height:1;}
+  .card .htxt{flex:1;}
+  .card .htxt h3{font-size:14.5px;color:var(--navy);font-weight:800;margin-bottom:2px;}
+  .card .htxt .ref{font-size:11px;color:var(--ink3);}
+  .chip{font-size:9.5px;font-weight:800;text-transform:uppercase;letter-spacing:.4px;padding:3px 8px;border-radius:20px;white-space:nowrap;}
+  .chip-oblig{background:#fef2f2;color:#b91c1c;}
+  .chip-vig{background:#ecfdf5;color:#047857;}
+  .chip-2027{background:#fff7ed;color:#c2410c;}
+  .card .body{padding:0 18px 16px;border-top:1px solid var(--border);}
+  .card .body p.q{font-size:12.5px;color:var(--ink2);margin:12px 0 8px;}
+  .card ul{list-style:none;margin:0 0 12px;}
+  .card ul li{font-size:12px;color:var(--ink2);padding:4px 0 4px 20px;position:relative;}
+  .card ul li::before{content:'✓';position:absolute;left:0;color:var(--teal);font-weight:800;}
+  .card .sancion{font-size:11px;color:#9a3412;background:#fff7ed;border:1px solid #fed7aa;border-radius:6px;padding:6px 9px;margin-bottom:12px;}
+  .card .acts{display:flex;gap:8px;flex-wrap:wrap;}
+  .card .caret{color:var(--ink3);font-size:12px;margin-top:3px;transition:transform .2s;}
+  .card[open] .caret{transform:rotate(90deg);}
+  @media(max-width:820px){.grid{grid-template-columns:1fr;}}
+</style>
+</head>
+<body>
+<div class="topbar">
+  <h1>🛡️ Auditor Virtual</h1>
+  <a class="btn btn-ghost" href="portal-cliente.html">← Portal</a>
+</div>
+
+<div class="wrap">
+  <div class="intro">
+    <h2>Cumplimiento normativo, norma por norma</h2>
+    <p>Cada tarjeta resume qué exige la norma, un checklist de cumplimiento y la sanción por incumplir, con acceso directo a la herramienta que genera los documentos. Toque una tarjeta para desplegar su guía.</p>
+  </div>
+
+  <div class="grid" id="grid">
+
+    <details class="card" open>
+      <summary><span class="ic">🪑</span><div class="htxt"><h3>Ley Silla</h3><div class="ref">Art. 132 fr. V LFT</div></div><span class="chip chip-vig">Vigente</span><span class="caret">▸</span></summary>
+      <div class="body">
+        <p class="q">Sillas con respaldo suficientes en servicios y comercio; prohíbe obligar a estar de pie toda la jornada. Vigente desde 17-jun-2025; RIT debió adecuarse antes del 14-dic-2025. En 2026 la STPS la inspecciona.</p>
+        <ul>
+          <li>Análisis de riesgo por bipedestación de los puestos</li>
+          <li>Cláusula específica en el Reglamento Interior de Trabajo</li>
+          <li>Pausas acordadas con el personal (no impuestas)</li>
+          <li>Registro ante la Comisión de Seguridad e Higiene + evidencia</li>
+        </ul>
+        <div class="sancion">Sanción: 250 a 2,500 UMA por trabajador afectado (art. 994 LFT).</div>
+        <div class="acts"><a class="btn btn-teal" data-tool="ley-silla.html">Análisis de bipedestación →</a><a class="btn btn-out" data-tool="reglamento-interior.html">Cláusula al RIT</a></div>
+      </div>
+    </details>
+
+    <details class="card">
+      <summary><span class="ic">⚕️</span><div class="htxt"><h3>NOM-035-STPS</h3><div class="ref">Factores de riesgo psicosocial</div></div><span class="chip chip-oblig">Obligatoria</span><span class="caret">▸</span></summary>
+      <div class="body">
+        <p class="q">Identificar, analizar y prevenir los factores de riesgo psicosocial y promover un entorno organizacional favorable. La guía aplicable depende del tamaño del centro.</p>
+        <ul>
+          <li>Guía I (hasta 15), Guía II (16–50) o Guía III (más de 50 trabajadores)</li>
+          <li>Aplicar cuestionarios y analizar resultados</li>
+          <li>Adoptar medidas y dar seguimiento</li>
+          <li>Conservar los registros para inspección</li>
+        </ul>
+        <div class="sancion">Sanción: 250 a 5,000 UMA (art. 994 LFT).</div>
+        <div class="acts"><a class="btn btn-teal" data-tool="nom035-evaluacion.html">Aplicar evaluación →</a></div>
+      </div>
+    </details>
+
+    <details class="card">
+      <summary><span class="ic">📖</span><div class="htxt"><h3>Reglamento Interior de Trabajo</h3><div class="ref">Arts. 422–425 LFT</div></div><span class="chip chip-oblig">Obligatorio</span><span class="caret">▸</span></summary>
+      <div class="body">
+        <p class="q">Documento que fija las reglas de disciplina, seguridad e higiene. Debe depositarse ante el Centro Federal de Conciliación y Registro Laboral y difundirse al personal.</p>
+        <ul>
+          <li>Contenido conforme al art. 423 LFT</li>
+          <li>Debe incluir cláusulas de NOM-035, Ley Silla y prevención de riesgos</li>
+          <li>Elaborado de común acuerdo con los trabajadores</li>
+          <li>Depósito y difusión</li>
+        </ul>
+        <div class="acts"><a class="btn btn-teal" data-tool="reglamento-interior.html">Generar reglamento →</a></div>
+      </div>
+    </details>
+
+    <details class="card">
+      <summary><span class="ic">🦺</span><div class="htxt"><h3>Comisión de Seguridad e Higiene</h3><div class="ref">NOM-019-STPS · Art. 509 LFT</div></div><span class="chip chip-oblig">Obligatoria</span><span class="caret">▸</span></summary>
+      <div class="body">
+        <p class="q">Toda empresa debe integrar comisiones mixtas (seguridad e higiene, capacitación) de forma paritaria y documentar sus verificaciones.</p>
+        <ul>
+          <li>Integración paritaria (patrón–trabajadores)</li>
+          <li>Actas de constitución y de verificación periódica</li>
+          <li>Programa de recorridos e identificación de riesgos</li>
+          <li>Soporte documental de la Ley Silla</li>
+        </ul>
+        <div class="acts"><a class="btn btn-teal" data-tool="comisiones-mixtas.html">Constituir comisiones →</a></div>
+      </div>
+    </details>
+
+    <details class="card">
+      <summary><span class="ic">🕐</span><div class="htxt"><h3>Jornada de 40 horas</h3><div class="ref">Reforma constitucional 2027</div></div><span class="chip chip-2027">2027</span><span class="caret">▸</span></summary>
+      <div class="body">
+        <p class="q">Reducción gradual de la jornada máxima hacia 40 horas. Se acompaña de la obligación de llevar el expediente del trabajador y el registro de la jornada de forma verificable.</p>
+        <ul>
+          <li>Ajuste de horarios y del Reglamento Interior</li>
+          <li>Registro de jornada y horas extra</li>
+          <li>Expediente digital de cada trabajador</li>
+        </ul>
+        <div class="acts"><a class="btn btn-teal" data-tool="asistencias-vacaciones.html">Registro de jornada →</a></div>
+      </div>
+    </details>
+
+    <details class="card">
+      <summary><span class="ic">📋</span><div class="htxt"><h3>Políticas internas obligatorias</h3><div class="ref">NOM-037, NOM-035, LFT</div></div><span class="chip chip-oblig">Obligatorias</span><span class="caret">▸</span></summary>
+      <div class="body">
+        <p class="q">Políticas que la autoridad exige tener por escrito y difundidas: teletrabajo, no discriminación, prevención de adicciones, entre otras.</p>
+        <ul>
+          <li>Teletrabajo / Home office (NOM-037)</li>
+          <li>No discriminación e igualdad + protocolo de denuncia</li>
+          <li>Prevención de adicciones</li>
+          <li>Uso de dispositivos y código de vestimenta</li>
+        </ul>
+        <div class="acts"><a class="btn btn-out" data-tool="politica-home-office.html">Home office</a><a class="btn btn-out" data-tool="politica-nno-discriminacion.html">No discriminación</a><a class="btn btn-out" data-tool="politica-prevencion-adicciones.html">Adicciones</a></div>
+      </div>
+    </details>
+
+    <details class="card">
+      <summary><span class="ic">🩺</span><div class="htxt"><h3>Diagnóstico de cumplimiento</h3><div class="ref">Autoevaluación general</div></div><span class="chip chip-vig">Recomendado</span><span class="caret">▸</span></summary>
+      <div class="body">
+        <p class="q">Revisión rápida del estado general de cumplimiento de la empresa para priorizar qué documentar primero.</p>
+        <ul>
+          <li>Identifica huecos por norma</li>
+          <li>Prioriza acciones antes de una inspección</li>
+        </ul>
+        <div class="acts"><a class="btn btn-teal" data-tool="diagnostico-cumplimiento.html">Iniciar diagnóstico →</a></div>
+      </div>
+    </details>
+
+  </div>
+</div>
+
+<script>
+// Propaga empresa/rfc del portal a cada herramienta.
+const p = new URLSearchParams(location.search);
+const emp = p.get('empresa') || '', rfc = p.get('rfc') || '';
+const qs = (emp || rfc) ? ('?empresa='+encodeURIComponent(emp)+'&rfc='+encodeURIComponent(rfc)) : '';
+document.querySelectorAll('a[data-tool]').forEach(a=>{ a.setAttribute('href', a.dataset.tool + qs); a.setAttribute('target','_blank'); });
+</script>
+</body>
+</html>

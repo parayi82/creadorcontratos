@@ -1,0 +1,225 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Ley Silla · Análisis de bipedestación · ClickLaboral.mx</title>
+<script src="membrete.js?v=3.7"></script>
+<style>
+  *{margin:0;padding:0;box-sizing:border-box;}
+  :root{--navy:#0f2640;--navy2:#1a3a5c;--teal:#0d9488;--teal-d:#0b5f57;--ink:#1f2937;--ink2:#475569;--ink3:#64748b;--border:#e2e8f0;--bg:#f1f4f8;}
+  body{font-family:'Segoe UI',system-ui,-apple-system,sans-serif;background:var(--bg);color:var(--ink);line-height:1.5;}
+  .topbar{background:var(--navy);color:#fff;padding:12px 20px;display:flex;align-items:center;justify-content:space-between;gap:12px;position:sticky;top:0;z-index:20;}
+  .topbar h1{font-size:15px;font-weight:700;display:flex;align-items:center;gap:8px;}
+  .topbar .actions{display:flex;gap:8px;}
+  .btn{padding:9px 14px;border-radius:8px;border:none;font-size:12.5px;font-weight:600;cursor:pointer;text-decoration:none;display:inline-block;}
+  .btn-primary{background:var(--teal);color:#fff;}
+  .btn-primary:hover{background:var(--teal-d);}
+  .btn-ghost{background:rgba(255,255,255,.12);color:#fff;}
+  .btn-ghost:hover{background:rgba(255,255,255,.2);}
+  .wrap{display:grid;grid-template-columns:400px 1fr;gap:0;min-height:calc(100vh - 49px);}
+  .panel-izq{background:#fff;border-right:1px solid var(--border);padding:20px;overflow-y:auto;max-height:calc(100vh - 49px);}
+  .panel-der{padding:26px;overflow-y:auto;max-height:calc(100vh - 49px);}
+  .guia{background:#f0f7f5;border:1px solid #bfe0d8;border-left:3px solid var(--teal);border-radius:8px;padding:12px 14px;margin-bottom:18px;font-size:12px;}
+  .guia summary{font-weight:700;color:var(--teal-d);cursor:pointer;font-size:12.5px;}
+  .guia ul{margin:8px 0 0 16px;color:var(--ink2);}
+  .guia li{margin-bottom:4px;}
+  .guia .warn{background:#fff7ed;border:1px solid #fed7aa;color:#9a3412;border-radius:6px;padding:7px 9px;margin-top:8px;font-size:11.5px;}
+  .field{margin-bottom:13px;}
+  .field label{display:block;font-size:11.5px;font-weight:600;color:var(--navy2);margin-bottom:4px;}
+  .field input,.field textarea,.field select{width:100%;padding:9px 10px;border:1.5px solid var(--border);border-radius:7px;font-size:13px;font-family:inherit;}
+  .field textarea{min-height:56px;resize:vertical;}
+  .field-row{display:grid;grid-template-columns:1fr 1fr;gap:10px;}
+  .section-label{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.5px;color:var(--teal-d);margin:18px 0 10px;padding-bottom:5px;border-bottom:1px solid var(--border);}
+  .puesto-card{border:1px solid var(--border);border-radius:8px;padding:11px;margin-bottom:10px;background:#fafcff;position:relative;}
+  .puesto-card .rm{position:absolute;top:8px;right:9px;color:#c0392b;cursor:pointer;font-size:12px;font-weight:700;}
+  .add-btn{background:#eef6f4;border:1px dashed var(--teal);color:var(--teal-d);border-radius:8px;padding:9px;width:100%;font-size:12px;font-weight:600;cursor:pointer;}
+  .hint{font-size:10.5px;color:var(--ink3);margin-top:3px;}
+  /* Documento */
+  .doc-sheet{background:#fff;max-width:800px;margin:0 auto;padding:44px 52px;box-shadow:0 2px 16px rgba(15,38,64,.1);border-radius:4px;font-size:13px;color:#222;}
+  .doc-title{font-size:16px;font-weight:800;color:var(--navy);text-align:center;margin:18px 0 4px;text-transform:uppercase;line-height:1.35;}
+  .doc-sub{text-align:center;font-size:11.5px;color:var(--ink3);margin-bottom:20px;}
+  .doc-p{margin-bottom:11px;text-align:justify;}
+  .doc-clause-title{font-weight:700;color:var(--navy2);margin:18px 0 7px;font-size:13.5px;}
+  table.doc-tab{width:100%;border-collapse:collapse;margin:8px 0 14px;font-size:11.5px;}
+  table.doc-tab th,table.doc-tab td{border:1px solid #cbd5e1;padding:6px 8px;text-align:left;vertical-align:top;}
+  table.doc-tab th{background:#eef2f7;color:var(--navy);font-weight:700;}
+  .doc-clause{background:#f8fafc;border-left:3px solid var(--teal);padding:10px 12px;margin:8px 0 14px;font-size:12px;color:#334155;}
+  .doc-check{list-style:none;margin:6px 0 14px;}
+  .doc-check li{padding:3px 0 3px 22px;position:relative;font-size:12px;}
+  .doc-check li::before{content:'☐';position:absolute;left:0;color:var(--teal);font-size:14px;}
+  .doc-firmas{display:grid;grid-template-columns:1fr 1fr;gap:40px;margin-top:44px;}
+  .doc-firma{text-align:center;font-size:11.5px;}
+  .doc-firma .line{border-top:1px solid #333;margin-bottom:5px;padding-top:5px;}
+  .empty{color:#94a3b8;font-style:italic;}
+  @media print{
+    .topbar,.panel-izq{display:none!important;}
+    .wrap{grid-template-columns:1fr;display:block;}
+    .panel-der{padding:0;max-height:none;overflow:visible;}
+    .doc-sheet{box-shadow:none;max-width:none;padding:14px;border-radius:0;}
+    body{background:#fff;}
+  }
+  @media(max-width:860px){.wrap{grid-template-columns:1fr;}.panel-izq{max-height:none;}}
+</style>
+</head>
+<body>
+<div class="topbar">
+  <h1>🪑 Ley Silla — Análisis de bipedestación</h1>
+  <div class="actions">
+    <a class="btn btn-ghost" href="auditor-virtual.html">← Auditor Virtual</a>
+    <button class="btn btn-primary" onclick="window.print()">Imprimir / PDF</button>
+  </div>
+</div>
+
+<div class="wrap">
+  <!-- FORM -->
+  <div class="panel-izq">
+    <details class="guia" open>
+      <summary>🧭 ¿Qué exige la Ley Silla?</summary>
+      <ul>
+        <li>Reforma al <strong>art. 132, fracc. V de la LFT</strong>: proveer asientos o sillas con respaldo suficientes en servicios, comercio y análogos.</li>
+        <li>Vigente desde el <strong>17 de junio de 2025</strong>; el plazo para adecuar el Reglamento Interior venció el <strong>14 de diciembre de 2025</strong>.</li>
+        <li>Obliga a: proporcionar sillas con respaldo, realizar un <strong>análisis de riesgo por bipedestación</strong>, incorporar cláusulas al RIT y documentarlo ante la Comisión de Seguridad e Higiene.</li>
+      </ul>
+      <div class="warn">En 2026 la STPS incorporó su verificación al Programa Anual de Inspección. Sanción: <strong>250 a 2,500 UMA por trabajador afectado</strong> (art. 994 LFT). Este documento no es "3 fotos": es el análisis documental que exige la norma.</div>
+    </details>
+
+    <div class="section-label">Datos de la empresa</div>
+    <div id="membrete-panel"></div>
+    <div class="field"><label>Ciudad y estado</label><input id="ciudad" oninput="render()" placeholder="Guadalajara, Jalisco"></div>
+    <div class="field-row">
+      <div class="field"><label>Fecha del análisis</label><input type="date" id="fecha" oninput="render()"></div>
+      <div class="field"><label>Centro de trabajo</label><input id="centro" oninput="render()" placeholder="Sucursal / planta"></div>
+    </div>
+
+    <div class="section-label">Puestos analizados</div>
+    <div id="puestos"></div>
+    <button class="add-btn" onclick="addPuesto()">+ Agregar puesto</button>
+
+    <div class="section-label">Descansos y responsables</div>
+    <div class="field"><label>Pausas / descansos acordados con el personal</label><textarea id="pausas" oninput="render()" placeholder="Ej. Pausa de 5 minutos sentado cada 2 horas, acordada con el personal de mostrador."></textarea><div class="hint">La ley obliga a acordar las pausas con el personal, no imponerlas unilateralmente.</div></div>
+    <div class="field"><label>Responsable del análisis</label><input id="responsable" oninput="render()" placeholder="Nombre y puesto"></div>
+    <div class="field"><label>Representante de la Comisión de Seguridad e Higiene</label><input id="csh" oninput="render()" placeholder="Nombre del integrante de la CSH"></div>
+  </div>
+
+  <!-- DOC -->
+  <div class="panel-der">
+    <div class="doc-sheet" id="doc"></div>
+  </div>
+</div>
+
+<script>
+// Datos desde el portal
+const params = new URLSearchParams(location.search);
+const empresaURL = params.get('empresa') || '';
+const rfcURL = params.get('rfc') || '';
+
+// Datos de empresa para el membrete (membrete.js expone generarMembrete).
+document.getElementById('membrete-panel').innerHTML =
+  '<div class="field"><label>Razón social</label><input id="empresa" oninput="render()" placeholder="Comercializadora Norte, S.A. de C.V."></div>'+
+  '<div class="field"><label>RFC</label><input id="mrfc" oninput="render()" placeholder="EMP010101AAA"></div>'+
+  '<div class="field"><label>Domicilio (opcional)</label><input id="domic" oninput="render()" placeholder="Calle, No., Colonia, Ciudad, C.P."></div>';
+document.getElementById('empresa').value = empresaURL;
+document.getElementById('mrfc').value = rfcURL;
+
+const MEDIDAS = {
+  'silla_puesto':'Se proporciona silla con respaldo en el puesto para ejecutar la función sentado.',
+  'silla_cercana':'La tarea impide colocar silla en el puesto; se proporciona silla con respaldo en área cercana y accesible para descanso periódico.',
+  'pausas':'Se otorgan pausas para sentarse periódicamente, acordadas con el personal.',
+  'mixta':'Combinación: silla en el puesto y pausas periódicas acordadas con el personal.'
+};
+
+let puestos = [];
+function addPuesto(p){
+  puestos.push(p||{nombre:'',naturaleza:'de_pie',tiempo:'',medida:'silla_puesto',sillas:''});
+  pintarPuestos();
+}
+function rmPuesto(i){ puestos.splice(i,1); pintarPuestos(); }
+function pintarPuestos(){
+  const c=document.getElementById('puestos');
+  c.innerHTML = puestos.map((p,i)=>`
+    <div class="puesto-card">
+      <span class="rm" onclick="rmPuesto(${i})">✕ quitar</span>
+      <div class="field"><label>Puesto</label><input value="${p.nombre.replace(/"/g,'&quot;')}" oninput="upd(${i},'nombre',this.value)" placeholder="Cajero, recepcionista, vigilante..."></div>
+      <div class="field-row">
+        <div class="field"><label>Naturaleza</label>
+          <select onchange="upd(${i},'naturaleza',this.value)">
+            <option value="de_pie" ${p.naturaleza==='de_pie'?'selected':''}>Requiere estar de pie</option>
+            <option value="puede_sentado" ${p.naturaleza==='puede_sentado'?'selected':''}>Puede hacerse sentado</option>
+          </select>
+        </div>
+        <div class="field"><label>Tiempo de pie / jornada</label><input value="${p.tiempo.replace(/"/g,'&quot;')}" oninput="upd(${i},'tiempo',this.value)" placeholder="Ej. 6 horas"></div>
+      </div>
+      <div class="field"><label>Medida adoptada</label>
+        <select onchange="upd(${i},'medida',this.value)">
+          <option value="silla_puesto" ${p.medida==='silla_puesto'?'selected':''}>Silla con respaldo en el puesto</option>
+          <option value="silla_cercana" ${p.medida==='silla_cercana'?'selected':''}>Silla con respaldo en área cercana</option>
+          <option value="pausas" ${p.medida==='pausas'?'selected':''}>Pausas para sentarse</option>
+          <option value="mixta" ${p.medida==='mixta'?'selected':''}>Silla + pausas</option>
+        </select>
+      </div>
+      <div class="field"><label>N.º de sillas proporcionadas</label><input value="${p.sillas.replace(/"/g,'&quot;')}" oninput="upd(${i},'sillas',this.value)" placeholder="Ej. 4"></div>
+    </div>`).join('');
+  render();
+}
+function upd(i,k,v){ puestos[i][k]=v; render(); }
+function v(id){ const e=document.getElementById(id); return e?e.value.trim():''; }
+function fmtFecha(f){ if(!f)return ''; const d=new Date(f+'T12:00:00'); return d.toLocaleDateString('es-MX',{day:'numeric',month:'long',year:'numeric'}); }
+function b(val,ph){ return val?val:`<span class="empty">[${ph}]</span>`; }
+
+function render(){
+  const empresa=v('empresa'),rfc=v('mrfc'),domic=v('domic'),ciudad=v('ciudad'),fecha=v('fecha'),centro=v('centro'),
+        pausas=v('pausas'),responsable=v('responsable'),csh=v('csh');
+  const memb = window.generarMembrete ? window.generarMembrete({empresa,rfc,domicilio:domic}) : '';
+
+  const filas = puestos.length ? puestos.map(p=>`<tr>
+      <td>${p.nombre||'<span class="empty">[puesto]</span>'}</td>
+      <td>${p.naturaleza==='de_pie'?'Requiere bipedestación':'Puede ejecutarse sentado'}</td>
+      <td>${p.tiempo||'—'}</td>
+      <td>${MEDIDAS[p.medida]||''}${p.sillas?` (${p.sillas} sillas)`:''}</td>
+    </tr>`).join('') : `<tr><td colspan="4" class="empty">Agregue al menos un puesto para documentar el análisis.</td></tr>`;
+
+  document.getElementById('doc').innerHTML = `
+    ${memb}
+    <div class="doc-title">Análisis de riesgo por bipedestación y medidas de cumplimiento — Ley Silla</div>
+    <div class="doc-sub">Reforma al artículo 132, fracción V, de la Ley Federal del Trabajo · vigente desde el 17 de junio de 2025</div>
+
+    <div class="doc-p">En ${b(ciudad,'ciudad y estado')}, a ${b(fmtFecha(fecha),'fecha')}, ${b(empresa,'razón social')}${rfc?` (RFC ${rfc})`:''}, en cumplimiento de la reforma a la Ley Federal del Trabajo conocida como "Ley Silla", documenta el presente análisis de los puestos que implican permanecer de pie y las medidas adoptadas para garantizar el derecho de las personas trabajadoras a contar con asientos con respaldo${centro?`, respecto del centro de trabajo ${centro}`:''}.</div>
+
+    <div class="doc-clause-title">I. — Fundamento y obligaciones</div>
+    <div class="doc-p">El artículo 132, fracción V, de la LFT obliga al patrón a proveer el número suficiente de asientos o sillas con respaldo a disposición de las personas trabajadoras en los sectores de servicios, comercio y centros de trabajo análogos, ya sea para ejecutar sus funciones sentadas o para descansar de forma periódica cuando el puesto exija estar de pie. La empresa realiza el presente análisis, adopta las medidas descritas e incorpora las cláusulas correspondientes a su Reglamento Interior de Trabajo.</div>
+
+    <div class="doc-clause-title">II. — Análisis de puestos y medidas adoptadas</div>
+    <table class="doc-tab">
+      <thead><tr><th>Puesto</th><th>Naturaleza</th><th>Tiempo de pie</th><th>Medida adoptada</th></tr></thead>
+      <tbody>${filas}</tbody>
+    </table>
+
+    <div class="doc-clause-title">III. — Descansos acordados</div>
+    <div class="doc-p">${pausas || '<span class="empty">[describa las pausas o descansos acordados con el personal]</span>'}</div>
+
+    <div class="doc-clause-title">IV. — Cláusula sugerida para el Reglamento Interior de Trabajo</div>
+    <div class="doc-clause">"La empresa proporcionará asientos o sillas con respaldo en número suficiente para las personas trabajadoras cuyas funciones puedan realizarse sentadas y para el descanso periódico de quienes deban permanecer de pie. Se prohíbe impedir que el personal se siente cuando la naturaleza del trabajo lo permita. Las pausas y su duración se acordarán con el personal y no podrán suprimirse unilateralmente, conforme al artículo 132, fracción V, de la Ley Federal del Trabajo."</div>
+
+    <div class="doc-clause-title">V. — Registro ante la Comisión de Seguridad e Higiene y evidencia</div>
+    <ul class="doc-check">
+      <li>Sillas con respaldo suficientes, disponibles en puestos y/o áreas de descanso.</li>
+      <li>Cláusula incorporada al Reglamento Interior de Trabajo y difundida al personal.</li>
+      <li>Este análisis presentado y registrado ante la Comisión de Seguridad e Higiene.</li>
+      <li>Evidencia fotográfica de asientos y áreas de descanso, archivada en el expediente.</li>
+      <li>Acuerdo de pausas firmado o documentado con el personal.</li>
+    </ul>
+
+    <div class="doc-firmas">
+      <div class="doc-firma"><div class="line">${responsable||'&nbsp;'}</div>Responsable del análisis</div>
+      <div class="doc-firma"><div class="line">${csh||'&nbsp;'}</div>Comisión de Seguridad e Higiene</div>
+    </div>`;
+}
+
+// init
+document.getElementById('fecha').value = new Date().toISOString().split('T')[0];
+addPuesto({nombre:'',naturaleza:'de_pie',tiempo:'',medida:'silla_puesto',sillas:''});
+render();
+</script>
+</body>
+</html>

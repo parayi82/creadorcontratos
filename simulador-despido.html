@@ -1,0 +1,185 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Simulador de exposición por despido · ClickLaboral.mx</title>
+<style>
+  *{margin:0;padding:0;box-sizing:border-box;}
+  :root{--navy:#0f2640;--navy2:#1a3a5c;--teal:#0d9488;--teal-d:#0b5f57;--ink:#1f2937;--ink2:#475569;--ink3:#64748b;--border:#e2e8f0;--bg:#f1f4f8;--amber:#b45309;}
+  body{font-family:'Segoe UI',system-ui,-apple-system,sans-serif;background:var(--bg);color:var(--ink);line-height:1.5;}
+  .topbar{background:var(--navy);color:#fff;padding:14px 22px;display:flex;align-items:center;justify-content:space-between;gap:12px;position:sticky;top:0;z-index:20;}
+  .topbar h1{font-size:16px;font-weight:700;display:flex;align-items:center;gap:9px;}
+  .btn{padding:9px 14px;border-radius:8px;border:none;font-size:12.5px;font-weight:600;cursor:pointer;text-decoration:none;display:inline-block;}
+  .btn-ghost{background:rgba(255,255,255,.12);color:#fff;}
+  .btn-ghost:hover{background:rgba(255,255,255,.2);}
+  .btn-teal{background:var(--teal);color:#fff;}.btn-teal:hover{background:var(--teal-d);}
+  .wrap{max-width:1000px;margin:0 auto;padding:24px 22px 60px;}
+  .aviso{background:#fff7ed;border:1px solid #fed7aa;border-left:3px solid var(--amber);border-radius:9px;padding:13px 15px;margin-bottom:20px;font-size:12.5px;color:#7c3a0a;}
+  .aviso strong{color:#7c2d12;}
+  .cfg{display:flex;gap:14px;flex-wrap:wrap;align-items:flex-end;background:#fff;border:1px solid var(--border);border-radius:10px;padding:14px 16px;margin-bottom:18px;}
+  .cfg .f{display:flex;flex-direction:column;gap:4px;}
+  .cfg label{font-size:11px;font-weight:600;color:var(--navy2);}
+  .cfg input,.cfg select{padding:8px 10px;border:1.5px solid var(--border);border-radius:7px;font-size:13px;}
+  table.t{width:100%;border-collapse:collapse;background:#fff;border:1px solid var(--border);border-radius:10px;overflow:hidden;}
+  table.t th,table.t td{padding:10px 12px;text-align:left;font-size:12.5px;border-bottom:1px solid var(--border);}
+  table.t th{background:#eef2f7;color:var(--navy);font-weight:700;font-size:11px;text-transform:uppercase;letter-spacing:.3px;}
+  table.t td input{width:100%;padding:7px 8px;border:1px solid var(--border);border-radius:6px;font-size:12.5px;}
+  table.t td.num{text-align:right;font-variant-numeric:tabular-nums;font-weight:600;}
+  .liq{color:var(--navy);}.exp{color:#b91c1c;}
+  .rm{color:#c0392b;cursor:pointer;font-weight:700;}
+  .desglose{font-size:11px;color:var(--ink3);cursor:pointer;text-decoration:underline;}
+  .add-btn{background:#eef6f4;border:1px dashed var(--teal);color:var(--teal-d);border-radius:8px;padding:10px;width:100%;font-size:12.5px;font-weight:600;cursor:pointer;margin-top:12px;}
+  .totales{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-top:20px;}
+  .tot-card{background:#fff;border:1px solid var(--border);border-radius:12px;padding:18px 20px;}
+  .tot-card.exp-card{border-color:#fecaca;background:#fff5f5;}
+  .tot-card .lbl{font-size:11.5px;color:var(--ink3);font-weight:600;text-transform:uppercase;letter-spacing:.3px;}
+  .tot-card .val{font-size:30px;font-weight:800;color:var(--navy);margin:4px 0 2px;font-variant-numeric:tabular-nums;}
+  .tot-card.exp-card .val{color:#b91c1c;}
+  .tot-card .sub{font-size:11.5px;color:var(--ink2);}
+  .desglose-box{background:#f8fafc;border:1px solid var(--border);border-radius:8px;padding:10px 12px;margin:6px 0;font-size:11.5px;color:var(--ink2);display:none;}
+  .desglose-box div{display:flex;justify-content:space-between;padding:2px 0;}
+  @media(max-width:760px){.totales{grid-template-columns:1fr;}table.t{font-size:11px;}}
+</style>
+</head>
+<body>
+<div class="topbar">
+  <h1>⚖️ Exposición por despido</h1>
+  <div style="display:flex;gap:8px;">
+    <a class="btn btn-ghost" href="portal-cliente.html">← Portal</a>
+    <button class="btn btn-teal" onclick="window.print()">Imprimir / PDF</button>
+  </div>
+</div>
+
+<div class="wrap">
+  <div class="aviso">
+    <strong>Esto es una provisión de riesgo, no una recomendación de despedir.</strong> Muestra cuánto tendría que provisionar la empresa por la contingencia de un despido <strong>injustificado</strong> (sin causa del art. 47 LFT). Despedir con causa justificada y bien documentada reduce drásticamente esta exposición. Cifras estimadas; el monto real depende del salario diario integrado ante el IMSS, prestaciones superiores a la ley y el resultado de un juicio.
+  </div>
+
+  <div class="cfg">
+    <div class="f"><label>Zona de salario mínimo (tope de prima de antigüedad)</label>
+      <select id="zona" onchange="recalc()">
+        <option value="315.04">General — $315.04/día (2026)</option>
+        <option value="440.87">Frontera Norte — $440.87/día (2026)</option>
+      </select>
+    </div>
+    <div class="f"><label>Días de aguinaldo (por política)</label><input type="number" id="aguinaldo" value="15" min="15" oninput="recalc()"></div>
+  </div>
+
+  <table class="t">
+    <thead><tr><th style="width:22%">Trabajador</th><th style="width:16%">Salario mensual</th><th style="width:16%">Fecha de ingreso</th><th style="width:9%">Antig.</th><th style="width:16%">Liquidación</th><th style="width:16%">Exposición en juicio</th><th></th></tr></thead>
+    <tbody id="filas"></tbody>
+  </table>
+  <button class="add-btn" onclick="addRow()">+ Agregar trabajador</button>
+
+  <div class="totales">
+    <div class="tot-card">
+      <div class="lbl">Provisión por liquidación</div>
+      <div class="val" id="tot-liq">$0</div>
+      <div class="sub">Suma de 3 meses + 20 días/año + prima de antigüedad + partes proporcionales.</div>
+    </div>
+    <div class="tot-card exp-card">
+      <div class="lbl">Exposición máxima en juicio</div>
+      <div class="val" id="tot-exp">$0</div>
+      <div class="sub">Liquidación + hasta 12 meses de salarios vencidos (art. 48 LFT) si se litiga y se pierde.</div>
+    </div>
+  </div>
+
+  <p style="font-size:11px;color:var(--ink3);margin-top:18px;line-height:1.6;">
+    Metodología: salario diario = mensual ÷ 30. Salario diario integrado = SD × (1 + (aguinaldo + vacaciones×25%) ÷ 365). Indemnización constitucional = 90 días de SDI (art. 48). 20 días por año de SDI (art. 50 fr. II). Prima de antigüedad = 12 días por año, con salario topado a 2× salario mínimo (art. 162). Vacaciones conforme a la reforma vigente (12 días el primer año, escalando). Salarios vencidos: hasta 12 meses de SDI (art. 48, reforma 2012). No sustituye el cálculo de su abogado.
+  </p>
+</div>
+
+<script>
+const params=new URLSearchParams(location.search);
+let rows=[];
+function fmt(n){ return '$'+Math.round(n).toLocaleString('es-MX'); }
+function vacDias(anios){ const y=Math.max(1,Math.floor(anios)); if(y<=5) return 10+2*y; return 20+2*Math.ceil((y-5)/5); }
+
+function calcTrabajador(salarioMensual, fechaIngreso){
+  const SM=parseFloat(document.getElementById('zona').value)||315.04;
+  const aguinaldoDias=parseFloat(document.getElementById('aguinaldo').value)||15;
+  if(!salarioMensual || !fechaIngreso) return null;
+  const hoy=new Date(); const ing=new Date(fechaIngreso+'T12:00:00'); const day=86400000;
+  if(isNaN(ing)||ing>hoy) return null;
+  const anios=(hoy-ing)/(365.25*day);
+  const SD=salarioMensual/30;
+  const vac=vacDias(anios);
+  const factor=1+(aguinaldoDias+vac*0.25)/365;
+  const SDI=SD*factor;
+  const indem3=90*SDI;
+  const veinte=20*anios*SDI;
+  const primaAnt=12*anios*Math.min(SD,2*SM);
+  const inicioAnio=new Date(hoy.getFullYear(),0,1);
+  const baseAgui=ing>inicioAnio?ing:inicioAnio;
+  const diasAnio=Math.max(0,(hoy-baseAgui)/day);
+  const aguiProp=aguinaldoDias*(diasAnio/365)*SD;
+  let aniv=new Date(hoy.getFullYear(),ing.getMonth(),ing.getDate());
+  if(aniv>hoy) aniv.setFullYear(aniv.getFullYear()-1);
+  const diasAniv=Math.max(0,(hoy-aniv)/day);
+  const vacProp=vac*(diasAniv/365)*SD;
+  const primaVacProp=0.25*vacProp;
+  const liquidacion=indem3+veinte+primaAnt+aguiProp+vacProp+primaVacProp;
+  const salariosCaidos=SDI*30*12;
+  return {anios,SD,SDI,vac,indem3,veinte,primaAnt,aguiProp,vacProp,primaVacProp,liquidacion,salariosCaidos,exposicion:liquidacion+salariosCaidos};
+}
+
+function addRow(d){ rows.push(d||{nombre:'',salario:'',fecha:''}); pintar(); }
+function rmRow(i){ rows.splice(i,1); pintar(); }
+function toggleDesg(i){ const el=document.getElementById('desg-'+i); if(el) el.style.display=el.style.display==='block'?'none':'block'; }
+
+function desgloseHTML(i,c){
+  if(!c) return '';
+  return '<div class="desglose-box" id="desg-'+i+'">'+
+    '<div><span>Indemnización 3 meses (90 días SDI)</span><span>'+fmt(c.indem3)+'</span></div>'+
+    '<div><span>20 días por año ('+c.anios.toFixed(1)+' años)</span><span>'+fmt(c.veinte)+'</span></div>'+
+    '<div><span>Prima de antigüedad (12 días/año, tope 2×SM)</span><span>'+fmt(c.primaAnt)+'</span></div>'+
+    '<div><span>Aguinaldo proporcional</span><span>'+fmt(c.aguiProp)+'</span></div>'+
+    '<div><span>Vacaciones proporcionales ('+c.vac+' días/año)</span><span>'+fmt(c.vacProp)+'</span></div>'+
+    '<div><span>Prima vacacional proporcional (25%)</span><span>'+fmt(c.primaVacProp)+'</span></div>'+
+    '<div style="border-top:1px solid #cbd5e1;margin-top:3px;padding-top:3px;font-weight:700;"><span>Liquidación</span><span>'+fmt(c.liquidacion)+'</span></div>'+
+    '<div style="color:#b91c1c;"><span>+ Salarios vencidos (hasta 12 meses)</span><span>'+fmt(c.salariosCaidos)+'</span></div>'+
+  '</div>';
+}
+
+// Actualiza SOLO las celdas calculadas de una fila (sin recrear los inputs → no pierde foco)
+function actualizarFila(i){
+  const r=rows[i]; const c=calcTrabajador(parseFloat(r.salario), r.fecha);
+  const a=document.getElementById('antig-'+i), l=document.getElementById('liq-'+i), e=document.getElementById('exp-'+i), d=document.getElementById('desgcell-'+i);
+  if(a) a.textContent=c?c.anios.toFixed(1)+' a':'—';
+  if(l) l.textContent=c?fmt(c.liquidacion):'—';
+  if(e) e.innerHTML=c?(fmt(c.exposicion)+' <br><span class="desglose" onclick="toggleDesg('+i+')">desglose</span>'):'—';
+  if(d) d.innerHTML=desgloseHTML(i,c);
+  recalcTotales();
+}
+function upd(i,k,val){ rows[i][k]=val; actualizarFila(i); }
+
+function pintar(){
+  document.getElementById('filas').innerHTML=rows.map((r,i)=>{
+    const c=calcTrabajador(parseFloat(r.salario), r.fecha);
+    return '<tr>'+
+      '<td><input value="'+(r.nombre||'').replace(/"/g,'&quot;')+'" oninput="upd('+i+',\'nombre\',this.value)" placeholder="Nombre (opcional)"></td>'+
+      '<td><input type="number" value="'+r.salario+'" oninput="upd('+i+',\'salario\',this.value)" placeholder="15000"></td>'+
+      '<td><input type="date" value="'+r.fecha+'" oninput="upd('+i+',\'fecha\',this.value)"></td>'+
+      '<td id="antig-'+i+'">'+(c?c.anios.toFixed(1)+' a':'—')+'</td>'+
+      '<td class="num liq" id="liq-'+i+'">'+(c?fmt(c.liquidacion):'—')+'</td>'+
+      '<td class="num exp" id="exp-'+i+'">'+(c?(fmt(c.exposicion)+' <br><span class="desglose" onclick="toggleDesg('+i+')">desglose</span>'):'—')+'</td>'+
+      '<td><span class="rm" onclick="rmRow('+i+')">✕</span></td>'+
+    '</tr>'+
+    '<tr><td colspan="7" id="desgcell-'+i+'" style="padding:0 12px;border:none;">'+desgloseHTML(i,c)+'</td></tr>';
+  }).join('');
+  recalcTotales();
+}
+// zona/aguinaldo afectan a todos → re-render completo (no hay foco en inputs de fila)
+function recalc(){ pintar(); }
+function recalcTotales(){
+  let tl=0, te=0;
+  rows.forEach(r=>{ const c=calcTrabajador(parseFloat(r.salario), r.fecha); if(c){ tl+=c.liquidacion; te+=c.exposicion; } });
+  document.getElementById('tot-liq').textContent=fmt(tl);
+  document.getElementById('tot-exp').textContent=fmt(te);
+}
+
+addRow({nombre:params.get('trabajador')||'', salario:params.get('salario')||'', fecha:params.get('ingreso')||''});
+</script>
+</body>
+</html>

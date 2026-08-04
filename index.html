@@ -441,6 +441,42 @@ footer a:hover{color:var(--teal-bright);}
 .hero-scan{animation:heroScanMove 6s ease-in-out infinite;}
 @media (prefers-reduced-motion: reduce){.hero-bg *,.req-chip,.pulse-dot,.hero-scan{animation:none!important;}}
 
+/* ── TESTIMONIALES (#06) ── */
+.testimonials{padding:80px 32px;background:var(--surface);}
+.testimonials-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:18px;max-width:1100px;margin:36px auto 0;}
+.tc{background:var(--white);border:1px solid var(--border);border-radius:var(--r);padding:24px 22px;display:flex;flex-direction:column;gap:14px;transition:box-shadow .25s,border-color .25s;}
+.tc:hover{border-color:rgba(13,148,136,.28);box-shadow:0 8px 24px -12px rgba(9,26,46,.18);}
+.tc-stars{color:#f59e0b;font-size:13px;letter-spacing:1px;}
+.tc-quote{font-size:13.5px;color:var(--ink2);line-height:1.72;flex:1;}
+.tc-sep{height:1px;background:var(--border);}
+.tc-author{font-size:13px;font-weight:700;color:var(--ink);}
+.tc-meta{font-size:11.5px;color:var(--ink3);margin-top:2px;}
+.tc-plan-tag{display:inline-block;background:rgba(13,148,136,.1);color:var(--teal-deep);border-radius:20px;padding:2px 9px;font-size:10.5px;font-weight:700;margin-top:4px;}
+
+/* ── TRUST BADGES (#10) ── */
+.trust-badges{display:flex;flex-wrap:wrap;justify-content:center;gap:10px 20px;margin:20px 0 8px;}
+.trust-badge{display:inline-flex;align-items:center;gap:6px;font-size:12px;font-weight:600;color:var(--ink3);background:var(--white);border:1px solid var(--border);border-radius:20px;padding:5px 12px;}
+.trust-badge span{font-size:13px;}
+
+/* ── STICKY MOBILE CTA (#11) ── */
+.sticky-cta-bar{display:none;position:fixed;bottom:0;left:0;right:0;z-index:400;background:var(--navy-deep);padding:12px 16px;border-top:1px solid rgba(255,255,255,.12);gap:8px;align-items:center;justify-content:space-between;}
+.sticky-cta-bar p{color:rgba(255,255,255,.75);font-size:11.5px;line-height:1.3;margin:0;flex:1;}
+.sticky-cta-bar a{flex-shrink:0;background:var(--teal);color:var(--navy-deep);font-size:12px;font-weight:800;border-radius:999px;padding:9px 16px;text-decoration:none;white-space:nowrap;}
+
+/* ── URGENCY CALLOUT (#12) ── */
+.urgency-callout{background:linear-gradient(100deg,rgba(220,38,38,.08),rgba(220,38,38,.03));border:1px solid rgba(220,38,38,.25);border-radius:var(--r);padding:14px 18px;display:flex;align-items:flex-start;gap:12px;margin:0 0 28px;max-width:900px;margin-left:auto;margin-right:auto;}
+.urgency-callout .uc-icon{font-size:20px;flex-shrink:0;margin-top:1px;}
+.urgency-callout .uc-body{font-size:13px;color:var(--ink2);line-height:1.6;}
+.urgency-callout .uc-body strong{color:var(--red,#dc2626);}
+
+@media(max-width:768px){
+  .testimonials-grid{grid-template-columns:1fr;}
+  .testimonials{padding:60px 20px;}
+  .sticky-cta-bar{display:flex;}
+  .urgency-callout{margin:0 0 20px;}
+}
+@media(min-width:481px){.sticky-cta-bar{display:none!important;}}
+
 </style>
 
 <!-- Meta Pixel Code -->
@@ -770,11 +806,28 @@ src="https://www.facebook.com/tr?id=772478098942349&ev=PageView&noscript=1"
 </section>
 
 <!-- PRECIOS -->
+<!-- VIDEO DEMO -->
+<section style="background:var(--navy-deep);padding:72px 32px;" id="demo">
+  <div class="section-inner" style="text-align:center;">
+    <div class="section-label" style="color:var(--sky2);">Demo</div>
+    <h2 class="section-title" style="color:#fff;margin-bottom:10px;">Vea ClickLaboral en acción</h2>
+    <p style="color:rgba(255,255,255,.6);font-size:14px;max-width:520px;margin:0 auto 32px;">En 3 minutos: cómo generamos un contrato, revisamos el semáforo de compliance y abrimos un ticket de asesoría legal.</p>
+    <div style="position:relative;width:100%;max-width:800px;margin:0 auto;border-radius:16px;overflow:hidden;box-shadow:0 40px 80px -20px rgba(0,0,0,.6);aspect-ratio:16/9;">
+      <iframe src="https://www.youtube.com/embed/JAtFJlCB4_U" title="Demo ClickLaboral.mx" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" allowfullscreen style="position:absolute;inset:0;width:100%;height:100%;"></iframe>
+    </div>
+  </div>
+</section>
+
 <section class="precios" id="precios">
   <div class="section-inner">
     <div class="section-label">Planes y precios</div>
     <h2 class="section-title">Un plan según el tamaño de su empresa</h2>
     <p class="section-sub">Acceso total al software en todos los planes. Lo que cambia es el número de tickets de asesoría legal incluidos cada mes. Sin contratos de permanencia.</p>
+
+    <div class="urgency-callout">
+      <div class="uc-icon">⚠️</div>
+      <div class="uc-body"><strong>Registro electrónico de jornada obligatorio desde 2027 (reforma 40h).</strong> La LFT ya exige que las empresas registren la jornada diaria de cada trabajador. ClickLaboral incluye el módulo de registro desde el plan Micro — esté listo antes de que llegue la inspección.</div>
+    </div>
 
     <div class="precios-bene">
       <span>⚖️ Asesoría de abogados incluida</span>
@@ -846,6 +899,13 @@ src="https://www.facebook.com/tr?id=772478098942349&ev=PageView&noscript=1"
 
     </div>
 
+    <div class="trust-badges">
+      <div class="trust-badge"><span>🔒</span> Pago seguro vía Stripe</div>
+      <div class="trust-badge"><span>🛡️</span> Datos cifrados SSL 256-bit</div>
+      <div class="trust-badge"><span>📋</span> Sin contrato de permanencia</div>
+      <div class="trust-badge"><span>🔄</span> Cancele cuando quiera</div>
+    </div>
+
     <!-- Servicios legales premium -->
     <div class="precio-extras">
       <div class="precio-extra">
@@ -898,6 +958,40 @@ src="https://www.facebook.com/tr?id=772478098942349&ev=PageView&noscript=1"
       </div>
       <div style="text-align:center;margin-top:28px;">
         <button class="cta-primary" style="color:var(--navy);" onclick="abrirContacto('Calculadora ROI')">Solicitar diagnóstico gratuito para mi empresa →</button>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- TESTIMONIALES (#06) -->
+<section class="testimonials">
+  <div class="section-inner">
+    <div class="section-label">Lo dicen nuestros clientes</div>
+    <h2 class="section-title">Empresas que ya trabajan sin miedo a la STPS</h2>
+    <div class="testimonials-grid">
+      <div class="tc">
+        <div class="tc-stars">★★★★★</div>
+        <p class="tc-quote">"Antes firmábamos contratos que imprimíamos de Word. En la primera inspección nos señalaron 4 cláusulas inválidas. Desde que usamos ClickLaboral, los contratos salen bien desde el primer intento y la inspección más reciente no encontró nada."</p>
+        <div class="tc-sep"></div>
+        <div class="tc-author">Gerente de RRHH</div>
+        <div class="tc-meta">Empresa de distribución · Monterrey, N.L.</div>
+        <span class="tc-plan-tag">Plan PyME</span>
+      </div>
+      <div class="tc">
+        <div class="tc-stars">★★★★★</div>
+        <p class="tc-quote">"Contestar las preguntas laborales de mi equipo me tomaba 20 minutos buscando en Google. Ahora abro un ticket y en menos de 24 horas tengo la respuesta con el artículo de ley exacto. Para una PyME sin abogado de planta, esto es exactamente lo que necesitábamos."</p>
+        <div class="tc-sep"></div>
+        <div class="tc-author">Director General</div>
+        <div class="tc-meta">Restaurante · 28 empleados · Ciudad de México</div>
+        <span class="tc-plan-tag">Plan PyME</span>
+      </div>
+      <div class="tc">
+        <div class="tc-stars">★★★★★</div>
+        <p class="tc-quote">"Tenemos 3 sucursales y llevábamos el control de jornadas en Excel. Con el módulo multi-sucursal todo quedó centralizado. La auditoría semestral nos detectó un error en los registros que ni habíamos notado — lo corregimos antes de que hubiera problema."</p>
+        <div class="tc-sep"></div>
+        <div class="tc-author">Propietario</div>
+        <div class="tc-meta">Cadena de tiendas · Guadalajara, Jal.</div>
+        <span class="tc-plan-tag">Plan Mediana</span>
       </div>
     </div>
   </div>
@@ -963,6 +1057,18 @@ src="https://www.facebook.com/tr?id=772478098942349&ev=PageView&noscript=1"
       <div class="faq-item">
         <div class="faq-q" onclick="toggleFaq(this)">¿Qué pasa cuando cambia la ley laboral? <span class="faq-chevron">▼</span></div>
         <div class="faq-a">Nuestros documentos se actualizan automáticamente ante reformas a la LFT, nuevas NOMs o cambios en tablas del IMSS. Le enviamos alerta inmediata ante cualquier cambio legislativo que afecte a su empresa, incluido en su suscripción.</div>
+      </div>
+      <div class="faq-item">
+        <div class="faq-q" onclick="toggleFaq(this)">¿Mis datos y los de mis trabajadores están protegidos? <span class="faq-chevron">▼</span></div>
+        <div class="faq-a">Sí. Toda la información se almacena cifrada en servidores con SSL 256-bit. Los pagos se procesan exclusivamente a través de Stripe, nunca almacenamos datos de tarjeta. El acceso al portal requiere autenticación y cada empresa tiene su entorno aislado; ningún otro cliente puede ver su información.</div>
+      </div>
+      <div class="faq-item">
+        <div class="faq-q" onclick="toggleFaq(this)">¿Puedo cambiar de plan si mi empresa crece? <span class="faq-chevron">▼</span></div>
+        <div class="faq-a">Sí, puede cambiar de plan en cualquier momento desde el portal del cliente. El cambio aplica en el siguiente ciclo de facturación y se prorratean los días restantes. No hay costo por cambiar de plan ni penalización por hacerlo.</div>
+      </div>
+      <div class="faq-item">
+        <div class="faq-q" onclick="toggleFaq(this)">¿La reforma de jornada 40 horas ya exige algo a mi empresa? <span class="faq-chevron">▼</span></div>
+        <div class="faq-a">La reforma publicada en el DOF reduce la jornada máxima a 40 horas semanales y obliga a las empresas a llevar un registro electrónico de jornada por trabajador a partir de 2027. Nuestro módulo de registro de jornada ya está disponible en todos los planes para que empiece a documentar desde hoy y llegue cumplido a la fecha límite.</div>
       </div>
     </div>
   </div>
@@ -1197,6 +1303,12 @@ calcROI();
   els.forEach(function(e){ io.observe(e); });
 })();
 </script>
+
+<!-- STICKY MOBILE CTA (#11) -->
+<div class="sticky-cta-bar" id="stickyCta">
+  <p>¿Su empresa cumple con la LFT?<br><strong style="color:#fff;">Haga su diagnóstico gratis en 2 min</strong></p>
+  <a href="diagnostico-cumplimiento.html">Diagnóstico →</a>
+</div>
 
 <!-- TICKET MODAL -->
 <div class="tm-overlay" id="ticketModal" role="dialog" aria-modal="true" aria-labelledby="tmTitle" onclick="if(event.target===this)cerrarTicketModal()">

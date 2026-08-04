@@ -204,10 +204,13 @@ nav{position:sticky;top:0;z-index:100;background:rgba(15,38,64,.97);backdrop-fil
     <div class="cta-final">
       <h3>¿Quiere cerrar estas brechas sin complicarse?</h3>
       <p>Agende una asesoría diagnóstica gratuita de 15 minutos y le decimos exactamente por dónde empezar.</p>
+      <div id="plan-rec-box" style="background:rgba(255,255,255,.12);border:1px solid rgba(255,255,255,.25);border-radius:12px;padding:14px 18px;margin:16px 0;display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;">
+        <div style="font-size:13px;color:rgba(255,255,255,.85);">Basado en su resultado, le recomendamos: <strong id="plan-rec-label" style="color:#fff;display:block;font-size:15px;margin-top:2px;"></strong></div>
+        <a id="plan-rec-btn" href="#" style="background:#fff;color:#0f2640;font-size:13px;font-weight:800;border-radius:999px;padding:10px 20px;text-decoration:none;white-space:nowrap;flex-shrink:0;">Contratar este plan →</a>
+      </div>
       <div class="cta-final-btns">
         <button class="btn btn-white" onclick="contactarWhatsApp()">💬 Agendar por WhatsApp</button>
         <button class="btn btn-ghost-w" onclick="window.print()">🖨️ Imprimir / Guardar PDF</button>
-        <a class="btn btn-ghost-w" href="index.html#precios">Ver planes →</a>
       </div>
     </div>
 
@@ -273,10 +276,18 @@ function verResultado(){
   const sis = aplicables.filter(([k,v]) => v === true).length;
   const pct = total ? Math.round((sis/total)*100) : 0;
 
-  let nivel, icon, titulo, desc;
-  if (pct >= 85) { nivel='verde'; icon='🟢'; titulo='Cumplimiento alto'; desc='Su empresa está en buena posición. Solo necesita mantenimiento y actualización documental periódica.'; }
-  else if (pct >= 60) { nivel='amarillo'; icon='🟡'; titulo='Riesgo moderado'; desc='Tiene la base, pero hay huecos que un inspector de la STPS podría señalar y sancionar.'; }
-  else { nivel='rojo'; icon='🔴'; titulo='Riesgo crítico'; desc='Su empresa es vulnerable a multas (hasta $565,700 MXN por NOM incumplida) y posibles clausuras parciales. Conviene actuar pronto.'; }
+  let nivel, icon, titulo, desc, planRec, planLabel, planUrl;
+  if (pct >= 85) {
+    nivel='verde'; icon='🟢'; titulo='Cumplimiento alto'; desc='Su empresa está en buena posición. Solo necesita mantenimiento y actualización documental periódica.';
+    planRec='Micro'; planLabel='Plan Micro — desde $899/mes'; planUrl='checkout.html?plan=micro';
+  } else if (pct >= 60) {
+    nivel='amarillo'; icon='🟡'; titulo='Riesgo moderado'; desc='Tiene la base, pero hay huecos que un inspector de la STPS podría señalar y sancionar.';
+    planRec='PyME'; planLabel='Plan PyME — desde $1,999/mes'; planUrl='checkout.html?plan=pyme';
+  } else {
+    nivel='rojo'; icon='🔴'; titulo='Riesgo crítico'; desc='Su empresa es vulnerable a multas (hasta $565,700 MXN por NOM incumplida) y posibles clausuras parciales. Conviene actuar pronto.';
+    planRec='Mediana'; planLabel='Plan Mediana — desde $4,499/mes'; planUrl='checkout.html?plan=mediana';
+  }
+  window._planRec = { planRec, planLabel, planUrl };
 
   const card = document.getElementById('semaforo-card');
   card.className = 'semaforo-card '+nivel;
@@ -297,6 +308,9 @@ function verResultado(){
   }
 
   window.ultimoResultado = { sis, total, pct, nivel, gaps: gaps.map(g=>PREGUNTAS_TEXTO[g]) };
+
+  document.getElementById('plan-rec-label').textContent = window._planRec.planLabel;
+  document.getElementById('plan-rec-btn').href = window._planRec.planUrl;
 
   document.getElementById('preguntas-wrap').style.display = 'none';
   document.getElementById('resultados').style.display = 'block';

@@ -154,6 +154,12 @@ function toast(msg, tipo){
 }
 function pedirGeo(){
   if(!navigator.geolocation) return;
+  // Aviso de captura de ubicación (LFPDPPP Art. 16 — datos personales de localización)
+  // Se muestra una sola vez por dispositivo vía localStorage
+  if(!localStorage.getItem('cl_geo_aviso_v1')){
+    localStorage.setItem('cl_geo_aviso_v1','1');
+    toast('📍 Esta terminal registra la ubicación al checar entrada/salida para fines de control de asistencia. Uso exclusivo del patrón.', '');
+  }
   navigator.geolocation.getCurrentPosition(
     p => { geoActual = { lat:+p.coords.latitude.toFixed(6), lng:+p.coords.longitude.toFixed(6) }; },
     () => { geoActual = null; }, // sin geo no bloqueamos — se registra sin ubicación

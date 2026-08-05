@@ -2,9 +2,10 @@
 // Alertas automáticas de vencimientos laborales — cobertura completa LFT + NOMs
 // Cron: https://clicklaboral.mx/api/notificaciones-laborales?secret=EL_VALOR_DE_SU_CRON_SECRET
 
+const { handleCors, clientIp, reportError } = require('./_security');
 const { createClient } = require('@supabase/supabase-js');
 
-const headers = { 'Access-Control-Allow-Origin': '*', 'Content-Type': 'application/json' };
+const headers = { 'Access-Control-Allow-Origin': 'https://clicklaboral.mx', 'Content-Type': 'application/json' };
 
 exports.handler = async function(event) {
   const secret = process.env.CRON_SECRET;

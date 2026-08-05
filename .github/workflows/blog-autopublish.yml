@@ -1,0 +1,84 @@
+name: Blog — Publicación automática semanal
+
+on:
+  schedule:
+    # Lunes a las 09:00 UTC (04:00 Ciudad de México)
+    - cron: '0 9 * * 1'
+  workflow_dispatch:
+    inputs:
+      topic:
+        description: 'Tema del artículo (opcional, dejar vacío para selección automática)'
+        required: false
+        default: ''
+      categoria:
+        description: 'Categoría (Contratos, Prestaciones, Cumplimiento, NOMs, Terminación laboral)'
+        required: false
+        default: ''
+
+jobs:
+  generate-and-publish:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+
+    steps:
+      - name: Checkout repositorio
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Configurar Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Generar artículo con Claude
+        env:
+          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+        run: |
+          if [ -n "${{ github.event.inputs.topic }}" ]; then
+            node .github/scripts/generate-blog-post.js \
+              --topic "${{ github.event.inputs.topic }}" \
+              --categoria "${{ github.event.inputs.categoria }}"
+          else
+            node .github/scripts/generate-blog-post.js
+          fi
+
+      - name: Verificar que se generaron archivos nuevos
+        run: |
+          if git diff --name-only | grep -q "blog/"; then
+            echo "CAMBIOS_DETECTADOS=true" >> $GITHUB_ENV
+          else
+            echo "No se detectaron cambios en blog/"
+            echo "CAMBIOS_DETECTADOS=false" >> $GITHUB_ENV
+          fi
+
+      - name: Commit y push del nuevo artículo
+        if: env.CAMBIOS_DETECTADOS == 'true'
+        run: |
+          git config user.name "ClickLaboral Blog Bot"
+          git config user.email "bot@clicklaboral.mx"
+          git add blog/ sitemap.xml
+          git commit -m "blog: nuevo artículo publicado automáticamente [$(date '+%Y-%m-%d')]"
+          git push origin HEAD
+
+      - name: Disparar deploy en Netlify
+        if: env.CAMBIOS_DETECTADOS == 'true' && env.NETLIFY_BUILD_HOOK != ''
+        env:
+          NETLIFY_BUILD_HOOK: ${{ secrets.NETLIFY_BUILD_HOOK }}
+        run: |
+          curl -s -X POST "$NETLIFY_BUILD_HOOK" \
+            -H "Content-Type: application/json" \
+            -d '{"clear_cache":false}' \
+            && echo "✅ Netlify build disparado" \
+            || echo "⚠️ No se pudo disparar Netlify (hook no configurado)"
+
+      - name: Resumen
+        run: |
+          echo "### Resultado" >> $GITHUB_STEP_SUMMARY
+          if [ "$CAMBIOS_DETECTADOS" = "true" ]; then
+            echo "✅ Artículo generado y publicado exitosamente." >> $GITHUB_STEP_SUMMARY
+            git log --oneline -1 >> $GITHUB_STEP_SUMMARY
+          else
+            echo "ℹ️ No se generaron cambios (posiblemente todos los temas ya están publicados)." >> $GITHUB_STEP_SUMMARY
+          fi

@@ -1,0 +1,148 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Blog de Compliance Laboral | ClickLaboral.mx</title>
+<meta name="description" content="Guías gratuitas sobre contratos, multas STPS, NOM-035, vacaciones y todo el cumplimiento laboral que las PyMEs mexicanas necesitan para operar sin riesgos.">
+<link rel="canonical" href="https://clicklaboral.mx/blog/">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="/blog/blog.css">
+<!-- Open Graph -->
+<meta property="og:title" content="Blog de Compliance Laboral | ClickLaboral.mx">
+<meta property="og:description" content="Guías gratuitas sobre contratos, NOM-035, multas STPS y todo el cumplimiento laboral para PyMEs mexicanas.">
+<meta property="og:url" content="https://clicklaboral.mx/blog/">
+<meta property="og:type" content="website">
+<meta property="og:image" content="https://clicklaboral.mx/img/og-blog.jpg">
+<meta name="twitter:card" content="summary_large_image">
+<!-- Schema.org -->
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "Blog",
+  "name": "Blog de Compliance Laboral — ClickLaboral.mx",
+  "description": "Recursos gratuitos de compliance laboral para PyMEs mexicanas.",
+  "url": "https://clicklaboral.mx/blog/",
+  "publisher": {
+    "@type": "Organization",
+    "name": "ClickLaboral.mx",
+    "url": "https://clicklaboral.mx",
+    "logo": {
+      "@type": "ImageObject",
+      "url": "https://clicklaboral.mx/img/logo.png"
+    }
+  }
+}
+</script>
+</head>
+<body>
+
+<nav class="bl-nav">
+  <a href="/" class="bl-nav-logo">Click<span>Laboral.mx</span></a>
+  <div class="bl-nav-links">
+    <a href="/" class="bl-nav-link">Inicio</a>
+    <a href="/blog/" class="bl-nav-link" style="color:#fff;">Blog</a>
+    <a href="/diagnostico-cumplimiento.html" class="bl-nav-cta">Diagnóstico gratis →</a>
+  </div>
+</nav>
+
+<section class="bl-hero">
+  <div class="bl-hero-label">Recursos gratuitos · PyMEs mexicanas</div>
+  <h1>Blog de Compliance Laboral</h1>
+  <p>Contratos, multas, NOMs y prestaciones — explicados en lenguaje de empresario, no de abogado.</p>
+</section>
+
+<div style="max-width:1100px;margin:0 auto;padding:32px 24px 0;">
+  <div class="bl-cats">
+    <button class="bl-cat active" onclick="filtrar(this,'todos')">Todos</button>
+    <button class="bl-cat" onclick="filtrar(this,'Contratos')">Contratos</button>
+    <button class="bl-cat" onclick="filtrar(this,'Prestaciones')">Prestaciones</button>
+    <button class="bl-cat" onclick="filtrar(this,'Cumplimiento')">Cumplimiento</button>
+    <button class="bl-cat" onclick="filtrar(this,'NOMs')">NOMs</button>
+    <button class="bl-cat" onclick="filtrar(this,'Terminación laboral')">Terminación</button>
+  </div>
+</div>
+
+<div class="bl-grid-wrap">
+  <div class="bl-grid" id="bl-grid">
+
+    <!-- POST: Multas STPS 2025 -->
+    <article class="bl-card" data-cat="Cumplimiento">
+      <div class="bl-card-body">
+        <div class="bl-card-cat">Cumplimiento</div>
+        <h2><a href="/blog/multas-stps-2025.html">Multas de la STPS 2025: Cuánto Pueden Cobrarle a Su Empresa</a></h2>
+        <p class="bl-card-exc">Conozca el monto exacto de las multas laborales vigentes en 2025, qué infracciones las disparan y cómo preparar su empresa para una inspección de la STPS.</p>
+        <div class="bl-card-meta">
+          <span>📅 1 ago 2025</span>
+          <span>⏱ 7 min</span>
+          <a href="/blog/multas-stps-2025.html" class="bl-card-read">Leer →</a>
+        </div>
+      </div>
+    </article>
+
+    <!-- POST: Tabla Vacaciones 2025 -->
+    <article class="bl-card" data-cat="Prestaciones">
+      <div class="bl-card-body">
+        <div class="bl-card-cat">Prestaciones</div>
+        <h2><a href="/blog/tabla-vacaciones-lft-2025.html">Tabla de Vacaciones LFT 2025: Días que le Corresponden a Cada Trabajador</a></h2>
+        <p class="bl-card-exc">La reforma de 2023 aumentó los días de vacaciones mínimos. Vea la tabla actualizada, cómo calcular la prima vacacional y los errores más comunes que generan multas.</p>
+        <div class="bl-card-meta">
+          <span>📅 25 jul 2025</span>
+          <span>⏱ 6 min</span>
+          <a href="/blog/tabla-vacaciones-lft-2025.html" class="bl-card-read">Leer →</a>
+        </div>
+      </div>
+    </article>
+
+    <!-- POST: Período de Prueba 2025 -->
+    <article class="bl-card" data-cat="Contratos">
+      <div class="bl-card-body">
+        <div class="bl-card-cat">Contratos</div>
+        <h2><a href="/blog/periodo-de-prueba-lft-2025.html">Período de Prueba: Qué Dice la LFT 2025 y Cómo Aplicarlo sin Riesgos</a></h2>
+        <p class="bl-card-exc">El artículo 39-A LFT permite contratar a prueba hasta 30 o 180 días. Le explicamos cómo usarlo correctamente, cuándo termina y qué errores generan demandas.</p>
+        <div class="bl-card-meta">
+          <span>📅 18 jul 2025</span>
+          <span>⏱ 8 min</span>
+          <a href="/blog/periodo-de-prueba-lft-2025.html" class="bl-card-read">Leer →</a>
+        </div>
+      </div>
+    </article>
+
+  </div>
+
+  <p id="bl-no-posts" style="display:none;padding:40px;text-align:center;color:#888;font-size:15px;">No hay artículos en esta categoría aún. Vuelva pronto.</p>
+</div>
+
+<!-- CTA Mid-page -->
+<section style="background:linear-gradient(135deg,#0f2640,#1a3a5c);padding:56px 24px;text-align:center;color:#fff;">
+  <div style="max-width:580px;margin:0 auto;">
+    <div style="font-size:11px;font-weight:700;letter-spacing:.14em;text-transform:uppercase;color:#2dd4bf;margin-bottom:12px;">Para su empresa</div>
+    <h2 style="font-family:'Fraunces',Georgia,serif;font-size:clamp(22px,4vw,34px);font-weight:700;margin-bottom:14px;line-height:1.22;">¿Quiere cumplir todo esto de forma automática?</h2>
+    <p style="font-size:16px;color:rgba(255,255,255,.78);margin-bottom:28px;line-height:1.6;">ClickLaboral.mx genera contratos LFT, alertas de vencimientos, comisiones mixtas y registros NOM-035 — en minutos, desde $899/mes.</p>
+    <a href="/diagnostico-cumplimiento.html" style="display:inline-block;background:#2dd4bf;color:#053730;font-weight:700;font-size:15px;padding:14px 32px;border-radius:999px;text-decoration:none;">Ver diagnóstico gratuito →</a>
+  </div>
+</section>
+
+<footer class="bl-footer">
+  <p><a href="/">ClickLaboral.mx</a> — Plataforma de compliance laboral para PyMEs mexicanas</p>
+  <p style="margin-top:4px;"><a href="/aviso-de-privacidad.html">Aviso de privacidad</a> · <a href="/terminos-de-servicio.html">Términos de servicio</a></p>
+  <p style="margin-top:12px;font-size:12px;opacity:.5;">El contenido de este blog es informativo y no constituye asesoría legal. Consulte a un abogado para su caso específico.</p>
+</footer>
+
+<script>
+function filtrar(btn, cat) {
+  document.querySelectorAll('.bl-cat').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  const cards = document.querySelectorAll('#bl-grid .bl-card');
+  let visible = 0;
+  cards.forEach(c => {
+    const show = cat === 'todos' || c.dataset.cat === cat;
+    c.style.display = show ? '' : 'none';
+    if (show) visible++;
+  });
+  document.getElementById('bl-no-posts').style.display = visible === 0 ? 'block' : 'none';
+}
+</script>
+</body>
+</html>

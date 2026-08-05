@@ -41,4 +41,31 @@
     <changefreq>yearly</changefreq>
     <priority>0.3</priority>
   </url>
+  <!-- Blog -->
+  <url>
+    <loc>https://clicklaboral.mx/blog/</loc>
+    <lastmod>2025-08-01</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.8</priority>
+  </url>
+<!-- BLOG_POSTS -->
+  <url>
+    <loc>https://clicklaboral.mx/blog/multas-stps-2025.html</loc>
+    <lastmod>2025-08-01</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://clicklaboral.mx/blog/tabla-vacaciones-lft-2025.html</loc>
+    <lastmod>2025-07-25</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://clicklaboral.mx/blog/periodo-de-prueba-lft-2025.html</loc>
+    <lastmod>2025-07-18</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.7</priority>
+  </url>
+<!-- /BLOG_POSTS -->
 </urlset>

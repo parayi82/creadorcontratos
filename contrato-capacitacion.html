@@ -227,6 +227,17 @@ body.modo-demo .doc-sheet::after{content:'MUESTRA — CUENTA DEMO, NO VÁLIDO PA
     </div>
     <div class="field"><label>Fecha de término (calculada)</label><input type="date" id="fecha_fin" readonly style="background:#f5f5f0;color:var(--ink2)"></div>
 
+    <!-- ── ALERTA DE VENCIMIENTO ── -->
+    <div id="alerta-cap-box" style="background:#fffbeb;border:1px solid #fde68a;border-left:4px solid #f59e0b;border-radius:6px;padding:12px 14px;margin-bottom:14px;display:none;">
+      <div style="font-size:12px;font-weight:700;color:#92400e;margin-bottom:6px;">⏰ Alerta automática de vencimiento</div>
+      <div id="alerta-cap-texto" style="font-size:12px;color:#78350f;margin-bottom:10px;line-height:1.5;"></div>
+      <button id="btn-alerta-cap" onclick="registrarAlertaCapacitacion()" style="padding:7px 14px;background:#92400e;color:#fff;border:none;border-radius:5px;font-size:12px;font-weight:600;cursor:pointer;">
+        📅 Activar alerta
+      </button>
+      <span id="alerta-cap-status" style="font-size:11px;margin-left:8px;display:none;"></span>
+    </div>
+    <!-- ── / ALERTA ── -->
+
     <div class="section-label">Evaluación y resultado</div>
     <div class="field"><label>Criterios para acreditar la capacitación</label><textarea id="criterios" oninput="render()" placeholder="Ej. Aprobación de examen teórico con mínimo 80%, realización supervisada de 10 procesos de mantenimiento..."></textarea></div>
     <div class="field"><label>Al acreditar satisfactoriamente</label>
@@ -297,7 +308,70 @@ function calcFin(){
   const fi=v('fecha_inicio'),m=parseInt(v('meses'));
   if(fi&&m>0){const d=new Date(fi+'T12:00:00');d.setMonth(d.getMonth()+m);document.getElementById('fecha_fin').value=d.toISOString().split('T')[0];}
   else document.getElementById('fecha_fin').value='';
+  mostrarAlertaCapacitacion();
   render();
+}
+
+function mostrarAlertaCapacitacion(){
+  const box=document.getElementById('alerta-cap-box');
+  const texto=document.getElementById('alerta-cap-texto');
+  const ff=document.getElementById('fecha_fin').value;
+  const trab=v('trabajador');
+  if(!ff||!trab){box.style.display='none';return;}
+  const diasRestantes=Math.ceil((new Date(ff+'T12:00:00')-new Date())/86400000);
+  const fmtFin=new Date(ff+'T12:00:00').toLocaleDateString('es-MX',{day:'numeric',month:'long',year:'numeric'});
+  texto.textContent=`El contrato de capacitación inicial de ${trab} vence el ${fmtFin} (en ${diasRestantes} días). Se registrará una alerta automática con anticipación suficiente.`;
+  box.style.display='block';
+  document.getElementById('btn-alerta-cap').style.display='inline-block';
+  document.getElementById('alerta-cap-status').style.display='none';
+}
+
+function addDiasCap(fecha,dias){const d=new Date(fecha+'T12:00:00');d.setDate(d.getDate()+dias);return d.toISOString().split('T')[0];}
+
+async function registrarAlertaCapacitacion(){
+  const btn=document.getElementById('btn-alerta-cap');
+  const statusEl=document.getElementById('alerta-cap-status');
+  const _sb=supabase.createClient('https://hpzgqaplrywwjuvrzhcp.supabase.co','sb_publishable_1g8US8iFJ8CxnSaF_4MHgA_gqyyAr3W');
+  btn.disabled=true; btn.textContent='Guardando…';
+  try{
+    const {data:sesData}=await _sb.auth.getSession();
+    const rfc=sesData?.session?.user?.user_metadata?.rfc;
+    if(!rfc) throw new Error('Debe iniciar sesión.');
+    const trab=v('trabajador');
+    const ff=document.getElementById('fecha_fin').value;
+    const fi=v('fecha_inicio');
+    const meses=parseInt(v('meses'))||3;
+    if(!trab||!ff||!fi) throw new Error('Complete nombre, fecha de inicio y meses primero.');
+    const esLarga=meses>3;
+    const diasTotal=meses*30;
+    const alertas=[
+      {
+        cliente_rfc:rfc,
+        tipo:esLarga?'capacitacion_inicial_larga':'capacitacion_inicial',
+        trabajador_nombre:trab,
+        fecha_alerta:addDiasCap(fi,esLarga?150:75),
+        mensaje:`El contrato de capacitación inicial de ${trab} vence el ${ff} (art. 39-B LFT). Evalúe si confirma la contratación definitiva.`,
+        urgencia:'media',leida:false
+      },
+      {
+        cliente_rfc:rfc,
+        tipo:esLarga?'capacitacion_inicial_larga':'capacitacion_inicial',
+        trabajador_nombre:trab,
+        fecha_alerta:addDiasCap(fi,esLarga?170:85),
+        mensaje:`⚠️ Vencimiento INMINENTE: contrato de capacitación de ${trab} termina el ${ff} (art. 39-B LFT). Actúe hoy.`,
+        urgencia:'alta',leida:false
+      }
+    ];
+    const {error}=await _sb.from('alertas_laborales').upsert(alertas,{onConflict:'cliente_rfc,tipo,trabajador_nombre,fecha_alerta',ignoreDuplicates:true});
+    if(error) throw error;
+    statusEl.textContent='✅ Alerta activada';
+    statusEl.style.cssText='font-size:11px;margin-left:8px;display:inline;color:#166534;font-weight:600;';
+    btn.style.display='none';
+  }catch(e){
+    statusEl.textContent='❌ '+e.message;
+    statusEl.style.cssText='font-size:11px;margin-left:8px;display:inline;color:#991b1b;';
+    btn.disabled=false; btn.textContent='📅 Activar alerta';
+  }
 }
 function resTexto(r){return{indeterminado:'subsistirá como contrato por tiempo indeterminado con plena vigencia de todos los derechos laborales adquiridos',determinado:'se formalizará mediante la suscripción de un contrato por tiempo determinado en los términos que las partes convengan por escrito',nuevo:'se acordará por escrito la modalidad y condiciones del nuevo vínculo laboral'}[r]||'continuará en los términos que las partes acuerden';}
 

@@ -119,19 +119,15 @@ exports.handler = async (event) => {
       subscriptionId = null;
     } else {
       // Plan mensual → Suscripción recurrente
-      // STRIPE TAX: si STRIPE_TAX_RATE_ID está configurado, se aplica la tasa de IVA
-      // mexicano (16%, inclusivo) definida en Stripe Dashboard → Tax rates.
-      // Si no está configurado, el precio ya incluye IVA (precio gross).
-      const subscriptionParams = {
+      // Stripe Tax automático: calcula y desglosa el IVA según la ubicación del cliente.
+      // Requiere que Stripe Tax esté activado en el dashboard (ya está activado).
+      const subscription = await stripe.subscriptions.create({
         customer: customer.id,
         items: [{ price: priceId }],
         expand: ['latest_invoice.payment_intent'],
         metadata: { rfc, empresa, plan },
-      };
-      if (process.env.STRIPE_TAX_RATE_ID) {
-        subscriptionParams.items[0].tax_rates = [process.env.STRIPE_TAX_RATE_ID];
-      }
-      const subscription = await stripe.subscriptions.create(subscriptionParams);
+        automatic_tax: { enabled: true },
+      });
       subscriptionId = subscription.id;
       paymentIntent = subscription.latest_invoice && subscription.latest_invoice.payment_intent;
     }

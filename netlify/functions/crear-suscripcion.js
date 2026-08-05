@@ -13,6 +13,8 @@
 
 const Stripe = require('stripe');
 const { createClient } = require('@supabase/supabase-js');
+const { handleCors, clientIp, safeJson, reportError, logSecurityEvent } = require('./_security');
+const { checkRateLimit, rateLimitResponse } = require('./_rate-limiter');
 
 // Planes vigentes por tamaño de empresa. Acceso total al software en todos;
 // cambian los tickets de asesoría legal incluidos.
@@ -41,19 +43,21 @@ const CUOTAS_PLAN = {
 const ES_PAGO_UNICO = {};
 
 exports.handler = async (event) => {
-  // CORS básico (el checkout vive en el mismo dominio, pero esto evita dolores de cabeza)
-  const headers = {
-    'Access-Control-Allow-Origin': '*',
-    'Access-Control-Allow-Headers': 'Content-Type',
-    'Access-Control-Allow-Methods': 'POST, OPTIONS',
-  };
-
-  if (event.httpMethod === 'OPTIONS') {
-    return { statusCode: 204, headers, body: '' };
-  }
+  // CORS restrictivo — solo clicklaboral.mx (o localhost en desarrollo)
+  const corsResult = handleCors(event);
+  if (corsResult.body !== undefined) return corsResult; // respuesta OPTIONS 204
+  const headers = corsResult._corsHeaders;
 
   if (event.httpMethod !== 'POST') {
     return { statusCode: 405, headers, body: JSON.stringify({ error: 'Método no permitido' }) };
+  }
+
+  // Rate limiting: máximo 5 intentos de checkout por IP cada 10 minutos
+  const ip = clientIp(event);
+  const rl = await checkRateLimit(ip, 'crear-suscripcion', 5, 600);
+  if (rl.limited) {
+    logSecurityEvent('RATE_LIMIT_CHECKOUT', { ip });
+    return rateLimitResponse(headers, rl.resetAt);
   }
 
   if (!process.env.STRIPE_SECRET_KEY) {
@@ -115,12 +119,19 @@ exports.handler = async (event) => {
       subscriptionId = null;
     } else {
       // Plan mensual → Suscripción recurrente
-      const subscription = await stripe.subscriptions.create({
+      // STRIPE TAX: si STRIPE_TAX_RATE_ID está configurado, se aplica la tasa de IVA
+      // mexicano (16%, inclusivo) definida en Stripe Dashboard → Tax rates.
+      // Si no está configurado, el precio ya incluye IVA (precio gross).
+      const subscriptionParams = {
         customer: customer.id,
         items: [{ price: priceId }],
         expand: ['latest_invoice.payment_intent'],
         metadata: { rfc, empresa, plan },
-      });
+      };
+      if (process.env.STRIPE_TAX_RATE_ID) {
+        subscriptionParams.items[0].tax_rates = [process.env.STRIPE_TAX_RATE_ID];
+      }
+      const subscription = await stripe.subscriptions.create(subscriptionParams);
       subscriptionId = subscription.id;
       paymentIntent = subscription.latest_invoice && subscription.latest_invoice.payment_intent;
     }
@@ -337,9 +348,11 @@ exports.handler = async (event) => {
     };
 
   } catch (err) {
-    console.error('Error creando suscripción:', err);
-    // Stripe regresa mensajes en inglés técnicos; el mensaje de tarjeta declinada sí es entendible para el usuario
-    const mensaje = (err.type === 'StripeCardError') ? err.message : 'No se pudo procesar el pago. Verifique los datos de la tarjeta o intente con otro método de pago.';
+    const isCardError = err.type === 'StripeCardError';
+    if (!isCardError) {
+      await reportError('crear-suscripcion', err, { plan: body?.plan, empresa: body?.empresa });
+    }
+    const mensaje = isCardError ? err.message : 'No se pudo procesar el pago. Verifique los datos de la tarjeta o intente con otro método de pago.';
     return { statusCode: 402, headers, body: JSON.stringify({ error: mensaje }) };
   }
 };

@@ -16,17 +16,15 @@
 // Variables de entorno requeridas:
 //   SUPABASE_URL, SUPABASE_SERVICE_KEY
 
+const { handleCors, clientIp, reportError } = require('./_security');
 const { createClient } = require('@supabase/supabase-js');
 const { verificarAdmin } = require('./_admin-auth');
+const { handleCors, reportError } = require('./_security');
 
 exports.handler = async (event) => {
-  const headers = {
-    'Access-Control-Allow-Origin': '*',
-    'Access-Control-Allow-Headers': 'Content-Type, Authorization',
-    'Access-Control-Allow-Methods': 'GET, POST, OPTIONS',
-  };
-
-  if (event.httpMethod === 'OPTIONS') return { statusCode: 204, headers, body: '' };
+  const corsResult = handleCors(event);
+  if (corsResult.body !== undefined) return corsResult;
+  const headers = corsResult._corsHeaders;
 
   if (!process.env.SUPABASE_URL || !process.env.SUPABASE_SERVICE_KEY) {
     return { statusCode: 500, headers, body: JSON.stringify({ error: 'Supabase no está configurado en el servidor (SUPABASE_URL / SUPABASE_SERVICE_KEY).' }) };

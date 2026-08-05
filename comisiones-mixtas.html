@@ -252,6 +252,30 @@ header h1{font-size:15px;font-weight:600;}
       <div id="campos-especificos"></div>
 
     </div>
+
+    <!-- ── CALENDARIO DE ALERTAS ── -->
+    <div style="border-top:2px solid var(--accent);margin-top:8px;">
+      <div class="section-label" style="background:var(--accent2);color:var(--accent);display:flex;align-items:center;gap:8px;">
+        <span>📅</span><span>Calendario de alertas automáticas</span>
+      </div>
+      <div style="padding:14px 20px 18px;">
+        <div style="font-size:12px;color:var(--ink2);line-height:1.6;margin-bottom:12px;">
+          Registre la fecha de constitución de esta comisión para recibir alertas automáticas de sesiones y vencimientos vía correo electrónico.
+        </div>
+        <div id="cal-fechas-info" style="display:none;background:#f0f9ff;border:1px solid #bae6fd;border-radius:6px;padding:10px 12px;margin-bottom:12px;font-size:11.5px;color:#0c4a6e;line-height:1.7;"></div>
+        <div style="display:flex;gap:8px;align-items:flex-end;flex-wrap:wrap;">
+          <div style="flex:1;min-width:140px;">
+            <div style="font-size:11px;font-weight:600;color:var(--ink2);margin-bottom:4px;">Fecha de constitución</div>
+            <input type="date" id="cal-fecha-const" style="width:100%;padding:7px 10px;border:1px solid var(--border);border-radius:var(--radius);font-size:13px;" oninput="actualizarInfoCalendario()">
+          </div>
+          <button id="btn-registrar-cal" onclick="registrarEnCalendario()" style="padding:8px 16px;background:var(--accent);color:#fff;border:none;border-radius:var(--radius);font-size:12px;font-weight:600;cursor:pointer;white-space:nowrap;">
+            📅 Registrar alertas
+          </button>
+        </div>
+        <div id="cal-status" style="margin-top:10px;font-size:12px;display:none;"></div>
+      </div>
+    </div>
+    <!-- ── / CALENDARIO ── -->
   </div>
 
   <!-- PANEL PREVIEW -->
@@ -569,6 +593,113 @@ function render(){
   document.getElementById('doc-preview').innerHTML = html || '<div class="watermark-empty">Complete los datos del formulario</div>';
 }
 
+// ════════════════════════════════════════════════════
+// CALENDARIO DE ALERTAS
+// ════════════════════════════════════════════════════
+const CAL_FREQ = {
+  sh:     { label: 'S&H', sesion: 'mensual',    dias: 30,  alertaDias: 5  },
+  cap:    { label: 'Capacitación', sesion: 'trimestral', dias: 90,  alertaDias: 7  },
+  ptu:    { label: 'PTU', sesion: 'anual',      dias: 365, alertaDias: 14 },
+  esc:    { label: 'Escalafón', sesion: 'según necesidad', dias: null, alertaDias: null },
+  rit:    { label: 'Reglamento Interior', sesion: 'bienal', dias: 730, alertaDias: 30 },
+  nom035: { label: 'NOM-035', sesion: 'bienal', dias: 730, alertaDias: 60 },
+};
+
+function addDiasDate(fecha, dias){
+  const d = new Date(fecha + 'T12:00:00');
+  d.setDate(d.getDate() + dias);
+  return d.toISOString().split('T')[0];
+}
+
+function fmtFechaES(iso){
+  if(!iso) return '';
+  return new Date(iso + 'T12:00:00').toLocaleDateString('es-MX', {day:'numeric',month:'long',year:'numeric'});
+}
+
+function actualizarInfoCalendario(){
+  const fConst = document.getElementById('cal-fecha-const').value;
+  const infoEl = document.getElementById('cal-fechas-info');
+  if(!fConst){ infoEl.style.display='none'; return; }
+
+  const com = CAL_FREQ[comTab];
+  if(!com || !com.dias){ infoEl.style.display='none'; return; }
+
+  const sig1 = addDiasDate(fConst, com.dias);
+  const sig2 = addDiasDate(fConst, com.dias * 2);
+  infoEl.innerHTML = `
+    <strong>${com.label} — ${com.sesion}</strong><br>
+    🔔 Próxima sesión: <strong>${fmtFechaES(sig1)}</strong><br>
+    🔔 Siguiente: <strong>${fmtFechaES(sig2)}</strong><br>
+    <span style="color:#0369a1;">Recibirá un correo ${com.alertaDias} día(s) antes de cada sesión.</span>`;
+  infoEl.style.display = 'block';
+}
+
+async function registrarEnCalendario(){
+  const fConst = document.getElementById('cal-fecha-const').value;
+  if(!fConst){ alert('Seleccione la fecha de constitución antes de registrar.'); return; }
+  const empresa = v('f-empresa') || 'Mi empresa';
+  const statusEl = document.getElementById('cal-status');
+  const btn = document.getElementById('btn-registrar-cal');
+
+  btn.disabled = true;
+  btn.textContent = 'Guardando…';
+  statusEl.style.display = 'none';
+
+  try {
+    const { data: sesionData } = await sb.auth.getSession();
+    const rfc = sesionData?.session?.user?.user_metadata?.rfc;
+    if(!rfc){ throw new Error('Debe iniciar sesión para registrar alertas.'); }
+
+    const { error } = await sb.from('comisiones_mixtas').upsert({
+      cliente_rfc: rfc,
+      tipo: comTab,
+      fecha_constitucion: fConst,
+      nombre_empresa: empresa,
+      activa: true,
+    }, { onConflict: 'cliente_rfc,tipo' });
+
+    if(error) throw error;
+
+    const com = CAL_FREQ[comTab];
+    statusEl.innerHTML = `✅ <strong>Registrado.</strong> Recibirá alertas de sesiones ${com?.sesion || ''} de la Comisión de ${com?.label || comTab} por correo electrónico.`;
+    statusEl.style.cssText = 'margin-top:10px;font-size:12px;display:block;background:#f0fdf4;border:1px solid #86efac;border-radius:6px;padding:8px 12px;color:#166534;';
+  } catch(e) {
+    statusEl.innerHTML = `❌ Error: ${e.message}`;
+    statusEl.style.cssText = 'margin-top:10px;font-size:12px;display:block;background:#fef2f2;border:1px solid #fca5a5;border-radius:6px;padding:8px 12px;color:#991b1b;';
+  }
+
+  btn.disabled = false;
+  btn.textContent = '📅 Registrar alertas';
+}
+
+// Cargar fecha de constitución guardada al cambiar de comisión
+async function cargarFechaConstitucion(){
+  try {
+    const { data: sesionData } = await sb.auth.getSession();
+    const rfc = sesionData?.session?.user?.user_metadata?.rfc;
+    if(!rfc) return;
+    const { data } = await sb.from('comisiones_mixtas')
+      .select('fecha_constitucion')
+      .eq('cliente_rfc', rfc)
+      .eq('tipo', comTab)
+      .maybeSingle();
+    if(data?.fecha_constitucion){
+      document.getElementById('cal-fecha-const').value = data.fecha_constitucion;
+      actualizarInfoCalendario();
+    } else {
+      document.getElementById('cal-fecha-const').value = '';
+      document.getElementById('cal-fechas-info').style.display = 'none';
+    }
+  } catch(e) {}
+}
+
+// Hook en setComTab para cargar la fecha al cambiar de pestaña
+const _origSetComTab = setComTab;
+window.setComTab = function(tab){
+  _origSetComTab(tab);
+  cargarFechaConstitucion();
+};
+
 // Init
 actualizarCamposEspecificos();
 // ── INIT ──
@@ -583,6 +714,8 @@ renderPanelMembrete('mem-logo-container');
   }catch(e){}
 })();
 render();
+// Cargar fecha de constitución de la comisión activa al iniciar
+cargarFechaConstitucion();
 // ── Expediente del trabajador ──
 if (window.ExpedienteHelper) {
   ExpedienteHelper.init({

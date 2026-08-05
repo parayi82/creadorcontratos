@@ -230,6 +230,18 @@ body.modo-demo .doc-sheet::after{content:'MUESTRA — CUENTA DEMO, NO VÁLIDO PA
       <div class="field"><label>Días de prueba <span class="req">*</span></label><input type="number" id="dias_prueba" placeholder="Ej. 30" oninput="calcFin()" min="1"><div class="hint" id="hint_dias">Máx. 30 días para puestos generales</div></div>
     </div>
     <div class="field"><label>Fecha de término (calculada)</label><input type="date" id="fecha_fin" readonly style="background:#f5f5f0;color:var(--ink2)"></div>
+
+    <!-- ── ALERTA DE VENCIMIENTO ── -->
+    <div id="alerta-vencimiento-box" style="background:#fffbeb;border:1px solid #fde68a;border-left:4px solid #f59e0b;border-radius:6px;padding:12px 14px;margin-bottom:14px;display:none;">
+      <div style="font-size:12px;font-weight:700;color:#92400e;margin-bottom:6px;">⏰ Alerta automática de vencimiento</div>
+      <div id="alerta-vencimiento-texto" style="font-size:12px;color:#78350f;margin-bottom:10px;line-height:1.5;"></div>
+      <button id="btn-alerta-prueba" onclick="registrarAlertaPrueba()" style="padding:7px 14px;background:#92400e;color:#fff;border:none;border-radius:5px;font-size:12px;font-weight:600;cursor:pointer;">
+        📅 Activar alerta
+      </button>
+      <span id="alerta-prueba-status" style="font-size:11px;margin-left:8px;display:none;"></span>
+    </div>
+    <!-- ── / ALERTA ── -->
+
     <div class="field"><label>Criterios de evaluación del período a prueba</label><textarea id="criterios" oninput="render()" placeholder="Ej. Cumplimiento de metas de venta, dominio del sistema ERP, puntualidad, adaptación al equipo de trabajo..."></textarea></div>
 
     <div class="section-label">Consecuencia al término</div>
@@ -304,15 +316,82 @@ function calcFin(){
   document.getElementById('hint_dias').textContent=`Máx. ${maxDias} días para este tipo de puesto`;
   const fi=v('fecha_inicio');
   const dias=parseInt(v('dias_prueba'));
+  const ffEl=document.getElementById('fecha_fin');
   if(fi&&dias&&dias>0&&dias<=maxDias){
     const d=new Date(fi+'T12:00:00');
     d.setDate(d.getDate()+dias);
-    document.getElementById('fecha_fin').value=d.toISOString().split('T')[0];
+    ffEl.value=d.toISOString().split('T')[0];
   } else {
-    document.getElementById('fecha_fin').value='';
+    ffEl.value='';
   }
+  mostrarAlertaVencimiento();
   render();
 }
+
+function mostrarAlertaVencimiento(){
+  const box=document.getElementById('alerta-vencimiento-box');
+  const texto=document.getElementById('alerta-vencimiento-texto');
+  const ff=document.getElementById('fecha_fin').value;
+  const trab=v('trabajador');
+  if(!ff||!trab){box.style.display='none';return;}
+  const diasRestantes=Math.ceil((new Date(ff+'T12:00:00')-new Date())/86400000);
+  const fmtFin=new Date(ff+'T12:00:00').toLocaleDateString('es-MX',{day:'numeric',month:'long',year:'numeric'});
+  texto.textContent=`El período de prueba de ${trab} vence el ${fmtFin} (en ${diasRestantes} días). Se registrará una alerta automática para avisarle con 7 y 3 días de anticipación.`;
+  box.style.display='block';
+  document.getElementById('btn-alerta-prueba').style.display='inline-block';
+  document.getElementById('alerta-prueba-status').style.display='none';
+}
+
+async function registrarAlertaPrueba(){
+  const btn=document.getElementById('btn-alerta-prueba');
+  const statusEl=document.getElementById('alerta-prueba-status');
+  const _sb=supabase.createClient('https://hpzgqaplrywwjuvrzhcp.supabase.co','sb_publishable_1g8US8iFJ8CxnSaF_4MHgA_gqyyAr3W');
+  btn.disabled=true; btn.textContent='Guardando…';
+  try{
+    const {data:sesData}=await _sb.auth.getSession();
+    const rfc=sesData?.session?.user?.user_metadata?.rfc;
+    if(!rfc) throw new Error('Debe iniciar sesión.');
+    const trab=v('trabajador');
+    const ff=document.getElementById('fecha_fin').value;
+    const fi=v('fecha_inicio');
+    if(!trab||!ff||!fi) throw new Error('Complete nombre del trabajador y fechas primero.');
+
+    // Calcular días desde hoy hasta vencimiento para generar alertas anticipadas
+    const hoy=new Date().toISOString().split('T')[0];
+    const diasTotal=parseInt(v('dias_prueba'))||30;
+    const esLarga=diasTotal>30;
+
+    const alertas=[
+      {
+        cliente_rfc:rfc,
+        tipo:esLarga?'periodo_prueba_larga':'periodo_prueba',
+        trabajador_nombre:trab,
+        fecha_alerta:addDias(fi,esLarga?150:23),
+        mensaje:`El período de prueba de ${trab} vence el ${ff} (${diasTotal} días, art. 39-A LFT). Confirme o dé por terminada la relación antes de esa fecha.`,
+        urgencia:'media',leida:false
+      },
+      {
+        cliente_rfc:rfc,
+        tipo:esLarga?'periodo_prueba_larga':'periodo_prueba',
+        trabajador_nombre:trab,
+        fecha_alerta:addDias(fi,esLarga?170:27),
+        mensaje:`⚠️ Vencimiento INMINENTE: el período de prueba de ${trab} termina el ${ff} (art. 39-A LFT). Actúe hoy.`,
+        urgencia:'alta',leida:false
+      }
+    ];
+    const {error}=await _sb.from('alertas_laborales').upsert(alertas,{onConflict:'cliente_rfc,tipo,trabajador_nombre,fecha_alerta',ignoreDuplicates:true});
+    if(error) throw error;
+    statusEl.textContent='✅ Alerta activada';
+    statusEl.style.cssText='font-size:11px;margin-left:8px;display:inline;color:#166534;font-weight:600;';
+    btn.style.display='none';
+  }catch(e){
+    statusEl.textContent='❌ '+e.message;
+    statusEl.style.cssText='font-size:11px;margin-left:8px;display:inline;color:#991b1b;';
+    btn.disabled=false; btn.textContent='📅 Activar alerta';
+  }
+}
+
+function addDias(fecha,dias){const d=new Date(fecha+'T12:00:00');d.setDate(d.getDate()+dias);return d.toISOString().split('T')[0];}
 
 function render(){
   const empresa=v('empresa'),rfc_p=v('rfc_patron'),imss_p=v('imss_patron'),dom_emp=v('domicilio_empresa'),rep=v('rep_legal');

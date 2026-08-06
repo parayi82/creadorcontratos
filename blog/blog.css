@@ -119,6 +119,15 @@ body{font-family:var(--font);color:var(--ink);background:var(--white);font-size:
 .bl-footer a{color:var(--teal-bright);text-decoration:none;}
 .bl-footer p{margin-bottom:6px;}
 
+/* ── News cards ─────────────────────────────────────── */
+.bl-card-noticia{border-left:3px solid var(--teal);}
+.bl-cat-noticia.active,.bl-cat-noticia:hover{background:var(--teal);border-color:var(--teal);}
+.bl-noticia-badge{background:#fef3c7;border-color:#fde68a;color:#92400e;}
+
+/* News article single-column body */
+.bl-news-body{max-width:720px;padding-bottom:72px;}
+.bl-news-body .bl-content{max-width:100%;}
+
 /* ── Responsive ───────────────────────────────────── */
 @media(max-width:768px){
   .bl-article-body{grid-template-columns:1fr;}

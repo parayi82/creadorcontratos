@@ -161,3 +161,10 @@
   for = "/*.html"
   [headers.values]
     Cache-Control = "no-cache, no-store, must-revalidate"
+
+# RSS feed — tipo MIME correcto y caché corto
+[[headers]]
+  for = "/blog/rss.xml"
+  [headers.values]
+    Content-Type = "application/rss+xml; charset=utf-8"
+    Cache-Control = "public, max-age=3600"

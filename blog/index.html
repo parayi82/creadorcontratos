@@ -9,6 +9,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="/blog/blog.css">
+<link rel="alternate" type="application/rss+xml" title="ClickLaboral.mx Blog" href="/blog/rss.xml">
 <!-- Open Graph -->
 <meta property="og:title" content="Blog de Compliance Laboral | ClickLaboral.mx">
 <meta property="og:description" content="Guías gratuitas sobre contratos, NOM-035, multas STPS y todo el cumplimiento laboral para PyMEs mexicanas.">
@@ -56,6 +57,7 @@
 <div style="max-width:1100px;margin:0 auto;padding:32px 24px 0;">
   <div class="bl-cats">
     <button class="bl-cat active" onclick="filtrar(this,'todos')">Todos</button>
+    <button class="bl-cat bl-cat-noticia" onclick="filtrar(this,'Noticias')">📰 Noticias</button>
     <button class="bl-cat" onclick="filtrar(this,'Contratos')">Contratos</button>
     <button class="bl-cat" onclick="filtrar(this,'Prestaciones')">Prestaciones</button>
     <button class="bl-cat" onclick="filtrar(this,'Cumplimiento')">Cumplimiento</button>
@@ -68,7 +70,7 @@
   <div class="bl-grid" id="bl-grid">
 
     <!-- POST: Multas STPS 2025 -->
-    <article class="bl-card" data-cat="Cumplimiento">
+    <article class="bl-card" data-cat="Cumplimiento" data-tipo="articulo">
       <div class="bl-card-body">
         <div class="bl-card-cat">Cumplimiento</div>
         <h2><a href="/blog/multas-stps-2025.html">Multas de la STPS 2025: Cuánto Pueden Cobrarle a Su Empresa</a></h2>
@@ -82,7 +84,7 @@
     </article>
 
     <!-- POST: Tabla Vacaciones 2025 -->
-    <article class="bl-card" data-cat="Prestaciones">
+    <article class="bl-card" data-cat="Prestaciones" data-tipo="articulo">
       <div class="bl-card-body">
         <div class="bl-card-cat">Prestaciones</div>
         <h2><a href="/blog/tabla-vacaciones-lft-2025.html">Tabla de Vacaciones LFT 2025: Días que le Corresponden a Cada Trabajador</a></h2>
@@ -96,7 +98,7 @@
     </article>
 
     <!-- POST: Período de Prueba 2025 -->
-    <article class="bl-card" data-cat="Contratos">
+    <article class="bl-card" data-cat="Contratos" data-tipo="articulo">
       <div class="bl-card-body">
         <div class="bl-card-cat">Contratos</div>
         <h2><a href="/blog/periodo-de-prueba-lft-2025.html">Período de Prueba: Qué Dice la LFT 2025 y Cómo Aplicarlo sin Riesgos</a></h2>
@@ -137,7 +139,14 @@ function filtrar(btn, cat) {
   const cards = document.querySelectorAll('#bl-grid .bl-card');
   let visible = 0;
   cards.forEach(c => {
-    const show = cat === 'todos' || c.dataset.cat === cat;
+    let show;
+    if (cat === 'todos') {
+      show = true;
+    } else if (cat === 'Noticias') {
+      show = c.dataset.tipo === 'noticia';
+    } else {
+      show = c.dataset.cat === cat && c.dataset.tipo !== 'noticia';
+    }
     c.style.display = show ? '' : 'none';
     if (show) visible++;
   });

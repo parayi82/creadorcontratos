@@ -1,0 +1,60 @@
+name: Blog — Noticia Diaria
+
+on:
+  schedule:
+    # 14:00 UTC = 09:00 CDT / 08:00 CST (Ciudad de México)
+    - cron: '0 14 * * *'
+  workflow_dispatch:
+    inputs:
+      topic:
+        description: 'Tema específico (opcional)'
+        required: false
+        default: ''
+      categoria:
+        description: 'Categoría: Tip RH | Alerta Legal | Jurisprudencia | Noticias | Reforma Laboral'
+        required: false
+        default: ''
+
+jobs:
+  daily-news:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Generar noticia diaria
+        env:
+          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+        run: |
+          ARGS="--tipo noticia"
+          if [ -n "${{ github.event.inputs.topic }}" ]; then
+            ARGS="$ARGS --topic \"${{ github.event.inputs.topic }}\""
+          fi
+          if [ -n "${{ github.event.inputs.categoria }}" ]; then
+            ARGS="$ARGS --categoria \"${{ github.event.inputs.categoria }}\""
+          fi
+          eval node .github/scripts/generate-blog-post.js $ARGS
+
+      - name: Commit y push
+        run: |
+          git config user.name "ClickLaboral Bot"
+          git config user.email "bot@clicklaboral.mx"
+          git add blog/
+          git diff --staged --quiet || git commit -m "🗞️ Noticia diaria: $(date +%Y-%m-%d)"
+          git push
+
+      - name: Trigger Netlify rebuild
+        if: ${{ env.NETLIFY_BUILD_HOOK != '' }}
+        env:
+          NETLIFY_BUILD_HOOK: ${{ secrets.NETLIFY_BUILD_HOOK }}
+        run: curl -s -X POST "$NETLIFY_BUILD_HOOK"

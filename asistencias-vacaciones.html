@@ -2104,6 +2104,10 @@ async function guardarDia(){
       hora_entrada:  registroHoras ? hora_entrada : null,
       hora_salida:   registroHoras ? hora_salida  : null,
       fuente:        'manual',
+      // Trazabilidad de ediciones manuales (Art. 784 LFT: el patrón debe poder
+      // acreditar que los registros no fueron alterados fraudulentamente)
+      editado_por:   clienteRFC || null,
+      editado_at:    new Date().toISOString(),
     };
     // Intentar guardar con horas extras (requiere sql-horas-extras.sql en Supabase)
     let { error } = await mutarDatos({ tabla:'asistencias', accion:'upsert',
@@ -2111,6 +2115,11 @@ async function guardarDia(){
       conflicto:'trabajador_id,fecha' });
     if (error && /horas_extra/.test(error.message||'')) {
       ({ error } = await mutarDatos({ tabla:'asistencias', accion:'upsert', payload:payloadBase, conflicto:'trabajador_id,fecha' }));
+    }
+    // Columnas editado_por/editado_at opcionales — si no existen, reintentamos sin ellas
+    if (error && /editado_por|editado_at/.test(error.message||'')) {
+      const { editado_por, editado_at, ...payloadSinAudit } = payloadBase;
+      ({ error } = await mutarDatos({ tabla:'asistencias', accion:'upsert', payload:payloadSinAudit, conflicto:'trabajador_id,fecha' }));
     }
     if (error) throw error;
 
@@ -3455,7 +3464,10 @@ const TABLA_JORNADA = [
 
 // ── Constantes fiscales para pago de extras ──
 console.log('%c✅ Módulo Horas Extras LFT v4.2 — tabla Transitorio Cuarto DOF 01-05-2026 corregida', 'color:#16a34a;font-weight:bold');
-const UMA_DIARIA = 117.31;           // UMA 2026 (INEGI, vigente 01-feb-2026 → 31-ene-2027). Actualizar cada febrero.
+// ⚠️ ACTUALIZAR CADA FEBRERO: UMA y salario mínimo los publica INEGI/CONASAMI en enero.
+// UMA 2026: $117.31/día (vigente 01-feb-2026 → 31-ene-2027)
+// UMA 2027: actualizar aquí cuando INEGI la publique (enero 2027)
+const UMA_DIARIA = 117.31;
 const JORNADA_DIARIA_DEFAULT = 8;    // Jornada diurna máxima (Art. 61 LFT; se mantiene en 8h con la reforma)
 
 // ── Motor de análisis LFT de horas extras ──

@@ -1204,6 +1204,7 @@ async function renderReportes() {
     window._repEmpresa = clienteActual?.empresa || rfcUsar;
     console.log('[Rep] Resultado — trabajadores:', trabs.length, '| docs:', docs.length);
     const activos = trabs.filter(t => t.activo !== false && !t.fecha_baja);
+    window._repActivos = activos;
     const bajas   = trabs.filter(t => t.activo === false || t.fecha_baja);
 
     const periodo = document.getElementById('rep-periodo')?.value || 'todo';
@@ -1371,60 +1372,119 @@ async function renderReportes() {
 
 
 async function exportarConstanciaPortal() {
-  const asis = window._repAsis || [];
-  if (!asis.length) { alert('Sin registros de asistencia en el período seleccionado.'); return; }
-
-  const empresa = window._repEmpresa || '—';
+  const asisAll  = window._repAsis    || [];
+  const activos  = window._repActivos || [];
+  const empresa  = window._repEmpresa || clienteActual?.empresa || '—';
   const hoy = new Date().toLocaleDateString('es-MX',{day:'2-digit',month:'long',year:'numeric'});
-  const fmt = function(d){ return d ? new Date(d+'T12:00:00').toLocaleDateString('es-MX',{day:'2-digit',month:'short',year:'numeric'}) : '—'; };
+
+  const fmt  = function(d){ return d ? new Date(d+'T12:00:00').toLocaleDateString('es-MX',{day:'2-digit',month:'short',year:'numeric'}) : '—'; };
   const fmtH = function(h){ return h ? h.substring(0,5) : '—'; };
-  const dur = function(e,s){
+  const dur  = function(e,s){
     if(!e||!s) return '—';
     var em=parseInt(e.substring(0,2))*60+parseInt(e.substring(3,5));
     var sm=parseInt(s.substring(0,2))*60+parseInt(s.substring(3,5));
     var d=sm-em; if(d<0) return '—';
     return Math.floor(d/60)+'h '+(d%60)+'min';
   };
+  const tdS = 'padding:5px 7px;border-bottom:1px solid #e5e7eb;font-size:10px;';
+  const thS = 'padding:6px 8px;text-align:left;font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:.04em;background:#0f2640;color:#fff;';
 
-  const sorted = asis.slice().sort(function(a,b){ return (a.fecha||'') < (b.fecha||'') ? -1 : 1; });
-  const filas = sorted.map(function(a){
-    var bg = a.status==='presente'||a.status==='tardanza' ? '' : a.status==='falta' ? 'background:#fee2e2;' : 'background:#fef9c3;';
-    return '<tr style="'+bg+'">'
-      +'<td style="padding:6px 8px;border:1px solid #e5e7eb;">'+fmt(a.fecha)+'</td>'
-      +'<td style="padding:6px 8px;border:1px solid #e5e7eb;text-transform:capitalize;">'+(a.status||'—')+'</td>'
-      +'<td style="padding:6px 8px;border:1px solid #e5e7eb;text-align:center;">'+fmtH(a.hora_entrada)+'</td>'
-      +'<td style="padding:6px 8px;border:1px solid #e5e7eb;text-align:center;">'+fmtH(a.hora_salida)+'</td>'
-      +'<td style="padding:6px 8px;border:1px solid #e5e7eb;text-align:center;">'+dur(a.hora_entrada,a.hora_salida)+'</td>'
-      +'</tr>';
-  }).join('');
+  // Mapa id → trabajador
+  var trabMap = {};
+  activos.forEach(function(t){ trabMap[t.id] = t; });
 
-  const html = '<!DOCTYPE html><html><head><meta charset="UTF-8">'
-    +'<style>body{font-family:Arial,sans-serif;font-size:11px;color:#111;margin:20px;}'
-    +'h1{font-size:15px;font-weight:bold;color:#0f2640;margin-bottom:2px;}'
-    +'h2{font-size:13px;font-weight:normal;color:#444;margin-bottom:14px;}'
-    +'table{width:100%;border-collapse:collapse;margin-top:12px;}'
-    +'th{background:#0f2640;color:#fff;padding:7px 8px;text-align:left;font-size:10px;}'
-    +'.footer{margin-top:20px;font-size:9px;color:#666;border-top:1px solid #ddd;padding-top:8px;}</style>'
-    +'</head><body>'
-    +'<h1>'+empresa+'</h1>'
-    +'<h2>Control de Asistencia del Personal — Generado: '+hoy+'</h2>'
-    +'<table><thead><tr><th>Fecha</th><th>Estatus</th><th>Entrada</th><th>Salida</th><th>Duración</th></tr></thead>'
-    +'<tbody>'+filas+'</tbody></table>'
-    +'<div class="footer">Documento generado por ClickLaboral.mx · '
-    +'Art. 804 LFT: el patrón debe conservar registros de asistencia · '
-    +'Art. 784 LFT: la carga de la prueba de la jornada corresponde al patrón.</div>'
-    +'</body></html>';
+  // Agrupar por trabajador
+  var byTrab = {};
+  asisAll.forEach(function(a){
+    var k = a.trabajador_id || '_sin_id';
+    if(!byTrab[k]) byTrab[k] = [];
+    byTrab[k].push(a);
+  });
 
-  const el = document.createElement('div');
-  el.innerHTML = html;
-  document.body.appendChild(el);
-  await html2pdf().set({
-    margin: [10,10,10,10],
-    filename: 'Constancia-Asistencia-'+empresa.replace(/\s+/g,'-')+'-'+new Date().toISOString().split('T')[0]+'.pdf',
-    html2canvas: { scale: 2, useCORS: true },
-    jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' },
-  }).from(el).save();
-  document.body.removeChild(el);
+  var sections = '';
+
+  if(asisAll.length === 0) {
+    // Sin registros: mostrar lista de trabajadores con nota
+    sections += '<p style="font-size:11px;color:#666;margin:0 0 12px;">Sin registros de asistencia en el período seleccionado. Para generar registros use el Checador Digital.</p>';
+    if(activos.length > 0) {
+      sections += '<table style="width:100%;border-collapse:collapse;margin-bottom:16px;">';
+      sections += '<thead><tr><th style="'+thS+'">Nombre</th><th style="'+thS+'">Puesto</th><th style="'+thS+'">Ingreso</th></tr></thead><tbody>';
+      activos.forEach(function(t){
+        sections += '<tr>'
+          +'<td style="'+tdS+'">'+t.nombre+'</td>'
+          +'<td style="'+tdS+'">'+(t.puesto||'—')+'</td>'
+          +'<td style="'+tdS+'">'+(t.fecha_ingreso ? fmt(t.fecha_ingreso) : '—')+'</td>'
+          +'</tr>';
+      });
+      sections += '</tbody></table>';
+    }
+  } else {
+    // Una sección por trabajador
+    Object.keys(byTrab).forEach(function(tid){
+      var trab   = trabMap[tid] || {nombre:'Trabajador desconocido', puesto:''};
+      var recs   = byTrab[tid].slice().sort(function(a,b){ return (a.fecha||'')<(b.fecha||'') ? -1 : 1; });
+      var pres   = recs.filter(function(r){ return r.status==='presente'||r.status==='tardanza'; }).length;
+      var faltas = recs.filter(function(r){ return r.status==='falta'; }).length;
+      var vacs   = recs.filter(function(r){ return r.status==='vacaciones'; }).length;
+      var pct    = recs.length ? Math.round(pres/recs.length*100) : 0;
+
+      sections += '<div style="margin-bottom:20px;page-break-inside:avoid;">';
+      sections += '<div style="font-size:12px;font-weight:700;color:#0f2640;border-bottom:2px solid #0f2640;padding-bottom:4px;margin-bottom:5px;">'
+        +trab.nombre+(trab.puesto?' &nbsp;·&nbsp; '+trab.puesto:'')+'</div>';
+      sections += '<div style="font-size:10px;color:#555;margin-bottom:7px;">Registros: '+recs.length
+        +' &nbsp;|&nbsp; Presentes/puntual: '+pres
+        +' &nbsp;|&nbsp; Faltas: '+faltas
+        +(vacs?' &nbsp;|&nbsp; Vacaciones: '+vacs:'')
+        +' &nbsp;|&nbsp; % Asistencia: <strong>'+pct+'%</strong></div>';
+      sections += '<table style="width:100%;border-collapse:collapse;">';
+      sections += '<thead><tr>'
+        +'<th style="'+thS+'">Fecha</th>'
+        +'<th style="'+thS+'">Estatus</th>'
+        +'<th style="'+thS+'text-align:center;">Entrada</th>'
+        +'<th style="'+thS+'text-align:center;">Salida</th>'
+        +'<th style="'+thS+'text-align:center;">Duración</th>'
+        +'</tr></thead><tbody>';
+      recs.forEach(function(a){
+        var bg = a.status==='falta' ? 'background:#fee2e2;' : (a.status==='vacaciones'||a.status==='permiso') ? 'background:#fef9c3;' : '';
+        sections += '<tr style="'+bg+'">'
+          +'<td style="'+tdS+'">'+fmt(a.fecha)+'</td>'
+          +'<td style="'+tdS+';text-transform:capitalize;">'+(a.status||'—')+'</td>'
+          +'<td style="'+tdS+';text-align:center;">'+fmtH(a.hora_entrada)+'</td>'
+          +'<td style="'+tdS+';text-align:center;">'+fmtH(a.hora_salida)+'</td>'
+          +'<td style="'+tdS+';text-align:center;">'+dur(a.hora_entrada,a.hora_salida)+'</td>'
+          +'</tr>';
+      });
+      sections += '</tbody></table></div>';
+    });
+  }
+
+  // Wrapper posicionado fuera de la vista (html2pdf lo necesita en el DOM)
+  var wrapper = document.createElement('div');
+  wrapper.style.cssText = 'position:fixed;left:-9999px;top:0;width:794px;background:#fff;padding:24px;font-family:Arial,sans-serif;font-size:11px;color:#111;box-sizing:border-box;';
+  wrapper.innerHTML =
+    '<div style="margin-bottom:18px;border-bottom:3px solid #0f2640;padding-bottom:10px;">'
+    +'<div style="font-size:17px;font-weight:700;color:#0f2640;">'+empresa+'</div>'
+    +'<div style="font-size:12px;color:#444;margin-top:2px;">Constancia de Control de Asistencia del Personal</div>'
+    +'<div style="font-size:10px;color:#888;margin-top:3px;">Generado: '+hoy+' &nbsp;·&nbsp; Art. 804 LFT</div>'
+    +'</div>'
+    + sections
+    +'<div style="margin-top:16px;font-size:9px;color:#999;border-top:1px solid #ddd;padding-top:8px;line-height:1.6;">'
+    +'Documento generado electrónicamente por ClickLaboral.mx &nbsp;·&nbsp; '
+    +'Art. 804 LFT: el patrón debe conservar los registros de asistencia durante al menos 1 año &nbsp;·&nbsp; '
+    +'Art. 784 LFT: la carga de la prueba de la jornada laboral corresponde al patrón.'
+    +'</div>';
+
+  document.body.appendChild(wrapper);
+  try {
+    await html2pdf().set({
+      margin: [10,10,10,10],
+      filename: 'Constancia-Asistencia-'+empresa.replace(/\s+/g,'-')+'-'+new Date().toISOString().split('T')[0]+'.pdf',
+      html2canvas: { scale: 2, useCORS: true, logging: false },
+      jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' },
+    }).from(wrapper).save();
+  } finally {
+    document.body.removeChild(wrapper);
+  }
 }
 
 async function logout(){

@@ -271,7 +271,15 @@ body{font-family:var(--font);background:var(--surface);color:var(--ink);min-heig
 @media(min-width:901px){
   .sb-menu-btn{display:none;}
 }
-
+/* ── Dropdown menú de generadores por trabajador ── */
+#gen-menu{position:absolute;z-index:9999;background:var(--white);border:1px solid var(--border);border-radius:9px;box-shadow:0 6px 24px rgba(0,0,0,.13);min-width:230px;display:none;overflow:hidden;}
+#gen-menu .gm-group{font-size:9px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--ink3);padding:9px 14px 4px;border-top:1px solid var(--border);}
+#gen-menu .gm-group:first-child{border-top:none;}
+#gen-menu .gm-item{display:block;width:100%;padding:7px 16px;font-size:12px;color:var(--navy);background:none;border:none;text-align:left;cursor:pointer;white-space:nowrap;font-family:inherit;}
+#gen-menu .gm-item:hover{background:var(--surface);}
+/* ── Filtro de búsqueda tabla trabajadores ── */
+#trab-search{width:100%;padding:8px 12px;border:1.5px solid var(--border);border-radius:8px;font-size:13px;color:var(--ink);background:var(--white);outline:none;box-sizing:border-box;}
+#trab-search:focus{border-color:var(--navy2);}
 </style>
 </head>
 <body>
@@ -1277,38 +1285,30 @@ async function renderReportes() {
     }
 
     // Tabla trabajadores
+    var thSt = 'text-align:left;padding:7px 10px;border-bottom:1.5px solid var(--border);font-size:10px;text-transform:uppercase;color:var(--ink3);';
+    var trigSt = 'padding:5px 12px;font-size:12px;font-weight:600;cursor:pointer;border:1.5px solid var(--navy2);border-radius:6px;background:var(--white);color:var(--navy2);white-space:nowrap;';
     html += '<div style="background:var(--white);border-radius:10px;padding:16px;border:1px solid var(--border);overflow-x:auto;">';
-    html += '<div style="font-size:13px;font-weight:700;color:var(--navy);margin-bottom:12px;">Trabajadores activos (' + activos.length + ')</div>';
+    html += '<div style="display:flex;align-items:center;gap:12px;margin-bottom:12px;">';
+    html += '<div style="font-size:13px;font-weight:700;color:var(--navy);flex-shrink:0;">Trabajadores activos (' + activos.length + ')</div>';
+    html += '<input id="trab-search" type="search" placeholder="🔍 Buscar por nombre o puesto…" oninput="filtrarTrabajadores(this.value)" style="flex:1;min-width:0;">';
+    html += '</div>';
     html += '<table style="width:100%;border-collapse:collapse;font-size:12px;">';
-    html += '<thead><tr><th style="text-align:left;padding:7px 10px;border-bottom:1.5px solid var(--border);font-size:10px;text-transform:uppercase;color:var(--ink3);">Nombre</th><th style="text-align:left;padding:7px 10px;border-bottom:1.5px solid var(--border);font-size:10px;text-transform:uppercase;color:var(--ink3);">Puesto</th><th style="text-align:left;padding:7px 10px;border-bottom:1.5px solid var(--border);font-size:10px;text-transform:uppercase;color:var(--ink3);">Ingreso</th><th style="text-align:left;padding:7px 10px;border-bottom:1.5px solid var(--border);font-size:10px;text-transform:uppercase;color:var(--ink3);">Antigüedad</th><th style="text-align:left;padding:7px 10px;border-bottom:1.5px solid var(--border);font-size:10px;text-transform:uppercase;color:var(--ink3);">NSS</th><th style="text-align:left;padding:7px 10px;border-bottom:1.5px solid var(--border);font-size:10px;text-transform:uppercase;color:var(--ink3);">Generar documento</th></tr></thead>';
+    html += '<thead><tr><th style="' + thSt + '">Nombre</th><th style="' + thSt + '">Puesto</th><th style="' + thSt + '">Ingreso</th><th style="' + thSt + '">Antigüedad</th><th style="' + thSt + '">NSS</th><th style="' + thSt + '">Documentos</th></tr></thead>';
     html += '<tbody>';
     if (activos.length === 0) {
       html += '<tr><td colspan="6" style="padding:20px;text-align:center;color:var(--ink3);">Sin trabajadores</td></tr>';
     } else {
-      var btnSt = 'padding:4px 8px;font-size:11px;font-weight:500;cursor:pointer;border:1px solid var(--border);border-radius:5px;background:var(--white);color:var(--navy);white-space:nowrap;';
       activos.forEach(function(t, idx) {
-        html += '<tr>';
+        var searchVal = ((t.nombre||'') + ' ' + (t.puesto||'')).replace(/"/g,'');
+        html += '<tr class="trab-row" data-search="' + searchVal.toLowerCase() + '">';
         html += '<td style="padding:8px 10px;border-bottom:1px solid var(--border);font-weight:600;">' + (t.nombre||'') + '</td>';
         html += '<td style="padding:8px 10px;border-bottom:1px solid var(--border);color:var(--ink2);">' + (t.puesto||'—') + '</td>';
         html += '<td style="padding:8px 10px;border-bottom:1px solid var(--border);color:var(--ink2);">' + fmt(t.fecha_ingreso) + '</td>';
         html += '<td style="padding:8px 10px;border-bottom:1px solid var(--border);color:var(--ink2);">' + antig(t.fecha_ingreso) + '</td>';
         html += '<td style="padding:8px 10px;border-bottom:1px solid var(--border);color:var(--ink2);">' + (t.nss||'—') + '</td>';
-        html += '<td style="padding:6px 10px;border-bottom:1px solid var(--border);"><div style="display:flex;gap:5px;flex-wrap:wrap;">';
-        html += '<button style="' + btnSt + '" onclick="abrirGenTrabajador(\'acta-administrativa.html\',' + idx + ')">📝 Acta</button>';
-        html += '<button style="' + btnSt + '" onclick="abrirGenTrabajador(\'aviso-rescision.html\',' + idx + ')">⚠️ Rescisión</button>';
-        html += '<button style="' + btnSt + '" onclick="abrirGenTrabajador(\'cartas-laborales.html\',' + idx + ')">📤 Renuncia / Carta</button>';
-        html += '<button style="' + btnSt + '" onclick="abrirGenTrabajador(\'permisos-ausencias.html\',' + idx + ')">🗓 Permiso</button>';
-        html += '<button style="' + btnSt + '" onclick="abrirGenTrabajador(\'convenio-modificatorio.html\',' + idx + ')">🔀 Modificatorio</button>';
-        html += '<button style="' + btnSt + '" onclick="abrirGenTrabajador(\'convenios-economicos.html\',' + idx + ')">💰 Convenio econ.</button>';
-        html += '<button style="' + btnSt + '" onclick="abrirGenTrabajador(\'horario-anexos.html\',' + idx + ')">🕐 Horario</button>';
-        html += '<button style="' + btnSt + '" onclick="abrirGenTrabajador(\'asignacion-recursos.html\',' + idx + ')">🧰 Recursos</button>';
-        html += '<button style="' + btnSt + '" onclick="abrirGenTrabajador(\'contrato-indeterminado.html\',' + idx + ')">📄 Contrato indef.</button>';
-        html += '<button style="' + btnSt + '" onclick="abrirGenTrabajador(\'contrato-tiempo-determinado.html\',' + idx + ')">📄 Contrato det.</button>';
-        html += '<button style="' + btnSt + '" onclick="abrirGenTrabajador(\'contrato-prueba.html\',' + idx + ')">📄 Contrato prueba</button>';
-        html += '<button style="' + btnSt + '" onclick="abrirGenTrabajador(\'contrato-capacitacion.html\',' + idx + ')">📄 Capacitación</button>';
-        html += '<button style="' + btnSt + '" onclick="abrirGenTrabajador(\'contratos-especiales.html\',' + idx + ')">📄 Contrato especial</button>';
-        html += '<button style="' + btnSt + '" onclick="abrirGenTrabajador(\'nom035-evaluacion.html\',' + idx + ')">🏥 NOM-035</button>';
-        html += '</div></td>';
+        html += '<td style="padding:6px 10px;border-bottom:1px solid var(--border);">';
+        html += '<button style="' + trigSt + '" onclick="toggleGenMenu(event,' + idx + ')">⚡ Generar ▾</button>';
+        html += '</td>';
         html += '</tr>';
       });
     }
@@ -3177,6 +3177,64 @@ function calcAntiguedad(){
     // Si algo falla al restaurar, simplemente se queda en login-screen (comportamiento normal)
   }
 })();
+
+// ── Menú flotante de generadores por trabajador ──
+var _genMenuIdx = -1;
+function toggleGenMenu(event, idx) {
+  event.stopPropagation();
+  var menu = document.getElementById('gen-menu');
+  if (_genMenuIdx === idx && menu.style.display !== 'none') { cerrarGenMenu(); return; }
+  _genMenuIdx = idx;
+  var rect = event.currentTarget.getBoundingClientRect();
+  var sy = window.pageYOffset || document.documentElement.scrollTop;
+  var sx = window.pageXOffset || document.documentElement.scrollLeft;
+  menu.style.top  = (rect.bottom + sy + 4) + 'px';
+  menu.style.left = Math.min(rect.left + sx, window.innerWidth + sx - 240) + 'px';
+  menu.style.display = 'block';
+}
+function cerrarGenMenu() {
+  var menu = document.getElementById('gen-menu');
+  if (menu) menu.style.display = 'none';
+  _genMenuIdx = -1;
+}
+document.addEventListener('click', cerrarGenMenu);
+document.getElementById('gen-menu').addEventListener('click', function(e) {
+  var btn = e.target.closest('.gm-item');
+  if (!btn || _genMenuIdx < 0) return;
+  abrirGenTrabajador(btn.getAttribute('data-gen'), _genMenuIdx);
+  cerrarGenMenu();
+});
+
+// ── Filtro de búsqueda en tabla de trabajadores ──
+function filtrarTrabajadores(q) {
+  var term = q.toLowerCase().trim();
+  document.querySelectorAll('.trab-row').forEach(function(tr) {
+    var txt = (tr.getAttribute('data-search') || '').toLowerCase();
+    tr.style.display = (!term || txt.indexOf(term) !== -1) ? '' : 'none';
+  });
+}
 </script>
+<!-- Menú flotante de generadores por trabajador -->
+<div id="gen-menu">
+  <div class="gm-group">Separación</div>
+  <button class="gm-item" data-gen="acta-administrativa.html">📝 Acta administrativa</button>
+  <button class="gm-item" data-gen="aviso-rescision.html">⚠️ Aviso de rescisión</button>
+  <button class="gm-item" data-gen="cartas-laborales.html">📤 Renuncia / Carta laboral</button>
+  <div class="gm-group">Permisos</div>
+  <button class="gm-item" data-gen="permisos-ausencias.html">🗓 Permiso / Ausencia</button>
+  <div class="gm-group">Operativos</div>
+  <button class="gm-item" data-gen="convenio-modificatorio.html">🔀 Convenio modificatorio</button>
+  <button class="gm-item" data-gen="convenios-economicos.html">💰 Convenio económico</button>
+  <button class="gm-item" data-gen="horario-anexos.html">🕐 Horario y anexos</button>
+  <button class="gm-item" data-gen="asignacion-recursos.html">🧰 Resguardo de activos</button>
+  <div class="gm-group">Contratos</div>
+  <button class="gm-item" data-gen="contrato-indeterminado.html">📄 Contrato indefinido</button>
+  <button class="gm-item" data-gen="contrato-tiempo-determinado.html">📄 Contrato determinado</button>
+  <button class="gm-item" data-gen="contrato-prueba.html">📄 Contrato a prueba</button>
+  <button class="gm-item" data-gen="contrato-capacitacion.html">📄 Contrato capacitación</button>
+  <button class="gm-item" data-gen="contratos-especiales.html">📄 Contrato especial</button>
+  <div class="gm-group">Cumplimiento</div>
+  <button class="gm-item" data-gen="nom035-evaluacion.html">🏥 NOM-035</button>
+</div>
 </body>
 </html>

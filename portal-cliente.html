@@ -2941,21 +2941,67 @@ function calcVacaciones(){
   const sal = parseFloat(document.getElementById('vac-salario').value)||0;
   const res = document.getElementById('vac-resultado');
 
-  if(!ing||!cor||new Date(cor)<=new Date(ing)){
-    res.innerHTML='';
+  if(!ing || !cor || new Date(cor) <= new Date(ing)){
+    res.innerHTML='<div style="text-align:center;padding:20px;opacity:.4;font-size:13px;">Ingrese las fechas de ingreso y de corte para calcular</div>';
     return;
   }
 
+  const d1 = new Date(ing), d2 = new Date(cor);
   const anios = diffAnios(ing, cor);
+
+  // Compute months worked beyond completed years
+  let mesesExtra = d2.getMonth() - d1.getMonth() - (d1.getFullYear() !== d2.getFullYear() ? 0 : 0);
+  // Use a clean month diff
+  let totalMeses = (d2.getFullYear() - d1.getFullYear()) * 12 + (d2.getMonth() - d1.getMonth());
+  if(d2.getDate() < d1.getDate()) totalMeses--;
+  totalMeses = Math.max(0, totalMeses);
+  const mesesResto = totalMeses % 12;
+
+  if(anios < 1){
+    // Trabajador con menos de un año — mostrar derecho en formación
+    const aniversario = new Date(d1);
+    aniversario.setFullYear(aniversario.getFullYear() + 1);
+    const fmtAniversario = aniversario.toLocaleDateString('es-MX',{day:'2-digit',month:'long',year:'numeric'});
+    const diasAAniversario = Math.ceil((aniversario - d2) / (1000*60*60*24));
+    const diasVacAl1Anio = 12; // Art. 76 LFT primer año
+
+    const filas = [
+      ['Tiempo trabajado', totalMeses + ' meses' + (totalMeses === 1 ? '' : '') ],
+      ['Aniversario laboral (1 año)', fmtAniversario],
+      ['Días para cumplir 1 año', diasAAniversario > 0 ? diasAAniversario + ' días' : 'Ya cumplido'],
+      ['Días de vacaciones al cumplir 1 año', diasVacAl1Anio + ' días (Art. 76 LFT)'],
+    ];
+    if(sal){
+      const vacAniversario = diasVacAl1Anio * sal;
+      const primAniversario = vacAniversario * 0.25;
+      filas.push(['Importe estimado al aniversario', mxn(vacAniversario)]);
+      filas.push(['Prima vacacional estimada (25%)', mxn(primAniversario)]);
+      filas.push(['Total estimado al aniversario', mxn(vacAniversario + primAniversario), true]);
+    }
+
+    res.innerHTML = `
+      <div class="card" style="background:var(--navy);color:#fff;">
+        <div style="font-size:12px;font-weight:600;margin-bottom:10px;padding-bottom:8px;border-bottom:1px solid rgba(255,255,255,.2);">
+          Derecho en formación — Art. 76 LFT
+        </div>
+        <div style="font-size:11px;opacity:.8;margin-bottom:10px;">
+          El trabajador aún no completa un año de servicio. Las vacaciones se generan al cumplir el primer aniversario laboral.
+        </div>
+        ${renderFilas(filas)}
+      </div>`;
+    return;
+  }
+
   const diasVac = diasVacacionesPorAnios(anios);
   const primVac = diasVac * sal * 0.25;
   const totalVac = diasVac * sal;
+  const antiguedadStr = anios + ' año' + (anios===1?'':'s') + (mesesResto > 0 ? ' y ' + mesesResto + ' mes' + (mesesResto===1?'':'es') : '');
 
   res.innerHTML = `
     <div class="card" style="background:var(--navy);color:#fff;">
       ${renderFilas([
-        ['Años de antigüedad', anios+' años'],
-        ['Días de vacaciones que corresponden', diasVac+' días'],
+        ['Antigüedad', antiguedadStr],
+        ['Días de vacaciones que corresponden', diasVac + ' días (Art. 76 LFT)'],
         sal ? ['Importe de vacaciones', mxn(totalVac)] : null,
         sal ? ['Prima vacacional (25%)', mxn(primVac)] : null,
         sal ? ['Total a pagar', mxn(totalVac + primVac), true] : null,

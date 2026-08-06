@@ -185,6 +185,13 @@
     </div>
 
     <div class="section-label">🧑‍💼 Datos del trabajador evaluado (Guía V)</div>
+    <div id="worker-selector-wrap" style="display:none;margin-bottom:12px;">
+      <label style="display:block;font-size:11px;font-weight:600;color:var(--accent);margin-bottom:5px;letter-spacing:.04em;text-transform:uppercase;">Autocompletar desde expediente</label>
+      <select id="worker-selector" style="width:100%;padding:8px 10px;border:1px solid var(--border);border-radius:var(--radius);font-size:13px;color:var(--ink);background:var(--white);">
+        <option value="">— Cargando trabajadores... —</option>
+      </select>
+      <div style="font-size:11px;color:var(--ink3);margin-top:3px;">Seleccione un trabajador para llenar los campos automáticamente</div>
+    </div>
     <div class="field">
       <label>Nombre del trabajador <span class="req">*</span></label>
       <input type="text" id="trab_nombre" placeholder="Nombre completo" oninput="actualizar()">
@@ -771,6 +778,34 @@ function generarFolio(){
   window.__folioNom035 = `NOM035-${ymd}-${rnd}`;
 }
 
+// ── Autocompletar desde portal (URL params) ──
+(function precargarDesdePortal() {
+  const p = new URLSearchParams(window.location.search);
+  if (!p.has('trabajador')) return;
+  const sv = (id, val) => {
+    const el = document.getElementById(id);
+    if (!el || val == null || val === '') return;
+    el.value = val;
+    el.dispatchEvent(new Event('input'));
+  };
+  sv('trab_nombre', p.get('trabajador'));
+  sv('trab_puesto', p.get('puesto'));
+  const ingreso = p.get('ingreso');
+  if (ingreso) {
+    const meses = (d => {
+      const d1 = new Date(d), d2 = new Date();
+      return (d2.getFullYear() - d1.getFullYear()) * 12 + (d2.getMonth() - d1.getMonth());
+    })(ingreso);
+    const antig = meses < 6 ? 'Menos de 6 meses'
+      : meses < 12  ? '6 meses a 1 año'
+      : meses < 48  ? '1 a 4 años'
+      : meses < 120 ? '5 a 9 años'
+      : '10 años o más';
+    sv('trab_antig', antig);
+  }
+  setTimeout(() => { if (typeof actualizar === 'function') actualizar(); }, 200);
+})();
+
 /* ── INIT ── */
 generarFolio();
 renderPanelMembrete('mem-logo-container');
@@ -786,6 +821,67 @@ renderCuestionario();
 // fecha por defecto = hoy
 $('cfg_fecha').value = new Date().toISOString().slice(0,10);
 render();
+
+// ── Selector de trabajador desde expediente ──
+(async function initWorkerSelector() {
+  const p = new URLSearchParams(window.location.search);
+  const rfc = p.get('rfc');
+  if (!rfc || typeof supabase === 'undefined') return;
+
+  const wrap = document.getElementById('worker-selector-wrap');
+  if (!wrap) return;
+  wrap.style.display = 'block';
+
+  const sel = document.getElementById('worker-selector');
+  let trabajadores = [];
+  try {
+    const _sb = supabase.createClient(
+      'https://hpzgqaplrywwjuvrzhcp.supabase.co',
+      'sb_publishable_1g8US8iFJ8CxnSaF_4MHgA_gqyyAr3W'
+    );
+    const { data } = await _sb
+      .from('trabajadores')
+      .select('id,nombre,puesto,fecha_ingreso')
+      .eq('cliente_rfc', rfc)
+      .eq('activo', true)
+      .order('nombre');
+    trabajadores = data || [];
+  } catch(e) {}
+
+  if (!trabajadores.length) {
+    sel.innerHTML = '<option value="">— Sin trabajadores activos en este RFC —</option>';
+    return;
+  }
+
+  const toAntig = ing => {
+    if (!ing) return '';
+    const d1 = new Date(ing), d2 = new Date();
+    const m = (d2.getFullYear() - d1.getFullYear()) * 12 + (d2.getMonth() - d1.getMonth());
+    return m < 6 ? 'Menos de 6 meses' : m < 12 ? '6 meses a 1 año' : m < 48 ? '1 a 4 años' : m < 120 ? '5 a 9 años' : '10 años o más';
+  };
+
+  sel.innerHTML = '<option value="">— Seleccione un trabajador —</option>' +
+    trabajadores.map(t =>
+      `<option value="${t.id}"
+        data-nombre="${(t.nombre||'').replace(/"/g,'&quot;')}"
+        data-puesto="${(t.puesto||'').replace(/"/g,'&quot;')}"
+        data-antig="${toAntig(t.fecha_ingreso)}"
+       >${t.nombre}${t.puesto ? ' — ' + t.puesto : ''}</option>`
+    ).join('');
+
+  sel.onchange = function() {
+    const opt = this.options[this.selectedIndex];
+    if (!opt.value) return;
+    const sv = (id, val) => {
+      const el = document.getElementById(id);
+      if (el && val != null && val !== '') { el.value = val; el.dispatchEvent(new Event('input')); }
+    };
+    sv('trab_nombre', opt.dataset.nombre);
+    sv('trab_puesto', opt.dataset.puesto);
+    sv('trab_antig',  opt.dataset.antig);
+    if (typeof actualizar === 'function') actualizar();
+  };
+})();
 
 // Expediente — vincular al roster y guardar (apaga el semáforo NOM-035 del dashboard)
 if (window.ExpedienteHelper) {

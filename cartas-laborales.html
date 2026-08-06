@@ -337,7 +337,7 @@ body.modo-demo .doc-sheet::after{content:'MUESTRA — CUENTA DEMO, NO VÁLIDO PA
         <div class="field"><label>Días de vacaciones pendientes</label><input type="number" id="lq_dias_vac" value="0" oninput="calcLiquidacion()"></div>
       </div>
       <div class="field-row">
-        <div class="field"><label>Salario mínimo vigente (MXN/día)</label><input type="number" id="lq_salmin" value="248.93" step="0.01" oninput="calcLiquidacion()"></div>
+        <div class="field"><label>Salario mínimo vigente (MXN/día)</label><input type="number" id="lq_salmin" value="315.04" step="0.01" oninput="calcLiquidacion()"></div>
         <div class="field"><label>Deducciones (préstamos, etc.)</label><input type="number" id="lq_deducciones" value="0" step="0.01" oninput="calcLiquidacion()"></div>
       </div>
       <div class="field">
@@ -807,12 +807,32 @@ renderPanelMembrete('mem-logo-container');
   setV('mem-empresa', p.get('empresa'));
   setV('mem-rfc', p.get('rfc'));
 
-  // Datos del trabajador
+  // Datos del trabajador (campos comunes a todos los tipos)
   setV('trabajador', p.get('trabajador'));
   setV('puesto', p.get('puesto'));
-  setV('salario', p.get('salario'));
   setV('fecha_ingreso', p.get('ingreso'));
-  setV('fecha_baja', p.get('baja'));
+
+  // Campos específicos por tipo
+  if (tipo === 'finiquito') {
+    const salPendDias = parseFloat(p.get('sal_pend_dias')) || 0;
+    const vacPrevDias = parseFloat(p.get('vac_prev_dias')) || 0;
+    const vacPropDias = parseFloat(p.get('vac_prop_dias')) || 0;
+    const vacTotal    = Math.round((vacPrevDias + vacPropDias) * 100) / 100;
+
+    setV('f_salario_diario', p.get('salario'));
+    setV('f_fecha_baja',     p.get('baja'));
+    setV('f_dias_salario',   String(salPendDias));
+    setV('f_dias_vacaciones', String(vacTotal));
+  }
+
+  if (tipo === 'liquidacion') {
+    const vacPropDias = parseFloat(p.get('vac_prop_dias')) || 0;
+
+    setV('lq_sdi',       p.get('salario'));
+    setV('lq_fecha_baja', p.get('baja'));
+    setV('lq_dias_vac',  String(Math.round(vacPropDias * 100) / 100));
+    setV('lq_salmin',    '315.04');
+  }
 
   // Si hay total calculado, mostrarlo como referencia
   const totalCalc = p.get('total_calc');
@@ -823,15 +843,15 @@ renderPanelMembrete('mem-logo-container');
         const banner = document.createElement('div');
         banner.id = 'calc-ref-banner';
         banner.style.cssText = 'background:#f0fdf4;border:1px solid #86efac;border-radius:8px;padding:10px 14px;margin-bottom:14px;font-size:12px;color:#065f46;';
-        banner.innerHTML = `✅ Datos precargados desde la calculadora. Total calculado: <strong>${totalCalc}</strong>. Revise y ajuste los campos antes de imprimir.`;
-        const workspace = document.querySelector('.workspace') || document.querySelector('.form-panel');
-        if (workspace) workspace.insertBefore(banner, workspace.firstChild);
+        banner.innerHTML = `✅ Datos precargados desde la calculadora del portal. Total calculado: <strong>${totalCalc}</strong>. Revise y ajuste si es necesario antes de imprimir.`;
+        const panel = document.querySelector('.form-panel');
+        if (panel) panel.insertBefore(banner, panel.firstChild);
       }
-    }, 500);
+    }, 600);
   }
 
-  // Render inicial
-  setTimeout(() => render(), 300);
+  // Render final tras poblar todos los campos
+  setTimeout(() => render(), 400);
 })();
 
 render();

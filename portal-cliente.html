@@ -1407,6 +1407,7 @@ async function renderReportes() {
     html += '<div style="display:flex;align-items:center;gap:12px;margin-bottom:12px;">';
     html += '<div style="font-size:13px;font-weight:700;color:var(--navy);flex-shrink:0;">Trabajadores activos (' + activos.length + ')</div>';
     html += '<input id="trab-search" type="search" placeholder="🔍 Buscar por nombre o puesto…" oninput="filtrarTrabajadores(this.value)" style="flex:1;min-width:0;">';
+    html += '<button onclick="exportarExcelTrabajadores()" title="Exportar a Excel" style="padding:6px 12px;font-size:12px;font-weight:600;cursor:pointer;border:1.5px solid var(--teal,#0d9488);border-radius:6px;background:var(--white);color:var(--teal,#0d9488);white-space:nowrap;flex-shrink:0;">⬇ Excel</button>';
     html += '</div>';
     html += '<table style="width:100%;border-collapse:collapse;font-size:12px;">';
     html += '<thead><tr><th style="' + thSt + '">Nombre</th><th style="' + thSt + '">Puesto</th><th style="' + thSt + '">Ingreso</th><th style="' + thSt + '">Antigüedad</th><th style="' + thSt + '">NSS</th><th style="' + thSt + '">Documentos</th></tr></thead>';
@@ -3320,6 +3321,53 @@ document.getElementById('gen-menu').addEventListener('click', function(e) {
   abrirGenTrabajador(btn.getAttribute('data-gen'), _genMenuIdx);
   cerrarGenMenu();
 });
+
+// ── Exportar tabla de trabajadores a Excel (SpreadsheetML) ──
+function exportarExcelTrabajadores() {
+  var activos = window._repActivos || [];
+  if (activos.length === 0) { alert('Sin trabajadores para exportar.'); return; }
+  var empresa = (window._repEmpresa || window._repRFC || 'plantilla').replace(/[^a-zA-Z0-9_-]/g, '_');
+  var hoy = new Date();
+  var fechaStr = hoy.toISOString().split('T')[0];
+  var esc = function(s){ return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); };
+  var sCell = function(v, sid){ return '<Cell'+(sid?' ss:StyleID="'+sid+'"':'')+' ><Data ss:Type="String">'+esc(v)+'</Data></Cell>'; };
+  var nCell = function(v){ return '<Cell><Data ss:Type="Number">'+Number(v)+'</Data></Cell>'; };
+  var antigCalc = function(fi) {
+    if(!fi) return '';
+    var d = Math.floor((hoy - new Date(fi+'T12:00:00'))/86400000);
+    if(d<30) return d+' días';
+    if(d<365) return Math.floor(d/30)+' meses';
+    return (d/365).toFixed(1)+' años';
+  };
+  var headers = ['Nombre','Puesto','Fecha de ingreso','Antigüedad','NSS','Salario diario','Salario mensual est.'];
+  var rows = '<Row>' + headers.map(function(h){ return sCell(h,'hdr'); }).join('') + '</Row>\n';
+  activos.forEach(function(t){
+    var hasSal = t.salario_diario != null && t.salario_diario > 0;
+    rows += '<Row>'
+      + sCell(t.nombre||'') + sCell(t.puesto||'') + sCell(t.fecha_ingreso||'')
+      + sCell(antigCalc(t.fecha_ingreso)) + sCell(t.nss||'')
+      + (hasSal ? nCell(t.salario_diario) + nCell(Math.round(t.salario_diario*30.4)) : sCell('')+sCell(''))
+      + '</Row>\n';
+  });
+  var xml = '<?xml version="1.0" encoding="UTF-8"?>\n<?mso-application progid="Excel.Sheet"?>\n'
+    +'<Workbook xmlns="urn:schemas-microsoft-com:office:spreadsheet" xmlns:ss="urn:schemas-microsoft-com:office:spreadsheet">\n'
+    +' <Styles>\n'
+    +'  <Style ss:ID="hdr"><Font ss:Bold="1" ss:Color="#FFFFFF"/><Interior ss:Color="#0F2640" ss:Pattern="Solid"/></Style>\n'
+    +' </Styles>\n'
+    +' <Worksheet ss:Name="Trabajadores">\n'
+    +'  <Table ss:DefaultColumnWidth="120">\n'
+    +'   <Column ss:Width="200"/><Column ss:Width="160"/><Column ss:Width="110"/><Column ss:Width="100"/><Column ss:Width="130"/><Column ss:Width="110"/><Column ss:Width="140"/>\n'
+    + rows
+    +'  </Table>\n'
+    +' </Worksheet>\n'
+    +'</Workbook>';
+  var blob = new Blob([xml], {type:'application/vnd.ms-excel;charset=utf-8'});
+  var url = URL.createObjectURL(blob);
+  var a = document.createElement('a');
+  a.href = url; a.download = empresa+'_trabajadores_'+fechaStr+'.xls';
+  document.body.appendChild(a); a.click();
+  document.body.removeChild(a); URL.revokeObjectURL(url);
+}
 
 // ── Filtro de búsqueda en tabla de trabajadores ──
 function filtrarTrabajadores(q) {

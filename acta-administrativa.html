@@ -615,6 +615,37 @@ renderPanelMembrete('mem-logo-container');
 })();
 setTipo('aperc');
 
+// ── Autocompletar desde portal (URL params) ──
+(function precargarDesdePortal() {
+  const p = new URLSearchParams(window.location.search);
+  if (!p.has('trabajador')) return;
+  const sv = (id, val) => {
+    const el = document.getElementById(id);
+    if (el && val) { el.value = val; el.dispatchEvent(new Event('input')); }
+  };
+  sv('trabajador', p.get('trabajador'));
+  sv('puesto',     p.get('puesto'));
+  sv('empresa',    p.get('empresa'));
+  sv('mem-rfc-acta', p.get('rfc'));
+  // Calcular antigüedad si viene fecha de ingreso
+  const ingreso = p.get('ingreso');
+  if (ingreso) {
+    const d1 = new Date(ingreso), d2 = new Date();
+    let anios = d2.getFullYear() - d1.getFullYear();
+    let meses = d2.getMonth() - d1.getMonth();
+    if (meses < 0 || (meses === 0 && d2.getDate() < d1.getDate())) anios--;
+    let totalMeses = (d2.getFullYear() - d1.getFullYear()) * 12 + meses;
+    if (d2.getDate() < d1.getDate()) totalMeses--;
+    totalMeses = Math.max(0, totalMeses);
+    const mResto = totalMeses % 12;
+    let antig = anios > 0 ? anios + ' año' + (anios === 1 ? '' : 's') : '';
+    if (mResto > 0) antig += (antig ? ' y ' : '') + mResto + ' mes' + (mResto === 1 ? '' : 'es');
+    if (!antig) antig = 'Menos de 1 mes';
+    sv('antiguedad', antig);
+  }
+  setTimeout(() => { if (typeof render === 'function') render(); }, 200);
+})();
+
 // ── Selector de trabajador desde expediente ──
 (async function initWorkerSelector() {
   const p = new URLSearchParams(window.location.search);

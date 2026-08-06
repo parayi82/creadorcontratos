@@ -1280,18 +1280,24 @@ async function renderReportes() {
     html += '<div style="background:var(--white);border-radius:10px;padding:16px;border:1px solid var(--border);overflow-x:auto;">';
     html += '<div style="font-size:13px;font-weight:700;color:var(--navy);margin-bottom:12px;">Trabajadores activos (' + activos.length + ')</div>';
     html += '<table style="width:100%;border-collapse:collapse;font-size:12px;">';
-    html += '<thead><tr><th style="text-align:left;padding:7px 10px;border-bottom:1.5px solid var(--border);font-size:10px;text-transform:uppercase;color:var(--ink3);">Nombre</th><th style="text-align:left;padding:7px 10px;border-bottom:1.5px solid var(--border);font-size:10px;text-transform:uppercase;color:var(--ink3);">Puesto</th><th style="text-align:left;padding:7px 10px;border-bottom:1.5px solid var(--border);font-size:10px;text-transform:uppercase;color:var(--ink3);">Ingreso</th><th style="text-align:left;padding:7px 10px;border-bottom:1.5px solid var(--border);font-size:10px;text-transform:uppercase;color:var(--ink3);">Antigüedad</th><th style="text-align:left;padding:7px 10px;border-bottom:1.5px solid var(--border);font-size:10px;text-transform:uppercase;color:var(--ink3);">NSS</th></tr></thead>';
+    html += '<thead><tr><th style="text-align:left;padding:7px 10px;border-bottom:1.5px solid var(--border);font-size:10px;text-transform:uppercase;color:var(--ink3);">Nombre</th><th style="text-align:left;padding:7px 10px;border-bottom:1.5px solid var(--border);font-size:10px;text-transform:uppercase;color:var(--ink3);">Puesto</th><th style="text-align:left;padding:7px 10px;border-bottom:1.5px solid var(--border);font-size:10px;text-transform:uppercase;color:var(--ink3);">Ingreso</th><th style="text-align:left;padding:7px 10px;border-bottom:1.5px solid var(--border);font-size:10px;text-transform:uppercase;color:var(--ink3);">Antigüedad</th><th style="text-align:left;padding:7px 10px;border-bottom:1.5px solid var(--border);font-size:10px;text-transform:uppercase;color:var(--ink3);">NSS</th><th style="text-align:left;padding:7px 10px;border-bottom:1.5px solid var(--border);font-size:10px;text-transform:uppercase;color:var(--ink3);">Generar documento</th></tr></thead>';
     html += '<tbody>';
     if (activos.length === 0) {
-      html += '<tr><td colspan="5" style="padding:20px;text-align:center;color:var(--ink3);">Sin trabajadores</td></tr>';
+      html += '<tr><td colspan="6" style="padding:20px;text-align:center;color:var(--ink3);">Sin trabajadores</td></tr>';
     } else {
-      activos.forEach(function(t) {
+      var btnSt = 'padding:4px 8px;font-size:11px;font-weight:500;cursor:pointer;border:1px solid var(--border);border-radius:5px;background:var(--white);color:var(--navy);white-space:nowrap;';
+      activos.forEach(function(t, idx) {
         html += '<tr>';
         html += '<td style="padding:8px 10px;border-bottom:1px solid var(--border);font-weight:600;">' + (t.nombre||'') + '</td>';
         html += '<td style="padding:8px 10px;border-bottom:1px solid var(--border);color:var(--ink2);">' + (t.puesto||'—') + '</td>';
         html += '<td style="padding:8px 10px;border-bottom:1px solid var(--border);color:var(--ink2);">' + fmt(t.fecha_ingreso) + '</td>';
         html += '<td style="padding:8px 10px;border-bottom:1px solid var(--border);color:var(--ink2);">' + antig(t.fecha_ingreso) + '</td>';
         html += '<td style="padding:8px 10px;border-bottom:1px solid var(--border);color:var(--ink2);">' + (t.nss||'—') + '</td>';
+        html += '<td style="padding:6px 10px;border-bottom:1px solid var(--border);"><div style="display:flex;gap:5px;flex-wrap:wrap;">';
+        html += '<button style="' + btnSt + '" onclick="abrirGenTrabajador(\'acta-administrativa.html\',' + idx + ')">📝 Acta</button>';
+        html += '<button style="' + btnSt + '" onclick="abrirGenTrabajador(\'cartas-laborales.html\',' + idx + ')">📤 Renuncia / Carta</button>';
+        html += '<button style="' + btnSt + '" onclick="abrirGenTrabajador(\'permisos-ausencias.html\',' + idx + ')">🗓 Permiso</button>';
+        html += '</div></td>';
         html += '</tr>';
       });
     }
@@ -2780,6 +2786,20 @@ function imprimirCalculadora(tipo) {
     <script>window.print(); setTimeout(()=>window.close(),1200);<\/script>
   </body></html>`);
   w.document.close();
+}
+
+function abrirGenTrabajador(gen, idx) {
+  const t = (window._repActivos || [])[idx];
+  if (!t) return;
+  const p = new URLSearchParams({
+    empresa: clienteActual?.empresa || '',
+    rfc:     clienteActual?.rfc || '',
+    trabajador: t.nombre || '',
+    puesto:     t.puesto || '',
+    ingreso:    t.fecha_ingreso || '',
+    nss:        t.nss || ''
+  });
+  window.open(gen + '?' + p.toString(), '_blank');
 }
 
 function generarDocumentoDesdeCalc(tipo) {

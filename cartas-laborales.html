@@ -794,9 +794,11 @@ renderPanelMembrete('mem-logo-container');
 // ── Precargar datos desde la calculadora (URL params) ──
 (function precargarDesdeCalculadora() {
   const p = new URLSearchParams(window.location.search);
-  if (!p.has('tipo')) return; // no viene de la calculadora
+  const hasTipo      = p.has('tipo');
+  const hasTrabajador = p.has('trabajador');
+  if (!hasTipo && !hasTrabajador) return; // no viene de portal ni calculadora
 
-  const tipo = p.get('tipo'); // 'renuncia' | 'recomendacion' | 'constancia' | 'finiquito' | 'liquidacion'
+  const tipo = p.get('tipo') || '';
 
   // Seleccionar la pestaña correcta (UI de pestañas con setTipo)
   const tiposValidos = ['renuncia','recomendacion','constancia','finiquito','liquidacion'];

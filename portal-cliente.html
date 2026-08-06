@@ -1283,7 +1283,14 @@ async function renderReportes() {
     const docs  = Array.isArray(j2) ? j2 : [];
     const asisAll = Array.isArray(j3) ? j3 : [];
     const docsPorTrab = {};
-    docs.forEach(function(d){ if(d.trabajador_id) docsPorTrab[d.trabajador_id] = (docsPorTrab[d.trabajador_id]||0)+1; });
+    const docsPorTrabSet = {};
+    docs.forEach(function(d){
+      if(!d.trabajador_id) return;
+      docsPorTrab[d.trabajador_id] = (docsPorTrab[d.trabajador_id]||0)+1;
+      if(!docsPorTrabSet[d.trabajador_id]) docsPorTrabSet[d.trabajador_id] = new Set();
+      var dk = (d.tipo||'') + ' ' + (d.nombre||'');
+      DOCS_REQUERIDOS.forEach(function(req){ if(req.kw.test(dk)) docsPorTrabSet[d.trabajador_id].add(req.id); });
+    });
     window._repAsis = asisAll;
     window._repRFC  = rfcUsar;
     window._repEmpresa = clienteActual?.empresa || rfcUsar;
@@ -1390,6 +1397,81 @@ async function renderReportes() {
       });
       html += '</tbody></table>';
       html += '</div>';
+    }
+
+    // ── Completitud de expedientes ──
+    if (activos.length > 0) {
+      var completitudOrden = activos.map(function(t){
+        var s = docsPorTrabSet[t.id] || new Set();
+        var faltantes = DOCS_REQUERIDOS.filter(function(r){ return !s.has(r.id); });
+        return { t:t, completados:s.size, pct:Math.round(s.size/DOCS_REQUERIDOS.length*100), faltantes:faltantes };
+      }).sort(function(a,b){ return a.pct - b.pct; });
+      var completosTotal = completitudOrden.filter(function(x){ return x.pct>=100; }).length;
+      var pctPromedio = Math.round(completitudOrden.reduce(function(s,x){ return s+x.pct; }, 0) / completitudOrden.length);
+      var pctCol = pctPromedio>=80 ? '#16a34a' : pctPromedio>=50 ? '#d97706' : '#dc2626';
+
+      // Guardar para exportación
+      window._completitudDatos = completitudOrden.map(function(x){
+        return { nombre:x.t.nombre, puesto:x.t.puesto, completados:x.completados, pct:x.pct, faltantes:x.faltantes.map(function(r){ return r.label; }) };
+      });
+
+      html += '<div style="background:var(--white);border-radius:10px;padding:16px;border:1px solid var(--border);margin-bottom:14px;">';
+      html += '<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;flex-wrap:wrap;gap:8px;">';
+      html += '<div style="display:flex;align-items:center;gap:8px;">';
+      html += '<span style="font-size:16px;">📋</span>';
+      html += '<div><div style="font-size:13px;font-weight:700;color:var(--navy);">Completitud de expedientes</div>';
+      html += '<div style="font-size:11px;color:var(--ink3);">' + DOCS_REQUERIDOS.length + ' docs requeridos · ' + completosTotal + ' de ' + activos.length + ' trabajadores al 100%</div></div>';
+      html += '</div>';
+      html += '<button onclick="exportarCompletitudExcel()" style="padding:6px 12px;background:var(--navy);color:#fff;border:none;border-radius:6px;font-size:12px;font-weight:600;cursor:pointer;">⬇ Exportar pendientes</button>';
+      html += '</div>';
+
+      // Medidor general
+      html += '<div style="display:flex;align-items:center;gap:14px;margin-bottom:14px;padding:10px 14px;background:var(--surface);border-radius:8px;">';
+      html += '<div style="font-size:30px;font-weight:800;color:' + pctCol + ';min-width:56px;line-height:1;">' + pctPromedio + '%</div>';
+      html += '<div style="flex:1;">';
+      html += '<div style="height:10px;background:#e2e8f0;border-radius:5px;overflow:hidden;">';
+      html += '<div style="height:100%;width:' + pctPromedio + '%;background:' + pctCol + ';border-radius:5px;transition:width .4s;"></div></div>';
+      html += '<div style="font-size:11px;color:var(--ink3);margin-top:4px;">Promedio de completitud de la plantilla · ' + (activos.length - completosTotal) + ' trabajador(es) con documentos faltantes</div>';
+      html += '</div></div>';
+
+      // Tabla
+      html += '<div style="overflow-x:auto;">';
+      html += '<table style="width:100%;border-collapse:collapse;font-size:12px;">';
+      html += '<thead><tr>';
+      html += '<th style="text-align:left;padding:5px 8px;border-bottom:1.5px solid var(--border);font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.05em;color:var(--ink3);">Trabajador</th>';
+      html += '<th style="text-align:left;padding:5px 8px;border-bottom:1.5px solid var(--border);font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.05em;color:var(--ink3);">Puesto</th>';
+      html += '<th style="padding:5px 8px;border-bottom:1.5px solid var(--border);font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.05em;color:var(--ink3);">Progreso · documentos faltantes</th>';
+      html += '<th style="text-align:right;padding:5px 8px;border-bottom:1.5px solid var(--border);font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.05em;color:var(--ink3);">Estado</th>';
+      html += '</tr></thead><tbody>';
+
+      completitudOrden.forEach(function(x){
+        var col = x.pct>=80 ? '#16a34a' : x.pct>=50 ? '#d97706' : '#dc2626';
+        var bg  = x.pct>=80 ? '#dcfce7'  : x.pct>=50 ? '#fef3c7'  : '#fee2e2';
+        html += '<tr>';
+        html += '<td style="padding:8px 8px 6px;font-weight:600;vertical-align:top;">' + (x.t.nombre||'') + '</td>';
+        html += '<td style="padding:8px 8px 6px;color:var(--ink2);white-space:nowrap;vertical-align:top;">' + (x.t.puesto||'—') + '</td>';
+        html += '<td style="padding:8px 8px 6px;vertical-align:top;">';
+        html += '<div style="display:flex;align-items:center;gap:8px;margin-bottom:' + (x.faltantes.length ? '6' : '0') + 'px;">';
+        html += '<div style="flex:1;height:8px;background:#e2e8f0;border-radius:4px;overflow:hidden;min-width:80px;">';
+        html += '<div style="height:100%;width:' + x.pct + '%;background:' + col + ';border-radius:4px;"></div></div>';
+        html += '<span style="font-size:11px;font-weight:700;color:var(--ink2);white-space:nowrap;">' + x.completados + '/' + DOCS_REQUERIDOS.length + '</span>';
+        html += '</div>';
+        if(x.faltantes.length){
+          html += '<div style="display:flex;flex-wrap:wrap;gap:4px;">';
+          x.faltantes.forEach(function(r){
+            html += '<span style="display:inline-block;padding:1px 7px;font-size:10px;font-weight:600;background:#fee2e2;color:#b91c1c;border-radius:8px;">Falta: '+r.label+'</span>';
+          });
+          html += '</div>';
+        }
+        html += '</td>';
+        html += '<td style="padding:8px 8px 6px;text-align:right;vertical-align:top;white-space:nowrap;">';
+        html += '<span style="display:inline-block;padding:3px 10px;border-radius:10px;font-weight:700;font-size:11px;background:'+bg+';color:'+col+';">';
+        html += x.pct===100 ? '✅ Completo' : x.pct+'%';
+        html += '</span></td>';
+        html += '</tr>';
+      });
+
+      html += '</tbody></table></div></div>';
     }
 
     // Distribución por puesto
@@ -1516,13 +1598,13 @@ async function renderReportes() {
         html += '<td style="padding:8px 10px;border-bottom:1px solid var(--border);color:var(--ink2);">' + antig(t.fecha_ingreso) + '</td>';
         html += '<td style="padding:8px 10px;border-bottom:1px solid var(--border);color:var(--ink2);">' + (t.nss||'—') + '</td>';
         var docCnt = docsPorTrab[t.id] || 0;
+        var tSet = docsPorTrabSet[t.id] || new Set();
+        var tPct = Math.round(tSet.size / DOCS_REQUERIDOS.length * 100);
+        var tCol = tPct >= 80 ? '#0f766e' : tPct >= 50 ? '#92400e' : '#991b1b';
+        var tBg  = tPct >= 80 ? '#ccfbf1' : tPct >= 50 ? '#fef3c7' : '#fee2e2';
         html += '<td style="padding:6px 10px;border-bottom:1px solid var(--border);">';
         html += '<div style="display:flex;align-items:center;gap:8px;">';
-        if (docCnt > 0) {
-          html += '<span title="' + docCnt + ' documento(s) en expediente" style="display:inline-block;padding:2px 8px;background:#ccfbf1;color:#0f766e;border-radius:10px;font-size:11px;font-weight:700;font-variant-numeric:tabular-nums;cursor:default;">' + docCnt + ' 📄</span>';
-        } else {
-          html += '<span title="Sin documentos en expediente" style="display:inline-block;padding:2px 8px;background:#f1f5f9;color:var(--ink3);border-radius:10px;font-size:11px;font-weight:600;cursor:default;">0 📄</span>';
-        }
+        html += '<span title="Expediente: ' + tSet.size + '/' + DOCS_REQUERIDOS.length + ' documentos requeridos" style="display:inline-block;padding:2px 8px;background:' + tBg + ';color:' + tCol + ';border-radius:10px;font-size:11px;font-weight:700;font-variant-numeric:tabular-nums;cursor:default;">' + tSet.size + '/' + DOCS_REQUERIDOS.length + ' 📄</span>';
         html += '<button style="' + trigSt + '" onclick="toggleGenMenu(event,' + idx + ')">⚡ Generar ▾</button>';
         html += '</div>';
         html += '</td>';
@@ -1604,6 +1686,40 @@ async function renderReportes() {
   }
 }
 
+
+function exportarCompletitudExcel() {
+  var datos = window._completitudDatos;
+  if (!datos || !datos.length) { alert('Abra Reportes gerenciales para generar la tabla primero.'); return; }
+  var esc = function(s){ return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); };
+  var xml = '<?xml version="1.0" encoding="UTF-8"?><?mso-application progid="Excel.Sheet"?>';
+  xml += '<Workbook xmlns="urn:schemas-microsoft-com:office:spreadsheet" xmlns:ss="urn:schemas-microsoft-com:office:spreadsheet">';
+  xml += '<Styles><Style ss:ID="h"><Font ss:Bold="1"/><Interior ss:Color="#0F2640" ss:Pattern="Solid"/><Font ss:Color="#FFFFFF" ss:Bold="1"/></Style>';
+  xml += '<Style ss:ID="ok"><Interior ss:Color="#DCFCE7" ss:Pattern="Solid"/></Style>';
+  xml += '<Style ss:ID="am"><Interior ss:Color="#FEF3C7" ss:Pattern="Solid"/></Style>';
+  xml += '<Style ss:ID="ro"><Interior ss:Color="#FEE2E2" ss:Pattern="Solid"/></Style></Styles>';
+  xml += '<Worksheet ss:Name="Expedientes"><Table>';
+  xml += '<Row>';
+  ['Trabajador','Puesto','Docs completos','Total requeridos','% Completitud','Documentos faltantes'].forEach(function(h){
+    xml += '<Cell ss:StyleID="h"><Data ss:Type="String">'+esc(h)+'</Data></Cell>';
+  });
+  xml += '</Row>';
+  datos.forEach(function(x){
+    var sid = x.pct>=80 ? 'ok' : x.pct>=50 ? 'am' : 'ro';
+    xml += '<Row>';
+    xml += '<Cell ss:StyleID="'+sid+'"><Data ss:Type="String">'+esc(x.nombre)+'</Data></Cell>';
+    xml += '<Cell ss:StyleID="'+sid+'"><Data ss:Type="String">'+esc(x.puesto)+'</Data></Cell>';
+    xml += '<Cell ss:StyleID="'+sid+'"><Data ss:Type="Number">'+x.completados+'</Data></Cell>';
+    xml += '<Cell ss:StyleID="'+sid+'"><Data ss:Type="Number">'+DOCS_REQUERIDOS.length+'</Data></Cell>';
+    xml += '<Cell ss:StyleID="'+sid+'"><Data ss:Type="Number">'+x.pct+'</Data></Cell>';
+    xml += '<Cell ss:StyleID="'+sid+'"><Data ss:Type="String">'+esc(x.faltantes.join(', ') || '—')+'</Data></Cell>';
+    xml += '</Row>';
+  });
+  xml += '</Table></Worksheet></Workbook>';
+  var a = document.createElement('a');
+  a.href = URL.createObjectURL(new Blob([xml], {type:'application/vnd.ms-excel'}));
+  a.download = 'completitud-expedientes.xls';
+  a.click();
+}
 
 async function exportarConstanciaPortal() {
   const asisAll  = window._repAsis    || [];
@@ -2926,6 +3042,21 @@ function asistAutoResize(el){
   el.style.height = 'auto';
   el.style.height = Math.min(el.scrollHeight, 100) + 'px';
 }
+
+// ════════════════════════════════════════════
+// EXPEDIENTE — documentos requeridos por trabajador
+// ════════════════════════════════════════════
+const DOCS_REQUERIDOS = [
+  { id:'contrato',  label:'Contrato de trabajo',      kw:/contrat/i },
+  { id:'imss',      label:'Alta IMSS',                kw:/imss|inscripci/i },
+  { id:'ine',       label:'Identificación oficial',   kw:/\bine\b|identif|pasaporte/i },
+  { id:'curp',      label:'CURP',                     kw:/curp/i },
+  { id:'rfc',       label:'RFC / Constancia fiscal',  kw:/\brfc\b|c[eé]dula.?fiscal|constancia.?fiscal/i },
+  { id:'domicilio', label:'Comprobante de domicilio', kw:/domicilio|comprobante/i },
+  { id:'solicitud', label:'Solicitud de empleo',      kw:/solicitud/i },
+  { id:'dc3',       label:'DC-3 Capacitación',        kw:/dc.?3|capacitac|adiestr/i },
+  { id:'nom035',    label:'NOM-035 Evaluación',       kw:/nom.?0?35|psicosocial/i },
+];
 
 // ════════════════════════════════════════════
 // ACCIONES

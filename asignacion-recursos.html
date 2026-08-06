@@ -208,6 +208,13 @@ body.modo-demo .doc-sheet::after{content:'MUESTRA — CUENTA DEMO, NO VÁLIDO PA
     <div class="field"><label>Representante / entrega (RRHH)</label><input type="text" id="representante" oninput="render()" placeholder="Nombre completo y puesto"></div>
 
     <div class="section-label">Datos del trabajador</div>
+    <div id="worker-selector-wrap" style="display:none;margin-bottom:12px;">
+      <label style="display:block;font-size:11px;font-weight:600;color:var(--accent);margin-bottom:5px;letter-spacing:.04em;text-transform:uppercase;">Autocompletar desde expediente</label>
+      <select id="worker-selector" style="width:100%;padding:8px 10px;border:1px solid var(--border);border-radius:var(--radius);font-size:13px;color:var(--ink);background:var(--white);">
+        <option value="">— Cargando trabajadores... —</option>
+      </select>
+      <div style="font-size:11px;color:var(--ink3);margin-top:3px;">Seleccione un trabajador para llenar los campos automáticamente</div>
+    </div>
     <div class="field"><label>Nombre completo <span class="req">*</span></label><input type="text" id="trabajador" oninput="render()" placeholder="Nombre(s) Apellido Paterno Apellido Materno"></div>
     <div class="field-row">
       <div class="field"><label>Puesto</label><input type="text" id="puesto" oninput="render()" placeholder="Puesto / cargo"></div>
@@ -410,6 +417,20 @@ if (window.ExpedienteHelper) {
   });
 }
 
+// ── Autocompletar desde portal (URL params) ──
+(function precargarDesdePortal() {
+  const p = new URLSearchParams(window.location.search);
+  if (!p.has('trabajador')) return;
+  const sv = (id, val) => {
+    const el = document.getElementById(id);
+    if (el && val) { el.value = val; el.dispatchEvent(new Event('input')); }
+  };
+  sv('trabajador', p.get('trabajador'));
+  sv('puesto',     p.get('puesto'));
+  sv('empresa',    p.get('empresa'));
+  setTimeout(() => { if (typeof render === 'function') render(); }, 200);
+})();
+
 // ── INIT ──
 renderPanelMembrete('mem-logo-container');
 (async()=>{
@@ -422,6 +443,58 @@ renderPanelMembrete('mem-logo-container');
   }catch(e){}
 })();
 render();
+
+// ── Selector de trabajador desde expediente ──
+(async function initWorkerSelector() {
+  const p = new URLSearchParams(window.location.search);
+  const rfc = p.get('rfc');
+  if (!rfc || typeof supabase === 'undefined') return;
+
+  const wrap = document.getElementById('worker-selector-wrap');
+  if (!wrap) return;
+  wrap.style.display = 'block';
+
+  const sel = document.getElementById('worker-selector');
+  let trabajadores = [];
+  try {
+    const _sb = supabase.createClient(
+      'https://hpzgqaplrywwjuvrzhcp.supabase.co',
+      'sb_publishable_1g8US8iFJ8CxnSaF_4MHgA_gqyyAr3W'
+    );
+    const { data } = await _sb
+      .from('trabajadores')
+      .select('id,nombre,puesto')
+      .eq('cliente_rfc', rfc)
+      .eq('activo', true)
+      .order('nombre');
+    trabajadores = data || [];
+  } catch(e) {}
+
+  if (!trabajadores.length) {
+    sel.innerHTML = '<option value="">— Sin trabajadores activos en este RFC —</option>';
+    return;
+  }
+
+  sel.innerHTML = '<option value="">— Seleccione un trabajador —</option>' +
+    trabajadores.map(t =>
+      `<option value="${t.id}"
+        data-nombre="${(t.nombre||'').replace(/"/g,'&quot;')}"
+        data-puesto="${(t.puesto||'').replace(/"/g,'&quot;')}"
+       >${t.nombre}${t.puesto ? ' — ' + t.puesto : ''}</option>`
+    ).join('');
+
+  sel.onchange = function() {
+    const opt = this.options[this.selectedIndex];
+    if (!opt.value) return;
+    const sv = (id, val) => {
+      const el = document.getElementById(id);
+      if (el && val != null && val !== '') { el.value = val; el.dispatchEvent(new Event('input')); }
+    };
+    sv('trabajador', opt.dataset.nombre);
+    sv('puesto',     opt.dataset.puesto);
+    if (typeof render === 'function') render();
+  };
+})();
 </script>
 <script src="edicion-libre.js?v=4.6"></script>
 

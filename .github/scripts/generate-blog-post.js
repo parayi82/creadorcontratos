@@ -716,7 +716,8 @@ async function main() {
     console.log(`🗞️  Generando noticia: "${selected.topic}" (${selected.cat})`);
 
     const contentHtml = await generateNews(selected.topic, selected.cat);
-    const slug = 'noticia-' + slugify(selected.topic).slice(0, 50) + '-' + today().slice(0, 4);
+    // Slug includes full date (YYYY-MM-DD) to avoid collisions entre años
+    const slug = 'noticia-' + slugify(selected.topic).slice(0, 50) + '-' + today();
     const fecha = today();
     const excerpt = extractExcerpt(contentHtml);
 
@@ -764,7 +765,8 @@ async function main() {
     console.log(`📝 Generando artículo: "${selected.topic}" (${selected.cat})`);
 
     const contentHtml = await generateContent(selected.topic, selected.cat);
-    const slug = slugify(selected.topic) + '-' + today().slice(0, 4);
+    // Slug includes full date (YYYY-MM-DD) to avoid collisions entre años
+    const slug = slugify(selected.topic) + '-' + today();
     const fecha = today();
     const minLectura = estimateReadTime(contentHtml);
     const excerpt = extractExcerpt(contentHtml);

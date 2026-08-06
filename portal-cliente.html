@@ -1253,6 +1253,18 @@ async function renderReportes() {
     const antig = fi => { if(!fi) return '—'; const d=Math.floor((new Date()-new Date(fi+'T12:00:00'))/86400000); if(d<30) return d+'d'; if(d<365) return Math.floor(d/30)+'m'; return (d/365).toFixed(1)+' años'; };
     const bar = (v,max,col='var(--navy2)') => `<div style="height:8px;background:#f1f5f9;border-radius:4px;overflow:hidden;flex:1;"><div style="height:100%;width:${Math.round(v/max*100)}%;background:${col};border-radius:4px;"></div></div>`;
 
+    // ── Alertas de aniversario ──
+    const diasVacLFT = function(a){ if(a<=4) return 10+a*2; if(a<=5) return 20; if(a<=10) return 22; if(a<=15) return 24; if(a<=20) return 26; if(a<=25) return 28; if(a<=30) return 30; return 32; };
+    const proximosAniv = activos.filter(function(t){return !!t.fecha_ingreso;}).map(function(t){
+      var ing = new Date(t.fecha_ingreso+'T12:00:00');
+      var aniosCump = Math.floor((hoy-ing)/(365.25*86400000));
+      var nxt = new Date(ing); nxt.setFullYear(hoy.getFullYear());
+      if(nxt <= hoy) nxt.setFullYear(hoy.getFullYear()+1);
+      var df = Math.ceil((nxt-hoy)/86400000);
+      var aniosSig = aniosCump+1;
+      return {t:t, nextAniv:nxt, diasFalta:df, aniosSig:aniosSig, vacDias:diasVacLFT(aniosSig)};
+    }).filter(function(x){return x.diasFalta<=30 && x.aniosSig>=1;}).sort(function(a,b){return a.diasFalta-b.diasFalta;});
+
     console.log('[Rep] Renderizando HTML con', activos.length, 'activos,', bajas.length, 'bajas');
 
     // Construcción del HTML por partes — sin template literals anidados
@@ -1265,7 +1277,43 @@ async function renderReportes() {
     html += kpiCard('Documentos', docsFiltrados.length, docsFiltrados.filter(function(d){return d.tipo&&/contrato/i.test(d.tipo);}).length + ' contratos', '#0f766e');
     html += kpiCard('Altas en período', altasPeriodo, 'nuevos ingresos', '#16a34a');
     if (conSalario.length > 0) html += kpiCard('Costo mensual est.', mxn(costoMensualTotal), pctConSalario + '% de plantilla capturado', '#7c3aed');
+    if (proximosAniv.length > 0) html += kpiCard('Aniversarios próximos', proximosAniv.length, 'en los próximos 30 días', '#d97706');
     html += '</div>';
+
+    // Alertas de aniversario
+    if (proximosAniv.length > 0) {
+      html += '<div style="background:var(--white);border-radius:10px;padding:16px;border:1.5px solid #fbbf24;margin-bottom:14px;">';
+      html += '<div style="display:flex;align-items:center;gap:8px;margin-bottom:12px;">';
+      html += '<span style="font-size:16px;">🎂</span>';
+      html += '<span style="font-size:13px;font-weight:700;color:var(--navy);">Aniversarios próximos</span>';
+      html += '<span style="font-size:11px;padding:2px 8px;background:#fef3c7;color:#92400e;border-radius:10px;font-weight:600;">' + proximosAniv.length + ' en 30 días</span>';
+      html += '</div>';
+      html += '<table style="width:100%;border-collapse:collapse;font-size:12px;">';
+      html += '<thead><tr style="border-bottom:1px solid var(--border);">';
+      html += '<th style="padding:4px 8px;text-align:left;font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.05em;color:var(--ink3);">Trabajador</th>';
+      html += '<th style="padding:4px 8px;text-align:left;font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.05em;color:var(--ink3);">Puesto</th>';
+      html += '<th style="padding:4px 8px;text-align:center;font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.05em;color:var(--ink3);">Fecha</th>';
+      html += '<th style="padding:4px 8px;text-align:center;font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.05em;color:var(--ink3);">Año que cumple</th>';
+      html += '<th style="padding:4px 8px;text-align:center;font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.05em;color:var(--ink3);">Vacaciones nuevas</th>';
+      html += '<th style="padding:4px 8px;text-align:right;font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.05em;color:var(--ink3);">Faltan</th>';
+      html += '</tr></thead><tbody>';
+      proximosAniv.forEach(function(x) {
+        var urgColor = x.diasFalta <= 3 ? '#dc2626' : x.diasFalta <= 7 ? '#b45309' : '#15803d';
+        var urgBg    = x.diasFalta <= 3 ? '#fee2e2' : x.diasFalta <= 7 ? '#fef3c7' : '#dcfce7';
+        var urgText  = x.diasFalta === 0 ? '¡Hoy!' : x.diasFalta + 'd';
+        var fechaStr = x.nextAniv.toISOString().split('T')[0];
+        html += '<tr style="border-bottom:1px solid var(--border);">';
+        html += '<td style="padding:7px 8px;font-weight:600;">' + (x.t.nombre||'') + '</td>';
+        html += '<td style="padding:7px 8px;color:var(--ink3);">' + (x.t.puesto||'—') + '</td>';
+        html += '<td style="padding:7px 8px;text-align:center;">' + fmt(fechaStr) + '</td>';
+        html += '<td style="padding:7px 8px;text-align:center;font-weight:700;">' + x.aniosSig + '</td>';
+        html += '<td style="padding:7px 8px;text-align:center;color:#0f766e;font-weight:700;">' + x.vacDias + ' días (Art. 76 LFT)</td>';
+        html += '<td style="padding:7px 8px;text-align:right;"><span style="display:inline-block;padding:2px 8px;background:' + urgBg + ';color:' + urgColor + ';border-radius:10px;font-weight:700;font-size:11px;">' + urgText + '</span></td>';
+        html += '</tr>';
+      });
+      html += '</tbody></table>';
+      html += '</div>';
+    }
 
     // Distribución por puesto
     if (puestosOrden.length > 0) {

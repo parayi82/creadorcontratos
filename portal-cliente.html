@@ -336,6 +336,51 @@ body{font-family:var(--font);background:var(--surface);color:var(--ink);min-heig
 .asis-input:focus{border-color:var(--navy2);}
 .asis-send{width:38px;height:38px;border-radius:50%;background:var(--navy);color:#fff;border:none;cursor:pointer;font-size:16px;display:flex;align-items:center;justify-content:center;flex-shrink:0;transition:background .15s;}
 .asis-send:hover{background:var(--navy2);}
+/* ── Calculadora unificada ── */
+.cu-concepto{display:flex;justify-content:space-between;align-items:flex-start;padding:9px 0;border-bottom:1px solid rgba(255,255,255,.1);gap:8px;}
+.cu-concepto:last-child{border-bottom:none;}
+.cu-concepto-label{font-size:13px;opacity:.85;line-height:1.35;}
+.cu-concepto-formula{font-size:10px;opacity:.45;margin-top:2px;}
+.cu-concepto-val{font-size:14px;font-weight:700;white-space:nowrap;}
+.cu-sep{height:1px;background:rgba(255,255,255,.15);margin:10px 0;}
+.cu-total{display:flex;justify-content:space-between;padding:10px 0 4px;font-size:16px;font-weight:700;}
+.cu-motivo-badge{display:inline-block;font-size:10px;font-weight:700;padding:2px 8px;border-radius:10px;text-transform:uppercase;letter-spacing:.06em;margin-bottom:12px;}
+.cu-motivo-renuncia{background:#dbeafe;color:#1e40af;}
+.cu-motivo-despido{background:#fee2e2;color:#991b1b;}
+.cu-motivo-rescision{background:#fef3c7;color:#92400e;}
+.cu-motivo-acuerdo{background:#dcfce7;color:#166534;}
+/* ── NOM-035 dashboard ── */
+.nom-prog-wrap{display:flex;align-items:center;gap:20px;padding:16px 20px;background:var(--sky);border:1px solid var(--border2);border-radius:var(--r);margin-bottom:16px;}
+.nom-ring{position:relative;width:80px;height:80px;flex-shrink:0;}
+.nom-ring svg{transform:rotate(-90deg);}
+.nom-ring-label{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;font-size:18px;font-weight:800;color:var(--navy);}
+.nom-ring-sub{font-size:10px;font-weight:400;color:var(--ink3);}
+.nom-seccion{background:var(--white);border:1px solid var(--border);border-radius:var(--r);padding:14px 16px;margin-bottom:10px;}
+.nom-seccion-hdr{display:flex;align-items:center;gap:10px;margin-bottom:10px;cursor:pointer;}
+.nom-seccion-title{font-size:13px;font-weight:700;color:var(--navy2);flex:1;}
+.nom-seccion-badge{font-size:11px;font-weight:600;padding:2px 8px;border-radius:10px;}
+.nom-item{display:flex;align-items:flex-start;gap:10px;padding:8px 0;border-bottom:1px solid var(--border);cursor:pointer;}
+.nom-item:last-child{border-bottom:none;}
+.nom-item:hover{background:var(--surface);margin:0 -4px;padding-left:4px;padding-right:4px;border-radius:4px;}
+.nom-item input[type=checkbox]{width:16px;height:16px;flex-shrink:0;cursor:pointer;accent-color:var(--teal);margin-top:1px;}
+.nom-item-text{font-size:13px;color:var(--ink2);line-height:1.4;}
+.nom-item-art{font-size:10px;color:var(--ink3);margin-top:2px;}
+/* ── Historial timeline ── */
+.hist-wrap{padding:0;}
+.hist-filtros{display:flex;gap:8px;margin-bottom:16px;flex-wrap:wrap;align-items:center;}
+.hist-timeline{position:relative;padding-left:28px;}
+.hist-timeline::before{content:'';position:absolute;left:10px;top:0;bottom:0;width:2px;background:var(--border2);}
+.hist-event{position:relative;margin-bottom:16px;}
+.hist-event::before{content:'';position:absolute;left:-22px;top:10px;width:10px;height:10px;border-radius:50%;border:2px solid var(--white);background:var(--ink3);}
+.hist-event.alta::before{background:#0d9488;}
+.hist-event.baja::before{background:#dc2626;}
+.hist-card{background:var(--white);border:1px solid var(--border);border-radius:var(--r-sm);padding:10px 14px;}
+.hist-badge{display:inline-block;font-size:10px;font-weight:700;padding:2px 8px;border-radius:10px;text-transform:uppercase;letter-spacing:.06em;margin-bottom:4px;}
+.hist-badge-alta{background:#ccfbf1;color:#0f766e;}
+.hist-badge-baja{background:#fee2e2;color:#991b1b;}
+.hist-nombre{font-size:14px;font-weight:600;color:var(--ink);}
+.hist-meta{font-size:12px;color:var(--ink3);margin-top:2px;}
+.hist-empty{text-align:center;padding:50px 20px;color:var(--ink3);}
 </style>
 </head>
 <body>
@@ -437,6 +482,8 @@ body{font-family:var(--font);background:var(--surface);color:var(--ink);min-heig
       <div class="nav-item" onclick="goPanel('compliance')"><span class="nav-icon">📊</span> Mi compliance</div>
       <div class="nav-item" onclick="goPanel('alertas')"><span class="nav-icon">🔔</span> Alertas <span class="nav-badge" id="sb-alert-badge">0</span></div>
       <div class="nav-item" onclick="goPanel('comisiones')"><span class="nav-icon">🏛</span> Comisiones mixtas</div>
+      <div class="nav-item" onclick="goPanel('nom035')"><span class="nav-icon">🛡</span> NOM-035</div>
+      <div class="nav-item" onclick="goPanel('historial')"><span class="nav-icon">📋</span> Historial de plantilla</div>
 
       <div class="sb-sec">Documentos</div>
 
@@ -706,14 +753,56 @@ body{font-family:var(--font);background:var(--surface);color:var(--ink);min-heig
 
         <!-- Selector de tipo de cálculo -->
         <div style="display:flex;gap:8px;margin-bottom:20px;flex-wrap:wrap;">
-          <button class="btn btn-primary btn-sm" id="calc-tab-finiquito" onclick="calcSetTab('finiquito')">📄 Finiquito</button>
+          <button class="btn btn-primary btn-sm" id="calc-tab-completo" onclick="calcSetTab('completo')">🧮 Cálculo completo</button>
+          <button class="btn btn-ghost btn-sm" id="calc-tab-finiquito" onclick="calcSetTab('finiquito')">📄 Finiquito</button>
           <button class="btn btn-ghost btn-sm" id="calc-tab-liquidacion" onclick="calcSetTab('liquidacion')">⚖️ Liquidación</button>
           <button class="btn btn-ghost btn-sm" id="calc-tab-vacaciones" onclick="calcSetTab('vacaciones')">🏖️ Vacaciones</button>
-          <button class="btn btn-ghost btn-sm" id="calc-tab-antiguedad" onclick="calcSetTab('antiguedad')">📅 Prima de antigüedad</button>
+          <button class="btn btn-ghost btn-sm" id="calc-tab-antiguedad" onclick="calcSetTab('antiguedad')">📅 Prima antigüedad</button>
+        </div>
+
+        <!-- CÁLCULO COMPLETO (flujo unificado) -->
+        <div id="calc-panel-completo">
+          <div class="two-col">
+            <div class="card">
+              <div class="card-title" style="margin-bottom:14px;">Datos del trabajador</div>
+              <div style="display:flex;flex-direction:column;gap:10px;">
+                <div><label style="font-size:12px;color:var(--ink3);display:block;margin-bottom:3px;">Nombre</label><input type="text" id="cu-nombre" class="form-input" placeholder="Nombre completo" oninput="calcCompleto()"></div>
+                <div><label style="font-size:12px;color:var(--ink3);display:block;margin-bottom:3px;">Puesto</label><input type="text" id="cu-puesto" class="form-input" placeholder="Puesto o categoría" oninput="calcCompleto()"></div>
+                <div><label style="font-size:12px;color:var(--ink3);display:block;margin-bottom:3px;">Salario diario base (MXN)</label><input type="number" id="cu-salario" class="form-input" placeholder="500.00" oninput="calcCompleto()"></div>
+                <div><label style="font-size:12px;color:var(--ink3);display:block;margin-bottom:3px;">Fecha de ingreso</label><input type="date" id="cu-ingreso" class="form-input" oninput="calcCompleto()"></div>
+                <div><label style="font-size:12px;color:var(--ink3);display:block;margin-bottom:3px;">Fecha de baja / separación</label><input type="date" id="cu-baja" class="form-input" oninput="calcCompleto()"></div>
+                <div>
+                  <label style="font-size:12px;color:var(--ink3);display:block;margin-bottom:3px;">Motivo de separación</label>
+                  <select id="cu-motivo" class="form-input" onchange="calcCompleto()">
+                    <option value="renuncia">Renuncia voluntaria (Art. 53 LFT)</option>
+                    <option value="despido">Despido injustificado (Art. 48 LFT)</option>
+                    <option value="rescision47">Rescisión por causa justificada — patrón (Art. 47 LFT)</option>
+                    <option value="acuerdo">Mutuo acuerdo / acuerdo de terminación</option>
+                  </select>
+                </div>
+                <div><label style="font-size:12px;color:var(--ink3);display:block;margin-bottom:3px;">Días de salario pendientes de pago</label><input type="number" id="cu-sal-pend" class="form-input" placeholder="0" value="0" min="0" oninput="calcCompleto()"></div>
+                <div><label style="font-size:12px;color:var(--ink3);display:block;margin-bottom:3px;">Días de aguinaldo contractuales (mínimo 15)</label><input type="number" id="cu-agui-dias" class="form-input" value="15" min="15" oninput="calcCompleto()"></div>
+                <div><label style="font-size:12px;color:var(--ink3);display:block;margin-bottom:3px;">Salario mínimo vigente (MXN/día)</label><input type="number" id="cu-salmin" class="form-input" value="315.04" oninput="calcCompleto()"><div style="font-size:11px;color:var(--ink3);margin-top:3px;">Usado solo para tope de prima de antigüedad (2×SM). Valor 2026: $315.04</div></div>
+              </div>
+            </div>
+            <div class="card" style="background:var(--navy);color:#fff;">
+              <div style="font-size:12px;opacity:.5;text-transform:uppercase;letter-spacing:.08em;margin-bottom:12px;">Desglose completo de pagos</div>
+              <div id="cu-resultado">
+                <div style="text-align:center;padding:30px;opacity:.4;font-size:13px;">Complete los datos para calcular</div>
+              </div>
+              <div id="cu-botones" style="display:none;margin-top:16px;display:flex;flex-direction:column;gap:8px;">
+                <button class="btn btn-outline" style="color:#fff;border-color:rgba(255,255,255,.4);" onclick="imprimirCalcCompleto()">🖨 Imprimir desglose</button>
+              </div>
+            </div>
+          </div>
+          <div class="card" style="margin-top:14px;background:var(--sky);border:1px solid var(--border2);">
+            <div style="font-size:11px;color:var(--navy2);font-weight:600;margin-bottom:4px;">ℹ️ Sobre esta calculadora</div>
+            <div style="font-size:12px;color:var(--ink2);line-height:1.6;">El cálculo completo muestra todos los conceptos que aplican según el motivo de separación, en un solo desglose imprimible. Para la indemnización (20 días/año y 3 meses) se usa el <strong>Salario Diario Integrado (SDI)</strong> calculado automáticamente con base en las prestaciones mínimas de ley. Los importes son orientativos — consulte a su asesor para casos con prestaciones superiores a la ley o bonificaciones variables.</div>
+          </div>
         </div>
 
         <!-- FINIQUITO -->
-        <div id="calc-panel-finiquito">
+        <div id="calc-panel-finiquito" style="display:none;">
           <div class="two-col">
             <div class="card">
               <div class="card-title" style="margin-bottom:14px;">Datos del trabajador</div>
@@ -902,6 +991,16 @@ body{font-family:var(--font);background:var(--surface);color:var(--ink);min-heig
             <button class="asis-send" onclick="asistEnviar()" title="Enviar">▶</button>
           </div>
         </div>
+      </div>
+
+      <!-- ── NOM-035 DASHBOARD ── -->
+      <div class="panel" id="panel-nom035">
+        <div id="nom035-contenido"><div style="text-align:center;padding:60px;color:var(--ink3);">⏳ Cargando…</div></div>
+      </div>
+
+      <!-- ── HISTORIAL DE PLANTILLA ── -->
+      <div class="panel" id="panel-historial">
+        <div id="hist-contenido"><div style="text-align:center;padding:60px;color:var(--ink3);">⏳ Cargando…</div></div>
       </div>
 
       <!-- ── SUSCRIPCIÓN ── -->
@@ -1686,6 +1785,351 @@ async function renderReportes() {
   }
 }
 
+
+// ════════════════════════════════════════════
+// CALCULADORA COMPLETA (flujo unificado)
+// ════════════════════════════════════════════
+function calcCompleto(){
+  const sal  = parseFloat(document.getElementById('cu-salario').value);
+  const ing  = document.getElementById('cu-ingreso').value;
+  const baj  = document.getElementById('cu-baja').value;
+  const mot  = document.getElementById('cu-motivo').value;
+  const salPendDias = parseFloat(document.getElementById('cu-sal-pend').value)||0;
+  const agDias = parseFloat(document.getElementById('cu-agui-dias').value)||15;
+  const salMin = parseFloat(document.getElementById('cu-salmin').value)||315.04;
+  const res  = document.getElementById('cu-resultado');
+
+  if(!sal||sal<=0||!ing||!baj||new Date(baj)<=new Date(ing)){
+    res.innerHTML='<div style="text-align:center;padding:30px;opacity:.4;font-size:13px;">Complete los datos para calcular</div>';
+    document.getElementById('cu-botones').style.display='none';
+    return;
+  }
+
+  const anios = diffAnios(ing, baj);
+  const diasTotal = diffDias(ing, baj);
+  const fracAnio = (diasTotal - anios*365)/365;
+  const aniosTot = anios + fracAnio;
+
+  // Año calendario para aguinaldo
+  const inicioAnio = new Date(new Date(baj).getFullYear(),0,1).toISOString().slice(0,10);
+  const diasAnio   = diffDias(inicioAnio, baj);
+
+  // Vacaciones proporcionales (periodo en curso)
+  const ultimoAnivD = new Date(ing);
+  ultimoAnivD.setFullYear(new Date(ing).getFullYear() + anios);
+  const ultimoAniv = ultimoAnivD.toISOString().slice(0,10);
+  const diasPeriodoActual = diffDias(ultimoAniv, baj);
+  const diasVacSig = diasVacacionesPorAnios(anios+1);
+  const diasVacProp = Math.round(diasPeriodoActual/365*diasVacSig*100)/100;
+
+  // SDI auto-calculado (salario integrado para indemnización)
+  // SDI = SD × (1 + agDias/365 + vacSig/365 + vacSig*0.25/365)
+  const sdi = sal * (1 + agDias/365 + diasVacSig/365 + diasVacSig*0.25/365);
+
+  const conIndemnizacion = (mot === 'despido');
+  const primaAntiguedadAplica = conIndemnizacion || (anios >= 15);
+
+  // ── Conceptos de finiquito (siempre aplican) ──
+  const salPendImporte   = salPendDias * sal;
+  const vacPropImporte   = diasVacProp * sal;
+  const primVacPropImp   = vacPropImporte * 0.25;
+  const aguinaldoProp    = (diasAnio/365) * agDias * sal;
+
+  const subtotalFiniquito = salPendImporte + vacPropImporte + primVacPropImp + aguinaldoProp;
+
+  // ── Conceptos de indemnización (solo despido injustificado) ──
+  const tresMeses   = conIndemnizacion ? sdi * 90 : 0;
+  const veinteDias  = conIndemnizacion ? sdi * 20 * Math.max(aniosTot, 1/12) : 0;
+
+  // ── Prima de antigüedad (Art. 162) ──
+  const salAnt = Math.min(sal, salMin*2);
+  const primaAnt = primaAntiguedadAplica ? salAnt * 12 * Math.max(1, anios) : 0;
+
+  const totalGeneral = subtotalFiniquito + tresMeses + veinteDias + primaAnt;
+
+  const n = (v) => v.toLocaleString('es-MX',{minimumFractionDigits:2,maximumFractionDigits:2});
+
+  const motLabels = {
+    renuncia:'Renuncia voluntaria',
+    despido:'Despido injustificado',
+    rescision47:'Rescisión justificada (Art. 47)',
+    acuerdo:'Mutuo acuerdo',
+  };
+  const motClass = {renuncia:'cu-motivo-renuncia',despido:'cu-motivo-despido',rescision47:'cu-motivo-rescision',acuerdo:'cu-motivo-acuerdo'};
+
+  let html = `<div class="cu-motivo-badge ${motClass[mot]}">${motLabels[mot]}</div>`;
+
+  // Finiquito section
+  html += '<div style="font-size:10px;font-weight:700;opacity:.5;text-transform:uppercase;letter-spacing:.08em;margin-bottom:6px;">Finiquito (siempre aplica)</div>';
+  if(salPendDias>0) html += cuFila('Salarios pendientes',''+salPendDias+' días × $'+n(sal), salPendImporte);
+  html += cuFila('Vacaciones proporcionales ('+diasVacProp+' días — Art. 79)',''+diasPeriodoActual+' días trans. / 365 × '+diasVacSig+' días', vacPropImporte);
+  html += cuFila('Prima vacacional (25%)',''+diasVacProp+' días × $'+n(sal)+' × 25%', primVacPropImp);
+  html += cuFila('Aguinaldo proporcional',''+Math.round(diasAnio)+' días del año / 365 × '+agDias+' días × $'+n(sal), aguinaldoProp);
+  html += `<div class="cu-sep"></div>`;
+  html += `<div class="cu-concepto"><span class="cu-concepto-label" style="font-weight:600;">Subtotal finiquito</span><span class="cu-concepto-val">$${n(subtotalFiniquito)}</span></div>`;
+
+  // Indemnización (despido)
+  if(conIndemnizacion){
+    html += '<div style="font-size:10px;font-weight:700;opacity:.5;text-transform:uppercase;letter-spacing:.08em;margin:12px 0 6px;">Indemnización (Art. 48 LFT)</div>';
+    html += `<div style="font-size:10px;opacity:.4;margin-bottom:8px;">SDI auto-calculado: $${n(sdi)}/día (SD + partes prop. mínimas)</div>`;
+    html += cuFila('3 meses de salario','$'+n(sdi)+' × 90 días', tresMeses);
+    html += cuFila('20 días × año ('+aniosTot.toFixed(1)+' años)','$'+n(sdi)+' × 20 × '+aniosTot.toFixed(1), veinteDias);
+    html += `<div class="cu-sep"></div>`;
+  }
+
+  // Prima antigüedad
+  if(primaAntiguedadAplica){
+    const razPrimaAnt = conIndemnizacion ? 'por despido' : anios+'+ años';
+    html += '<div style="font-size:10px;font-weight:700;opacity:.5;text-transform:uppercase;letter-spacing:.08em;margin:12px 0 6px;">Prima de antigüedad (Art. 162 LFT)</div>';
+    html += cuFila('Prima de antigüedad ('+razPrimaAnt+')','12 días × '+Math.max(1,anios)+' años × $'+n(salAnt)+' (tope 2×SM)',primaAnt);
+    html += `<div class="cu-sep"></div>`;
+  }
+
+  // Total
+  html += `<div class="cu-total"><span>TOTAL A PAGAR</span><span>$${n(totalGeneral)}</span></div>`;
+  if(anios>0){
+    html += `<div style="font-size:11px;opacity:.45;margin-top:6px;">Antigüedad: ${anios} año${anios!==1?'s':''} ${Math.round(fracAnio*12)} mes${Math.round(fracAnio*12)!==1?'es':''}</div>`;
+  }
+
+  window._cuCalcData = { nombre: document.getElementById('cu-nombre').value, motivo: motLabels[mot], total: totalGeneral, resHtml: html };
+  res.innerHTML = html;
+  document.getElementById('cu-botones').style.display = 'flex';
+}
+
+function cuFila(label, formula, val){
+  return `<div class="cu-concepto">
+    <div><div class="cu-concepto-label">${label}</div><div class="cu-concepto-formula">${formula}</div></div>
+    <div class="cu-concepto-val">$${val.toLocaleString('es-MX',{minimumFractionDigits:2,maximumFractionDigits:2})}</div>
+  </div>`;
+}
+
+function imprimirCalcCompleto(){
+  const d = window._cuCalcData;
+  if(!d) return;
+  const empresa = clienteActual?.empresa||'';
+  const w = window.open('','_blank','width=720,height=700');
+  w.document.write(`<!DOCTYPE html><html><head><meta charset="UTF-8"><title>Cálculo de terminación laboral</title>
+  <style>
+    body{font-family:'Segoe UI',Arial,sans-serif;max-width:580px;margin:40px auto;color:#1a1a1a;}
+    h1{font-size:20px;border-bottom:2px solid #0f2640;padding-bottom:8px;margin-bottom:4px;}
+    .sub{font-size:13px;color:#888;margin-bottom:24px;}
+    .row{display:flex;justify-content:space-between;padding:7px 0;border-bottom:1px solid #eee;font-size:14px;}
+    .row.total{font-weight:700;font-size:16px;border-top:2px solid #0f2640;border-bottom:none;padding-top:10px;}
+    .section-hdr{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.08em;color:#888;padding:14px 0 4px;}
+    .badge{display:inline-block;font-size:11px;padding:2px 10px;border-radius:10px;background:#dbeafe;color:#1e40af;margin-bottom:16px;}
+    @media print{body{margin:20px;}}
+  </style></head><body>
+  <h1>Cálculo de terminación laboral</h1>
+  <div class="sub">${empresa ? empresa+' · ' : ''}${d.nombre||''} · ${new Date().toLocaleDateString('es-MX')}</div>
+  <div class="badge">${d.motivo}</div>
+  ${d.resHtml.replace(/class="cu-concepto"/g,'class="row"').replace(/class="cu-total"/g,'class="row total"').replace(/<div class="cu-concepto-formula">[^<]*<\/div>/g,'').replace(/class="cu-concepto-label[^"]*"/g,'').replace(/class="cu-concepto-val"/g,'').replace(/class="cu-motivo-badge[^"]*">.*?<\/div>/,'').replace(/class="cu-sep"/g,'style="display:none"').replace(/<div style="font-size:10[^>]*>[^<]*<\/div>/g,s=>s.replace('font-size:10','class="section-hdr" style="display:block;font-size:10'))}
+  <p style="margin-top:24px;font-size:11px;color:#888;">Cálculo orientativo basado en LFT vigente. Confirme los importes con su asesor legal antes de hacer el pago.</p>
+  </body></html>`);
+  w.document.close();
+  setTimeout(()=>w.print(),400);
+}
+
+// ════════════════════════════════════════════
+// NOM-035 — DASHBOARD DE CUMPLIMIENTO
+// ════════════════════════════════════════════
+const NOM035_ELEMENTOS = [
+  { id:'e1', num:'1', titulo:'Política de prevención de riesgos psicosociales', art:'Arts. 7, 8 y 9 NOM-035', items:[
+    { id:'e1i1', texto:'Elaborar la política escrita de prevención de riesgos psicosociales', art:'Art. 8.1' },
+    { id:'e1i2', texto:'Difundir la política entre todos los trabajadores (mínimo una vez al año)', art:'Art. 8.2' },
+    { id:'e1i3', texto:'La política establece mecanismos de participación de los trabajadores', art:'Art. 8.3' },
+    { id:'e1i4', texto:'Revisar y actualizar la política al menos una vez al año', art:'Art. 8.4' },
+  ]},
+  { id:'e2', num:'2', titulo:'Identificación y análisis de factores de riesgo psicosocial', art:'Arts. 7.2, 8.1 y Guías de referencia I y II', items:[
+    { id:'e2i1', texto:'Aplicar la Guía de Referencia I (≤50 trabajadores) o evaluación con instrumento validado (>50)', art:'Art. 7.2' },
+    { id:'e2i2', texto:'Evaluar las condiciones del entorno organizacional (Guía de Referencia II)', art:'Art. 7.3' },
+    { id:'e2i3', texto:'Identificar trabajadores expuestos a violencia laboral', art:'Art. 7.4' },
+    { id:'e2i4', texto:'Documentar y conservar los resultados de la evaluación (mínimo 2 años)', art:'Art. 7.5' },
+  ]},
+  { id:'e3', num:'3', titulo:'Medidas y acciones de control', art:'Art. 8.5 NOM-035', items:[
+    { id:'e3i1', texto:'Establecer medidas de prevención y control para los factores de riesgo identificados', art:'Art. 8.5.1' },
+    { id:'e3i2', texto:'Difundir las medidas entre los trabajadores afectados', art:'Art. 8.5.2' },
+    { id:'e3i3', texto:'Implementar acciones de mejora en el entorno organizacional', art:'Art. 8.5.3' },
+    { id:'e3i4', texto:'Elaborar un plan de acción con responsables y fechas de seguimiento', art:'Art. 8.5.4' },
+  ]},
+  { id:'e4', num:'4', titulo:'Práctica de exámenes médicos y psicológicos', art:'Art. 8.6 NOM-035 (aplica si hay trabajadores con riesgo identificado)', items:[
+    { id:'e4i1', texto:'Ofrecer exámenes médicos a trabajadores identificados con exposición a factores de riesgo', art:'Art. 8.6.1' },
+    { id:'e4i2', texto:'Garantizar la confidencialidad de los resultados médicos', art:'Art. 8.6.2' },
+    { id:'e4i3', texto:'Documentar la oferta de exámenes aunque el trabajador decline realizarlos', art:'Art. 8.6.3' },
+  ]},
+  { id:'e5', num:'5', titulo:'Información y capacitación a trabajadores', art:'Art. 8.7 NOM-035', items:[
+    { id:'e5i1', texto:'Proporcionar información a los trabajadores sobre los factores de riesgo psicosocial', art:'Art. 8.7.1' },
+    { id:'e5i2', texto:'Capacitar a quienes participan en la identificación y análisis de factores de riesgo', art:'Art. 8.7.2' },
+    { id:'e5i3', texto:'Capacitar a los jefes directos en prevención de violencia laboral y hostigamiento', art:'Art. 8.7.3' },
+  ]},
+];
+
+function nom035Key(){
+  return 'nom035_'+(_rfcReal||clienteActual?.rfc||'demo');
+}
+
+function nom035Toggle(itemId){
+  const saved = JSON.parse(localStorage.getItem(nom035Key())||'{}');
+  saved[itemId] = !saved[itemId];
+  localStorage.setItem(nom035Key(), JSON.stringify(saved));
+  renderNom035();
+}
+
+function renderNom035(){
+  const el = document.getElementById('nom035-contenido');
+  if(!el) return;
+  const saved = JSON.parse(localStorage.getItem(nom035Key())||'{}');
+
+  const totalItems = NOM035_ELEMENTOS.reduce((s,e)=>s+e.items.length,0);
+  const doneItems  = NOM035_ELEMENTOS.reduce((s,e)=>s+e.items.filter(i=>saved[i.id]).length,0);
+  const pct = totalItems>0 ? Math.round(doneItems/totalItems*100) : 0;
+
+  const ringColor = pct>=75?'#0d9488':pct>=40?'#d97706':'#dc2626';
+  const ringText  = pct>=75?'✅ Cumplimiento alto':pct>=40?'⚠️ Cumplimiento parcial':'🔴 Cumplimiento bajo';
+  const circum = 2*Math.PI*30;
+  const dash   = (pct/100)*circum;
+
+  let html = `<div style="margin-bottom:16px;">
+    <div style="font-size:13px;color:var(--ink2);line-height:1.5;padding:10px 14px;background:var(--sky);border:1px solid var(--border2);border-radius:var(--r-sm);">
+      <strong>NOM-035-STPS-2018</strong> · Factores de riesgo psicosocial en el trabajo. Marque los elementos que su empresa ya tiene implementados para visualizar su nivel de cumplimiento.
+    </div>
+  </div>
+  <div class="nom-prog-wrap">
+    <div class="nom-ring">
+      <svg width="80" height="80" viewBox="0 0 80 80">
+        <circle cx="40" cy="40" r="30" fill="none" stroke="var(--border2)" stroke-width="8"/>
+        <circle cx="40" cy="40" r="30" fill="none" stroke="${ringColor}" stroke-width="8"
+          stroke-dasharray="${dash.toFixed(1)} ${circum.toFixed(1)}" stroke-linecap="round"/>
+      </svg>
+      <div class="nom-ring-label">${pct}%<span class="nom-ring-sub">${doneItems}/${totalItems}</span></div>
+    </div>
+    <div style="flex:1;">
+      <div style="font-size:15px;font-weight:700;color:var(--ink);margin-bottom:4px;">${ringText}</div>
+      <div style="font-size:12px;color:var(--ink3);line-height:1.5;">${doneItems} de ${totalItems} requisitos cumplidos · El progreso se guarda en este navegador automáticamente.</div>
+      <div style="margin-top:8px;">
+        <div style="height:6px;border-radius:3px;background:var(--border2);overflow:hidden;">
+          <div style="height:100%;width:${pct}%;background:${ringColor};border-radius:3px;transition:width .4s;"></div>
+        </div>
+      </div>
+    </div>
+  </div>`;
+
+  NOM035_ELEMENTOS.forEach(elem=>{
+    const elemDone = elem.items.filter(i=>saved[i.id]).length;
+    const elemPct  = Math.round(elemDone/elem.items.length*100);
+    const badgeBg  = elemDone===elem.items.length?'#ccfbf1':elemDone>0?'#fef3c7':'#fee2e2';
+    const badgeCol = elemDone===elem.items.length?'#0f766e':elemDone>0?'#92400e':'#991b1b';
+    html += `<div class="nom-seccion">
+      <div class="nom-seccion-hdr">
+        <div style="width:24px;height:24px;border-radius:50%;background:var(--navy);color:#fff;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;flex-shrink:0;">${elem.num}</div>
+        <div class="nom-seccion-title">${elem.titulo}<br><span style="font-size:10px;color:var(--ink3);font-weight:400;">${elem.art}</span></div>
+        <div class="nom-seccion-badge" style="background:${badgeBg};color:${badgeCol};">${elemDone}/${elem.items.length}</div>
+      </div>`;
+    elem.items.forEach(item=>{
+      const checked = !!saved[item.id];
+      html += `<div class="nom-item" onclick="nom035Toggle('${item.id}')">
+        <input type="checkbox" ${checked?'checked':''} onclick="event.stopPropagation();nom035Toggle('${item.id}')">
+        <div>
+          <div class="nom-item-text" style="${checked?'text-decoration:line-through;opacity:.55;':''}">${item.texto}</div>
+          <div class="nom-item-art">${item.art}</div>
+        </div>
+      </div>`;
+    });
+    html += `</div>`;
+  });
+
+  html += `<div style="margin-top:14px;padding:12px 14px;background:var(--sky);border:1px solid var(--border2);border-radius:var(--r-sm);font-size:12px;color:var(--ink2);line-height:1.6;">
+    ⚠️ <strong>Nota legal:</strong> Esta herramienta es de autoevaluación orientativa. La NOM-035 obliga a empresas de todos los tamaños; las obligaciones difieren según número de trabajadores (1-15, 16-50, más de 50). Para auditorías formales de la STPS, consulte a su asesor.
+    <div style="margin-top:8px;"><button class="btn btn-primary btn-sm" onclick="goPanel('solicitudes')">Consultar a mi asesor →</button></div>
+  </div>`;
+
+  el.innerHTML = html;
+}
+
+// ════════════════════════════════════════════
+// HISTORIAL DE MOVIMIENTOS DE PLANTILLA
+// ════════════════════════════════════════════
+async function renderHistorial(){
+  const el = document.getElementById('hist-contenido');
+  if(!el) return;
+  el.innerHTML = '<div style="text-align:center;padding:60px;color:var(--ink3);">⏳ Cargando movimientos…</div>';
+
+  const rfcUsar = _rfcReal || clienteActual?.rfc;
+  if(!rfcUsar || !_sbAuth){
+    el.innerHTML = '<div style="text-align:center;padding:40px;color:var(--ink3);">Inicia sesión para ver el historial de plantilla.</div>';
+    return;
+  }
+
+  try{
+    const { data: sesData } = await _sbAuth.auth.getSession();
+    const tok = sesData?.session?.access_token;
+    if(!tok){ el.innerHTML='<div style="padding:40px;text-align:center;color:#dc2626;">Sin sesión activa. <button onclick="location.reload()" style="padding:6px 14px;background:var(--navy2);color:#fff;border:none;border-radius:6px;cursor:pointer;margin-left:6px;">Recargar</button></div>'; return; }
+
+    const hdrs = { apikey:SUPABASE_ANON_KEY, Authorization:'Bearer '+tok, Accept:'application/json' };
+    const base = SUPABASE_URL+'/rest/v1/';
+    const rfc  = encodeURIComponent(rfcUsar);
+
+    const hace90 = new Date();
+    hace90.setDate(hace90.getDate()-90);
+    const hace90str = hace90.toISOString().slice(0,10);
+
+    const [altasJ, bajasJ] = await Promise.all([
+      fetch(base+'trabajadores?select=id,nombre,puesto,fecha_ingreso&cliente_rfc=eq.'+rfc+'&fecha_ingreso=gte.'+hace90str+'&order=fecha_ingreso.desc&limit=100',{headers:hdrs}).then(r=>r.ok?r.json():[]),
+      fetch(base+'trabajadores?select=id,nombre,puesto,fecha_baja,motivo_baja&cliente_rfc=eq.'+rfc+'&activo=eq.false&fecha_baja=gte.'+hace90str+'&order=fecha_baja.desc&limit=100',{headers:hdrs}).then(r=>r.ok?r.json():[]),
+    ]);
+
+    const altas = (Array.isArray(altasJ)?altasJ:[]).map(t=>({tipo:'alta',fecha:t.fecha_ingreso,nombre:t.nombre,puesto:t.puesto||'',extra:''}));
+    const bajas = (Array.isArray(bajasJ)?bajasJ:[]).map(t=>({tipo:'baja',fecha:t.fecha_baja,nombre:t.nombre,puesto:t.puesto||'',extra:t.motivo_baja||''}));
+    const eventos = [...altas,...bajas].sort((a,b)=>b.fecha.localeCompare(a.fecha));
+
+    const nAltas = altas.length, nBajas = bajas.length;
+    const rotacion = (nAltas+nBajas);
+
+    let html = `<div style="display:flex;gap:12px;margin-bottom:18px;flex-wrap:wrap;">
+      <div style="flex:1;min-width:120px;padding:12px 16px;background:var(--sky);border:1px solid var(--border2);border-radius:var(--r-sm);text-align:center;">
+        <div style="font-size:24px;font-weight:800;color:#0d9488;">${nAltas}</div>
+        <div style="font-size:12px;color:var(--ink3);">Altas últimos 90 días</div>
+      </div>
+      <div style="flex:1;min-width:120px;padding:12px 16px;background:var(--sky);border:1px solid var(--border2);border-radius:var(--r-sm);text-align:center;">
+        <div style="font-size:24px;font-weight:800;color:#dc2626;">${nBajas}</div>
+        <div style="font-size:12px;color:var(--ink3);">Bajas últimos 90 días</div>
+      </div>
+      <div style="flex:1;min-width:120px;padding:12px 16px;background:var(--sky);border:1px solid var(--border2);border-radius:var(--r-sm);text-align:center;">
+        <div style="font-size:24px;font-weight:800;color:var(--navy2);">${rotacion}</div>
+        <div style="font-size:12px;color:var(--ink3);">Total movimientos</div>
+      </div>
+    </div>`;
+
+    if(!eventos.length){
+      html += '<div class="hist-empty">📋 Sin movimientos de plantilla en los últimos 90 días.</div>';
+    } else {
+      let prevMes = '';
+      html += '<div class="hist-timeline">';
+      eventos.forEach(ev=>{
+        const d = new Date(ev.fecha+'T12:00:00');
+        const mesLabel = d.toLocaleDateString('es-MX',{month:'long',year:'numeric'});
+        if(mesLabel!==prevMes){
+          html += `<div style="font-size:11px;font-weight:700;color:var(--ink3);text-transform:uppercase;letter-spacing:.08em;padding:4px 0 8px;">${mesLabel}</div>`;
+          prevMes=mesLabel;
+        }
+        const dia = d.toLocaleDateString('es-MX',{weekday:'short',day:'numeric'});
+        html += `<div class="hist-event ${ev.tipo}">
+          <div class="hist-card">
+            <span class="hist-badge hist-badge-${ev.tipo}">${ev.tipo==='alta'?'▲ Alta':'▼ Baja'}</span>
+            <div class="hist-nombre">${ev.nombre}</div>
+            <div class="hist-meta">${ev.puesto||'Sin puesto'}${ev.extra?' · '+ev.extra:''} · ${dia}</div>
+          </div>
+        </div>`;
+      });
+      html += '</div>';
+    }
+
+    html += `<div style="margin-top:16px;font-size:11px;color:var(--ink3);text-align:center;">Mostrando movimientos de los últimos 90 días · ${new Date().toLocaleDateString('es-MX')}</div>`;
+    el.innerHTML = html;
+
+  } catch(e){
+    el.innerHTML = `<div style="padding:40px;text-align:center;color:#dc2626;">Error al cargar el historial: ${e.message||e}</div>`;
+  }
+}
 
 function exportarCompletitudExcel() {
   var datos = window._completitudDatos;
@@ -2649,6 +3093,8 @@ const panelTitles = {
   generadores:'Generar documento', reportes:'Reportes gerenciales',
   solicitudes:'Solicitar asesoría', calculadora:'Calculadora laboral',
   asistente:'Asistente Legal IA',
+  nom035:'NOM-035 — Dashboard de cumplimiento',
+  historial:'Historial de movimientos de plantilla',
   suscripcion:'Mi suscripción', configuracion:'Configuración'
 };
 
@@ -2665,6 +3111,8 @@ function goPanel(id){
   if(id==='calculadora') calcCargarRoster();
   if(id==='reportes') renderReportes();
   if(id==='asistente' && !window._asistInited) asistInit();
+  if(id==='nom035') renderNom035();
+  if(id==='historial') renderHistorial();
   cerrarSidebarMobile();
 }
 
@@ -3326,7 +3774,7 @@ function actualizarProgresoComPortal(id, total){
 // ════════════════════════════════════════════════════════
 
 function calcSetTab(tab){
-  ['finiquito','liquidacion','vacaciones','antiguedad'].forEach(t=>{
+  ['completo','finiquito','liquidacion','vacaciones','antiguedad'].forEach(t=>{
     document.getElementById('calc-panel-'+t).style.display = t===tab ? '' : 'none';
     const btn = document.getElementById('calc-tab-'+t);
     if(btn){ btn.className = t===tab ? 'btn btn-primary btn-sm' : 'btn btn-ghost btn-sm'; }
@@ -3368,6 +3816,9 @@ function calcAutocompletarTrabajador() {
   const nombre = opt.dataset.nombre||'', puesto = opt.dataset.puesto||'', ingreso = opt.dataset.ingreso||'';
   const setVal = (id, v) => { const el = document.getElementById(id); if(el) el.value = v; };
   const hoy = new Date().toISOString().split('T')[0];
+  // Cálculo completo
+  setVal('cu-nombre', nombre); setVal('cu-puesto', puesto);
+  if (ingreso) setVal('cu-ingreso', ingreso);
   // Finiquito
   setVal('fq-nombre', nombre); setVal('fq-puesto', puesto);
   if (ingreso) setVal('fq-ingreso', ingreso);
@@ -3380,7 +3831,7 @@ function calcAutocompletarTrabajador() {
   if (ingreso) setVal('ant-ingreso', ingreso);
   if (infoEl) infoEl.textContent =
     nombre + (puesto?' · '+puesto:'') + (ingreso?' · Ingreso: '+new Date(ingreso+'T12:00:00').toLocaleDateString('es-MX'):'');
-  calcFiniquito(); calcLiquidacion(); calcVacaciones(); calcAntiguedad();
+  calcCompleto(); calcFiniquito(); calcLiquidacion(); calcVacaciones(); calcAntiguedad();
 }
 
 function imprimirCalculadora(tipo) {

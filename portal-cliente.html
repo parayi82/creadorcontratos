@@ -5,6 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Mi Portal · ClickLaboral.mx</title>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
 <script src="faq-data.js"></script>
 <script src="lft-glosario.js"></script>
 <style>
@@ -1188,13 +1189,18 @@ async function renderReportes() {
     const base = SUPABASE_URL + '/rest/v1/';
     const rfc = encodeURIComponent(rfcUsar);
 
-    const [j1, j2] = await Promise.all([
+    const [j1, j2, j3] = await Promise.all([
       fetch(base + 'trabajadores?select=id,nombre,puesto,activo,fecha_ingreso,fecha_baja,motivo_baja,nss&cliente_rfc=eq.' + rfc + '&order=nombre.asc', {headers: hdrs}).then(r=>{ console.log('[Rep] trabajadores status:', r.status); return r.ok?r.json():[]; }),
       fetch(base + 'documentos_expediente?select=id,tipo,nombre,fecha&cliente_rfc=eq.' + rfc + '&order=fecha.desc&limit=200', {headers: hdrs}).then(r=>{ console.log('[Rep] docs status:', r.status); return r.ok?r.json():[]; }),
+      fetch(base + 'asistencias?select=trabajador_id,fecha,status,hora_entrada,hora_salida&cliente_rfc=eq.' + rfc + '&order=fecha.desc&limit=2000', {headers: hdrs}).then(r=>{ console.log('[Rep] asistencias status:', r.status); return r.ok?r.json():[]; }),
     ]);
 
     const trabs = Array.isArray(j1) ? j1 : [];
     const docs  = Array.isArray(j2) ? j2 : [];
+    const asisAll = Array.isArray(j3) ? j3 : [];
+    window._repAsis = asisAll;
+    window._repRFC  = rfcUsar;
+    window._repEmpresa = clienteActual?.empresa || rfcUsar;
     console.log('[Rep] Resultado — trabajadores:', trabs.length, '| docs:', docs.length);
     const activos = trabs.filter(t => t.activo !== false && !t.fecha_baja);
     const bajas   = trabs.filter(t => t.activo === false || t.fecha_baja);
@@ -1307,6 +1313,53 @@ async function renderReportes() {
       html += '</tbody></table></div>';
     }
 
+    // ── Sección Asistencias ────────────────────────────────────────────────────
+    const asisFiltrados = asisAll.filter(function(a){ return !desdeStr || (a.fecha||'') >= desdeStr; });
+    const resumenAsis = {};
+    activos.forEach(function(t){ resumenAsis[t.id]={nombre:t.nombre,puesto:t.puesto,total:0,presentes:0,faltas:0,vacaciones:0}; });
+    asisFiltrados.forEach(function(a){
+      if(!resumenAsis[a.trabajador_id]) return;
+      resumenAsis[a.trabajador_id].total++;
+      var s=a.status||'';
+      if(s==='presente'||s==='tardanza') resumenAsis[a.trabajador_id].presentes++;
+      else if(s==='falta') resumenAsis[a.trabajador_id].faltas++;
+      else if(s==='vacaciones') resumenAsis[a.trabajador_id].vacaciones++;
+    });
+    var filasAsis = Object.values(resumenAsis);
+    html += '<div style="background:var(--white);border-radius:10px;padding:16px;border:1px solid var(--border);margin-top:14px;overflow-x:auto;">';
+    html += '<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;flex-wrap:wrap;gap:8px;">';
+    html += '<div style="font-size:13px;font-weight:700;color:var(--navy);">📅 Asistencias por trabajador</div>';
+    html += '<button onclick="exportarConstanciaPortal()" style="padding:6px 14px;background:var(--navy2);color:#fff;border:none;border-radius:6px;font-size:12px;font-weight:600;cursor:pointer;">📄 Constancia de asistencia (Art. 804 LFT)</button>';
+    html += '</div>';
+    if(asisFiltrados.length === 0){
+      html += '<div style="text-align:center;padding:20px;color:var(--ink3);font-size:12px;">Sin registros de asistencia en el período seleccionado.</div>';
+    } else {
+      html += '<table style="width:100%;border-collapse:collapse;font-size:12px;">';
+      html += '<thead><tr>';
+      html += '<th style="text-align:left;padding:7px 10px;border-bottom:1.5px solid var(--border);font-size:10px;text-transform:uppercase;color:var(--ink3);">Nombre</th>';
+      html += '<th style="text-align:left;padding:7px 10px;border-bottom:1.5px solid var(--border);font-size:10px;text-transform:uppercase;color:var(--ink3);">Puesto</th>';
+      html += '<th style="text-align:right;padding:7px 10px;border-bottom:1.5px solid var(--border);font-size:10px;text-transform:uppercase;color:var(--ink3);">Registros</th>';
+      html += '<th style="text-align:right;padding:7px 10px;border-bottom:1.5px solid var(--border);font-size:10px;text-transform:uppercase;color:var(--ink3);">Presentes</th>';
+      html += '<th style="text-align:right;padding:7px 10px;border-bottom:1.5px solid var(--border);font-size:10px;text-transform:uppercase;color:var(--ink3);">Faltas</th>';
+      html += '<th style="text-align:right;padding:7px 10px;border-bottom:1.5px solid var(--border);font-size:10px;text-transform:uppercase;color:var(--ink3);">% Asistencia</th>';
+      html += '</tr></thead><tbody>';
+      filasAsis.forEach(function(r){
+        var pct = r.total>0 ? Math.round(r.presentes/r.total*100) : 0;
+        var col = pct>=90?'#16a34a':pct>=70?'#d97706':'#dc2626';
+        html += '<tr>';
+        html += '<td style="padding:8px 10px;border-bottom:1px solid var(--border);font-weight:600;">'+(r.nombre||'')+'</td>';
+        html += '<td style="padding:8px 10px;border-bottom:1px solid var(--border);color:var(--ink2);">'+(r.puesto||'—')+'</td>';
+        html += '<td style="padding:8px 10px;border-bottom:1px solid var(--border);text-align:right;">'+r.total+'</td>';
+        html += '<td style="padding:8px 10px;border-bottom:1px solid var(--border);text-align:right;color:#16a34a;font-weight:600;">'+r.presentes+'</td>';
+        html += '<td style="padding:8px 10px;border-bottom:1px solid var(--border);text-align:right;color:#dc2626;">'+r.faltas+'</td>';
+        html += '<td style="padding:8px 10px;border-bottom:1px solid var(--border);text-align:right;font-weight:700;color:'+col+';">'+pct+'%</td>';
+        html += '</tr>';
+      });
+      html += '</tbody></table>';
+    }
+    html += '</div>';
+    // ── fin Asistencias ───────────────────────────────────────────────────────
+
     el.innerHTML = html;
     console.log('[Rep] HTML renderizado OK (' + html.length + ' chars)');
   } catch(e) {
@@ -1315,6 +1368,63 @@ async function renderReportes() {
   }
 }
 
+
+async function exportarConstanciaPortal() {
+  const asis = window._repAsis || [];
+  if (!asis.length) { alert('Sin registros de asistencia en el período seleccionado.'); return; }
+
+  const empresa = window._repEmpresa || '—';
+  const hoy = new Date().toLocaleDateString('es-MX',{day:'2-digit',month:'long',year:'numeric'});
+  const fmt = function(d){ return d ? new Date(d+'T12:00:00').toLocaleDateString('es-MX',{day:'2-digit',month:'short',year:'numeric'}) : '—'; };
+  const fmtH = function(h){ return h ? h.substring(0,5) : '—'; };
+  const dur = function(e,s){
+    if(!e||!s) return '—';
+    var em=parseInt(e.substring(0,2))*60+parseInt(e.substring(3,5));
+    var sm=parseInt(s.substring(0,2))*60+parseInt(s.substring(3,5));
+    var d=sm-em; if(d<0) return '—';
+    return Math.floor(d/60)+'h '+(d%60)+'min';
+  };
+
+  const sorted = asis.slice().sort(function(a,b){ return (a.fecha||'') < (b.fecha||'') ? -1 : 1; });
+  const filas = sorted.map(function(a){
+    var bg = a.status==='presente'||a.status==='tardanza' ? '' : a.status==='falta' ? 'background:#fee2e2;' : 'background:#fef9c3;';
+    return '<tr style="'+bg+'">'
+      +'<td style="padding:6px 8px;border:1px solid #e5e7eb;">'+fmt(a.fecha)+'</td>'
+      +'<td style="padding:6px 8px;border:1px solid #e5e7eb;text-transform:capitalize;">'+(a.status||'—')+'</td>'
+      +'<td style="padding:6px 8px;border:1px solid #e5e7eb;text-align:center;">'+fmtH(a.hora_entrada)+'</td>'
+      +'<td style="padding:6px 8px;border:1px solid #e5e7eb;text-align:center;">'+fmtH(a.hora_salida)+'</td>'
+      +'<td style="padding:6px 8px;border:1px solid #e5e7eb;text-align:center;">'+dur(a.hora_entrada,a.hora_salida)+'</td>'
+      +'</tr>';
+  }).join('');
+
+  const html = '<!DOCTYPE html><html><head><meta charset="UTF-8">'
+    +'<style>body{font-family:Arial,sans-serif;font-size:11px;color:#111;margin:20px;}'
+    +'h1{font-size:15px;font-weight:bold;color:#0f2640;margin-bottom:2px;}'
+    +'h2{font-size:13px;font-weight:normal;color:#444;margin-bottom:14px;}'
+    +'table{width:100%;border-collapse:collapse;margin-top:12px;}'
+    +'th{background:#0f2640;color:#fff;padding:7px 8px;text-align:left;font-size:10px;}'
+    +'.footer{margin-top:20px;font-size:9px;color:#666;border-top:1px solid #ddd;padding-top:8px;}</style>'
+    +'</head><body>'
+    +'<h1>'+empresa+'</h1>'
+    +'<h2>Control de Asistencia del Personal — Generado: '+hoy+'</h2>'
+    +'<table><thead><tr><th>Fecha</th><th>Estatus</th><th>Entrada</th><th>Salida</th><th>Duración</th></tr></thead>'
+    +'<tbody>'+filas+'</tbody></table>'
+    +'<div class="footer">Documento generado por ClickLaboral.mx · '
+    +'Art. 804 LFT: el patrón debe conservar registros de asistencia · '
+    +'Art. 784 LFT: la carga de la prueba de la jornada corresponde al patrón.</div>'
+    +'</body></html>';
+
+  const el = document.createElement('div');
+  el.innerHTML = html;
+  document.body.appendChild(el);
+  await html2pdf().set({
+    margin: [10,10,10,10],
+    filename: 'Constancia-Asistencia-'+empresa.replace(/\s+/g,'-')+'-'+new Date().toISOString().split('T')[0]+'.pdf',
+    html2canvas: { scale: 2, useCORS: true },
+    jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' },
+  }).from(el).save();
+  document.body.removeChild(el);
+}
 
 async function logout(){
   await sbAuth.auth.signOut();

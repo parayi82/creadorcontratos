@@ -627,7 +627,6 @@ setTipo('aperc');
   sv('puesto',     p.get('puesto'));
   sv('empresa',    p.get('empresa'));
   sv('mem-rfc-acta', p.get('rfc'));
-  // Calcular antigüedad si viene fecha de ingreso
   const ingreso = p.get('ingreso');
   if (ingreso) {
     const d1 = new Date(ingreso), d2 = new Date();

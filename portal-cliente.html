@@ -2794,7 +2794,7 @@ function generarDocumentoDesdeCalc(tipo) {
     empresa:       clienteActual?.empresa || '',
     rfc:           clienteActual?.rfc || '',
     tipo,
-    trabajador:    get('fq-nombre'),
+    trabajador:    get(tipo === 'liquidacion' ? 'lq-nombre' : 'fq-nombre'),
     puesto:        get('fq-puesto'),
     salario:       get(tipo==='finiquito'?'fq-salario':'lq-salario'),
     ingreso:       get(tipo==='finiquito'?'fq-ingreso':'lq-ingreso'),

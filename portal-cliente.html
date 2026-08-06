@@ -280,6 +280,13 @@ body{font-family:var(--font);background:var(--surface);color:var(--ink);min-heig
 /* ── Filtro de búsqueda tabla trabajadores ── */
 #trab-search{width:100%;padding:8px 12px;border:1.5px solid var(--border);border-radius:8px;font-size:13px;color:var(--ink);background:var(--white);outline:none;box-sizing:border-box;}
 #trab-search:focus{border-color:var(--navy2);}
+/* ── Wizard de terminación ── */
+.baja-step{padding:4px 10px;border-radius:10px;font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.05em;background:var(--surface);color:var(--ink3);white-space:nowrap;}
+.baja-step.active{background:var(--navy);color:#fff;}
+.baja-step.done{background:#dcfce7;color:#15803d;}
+.baja-tipo-card{cursor:pointer;border:2px solid var(--border);border-radius:10px;padding:12px 16px;margin-bottom:10px;display:flex;align-items:center;gap:12px;transition:border-color .15s,background .15s;}
+.baja-tipo-card:hover{border-color:var(--navy2);background:var(--surface);}
+.baja-tipo-card.sel{border-color:var(--navy);background:var(--surface);}
 </style>
 </head>
 <body>
@@ -3343,7 +3350,11 @@ document.addEventListener('click', cerrarGenMenu);
 document.getElementById('gen-menu').addEventListener('click', function(e) {
   var btn = e.target.closest('.gm-item');
   if (!btn || _genMenuIdx < 0) return;
-  abrirGenTrabajador(btn.getAttribute('data-gen'), _genMenuIdx);
+  if (btn.getAttribute('data-action') === 'baja') {
+    abrirBajaWizard(_genMenuIdx);
+  } else {
+    abrirGenTrabajador(btn.getAttribute('data-gen'), _genMenuIdx);
+  }
   cerrarGenMenu();
 });
 
@@ -3484,6 +3495,7 @@ function filtrarTrabajadores(q) {
 </script>
 <!-- Menú flotante de generadores por trabajador -->
 <div id="gen-menu">
+  <button class="gm-item" data-action="baja" style="color:#dc2626;font-weight:700;border-bottom:1px solid var(--border);padding-top:10px;padding-bottom:10px;">🚪 Iniciar proceso de baja…</button>
   <div class="gm-group">Separación</div>
   <button class="gm-item" data-gen="acta-administrativa.html">📝 Acta administrativa</button>
   <button class="gm-item" data-gen="aviso-rescision.html">⚠️ Aviso de rescisión</button>
@@ -3504,5 +3516,237 @@ function filtrarTrabajadores(q) {
   <div class="gm-group">Cumplimiento</div>
   <button class="gm-item" data-gen="nom035-evaluacion.html">🏥 NOM-035</button>
 </div>
+<!-- ── Modal: Flujo guiado de terminación laboral ── -->
+<div id="baja-overlay" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.55);z-index:10000;align-items:center;justify-content:center;padding:20px;box-sizing:border-box;">
+  <div style="background:var(--white);border-radius:14px;width:100%;max-width:520px;max-height:90vh;display:flex;flex-direction:column;box-shadow:0 20px 60px rgba(0,0,0,.3);">
+    <div style="padding:18px 20px 14px;border-bottom:1px solid var(--border);flex-shrink:0;">
+      <div style="display:flex;justify-content:space-between;align-items:flex-start;">
+        <div>
+          <div style="font-size:15px;font-weight:800;color:var(--navy);">🚪 Flujo de terminación laboral</div>
+          <div style="font-size:12px;color:var(--ink3);margin-top:3px;">
+            <span id="baja-trab-nombre" style="font-weight:700;color:var(--navy2);"></span>&nbsp;·&nbsp;<span id="baja-trab-puesto"></span>
+          </div>
+        </div>
+        <button onclick="cerrarBajaWizard()" style="background:none;border:none;font-size:22px;cursor:pointer;color:var(--ink3);padding:0 2px;line-height:1;">×</button>
+      </div>
+      <div style="display:flex;gap:6px;margin-top:14px;overflow-x:auto;">
+        <div id="baja-step-1" class="baja-step active">1 Tipo</div>
+        <div id="baja-step-2" class="baja-step">2 Datos</div>
+        <div id="baja-step-3" class="baja-step">3 Cálculo</div>
+        <div id="baja-step-4" class="baja-step">4 Documentos</div>
+      </div>
+    </div>
+    <div id="baja-content" style="padding:20px;overflow-y:auto;flex:1;"></div>
+    <div style="padding:14px 20px;border-top:1px solid var(--border);display:flex;align-items:center;gap:8px;flex-shrink:0;">
+      <button id="baja-btn-prev" onclick="bajaWizardPrev()" style="padding:9px 18px;background:var(--white);color:var(--navy2);border:1.5px solid var(--border);border-radius:8px;font-size:13px;font-weight:600;cursor:pointer;">← Anterior</button>
+      <div style="flex:1;"></div>
+      <button onclick="cerrarBajaWizard()" style="padding:9px 16px;background:var(--white);color:var(--ink3);border:1.5px solid var(--border);border-radius:8px;font-size:13px;cursor:pointer;">Cancelar</button>
+      <button id="baja-btn-next" onclick="bajaWizardNext()" style="padding:9px 20px;background:var(--navy);color:#fff;border:none;border-radius:8px;font-size:13px;font-weight:700;cursor:pointer;">Siguiente →</button>
+      <button id="baja-btn-finish" onclick="cerrarBajaWizard()" style="padding:9px 20px;background:var(--teal,#0d9488);color:#fff;border:none;border-radius:8px;font-size:13px;font-weight:700;cursor:pointer;">✓ Finalizar</button>
+    </div>
+  </div>
+</div>
+
+<script>
+// ── Flujo guiado de terminación laboral ──
+var _baja = { idx:-1, tipo:null, fecha:'', sal:0, paso:1 };
+
+var BAJA_TIPOS = [
+  {id:'renuncia',    icon:'✋', label:'Renuncia voluntaria',                        sub:'Art. 49 LFT — El trabajador decide retirarse',                          liq:false},
+  {id:'rescision47', icon:'⚠️', label:'Rescisión sin responsabilidad del patrón',   sub:'Art. 47 LFT — Despido justificado por causa grave',                      liq:false},
+  {id:'convenio',   icon:'🤝', label:'Convenio de terminación',                     sub:'Mutuo acuerdo entre patrón y trabajador',                                liq:false},
+  {id:'termino',    icon:'📅', label:'Término de contrato',                         sub:'Vencimiento del plazo pactado',                                          liq:false},
+  {id:'rescision51', icon:'🔴', label:'Rescisión sin responsabilidad del trabajador', sub:'Art. 51 LFT — El trabajador se va por falta del patrón → liquidación',  liq:true },
+];
+
+function _diasVacLFT(a){ if(a<=4) return 10+a*2; if(a<=5) return 20; if(a<=10) return 22; if(a<=15) return 24; if(a<=20) return 26; if(a<=25) return 28; if(a<=30) return 30; return 32; }
+
+function abrirBajaWizard(idx) {
+  var t = (window._repActivos || [])[idx];
+  if (!t) return;
+  _baja.idx   = idx;
+  _baja.tipo  = null;
+  _baja.paso  = 1;
+  _baja.sal   = t.salario_diario || 0;
+  _baja.fecha = new Date().toISOString().split('T')[0];
+  document.getElementById('baja-overlay').style.display = 'flex';
+  document.body.style.overflow = 'hidden';
+  bajaRender();
+}
+
+function cerrarBajaWizard() {
+  document.getElementById('baja-overlay').style.display = 'none';
+  document.body.style.overflow = '';
+}
+
+function bajaTrabajador() { return (window._repActivos || [])[_baja.idx] || {}; }
+
+function bajaRender() {
+  var t = bajaTrabajador();
+  document.getElementById('baja-trab-nombre').textContent = t.nombre || '—';
+  document.getElementById('baja-trab-puesto').textContent = t.puesto || '—';
+  for (var i=1;i<=4;i++) {
+    var el = document.getElementById('baja-step-'+i);
+    el.className = 'baja-step'+(i===_baja.paso?' active':i<_baja.paso?' done':'');
+  }
+  var prevBtn = document.getElementById('baja-btn-prev');
+  var nextBtn = document.getElementById('baja-btn-next');
+  var finBtn  = document.getElementById('baja-btn-finish');
+  prevBtn.style.display = _baja.paso > 1 ? '' : 'none';
+  nextBtn.style.display = _baja.paso < 4 ? '' : 'none';
+  finBtn.style.display  = _baja.paso === 4 ? '' : 'none';
+  nextBtn.disabled      = _baja.paso === 1 && !_baja.tipo;
+  nextBtn.style.opacity = nextBtn.disabled ? '.4' : '1';
+  var steps = [null, bajaStep1, bajaStep2, bajaStep3, bajaStep4];
+  document.getElementById('baja-content').innerHTML = steps[_baja.paso]();
+}
+
+function bajaStep1() {
+  var html = '<div style="font-size:13px;font-weight:700;color:var(--navy);margin-bottom:14px;">¿Cómo termina la relación laboral?</div>';
+  BAJA_TIPOS.forEach(function(tipo) {
+    var sel = _baja.tipo === tipo.id;
+    html += '<div class="baja-tipo-card'+(sel?' sel':'')+'" onclick="selBajaTipo(\''+tipo.id+'\')">';
+    html += '<span style="font-size:22px;flex-shrink:0;">'+tipo.icon+'</span>';
+    html += '<div style="flex:1;"><div style="font-size:13px;font-weight:700;color:var(--navy);">'+tipo.label+'</div>';
+    html += '<div style="font-size:11px;color:var(--ink3);margin-top:2px;">'+tipo.sub+'</div></div>';
+    if (sel) html += '<span style="color:var(--navy);font-size:18px;flex-shrink:0;">✓</span>';
+    html += '</div>';
+  });
+  return html;
+}
+
+function selBajaTipo(id) { _baja.tipo=id; bajaRender(); }
+
+function bajaStep2() {
+  var t = bajaTrabajador();
+  var tipo = BAJA_TIPOS.find(function(x){return x.id===_baja.tipo;});
+  var html = '<div style="background:var(--surface);border-radius:8px;padding:10px 14px;margin-bottom:16px;font-size:12px;color:var(--navy2);">';
+  html += tipo.icon+' <strong>'+tipo.label+'</strong></div>';
+  html += '<label style="display:block;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.05em;color:var(--ink3);margin-bottom:5px;">Fecha efectiva de baja</label>';
+  html += '<input id="baja-fecha-in" type="date" value="'+_baja.fecha+'" style="width:100%;padding:9px 12px;border:1.5px solid var(--border);border-radius:8px;font-size:13px;box-sizing:border-box;margin-bottom:14px;">';
+  html += '<label style="display:block;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.05em;color:var(--ink3);margin-bottom:5px;">Salario diario (MXN)</label>';
+  html += '<input id="baja-sal-in" type="number" min="0" step="0.01" value="'+(_baja.sal||'')+'" placeholder="0.00" style="width:100%;padding:9px 12px;border:1.5px solid var(--border);border-radius:8px;font-size:13px;box-sizing:border-box;">';
+  html += t.salario_diario
+    ? '<div style="font-size:10px;color:var(--ink3);margin-top:4px;">Registrado en expediente: $'+t.salario_diario+'/día</div>'
+    : '<div style="font-size:10px;color:#d97706;margin-top:4px;">⚠️ Sin salario registrado — ingrésalo para calcular prestaciones</div>';
+  if (t.fecha_ingreso) {
+    var ing = new Date(t.fecha_ingreso+'T12:00:00');
+    var anios = ((new Date(_baja.fecha+'T12:00:00')-ing)/86400000/365).toFixed(1);
+    html += '<div style="background:#f0fdf4;border-radius:8px;padding:10px 14px;margin-top:16px;font-size:12px;color:#15803d;">';
+    html += '📅 Ingreso: <strong>'+ing.toLocaleDateString('es-MX',{day:'2-digit',month:'long',year:'numeric'})+'</strong> &nbsp;·&nbsp; <strong>'+anios+' años</strong> de servicio</div>';
+  }
+  return html;
+}
+
+function bajaCalculo() {
+  var t = bajaTrabajador();
+  var sal = _baja.sal || 0;
+  if (!t.fecha_ingreso || !sal) return null;
+  var ing     = new Date(t.fecha_ingreso+'T12:00:00');
+  var fechaBaja = new Date(_baja.fecha+'T12:00:00');
+  var diasTotales  = Math.floor((fechaBaja-ing)/86400000);
+  var aniosTotales = diasTotales/365;
+  var aniosCump    = Math.floor(aniosTotales);
+  var ultimoAniv   = new Date(ing); ultimoAniv.setFullYear(fechaBaja.getFullYear());
+  if (ultimoAniv > fechaBaja) ultimoAniv.setFullYear(fechaBaja.getFullYear()-1);
+  var diasPeriodo  = Math.floor((fechaBaja-ultimoAniv)/86400000);
+  var diasAnio     = 365;
+  var diasVacPer   = _diasVacLFT(aniosCump+1);
+  var vacProp      = (diasPeriodo/diasAnio)*diasVacPer;
+  var vacImporte   = vacProp*sal;
+  var primaVac     = vacImporte*0.25;
+  var diaAnioIni   = new Date(fechaBaja.getFullYear(),0,1);
+  var diasCalend   = Math.floor((fechaBaja-diaAnioIni)/86400000)+1;
+  var aguinaldo    = (diasCalend/365)*15*sal;
+  var subtotal     = vacImporte+primaVac+aguinaldo;
+  var liq = null;
+  var tipoObj = BAJA_TIPOS.find(function(x){return x.id===_baja.tipo;});
+  if (tipoObj && tipoObj.liq) {
+    var tresMeses  = 90*sal;
+    var veinteDias = 20*aniosTotales*sal;
+    liq = {tresMeses:tresMeses, veinteDias:veinteDias, total:tresMeses+veinteDias};
+  }
+  return {sal:sal,diasTotales:diasTotales,aniosTotales:aniosTotales,aniosCump:aniosCump,diasPeriodo:diasPeriodo,diasVacPer:diasVacPer,vacProp:vacProp,vacImporte:vacImporte,primaVac:primaVac,aguinaldo:aguinaldo,subtotal:subtotal,liq:liq,total:subtotal+(liq?liq.total:0)};
+}
+
+function bajaStep3() {
+  var mxn = function(n){ return '$'+Math.round(n).toLocaleString('es-MX'); };
+  var t    = bajaTrabajador();
+  var tipo = BAJA_TIPOS.find(function(x){return x.id===_baja.tipo;});
+  var calc = bajaCalculo();
+  if (!t.fecha_ingreso) return '<div style="background:#fef3c7;border-radius:8px;padding:14px;color:#92400e;">⚠️ Este trabajador no tiene fecha de ingreso registrada. El cálculo no es posible.</div>';
+  if (!calc) return '<div style="background:#fef3c7;border-radius:8px;padding:14px;color:#92400e;">⚠️ Ingresa el salario diario en el paso anterior para calcular las prestaciones.</div>';
+  var row = function(lbl,val,bold){
+    return '<tr style="border-bottom:1px solid var(--border);"><td style="padding:7px 10px;font-size:12px;'+(bold?'font-weight:700;':'')+'">'+lbl+'</td><td style="padding:7px 10px;font-size:12px;text-align:right;font-weight:700;font-variant-numeric:tabular-nums;'+(bold?'color:var(--navy);':'color:var(--ink2);')+'">'+val+'</td></tr>';
+  };
+  var html = '<div style="background:var(--surface);border-radius:8px;padding:10px 14px;margin-bottom:14px;font-size:11px;color:var(--ink3);">';
+  html += tipo.icon+' <strong style="color:var(--navy);">'+tipo.label+'</strong>';
+  html += ' &nbsp;·&nbsp; '+calc.aniosTotales.toFixed(1)+' años ('+calc.diasTotales+' días) &nbsp;·&nbsp; $'+calc.sal+'/día</div>';
+  html += '<table style="width:100%;border-collapse:collapse;">';
+  html += '<thead><tr><th style="text-align:left;padding:5px 10px;font-size:10px;text-transform:uppercase;letter-spacing:.05em;color:var(--ink3);">Concepto</th><th style="text-align:right;padding:5px 10px;font-size:10px;text-transform:uppercase;letter-spacing:.05em;color:var(--ink3);">Importe</th></tr></thead><tbody>';
+  html += row('Vacaciones proporcionales ('+calc.vacProp.toFixed(1)+' días — Art. 76 LFT)', mxn(calc.vacImporte));
+  html += row('Prima vacacional proporcional (25%)', mxn(calc.primaVac));
+  html += row('Aguinaldo proporcional (Art. 87 LFT)', mxn(calc.aguinaldo));
+  if (calc.liq) {
+    html += row('3 meses de salario (Art. 50 LFT)', mxn(calc.liq.tresMeses));
+    html += row('20 días × '+calc.aniosTotales.toFixed(1)+' años (Art. 50 LFT)', mxn(calc.liq.veinteDias));
+  }
+  html += row('TOTAL ESTIMADO', mxn(calc.total), true);
+  html += '</tbody></table>';
+  html += '<div style="font-size:10px;color:var(--ink3);margin-top:10px;line-height:1.5;">* Estimación. No incluye salarios pendientes, días de vacaciones anteriores no gozados, ni retenciones fiscales.</div>';
+  return html;
+}
+
+function bajaStep4() {
+  var t      = bajaTrabajador();
+  var tipo   = BAJA_TIPOS.find(function(x){return x.id===_baja.tipo;});
+  var calc   = bajaCalculo();
+  var mxn    = function(n){ return '$'+Math.round(n).toLocaleString('es-MX'); };
+  var params = new URLSearchParams({
+    empresa:    clienteActual?.empresa||'', rfc: clienteActual?.rfc||'',
+    trabajador: t.nombre||'', puesto: t.puesto||'',
+    ingreso:    t.fecha_ingreso||'', nss: t.nss||'',
+    salario:    String(_baja.sal||t.salario_diario||''),
+    fecha_baja: _baja.fecha
+  }).toString();
+  var btnPri = 'display:block;width:100%;padding:11px 16px;margin-bottom:10px;background:var(--navy);color:#fff;border:none;border-radius:9px;font-size:13px;font-weight:700;cursor:pointer;text-align:left;';
+  var btnSec = 'display:block;width:100%;padding:11px 16px;margin-bottom:10px;background:var(--white);color:var(--navy2);border:1.5px solid var(--border);border-radius:9px;font-size:13px;font-weight:600;cursor:pointer;text-align:left;';
+  var GEN_MAP = {
+    renuncia:    [{lbl:'📤 Carta de renuncia', gen:'cartas-laborales.html', pri:true},{lbl:'💵 Finiquito', gen:'finiquito.html', pri:true},{lbl:'🧰 Resguardo de activos', gen:'asignacion-recursos.html', pri:false}],
+    rescision47: [{lbl:'📝 Acta administrativa', gen:'acta-administrativa.html', pri:false},{lbl:'⚠️ Aviso de rescisión', gen:'aviso-rescision.html', pri:true},{lbl:'💵 Finiquito', gen:'finiquito.html', pri:true},{lbl:'🧰 Resguardo de activos', gen:'asignacion-recursos.html', pri:false}],
+    convenio:    [{lbl:'🤝 Convenio económico', gen:'convenios-economicos.html', pri:true},{lbl:'💵 Finiquito', gen:'finiquito.html', pri:true}],
+    termino:     [{lbl:'💵 Finiquito', gen:'finiquito.html', pri:true}],
+    rescision51: [{lbl:'⚠️ Aviso de rescisión', gen:'aviso-rescision.html', pri:true},{lbl:'💵 Finiquito + Liquidación', gen:'aviso-rescision.html', pri:true}],
+  };
+  var gens = GEN_MAP[_baja.tipo] || [];
+  var html = '<div style="font-size:13px;font-weight:700;color:var(--navy);margin-bottom:5px;">Documentos a generar</div>';
+  html += '<div style="font-size:11px;color:var(--ink3);margin-bottom:14px;">Los generadores se abrirán con los datos del trabajador prellenados.</div>';
+  gens.forEach(function(g){
+    html += '<button style="'+(g.pri?btnPri:btnSec)+'" onclick="window.open(\''+g.gen+'?'+params+'\',\'_blank\')">'+g.lbl+'</button>';
+  });
+  if (calc) {
+    html += '<div style="background:var(--surface);border-radius:8px;padding:12px 14px;margin-top:6px;display:flex;justify-content:space-between;align-items:center;">';
+    html += '<div style="font-size:12px;color:var(--ink3);">Total estimado de prestaciones</div>';
+    html += '<div style="font-size:16px;font-weight:800;color:var(--navy);">'+mxn(calc.total)+'</div></div>';
+  }
+  return html;
+}
+
+function bajaWizardNext() {
+  if (_baja.paso === 1 && !_baja.tipo) return;
+  if (_baja.paso === 2) {
+    var fi = document.getElementById('baja-fecha-in');
+    var si = document.getElementById('baja-sal-in');
+    if (fi) _baja.fecha = fi.value || _baja.fecha;
+    if (si) _baja.sal   = parseFloat(si.value) || _baja.sal;
+  }
+  _baja.paso++;
+  bajaRender();
+}
+
+function bajaWizardPrev() {
+  if (_baja.paso > 1) { _baja.paso--; bajaRender(); }
+}
+</script>
 </body>
 </html>

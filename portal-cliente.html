@@ -287,6 +287,55 @@ body{font-family:var(--font);background:var(--surface);color:var(--ink);min-heig
 .baja-tipo-card{cursor:pointer;border:2px solid var(--border);border-radius:10px;padding:12px 16px;margin-bottom:10px;display:flex;align-items:center;gap:12px;transition:border-color .15s,background .15s;}
 .baja-tipo-card:hover{border-color:var(--navy2);background:var(--surface);}
 .baja-tipo-card.sel{border-color:var(--navy);background:var(--surface);}
+/* ── Asistente Legal chat ── */
+#panel-asistente{display:none;flex-direction:column;}
+#panel-asistente.active{display:flex;padding:0;overflow:hidden;}
+.asis-wrap{display:flex;flex-direction:column;height:100%;min-height:0;}
+.asis-header{padding:16px 20px;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:12px;flex-shrink:0;}
+.asis-avatar{width:38px;height:38px;border-radius:50%;background:var(--navy);display:flex;align-items:center;justify-content:center;font-size:18px;flex-shrink:0;}
+.asis-hinfo{flex:1;}
+.asis-hname{font-weight:700;font-size:14px;color:var(--ink);}
+.asis-hsub{font-size:11px;color:var(--ink3);}
+.asis-online{width:8px;height:8px;border-radius:50%;background:#22c55e;flex-shrink:0;}
+.asis-msgs{flex:1;overflow-y:auto;padding:16px 20px;display:flex;flex-direction:column;gap:12px;min-height:0;}
+.asis-msg{display:flex;flex-direction:column;max-width:88%;}
+.asis-msg.bot{align-self:flex-start;}
+.asis-msg.usr{align-self:flex-end;}
+.asis-sender{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:var(--ink3);margin-bottom:4px;}
+.asis-msg.usr .asis-sender{text-align:right;}
+.asis-bubble{padding:10px 14px;border-radius:14px;font-size:13px;line-height:1.65;}
+.asis-msg.bot .asis-bubble{background:var(--surface);color:var(--ink);border-bottom-left-radius:3px;}
+.asis-msg.usr .asis-bubble{background:var(--navy);color:#fff;border-bottom-right-radius:3px;}
+.asis-bubble p{margin:0 0 8px;}
+.asis-bubble p:last-child{margin-bottom:0;}
+.asis-bubble ul{margin:6px 0 4px 16px;}
+.asis-bubble li{margin-bottom:4px;}
+.asis-faq-card{margin-top:10px;background:var(--white);border:1.5px solid var(--border);border-radius:10px;padding:12px 14px;}
+.asis-faq-q{font-weight:700;font-size:12.5px;color:var(--navy2);margin-bottom:6px;}
+.asis-faq-a{font-size:12.5px;line-height:1.6;color:var(--ink2);}
+.asis-faq-a p{margin:0 0 6px;}
+.asis-faq-a p:last-child{margin-bottom:0;}
+.asis-faq-cat{display:inline-block;font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.05em;background:var(--teal-bg);color:var(--teal);padding:2px 7px;border-radius:10px;margin-bottom:6px;}
+.asis-actions{display:flex;flex-wrap:wrap;gap:7px;margin-top:10px;}
+.asis-action-btn{padding:6px 12px;border-radius:16px;font-size:11.5px;font-weight:600;cursor:pointer;border:1.5px solid var(--border);background:var(--white);color:var(--ink2);transition:border-color .15s,background .15s;}
+.asis-action-btn:hover{border-color:var(--navy2);background:var(--sky);}
+.asis-action-btn.primary{background:var(--navy);color:#fff;border-color:var(--navy);}
+.asis-action-btn.primary:hover{background:var(--navy2);}
+.asis-action-btn.wa{background:#22c55e;color:#fff;border-color:#22c55e;}
+.asis-action-btn.wa:hover{background:#16a34a;}
+.asis-typing{display:flex;align-items:center;gap:4px;padding:10px 14px;background:var(--surface);border-radius:14px;border-bottom-left-radius:3px;width:fit-content;}
+.asis-typing span{width:6px;height:6px;border-radius:50%;background:var(--ink3);display:inline-block;animation:asTyp 1s ease-in-out infinite;}
+.asis-typing span:nth-child(2){animation-delay:.2s;}
+.asis-typing span:nth-child(3){animation-delay:.4s;}
+@keyframes asTyp{0%,60%,100%{transform:translateY(0);opacity:.5;}30%{transform:translateY(-5px);opacity:1;}}
+.asis-chips{padding:10px 20px 0;display:flex;flex-wrap:wrap;gap:7px;flex-shrink:0;}
+.asis-chip{padding:6px 13px;border:1.5px solid var(--border);border-radius:18px;font-size:12px;font-weight:600;cursor:pointer;background:var(--white);color:var(--ink2);transition:border-color .15s,background .15s;}
+.asis-chip:hover{border-color:var(--navy);background:var(--sky);}
+.asis-input-row{padding:12px 20px;border-top:1px solid var(--border);display:flex;gap:8px;align-items:flex-end;flex-shrink:0;}
+.asis-input{flex:1;border:1.5px solid var(--border);border-radius:10px;padding:9px 12px;font-size:13px;color:var(--ink);resize:none;outline:none;font-family:inherit;line-height:1.5;max-height:100px;overflow-y:auto;}
+.asis-input:focus{border-color:var(--navy2);}
+.asis-send{width:38px;height:38px;border-radius:50%;background:var(--navy);color:#fff;border:none;cursor:pointer;font-size:16px;display:flex;align-items:center;justify-content:center;flex-shrink:0;transition:background .15s;}
+.asis-send:hover{background:var(--navy2);}
 </style>
 </head>
 <body>
@@ -826,13 +875,32 @@ body{font-family:var(--font);background:var(--surface);color:var(--ink);min-heig
         </div>
       </div>
 
-      <!-- ── ASISTENTE IA ── -->
+      <!-- ── ASISTENTE LEGAL IA ── -->
       <div class="panel" id="panel-asistente">
-        <div style="text-align:center;padding:40px 20px;">
-          <div style="font-size:48px;margin-bottom:16px;">⚖️</div>
-          <div style="font-size:18px;font-weight:700;margin-bottom:8px;">Consultas Legales</div>
-          <div style="font-size:14px;color:var(--ink3);max-width:400px;margin:0 auto 24px;">Base de conocimiento con respuestas verificadas sobre la LFT. Si su pregunta no está prevista, le conectamos directo con un abogado por WhatsApp.</div>
-          <button class="btn btn-primary" style="font-size:14px;padding:12px 28px;" onclick="abrirConsultasLegales()">Buscar mi pregunta →</button>
+        <div class="asis-wrap">
+          <div class="asis-header">
+            <div class="asis-avatar">⚖️</div>
+            <div class="asis-hinfo">
+              <div class="asis-hname">Lex · Asistente Legal</div>
+              <div class="asis-hsub">Base de conocimiento LFT · 46+ preguntas verificadas</div>
+            </div>
+            <div class="asis-online" title="En línea"></div>
+          </div>
+          <div class="asis-msgs" id="asis-msgs"></div>
+          <div class="asis-chips" id="asis-chips">
+            <button class="asis-chip" onclick="asistChip('Renuncia voluntaria')">✋ Renuncia</button>
+            <button class="asis-chip" onclick="asistChip('Me despidieron')">⚠️ Despido</button>
+            <button class="asis-chip" onclick="asistChip('Finiquito y liquidación')">💰 Finiquito</button>
+            <button class="asis-chip" onclick="asistChip('Aguinaldo')">🎁 Aguinaldo</button>
+            <button class="asis-chip" onclick="asistChip('Horas extra')">⏰ Horas extra</button>
+            <button class="asis-chip" onclick="asistChip('IMSS y seguro social')">🏥 IMSS</button>
+            <button class="asis-chip" onclick="asistChip('Vacaciones')">🌴 Vacaciones</button>
+            <button class="asis-chip" onclick="asistChip('Contrato de trabajo')">📋 Contratos</button>
+          </div>
+          <div class="asis-input-row">
+            <textarea class="asis-input" id="asis-input" rows="1" placeholder="Escriba su duda laboral…" onkeydown="asistKeydown(event)" oninput="asistAutoResize(this)"></textarea>
+            <button class="asis-send" onclick="asistEnviar()" title="Enviar">▶</button>
+          </div>
         </div>
       </div>
 
@@ -2480,6 +2548,7 @@ function goPanel(id){
   if(id==='comisiones') renderComisiones();
   if(id==='calculadora') calcCargarRoster();
   if(id==='reportes') renderReportes();
+  if(id==='asistente' && !window._asistInited) asistInit();
   cerrarSidebarMobile();
 }
 
@@ -2587,6 +2656,275 @@ function preguntarIA(){
         <button class="ia-btn" onclick="goPanel('solicitudes')" style="background:transparent;border:1px solid rgba(255,255,255,.3);">Preguntarle a su asesor</button>
       </div>`;
   }, 400);
+}
+
+// ════════════════════════════════════════════
+// ASISTENTE LEGAL IA — keyword routing + TF-IDF sobre FAQ_DATA
+// ════════════════════════════════════════════
+window._asistInited = false;
+
+const ASIS_WA = '5213339263817';
+function asistLinkWA(msg){ return `https://wa.me/${ASIS_WA}?text=${encodeURIComponent(msg)}`; }
+
+const ASIS_CAT_LABELS = {
+  contratos:'Contratos', rescision:'Rescisión y despido',
+  liquidacion:'Liquidación y finiquito', jornada:'Jornada y descansos',
+  salario:'Salario y prestaciones', imss:'IMSS y seguridad social',
+  noms:'NOMs y seguridad', reglamento:'Reglamento interior',
+  actas:'Actas administrativas', especiales:'Modalidades especiales',
+  stps:'STPS e inspecciones'
+};
+
+const ASIS_KMAP = [
+  // Rescisión / despido
+  {k:['despid','corrido','corrio','corrieron','echaron','corrieron','despedido','cesado','rescision47','art47'], cat:'rescision', hint:'despido o rescisión'},
+  {k:['renuncia','renunci','resignacion'], cat:'rescision', hint:'renuncia voluntaria', prio:0},
+  {k:['rescision51','art51','rescision trabajador'], cat:'rescision', hint:'rescisión por parte del trabajador', prio:1},
+  {k:['convenio terminacion','convenio baja','mutuo acuerdo'], cat:'rescision', hint:'convenio de terminación', prio:2},
+  {k:['carta','aviso','notificacion despido'], cat:'rescision', hint:'aviso o carta de despido', prio:3},
+  // Liquidación / finiquito
+  {k:['finiquito','partes proporcional'], cat:'liquidacion', hint:'finiquito', prio:0},
+  {k:['liquidacion','indemnizacion','90 dias','tres meses','3 meses','20 dias','indemniz'], cat:'liquidacion', hint:'liquidación e indemnización', prio:1},
+  {k:['prima antiguedad','antiguedad'], cat:'liquidacion', hint:'prima de antigüedad', prio:2},
+  {k:['aguinaldo'], cat:'liquidacion', hint:'aguinaldo', prio:3},
+  {k:['vacaciones','prima vacacional','dias vacacion'], cat:'liquidacion', hint:'vacaciones y prima vacacional', prio:4},
+  {k:['utilidades','ptu','reparto'], cat:'salario', hint:'PTU / utilidades'},
+  // Contratos
+  {k:['contrato','contratar','tipo contrato','modalidad contrato'], cat:'contratos', hint:'contratos de trabajo'},
+  {k:['periodo prueba','prueba','capacitacion'], cat:'contratos', hint:'periodo de prueba', prio:1},
+  {k:['trabajador confianza','empleado confianza'], cat:'especiales', hint:'trabajadores de confianza'},
+  {k:['teletrabajo','home office','trabajo distancia'], cat:'noms', hint:'teletrabajo'},
+  // Jornada / horario
+  {k:['jornada','horario','horas trabajo','tiempo trabajo'], cat:'jornada', hint:'jornada laboral', prio:0},
+  {k:['horas extra','tiempo extra','extraordinar','sobretiempo'], cat:'jornada', hint:'horas extras', prio:1},
+  {k:['descanso','dia descanso','dia libre','domingo'], cat:'jornada', hint:'días de descanso', prio:2},
+  {k:['dias festivos','festivo','feriado'], cat:'jornada', hint:'días festivos', prio:3},
+  {k:['turno nocturno','nocturno','mixto'], cat:'jornada', hint:'turno nocturno o mixto', prio:4},
+  // Salario
+  {k:['salario','sueldo','pago','remunera'], cat:'salario', hint:'salario y pagos', prio:0},
+  {k:['salario minimo','smi','smg'], cat:'salario', hint:'salario mínimo', prio:1},
+  {k:['descuento','deduccion','retencion'], cat:'salario', hint:'descuentos al salario', prio:2},
+  // IMSS / seguridad social
+  {k:['imss','seguro social','cotizar','cotizacion','afiliacion'], cat:'imss', hint:'IMSS y seguridad social', prio:0},
+  {k:['infonavit','credito vivienda'], cat:'imss', hint:'INFONAVIT', prio:1},
+  {k:['incapacidad','enfermedad','accidente trabajo'], cat:'imss', hint:'incapacidades', prio:2},
+  // NOMs
+  {k:['nom035','nom 035','psicosocial','riesgo psicosocial'], cat:'noms', hint:'NOM-035', prio:0},
+  {k:['nom036','nom 036','factor ergonomico'], cat:'noms', hint:'NOM-036', prio:1},
+  {k:['seguridad higiene','equipo proteccion','epi','epp'], cat:'noms', hint:'seguridad e higiene', prio:2},
+  // Reglamento
+  {k:['reglamento interior','reglamento empresa'], cat:'reglamento', hint:'Reglamento Interior de Trabajo'},
+  // Actas
+  {k:['acta administrativa','acta disciplinaria','apercibimiento','sancion'], cat:'actas', hint:'actas administrativas'},
+  // STPS / inspecciones
+  {k:['stps','inspector','inspeccion','visita inspector','autoridad trabajo'], cat:'stps', hint:'inspecciones STPS'},
+];
+
+const ASIS_SALUDOS = [
+  '¡Hola! Soy Lex, su asistente legal laboral. Cuénteme su duda y la busco en nuestra base de conocimiento verificada.',
+  '¡Buenos días! Soy Lex. Estoy aquí para ayudarle con sus consultas sobre la Ley Federal del Trabajo. ¿Cuál es su pregunta hoy?',
+  '¡Hola! Puedo orientarle sobre contratos, despidos, finiquitos, jornadas y más. ¿Qué le preocupa?',
+];
+const ASIS_ENCONTRE = [
+  'Encontré algo que puede ayudarle:',
+  'En nuestra base de conocimiento tenemos esto:',
+  'Esto es lo que dice la Ley al respecto:',
+  'Aquí hay información verificada sobre su consulta:',
+];
+const ASIS_MULTIPLES = [
+  'Encontré varias entradas relacionadas con {hint}:',
+  'Sobre {hint} tenemos más de una pregunta frecuente:',
+  'Hay varias respuestas que pueden ayudarle con {hint}:',
+];
+const ASIS_NOTFOUND = [
+  'No encontré una respuesta exacta en la base de conocimiento para eso.',
+  'Hmm, esa consulta específica no está en nuestras preguntas frecuentes.',
+  'No tengo una respuesta verificada para eso en este momento.',
+];
+const ASIS_SEGUIMIENTO = [
+  '¿Le quedó alguna duda adicional?',
+  '¿Esto resuelve su pregunta, o necesita más detalle?',
+  '¿Hay algo más en lo que pueda orientarle?',
+];
+
+function asistRand(arr){ return arr[Math.floor(Math.random()*arr.length)]; }
+
+function asistNorm(txt){
+  return txt.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'').replace(/[^a-z0-9\s]/g,' ');
+}
+
+function asistDetectar(txt){
+  const n = asistNorm(txt);
+  let mejor = null, mejorPrio = 999;
+  for(const entry of ASIS_KMAP){
+    for(const kw of entry.k){
+      if(n.includes(kw)){
+        const p = entry.prio !== undefined ? entry.prio : 99;
+        if(!mejor || p < mejorPrio){ mejor = entry; mejorPrio = p; }
+        break;
+      }
+    }
+  }
+  return mejor;
+}
+
+function asistBuscarEnCat(cat, query, maxN){
+  construirIndiceFAQ();
+  const items = typeof FAQ_DATA !== 'undefined' ? FAQ_DATA.filter(f=>f.cat===cat) : [];
+  if(!items.length) return [];
+  const palabras = tokenizarFAQ(query);
+  const scored = items.map(item=>{
+    const tq = tokenizarFAQ(item.q), ta = tokenizarFAQ(item.a);
+    let s=0;
+    palabras.forEach(p=>{ const idf=idfFAQ(p); if(tq.includes(p)) s+=idf*2.5; else if(ta.includes(p)) s+=idf*0.6; });
+    return {item, s};
+  }).sort((a,b)=>b.s-a.s);
+  const top = scored.filter(x=>x.s>0).slice(0,maxN||2);
+  if(!top.length) return items.slice(0,1).map(x=>({item:x,s:0}));
+  return top;
+}
+
+function asistFmtA(a){
+  // Strip HTML tags from faq answers since they contain <strong>, <br> etc.
+  return a.replace(/<br\s*\/?>/gi,'\n').replace(/<[^>]+>/g,'').trim();
+}
+
+function asistRenderFaqCard(f){
+  return `<div class="asis-faq-card">
+    <div class="asis-faq-cat">${ASIS_CAT_LABELS[f.cat]||f.cat}</div>
+    <div class="asis-faq-q">${f.q}</div>
+    <div class="asis-faq-a"><p>${asistFmtA(f.a).replace(/\n{2,}/g,'</p><p>').replace(/\n/g,' ')}</p></div>
+  </div>`;
+}
+
+function asistMsgBot(html, cards, actions){
+  const msgsEl = document.getElementById('asis-msgs');
+  const div = document.createElement('div');
+  div.className = 'asis-msg bot';
+  let inner = `<div class="asis-sender">Lex</div><div class="asis-bubble">${html}</div>`;
+  if(cards && cards.length){
+    inner += cards.map(asistRenderFaqCard).join('');
+  }
+  if(actions && actions.length){
+    inner += `<div class="asis-actions">${actions.map(a=>`<button class="asis-action-btn ${a.cls||''}" onclick="${a.fn}">${a.label}</button>`).join('')}</div>`;
+  }
+  div.innerHTML = inner;
+  msgsEl.appendChild(div);
+  msgsEl.scrollTop = msgsEl.scrollHeight;
+}
+
+function asistMsgUser(txt){
+  const msgsEl = document.getElementById('asis-msgs');
+  const div = document.createElement('div');
+  div.className = 'asis-msg usr';
+  div.innerHTML = `<div class="asis-sender">Usted</div><div class="asis-bubble">${txt.replace(/</g,'&lt;')}</div>`;
+  msgsEl.appendChild(div);
+  msgsEl.scrollTop = msgsEl.scrollHeight;
+}
+
+let _asistTypingEl = null;
+function asistTyping(){
+  const msgsEl = document.getElementById('asis-msgs');
+  _asistTypingEl = document.createElement('div');
+  _asistTypingEl.className = 'asis-msg bot';
+  _asistTypingEl.innerHTML = '<div class="asis-sender">Lex</div><div class="asis-typing"><span></span><span></span><span></span></div>';
+  msgsEl.appendChild(_asistTypingEl);
+  msgsEl.scrollTop = msgsEl.scrollHeight;
+}
+function asistRemoveTyping(){
+  if(_asistTypingEl){ _asistTypingEl.remove(); _asistTypingEl=null; }
+}
+
+function asistResponder(query){
+  asistTyping();
+  const delay = 600 + Math.random()*600;
+  setTimeout(()=>{
+    asistRemoveTyping();
+
+    // 1. Try keyword detection → category → TF-IDF within category
+    const detected = asistDetectar(query);
+    if(detected){
+      const resultados = asistBuscarEnCat(detected.cat, query, 3);
+      const tieneScore = resultados.some(r=>r.s>0);
+
+      if(resultados.length===1 || !tieneScore){
+        const res = asistFmtA(resultados[0].item.a);
+        const intro = asistRand(ASIS_ENCONTRE);
+        asistMsgBot(`<p>${intro}</p>`, [resultados[0].item], [
+          {label:'📚 Ver biblioteca completa', fn:`window.open('consultas-legales.html','_blank')`, cls:''},
+          {label:'💬 Hablar con abogado', fn:`window.open('${asistLinkWA('Hola, tengo una duda sobre: '+detected.hint)}','_blank')`, cls:'wa'},
+        ]);
+      } else {
+        const intro = asistRand(ASIS_MULTIPLES).replace('{hint}', detected.hint);
+        asistMsgBot(`<p>${intro}</p>`, resultados.map(r=>r.item), [
+          {label:'📚 Ver biblioteca completa', fn:`window.open('consultas-legales.html','_blank')`, cls:''},
+          {label:'💬 Hablar con abogado', fn:`window.open('${asistLinkWA('Hola, tengo una duda sobre: '+detected.hint)}','_blank')`, cls:'wa'},
+        ]);
+      }
+
+      // Follow-up after slight delay
+      setTimeout(()=>{
+        asistMsgBot(`<p>${asistRand(ASIS_SEGUIMIENTO)}</p>`);
+      }, 1800);
+      return;
+    }
+
+    // 2. Fallback: global TF-IDF across all FAQ
+    const global = buscarMejorRespuestaFAQ(query);
+    if(global){
+      asistMsgBot(`<p>${asistRand(ASIS_ENCONTRE)}</p>`, [global], [
+        {label:'📚 Ver biblioteca completa', fn:`window.open('consultas-legales.html','_blank')`, cls:''},
+        {label:'💬 Hablar con abogado', fn:`window.open('${asistLinkWA('Hola, busqué sobre "'+query+'" y necesito ayuda')}','_blank')`, cls:'wa'},
+      ]);
+      setTimeout(()=>{ asistMsgBot(`<p>${asistRand(ASIS_SEGUIMIENTO)}</p>`); }, 1800);
+      return;
+    }
+
+    // 3. No match
+    asistMsgBot(
+      `<p>${asistRand(ASIS_NOTFOUND)}</p><p>Para esta consulta le recomiendo hablar directamente con un abogado del equipo — le atenderán por WhatsApp en horario hábil.</p>`,
+      null,
+      [
+        {label:'📚 Buscar en biblioteca', fn:`window.open('consultas-legales.html','_blank')`, cls:''},
+        {label:'💬 Contactar abogado', fn:`window.open('${asistLinkWA('Hola, tengo una consulta laboral que no está en la base de preguntas frecuentes: '+query)}','_blank')`, cls:'wa'},
+      ]
+    );
+  }, delay);
+}
+
+function asistInit(){
+  window._asistInited = true;
+  document.getElementById('asis-msgs').innerHTML = '';
+  setTimeout(()=>{
+    asistMsgBot(`<p>${asistRand(ASIS_SALUDOS)}</p><p>Puede escribir su pregunta o elegir un tema de los accesos rápidos de abajo.</p>`);
+  }, 300);
+}
+
+function asistEnviar(){
+  const inp = document.getElementById('asis-input');
+  const txt = inp.value.trim();
+  if(!txt) return;
+  inp.value = '';
+  asistAutoResize(inp);
+  // Hide chips after first interaction
+  document.getElementById('asis-chips').style.display = 'none';
+  asistMsgUser(txt);
+  asistResponder(txt);
+}
+
+function asistChip(texto){
+  document.getElementById('asis-chips').style.display = 'none';
+  asistMsgUser(texto);
+  asistResponder(texto);
+}
+
+function asistKeydown(e){
+  if(e.key==='Enter' && !e.shiftKey){ e.preventDefault(); asistEnviar(); }
+}
+
+function asistAutoResize(el){
+  el.style.height = 'auto';
+  el.style.height = Math.min(el.scrollHeight, 100) + 'px';
 }
 
 // ════════════════════════════════════════════

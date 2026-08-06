@@ -1200,13 +1200,15 @@ async function renderReportes() {
 
     const [j1, j2, j3] = await Promise.all([
       fetch(base + 'trabajadores?select=id,nombre,puesto,activo,fecha_ingreso,fecha_baja,motivo_baja,nss,salario_diario&cliente_rfc=eq.' + rfc + '&order=nombre.asc', {headers: hdrs}).then(r=>{ console.log('[Rep] trabajadores status:', r.status); return r.ok?r.json():[]; }),
-      fetch(base + 'documentos_expediente?select=id,tipo,nombre,fecha&cliente_rfc=eq.' + rfc + '&order=fecha.desc&limit=200', {headers: hdrs}).then(r=>{ console.log('[Rep] docs status:', r.status); return r.ok?r.json():[]; }),
+      fetch(base + 'documentos_expediente?select=id,tipo,nombre,fecha,trabajador_id&cliente_rfc=eq.' + rfc + '&order=fecha.desc&limit=200', {headers: hdrs}).then(r=>{ console.log('[Rep] docs status:', r.status); return r.ok?r.json():[]; }),
       fetch(base + 'asistencias?select=trabajador_id,fecha,status,hora_entrada,hora_salida&cliente_rfc=eq.' + rfc + '&order=fecha.desc&limit=2000', {headers: hdrs}).then(r=>{ console.log('[Rep] asistencias status:', r.status); return r.ok?r.json():[]; }),
     ]);
 
     const trabs = Array.isArray(j1) ? j1 : [];
     const docs  = Array.isArray(j2) ? j2 : [];
     const asisAll = Array.isArray(j3) ? j3 : [];
+    const docsPorTrab = {};
+    docs.forEach(function(d){ if(d.trabajador_id) docsPorTrab[d.trabajador_id] = (docsPorTrab[d.trabajador_id]||0)+1; });
     window._repAsis = asisAll;
     window._repRFC  = rfcUsar;
     window._repEmpresa = clienteActual?.empresa || rfcUsar;
@@ -1438,8 +1440,16 @@ async function renderReportes() {
         html += '<td style="padding:8px 10px;border-bottom:1px solid var(--border);color:var(--ink2);">' + fmt(t.fecha_ingreso) + '</td>';
         html += '<td style="padding:8px 10px;border-bottom:1px solid var(--border);color:var(--ink2);">' + antig(t.fecha_ingreso) + '</td>';
         html += '<td style="padding:8px 10px;border-bottom:1px solid var(--border);color:var(--ink2);">' + (t.nss||'—') + '</td>';
+        var docCnt = docsPorTrab[t.id] || 0;
         html += '<td style="padding:6px 10px;border-bottom:1px solid var(--border);">';
+        html += '<div style="display:flex;align-items:center;gap:8px;">';
+        if (docCnt > 0) {
+          html += '<span title="' + docCnt + ' documento(s) en expediente" style="display:inline-block;padding:2px 8px;background:#ccfbf1;color:#0f766e;border-radius:10px;font-size:11px;font-weight:700;font-variant-numeric:tabular-nums;cursor:default;">' + docCnt + ' 📄</span>';
+        } else {
+          html += '<span title="Sin documentos en expediente" style="display:inline-block;padding:2px 8px;background:#f1f5f9;color:var(--ink3);border-radius:10px;font-size:11px;font-weight:600;cursor:default;">0 📄</span>';
+        }
         html += '<button style="' + trigSt + '" onclick="toggleGenMenu(event,' + idx + ')">⚡ Generar ▾</button>';
+        html += '</div>';
         html += '</td>';
         html += '</tr>';
       });

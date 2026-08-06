@@ -4,6 +4,8 @@ on:
   schedule:
     # 14:00 UTC = 09:00 CDT / 08:00 CST (Ciudad de México)
     - cron: '0 14 * * *'
+    # Respaldo: si el de 14:00 falla por infraestructura de GitHub, reintenta a las 15:00
+    - cron: '0 15 * * *'
   workflow_dispatch:
     inputs:
       topic:
@@ -32,7 +34,25 @@ jobs:
         with:
           node-version: '20'
 
+      - name: Verificar si ya existe noticia de hoy
+        id: check
+        run: |
+          TODAY=$(date -u +%Y-%m-%d)
+          EXISTING=$(node -e "
+            const posts = require('./blog/posts.json');
+            const t = posts.find(p => p.fecha === '$TODAY' && p.tipo === 'noticia');
+            if (t) { process.stdout.write(t.slug); }
+          " 2>/dev/null || echo "")
+          if [ -n "$EXISTING" ]; then
+            echo "skip=true" >> $GITHUB_OUTPUT
+            echo "✅ Noticia del $TODAY ya publicada: $EXISTING — nada que hacer."
+          else
+            echo "skip=false" >> $GITHUB_OUTPUT
+            echo "📝 No hay noticia para $TODAY — procediendo a generar."
+          fi
+
       - name: Generar noticia diaria
+        if: steps.check.outputs.skip != 'true'
         env:
           ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
         run: |
@@ -46,15 +66,16 @@ jobs:
           eval node .github/scripts/generate-blog-post.js $ARGS
 
       - name: Commit y push
+        if: steps.check.outputs.skip != 'true'
         run: |
           git config user.name "ClickLaboral Bot"
           git config user.email "bot@clicklaboral.mx"
           git add blog/
-          git diff --staged --quiet || git commit -m "🗞️ Noticia diaria: $(date +%Y-%m-%d)"
+          git diff --staged --quiet || git commit -m "🗞️ Noticia diaria: $(date -u +%Y-%m-%d)"
           git push
 
       - name: Trigger Netlify rebuild
-        if: ${{ env.NETLIFY_BUILD_HOOK != '' }}
+        if: steps.check.outputs.skip != 'true' && env.NETLIFY_BUILD_HOOK != ''
         env:
           NETLIFY_BUILD_HOOK: ${{ secrets.NETLIFY_BUILD_HOOK }}
         run: curl -s -X POST "$NETLIFY_BUILD_HOOK"

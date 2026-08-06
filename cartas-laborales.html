@@ -821,6 +821,12 @@ renderPanelMembrete('mem-logo-container');
   setV('puesto', p.get('puesto'));
   setV('fecha_ingreso', p.get('ingreso'));
 
+  // Salario desde portal (flujo sin tipo — renuncia/constancia/recomendación)
+  if (!tipo && p.get('salario')) {
+    setV('f_salario_diario', p.get('salario'));
+    setV('lq_sdi', p.get('salario'));
+  }
+
   // Campos específicos por tipo
   if (tipo === 'finiquito') {
     const salPendDias = parseFloat(p.get('sal_pend_dias')) || 0;

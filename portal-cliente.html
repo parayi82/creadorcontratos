@@ -625,7 +625,7 @@ body{font-family:var(--font);background:var(--surface);color:var(--ink);min-heig
               <option value="anio">Este año</option>
               <option value="todo" selected>Todo el tiempo</option>
             </select>
-            <button onclick="window.print()" class="btn btn-outline" style="font-size:12px;">🖨️ Imprimir</button>
+            <button onclick="exportarPDFReporte()" class="btn btn-outline" style="font-size:12px;">📥 Exportar PDF</button>
           </div>
         </div>
         <div id="rep-contenido"><div style="text-align:center;padding:40px;color:var(--ink3);">Cargando reportes…</div></div>
@@ -3392,6 +3392,66 @@ function exportarExcelTrabajadores() {
   a.href = url; a.download = empresa+'_trabajadores_'+fechaStr+'.xls';
   document.body.appendChild(a); a.click();
   document.body.removeChild(a); URL.revokeObjectURL(url);
+}
+
+// ── Exportar reporte gerencial a PDF ──
+function exportarPDFReporte() {
+  var contenido = document.getElementById('rep-contenido');
+  if (!contenido || !contenido.innerHTML.trim()) { alert('El reporte aún no ha cargado.'); return; }
+  var empresa = window._repEmpresa || window._repRFC || 'Empresa';
+  var periodoEl = document.getElementById('rep-periodo');
+  var periodoLabel = periodoEl ? periodoEl.options[periodoEl.selectedIndex].text : '';
+  var hoy = new Date().toLocaleDateString('es-MX', {day:'2-digit', month:'long', year:'numeric'});
+
+  var css = [
+    ':root{--navy:#0f2640;--navy2:#1a3a5c;--white:#fff;--surface:#f5f4f0;',
+    '      --ink:#1a1a18;--ink2:#4a4a46;--ink3:#888880;--border:rgba(0,0,0,.1);',
+    '      --teal:#0d9488;--teal-bg:#ccfbf1;}',
+    'body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;',
+    '     font-size:12px;color:#1a1a18;background:#fff;margin:0;padding:0;}',
+    /* hide interactive elements */
+    'button,input[type=search],.sort-ind{display:none!important;}',
+    /* strip box-shadows for print */
+    '*{box-shadow:none!important;}',
+    /* tables */
+    'table{border-collapse:collapse;width:100%;page-break-inside:auto;}',
+    'tr{page-break-inside:avoid;}',
+    'th,td{padding:5px 8px;}',
+    /* card sections: keep border, remove white bg flash */
+    'div[style*="border-radius:10px"]{border:1px solid #e2e8f0;break-inside:avoid;}',
+    /* urgency chips keep color in print */
+    '@media print{',
+    '  @page{margin:15mm 12mm;size:A4;}',
+    '  a[href]:after{content:none!important;}',
+    '  .no-print{display:none;}',
+    '}',
+  ].join('');
+
+  var header = '<div style="display:flex;justify-content:space-between;align-items:flex-start;'
+    + 'margin-bottom:18px;padding-bottom:12px;border-bottom:2.5px solid #0f2640;">'
+    + '<div>'
+    + '<div style="font-size:18px;font-weight:800;color:#0f2640;">📊 Reporte Gerencial</div>'
+    + '<div style="font-size:13px;font-weight:700;color:#1a3a5c;margin-top:2px;">' + empresa + '</div>'
+    + '<div style="font-size:11px;color:#888880;margin-top:2px;">' + periodoLabel + ' · Generado el ' + hoy + '</div>'
+    + '</div>'
+    + '<img src="' + (document.querySelector('.logo-img, .logo, img[alt*="logo"]')?.src || '') + '" style="height:36px;opacity:.8;" onerror="this.style.display=\'none\'">'
+    + '</div>';
+
+  var html = '<!DOCTYPE html><html lang="es"><head><meta charset="UTF-8">'
+    + '<title>Reporte Gerencial — ' + empresa + '</title>'
+    + '<style>' + css + '</style>'
+    + '</head><body style="padding:16px;">'
+    + header
+    + contenido.innerHTML
+    + '</body></html>';
+
+  var w = window.open('', '_blank', 'width=960,height=750,menubar=yes');
+  if (!w) { alert('Permite ventanas emergentes en tu navegador para exportar el PDF.'); return; }
+  w.document.write(html);
+  w.document.close();
+  w.focus();
+  w.onafterprint = function(){ w.close(); };
+  setTimeout(function(){ w.print(); }, 600);
 }
 
 // ── Ordenamiento de columnas en tabla de trabajadores ──

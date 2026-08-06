@@ -2787,18 +2787,23 @@ function generarDocumentoDesdeCalc(tipo) {
   const resEl   = document.getElementById(tipo==='finiquito'?'fq-resultado':'lq-resultado');
   const totalEl = resEl?.querySelector('.calc-row-total .calc-value');
 
+  const fq = window._fqCalcData || {};
+  const lq = window._lqCalcData || {};
+
   const params = new URLSearchParams({
-    empresa:    clienteActual?.empresa || '',
-    rfc:        clienteActual?.rfc || '',
+    empresa:       clienteActual?.empresa || '',
+    rfc:           clienteActual?.rfc || '',
     tipo,
-    trabajador: get('fq-nombre'),
-    puesto:     get('fq-puesto'),
-    salario:    get(tipo==='finiquito'?'fq-salario':'lq-salario'),
-    ingreso:    get(tipo==='finiquito'?'fq-ingreso':'lq-ingreso'),
-    baja:       get(tipo==='finiquito'?'fq-baja':'lq-despido'),
-    vac_pend:   get('fq-vac-pend'),
-    ag_dias:    get('fq-aguinaldo-dias'),
-    total_calc: totalEl?.textContent || '',
+    trabajador:    get('fq-nombre'),
+    puesto:        get('fq-puesto'),
+    salario:       get(tipo==='finiquito'?'fq-salario':'lq-salario'),
+    ingreso:       get(tipo==='finiquito'?'fq-ingreso':'lq-ingreso'),
+    baja:          get(tipo==='finiquito'?'fq-baja':'lq-despido'),
+    sal_pend_dias: tipo==='finiquito' ? (fq.salPendDias||0) : 0,
+    vac_prev_dias: tipo==='finiquito' ? (fq.vacPrevDias||0) : 0,
+    vac_prop_dias: tipo==='finiquito' ? (fq.vacPropDias||0) : (lq.vacPropDias||0),
+    ag_dias:       get('fq-aguinaldo-dias'),
+    total_calc:    totalEl?.textContent || '',
   });
   window.open('cartas-laborales.html?' + params.toString(), '_blank');
 }
@@ -2893,6 +2898,8 @@ function calcFiniquito(){
   filasFq.push(['Aguinaldo proporcional ('+Math.round(diasAnio)+' días del año)', mxn(aguinaldo)]);
   filasFq.push(['TOTAL FINIQUITO', mxn(total), true]);
   res.innerHTML = renderFilas(filasFq);
+  // Guardar para generarDocumentoDesdeCalc
+  window._fqCalcData = { salPendDias: salPendEl, vacPrevDias: vacPrevPend, vacPropDias: diasVacProp };
   const btnDiv = document.getElementById('fq-botones');
   if (btnDiv) btnDiv.style.display = 'flex';
 }
@@ -2953,6 +2960,8 @@ function calcLiquidacion(){
   filas.push(['TOTAL LIQUIDACIÓN', mxn(total), true]);
   res.innerHTML = renderFilas(filas);
   res.innerHTML += '<div style="margin-top:10px;font-size:11px;color:var(--ink3);padding:8px 10px;background:rgba(0,0,0,.04);border-radius:6px;line-height:1.6;">Nota: Si el trabajador tiene vacaciones de períodos anteriores no gozadas, estas se suman al total. Ingrese esos días en la calculadora de Finiquito.</div>';
+  // Guardar para generarDocumentoDesdeCalc
+  window._lqCalcData = { vacPropDias: diasVacProp };
   const btnDiv = document.getElementById('lq-botones');
   if (btnDiv) btnDiv.style.display = 'flex';
 }

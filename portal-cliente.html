@@ -629,6 +629,17 @@ body{font-family:var(--font);background:var(--surface);color:var(--ink);min-heig
       <!-- ── CALCULADORA LABORAL ── -->
       <div class="panel" id="panel-calculadora">
 
+        <!-- Selector global de trabajador — aplica a todas las calculadoras -->
+        <div style="background:var(--sky);border:1px solid var(--border2);border-radius:var(--r);padding:12px 16px;margin-bottom:14px;">
+          <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;">
+            <label style="font-size:12px;font-weight:600;color:var(--navy2);white-space:nowrap;">👤 Trabajador del roster:</label>
+            <select id="calc-select-trabajador" class="form-input" style="flex:1;min-width:180px;" onchange="calcAutocompletarTrabajador()">
+              <option value="">— Seleccionar (opcional) o llena los campos manualmente —</option>
+            </select>
+          </div>
+          <div id="calc-trab-info" style="font-size:11px;color:var(--ink3);margin-top:6px;"></div>
+        </div>
+
         <!-- Selector de tipo de cálculo -->
         <div style="display:flex;gap:8px;margin-bottom:20px;flex-wrap:wrap;">
           <button class="btn btn-primary btn-sm" id="calc-tab-finiquito" onclick="calcSetTab('finiquito')">📄 Finiquito</button>
@@ -639,18 +650,6 @@ body{font-family:var(--font);background:var(--surface);color:var(--ink);min-heig
 
         <!-- FINIQUITO -->
         <div id="calc-panel-finiquito">
-
-          <!-- Selector de trabajador -->
-          <div class="card" style="margin-bottom:14px;padding:14px 16px;">
-            <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;">
-              <label style="font-size:12px;font-weight:600;color:var(--ink3);white-space:nowrap;">👤 Trabajador del roster:</label>
-              <select id="calc-select-trabajador" class="form-input" style="flex:1;min-width:200px;" onchange="calcAutocompletarTrabajador()">
-                <option value="">— Seleccionar del roster (opcional) —</option>
-              </select>
-              <div id="calc-trab-info" style="font-size:11px;color:var(--ink3);"></div>
-            </div>
-          </div>
-
           <div class="two-col">
             <div class="card">
               <div class="card-title" style="margin-bottom:14px;">Datos del trabajador</div>
@@ -660,8 +659,9 @@ body{font-family:var(--font);background:var(--surface);color:var(--ink);min-heig
                 <div><label style="font-size:12px;color:var(--ink3);display:block;margin-bottom:3px;">Puesto</label><input type="text" id="fq-puesto" class="form-input" placeholder="Puesto o categoría" oninput="calcFiniquito()"></div>
                 <div><label style="font-size:12px;color:var(--ink3);display:block;margin-bottom:3px;">Fecha de ingreso</label><input type="date" id="fq-ingreso" class="form-input" oninput="calcFiniquito()"></div>
                 <div><label style="font-size:12px;color:var(--ink3);display:block;margin-bottom:3px;">Fecha de baja</label><input type="date" id="fq-baja" class="form-input" oninput="calcFiniquito()"></div>
-                <div><label style="font-size:12px;color:var(--ink3);display:block;margin-bottom:3px;">Días de vacaciones pendientes</label><input type="number" id="fq-vac-pend" class="form-input" placeholder="0" value="0" oninput="calcFiniquito()"></div>
-                <div><label style="font-size:12px;color:var(--ink3);display:block;margin-bottom:3px;">Partes proporcionales de aguinaldo (días)</label><input type="number" id="fq-aguinaldo-dias" class="form-input" placeholder="15" value="15" oninput="calcFiniquito()"></div>
+                <div><label style="font-size:12px;color:var(--ink3);display:block;margin-bottom:3px;">Días de salario pendientes de pago</label><input type="number" id="fq-sal-pend" class="form-input" placeholder="0" value="0" min="0" oninput="calcFiniquito()"><div style="font-size:11px;color:var(--ink3);margin-top:3px;">Días trabajados en el período actual aún no pagados</div></div>
+                <div><label style="font-size:12px;color:var(--ink3);display:block;margin-bottom:3px;">Días de vacaciones pendientes (no tomadas)</label><input type="number" id="fq-vac-pend" class="form-input" placeholder="0" value="0" min="0" oninput="calcFiniquito()"></div>
+                <div><label style="font-size:12px;color:var(--ink3);display:block;margin-bottom:3px;">Días de aguinaldo (mínimo legal: 15)</label><input type="number" id="fq-aguinaldo-dias" class="form-input" placeholder="15" value="15" min="15" oninput="calcFiniquito()"></div>
               </div>
             </div>
             <div class="card" style="background:var(--navy);color:#fff;">
@@ -687,6 +687,7 @@ body{font-family:var(--font);background:var(--surface);color:var(--ink);min-heig
             <div class="card">
               <div class="card-title" style="margin-bottom:14px;">Datos del trabajador</div>
               <div style="display:flex;flex-direction:column;gap:10px;">
+                <div><label style="font-size:12px;color:var(--ink3);display:block;margin-bottom:3px;">Nombre del trabajador</label><input type="text" id="lq-nombre" class="form-input" placeholder="Nombre completo"></div>
                 <div><label style="font-size:12px;color:var(--ink3);display:block;margin-bottom:3px;">Salario diario integrado (MXN)</label><input type="number" id="lq-salario" class="form-input" placeholder="600.00" oninput="calcLiquidacion()"><div style="font-size:11px;color:var(--ink3);margin-top:3px;">Salario diario + partes prop. de prestaciones (Art. 89 LFT)</div></div>
                 <div><label style="font-size:12px;color:var(--ink3);display:block;margin-bottom:3px;">Fecha de ingreso</label><input type="date" id="lq-ingreso" class="form-input" oninput="calcLiquidacion()"></div>
                 <div><label style="font-size:12px;color:var(--ink3);display:block;margin-bottom:3px;">Fecha de despido</label><input type="date" id="lq-despido" class="form-input" oninput="calcLiquidacion()"></div>
@@ -702,7 +703,7 @@ body{font-family:var(--font);background:var(--surface);color:var(--ink);min-heig
                     <option value="no">No</option>
                   </select>
                 </div>
-                <div><label style="font-size:12px;color:var(--ink3);display:block;margin-bottom:3px;">Salario mínimo vigente (MXN/día)</label><input type="number" id="lq-salmin" class="form-input" value="248.93" oninput="calcLiquidacion()"><div style="font-size:11px;color:var(--ink3);margin-top:3px;">Tope máximo de prima de antigüedad = 2 × salario mínimo</div></div>
+                <div><label style="font-size:12px;color:var(--ink3);display:block;margin-bottom:3px;">Salario mínimo vigente (MXN/día)</label><input type="number" id="lq-salmin" class="form-input" value="315.04" oninput="calcLiquidacion()"><div style="font-size:11px;color:var(--ink3);margin-top:3px;">Tope máximo de prima de antigüedad = 2 × salario mínimo · Valor 2026: $315.04</div></div>
               </div>
             </div>
             <div class="card" style="background:var(--navy);color:#fff;">
@@ -783,7 +784,7 @@ body{font-family:var(--font);background:var(--surface);color:var(--ink);min-heig
                 <div><label style="font-size:12px;color:var(--ink3);display:block;margin-bottom:3px;">Fecha de ingreso</label><input type="date" id="ant-ingreso" class="form-input" oninput="calcAntiguedad()"></div>
                 <div><label style="font-size:12px;color:var(--ink3);display:block;margin-bottom:3px;">Fecha de baja</label><input type="date" id="ant-baja" class="form-input" oninput="calcAntiguedad()"></div>
                 <div><label style="font-size:12px;color:var(--ink3);display:block;margin-bottom:3px;">Salario diario del trabajador (MXN)</label><input type="number" id="ant-salario" class="form-input" placeholder="600.00" oninput="calcAntiguedad()"></div>
-                <div><label style="font-size:12px;color:var(--ink3);display:block;margin-bottom:3px;">Salario mínimo vigente (MXN/día)</label><input type="number" id="ant-salmin" class="form-input" value="248.93" oninput="calcAntiguedad()"><div style="font-size:11px;color:var(--ink3);margin-top:3px;">El salario aplicable no puede exceder el doble del mínimo (Art. 162 LFT)</div></div>
+                <div><label style="font-size:12px;color:var(--ink3);display:block;margin-bottom:3px;">Salario mínimo vigente (MXN/día)</label><input type="number" id="ant-salmin" class="form-input" value="315.04" oninput="calcAntiguedad()"><div style="font-size:11px;color:var(--ink3);margin-top:3px;">El salario aplicable no puede exceder el doble del mínimo (Art. 162 LFT) · Valor 2026: $315.04</div></div>
               </div>
             </div>
             <div class="card" style="background:var(--navy);color:#fff;">
@@ -2667,14 +2668,24 @@ async function calcCargarRoster() {
 function calcAutocompletarTrabajador() {
   const sel = document.getElementById('calc-select-trabajador');
   const opt = sel?.options[sel.selectedIndex];
-  if (!opt?.value) { document.getElementById('calc-trab-info').textContent=''; return; }
+  const infoEl = document.getElementById('calc-trab-info');
+  if (!opt?.value) { if(infoEl) infoEl.textContent=''; return; }
   const nombre = opt.dataset.nombre||'', puesto = opt.dataset.puesto||'', ingreso = opt.dataset.ingreso||'';
   const setVal = (id, v) => { const el = document.getElementById(id); if(el) el.value = v; };
+  const hoy = new Date().toISOString().split('T')[0];
+  // Finiquito
   setVal('fq-nombre', nombre); setVal('fq-puesto', puesto);
-  if (ingreso) { setVal('fq-ingreso', ingreso); setVal('lq-ingreso', ingreso); }
-  document.getElementById('calc-trab-info').textContent =
+  if (ingreso) setVal('fq-ingreso', ingreso);
+  // Liquidación
+  setVal('lq-nombre', nombre);
+  if (ingreso) setVal('lq-ingreso', ingreso);
+  // Vacaciones
+  if (ingreso) { setVal('vac-ingreso', ingreso); setVal('vac-corte', hoy); }
+  // Antigüedad
+  if (ingreso) setVal('ant-ingreso', ingreso);
+  if (infoEl) infoEl.textContent =
     nombre + (puesto?' · '+puesto:'') + (ingreso?' · Ingreso: '+new Date(ingreso+'T12:00:00').toLocaleDateString('es-MX'):'');
-  calcFiniquito(); calcLiquidacion();
+  calcFiniquito(); calcLiquidacion(); calcVacaciones(); calcAntiguedad();
 }
 
 function imprimirCalculadora(tipo) {
@@ -2784,26 +2795,25 @@ function calcFiniquito(){
 
   const diasTotal = diffDias(ing, baj);
   const anios = diffAnios(ing, baj);
+  const salPendEl = parseFloat(document.getElementById('fq-sal-pend')?.value)||0;
 
   // Días trabajados del año en curso (para aguinaldo proporcional)
   const inicioAnio = new Date(new Date(baj).getFullYear(), 0, 1).toISOString().split('T')[0];
   const diasAnio = diffDias(inicioAnio, baj);
 
-  const salPendientes = sal * (diasTotal % 365 === 0 ? 0 : (diasTotal - anios*365));
-  // Simplificamos: días trabajados desde último aniversario
-  const diasDesdeAniversario = diasTotal - (anios * 365);
-
+  const salPendientes = salPendEl * sal;
   const vacaciones = vacPend * sal;
   const primaVac = vacaciones * 0.25;
   const aguinaldo = (diasAnio / 365) * agDias * sal;
-  const total = vacaciones + primaVac + aguinaldo;
+  const total = salPendientes + vacaciones + primaVac + aguinaldo;
 
-  res.innerHTML = renderFilas([
-    ['Vacaciones pendientes ('+vacPend+' días)', mxn(vacaciones)],
-    ['Prima vacacional (25%)', mxn(primaVac)],
-    ['Aguinaldo proporcional ('+Math.round(diasAnio)+' días del año)', mxn(aguinaldo)],
-    ['TOTAL FINIQUITO', mxn(total), true],
-  ]);
+  const filasFq = [];
+  if(salPendEl > 0) filasFq.push(['Salarios pendientes ('+salPendEl+' días)', mxn(salPendientes)]);
+  filasFq.push(['Vacaciones pendientes ('+vacPend+' días)', mxn(vacaciones)]);
+  filasFq.push(['Prima vacacional (25%)', mxn(primaVac)]);
+  filasFq.push(['Aguinaldo proporcional ('+Math.round(diasAnio)+' días del año)', mxn(aguinaldo)]);
+  filasFq.push(['TOTAL FINIQUITO', mxn(total), true]);
+  res.innerHTML = renderFilas(filasFq);
   // Mostrar botones de imprimir y generar documento
   const btnDiv = document.getElementById('fq-botones');
   if (btnDiv) btnDiv.style.display = 'flex';
@@ -2829,13 +2839,18 @@ function calcLiquidacion(){
   const diasAnio = diffDias(inicioAnio, des);
 
   // Prestaciones de liquidación (Art. 48 LFT)
+  // 20 días × años completos + proporción de fracción de año (Art. 48)
+  const fraccionAnio = (diasTotal - anios * 365) / 365;
+  const aniosTotales = anios + fraccionAnio;
   const tresMeses = sal * 90;
-  const veinteDias = sal * 20 * Math.max(1, anios);
+  const veinteDias = sal * 20 * Math.max(aniosTotales, 1/12);
 
   // Partes proporcionales (finiquito)
-  const aniosProp = Math.max(1, anios);
-  const diasVac = diasVacacionesPorAnios(aniosProp);
-  const vacaciones = diasVac > 0 ? diasVac * sal : 0;
+  // Vacaciones: según tabla LFT para años completos; si < 1 año, proporcional al primer año (12 días)
+  const diasVac = anios >= 1
+    ? diasVacacionesPorAnios(anios)
+    : Math.round(12 * (diasTotal / 365));
+  const vacaciones = diasVac * sal;
   const primaVac = vacaciones * 0.25;
   const aguinaldo = (diasAnio / 365) * 15 * sal;
 
@@ -2848,7 +2863,7 @@ function calcLiquidacion(){
 
   const filas = [
     ['3 meses de salario (Art. 48)', mxn(tresMeses)],
-    ['20 días × año ('+anios+' años)', mxn(veinteDias)],
+    ['20 días × año ('+aniosTotales.toFixed(1)+' años)', mxn(veinteDias)],
     ['Vacaciones proporcionales ('+diasVac+' días)', mxn(vacaciones)],
     ['Prima vacacional (25%)', mxn(primaVac)],
     ['Aguinaldo proporcional', mxn(aguinaldo)],

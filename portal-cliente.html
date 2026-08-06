@@ -1237,6 +1237,18 @@ async function renderReportes() {
     const tiposOrden = Object.entries(tiposDocs).sort((a,b)=>b[1]-a[1]).slice(0,6);
     const maxT = tiposOrden[0]?.[1] || 1;
 
+    // ── Costo de plantilla ──
+    const mxn = n => '$' + Math.round(n).toLocaleString('es-MX');
+    const conSalario = activos.filter(function(t){ return t.salario_diario != null && t.salario_diario > 0; });
+    const costoMensualTotal = conSalario.reduce(function(s,t){ return s + t.salario_diario * 30.4; }, 0);
+    const salPromedio = conSalario.length ? costoMensualTotal / conSalario.length : 0;
+    const pctConSalario = activos.length ? Math.round(conSalario.length / activos.length * 100) : 0;
+    const costoPuesto = {};
+    conSalario.forEach(function(t){ var p=t.puesto||'Sin puesto'; costoPuesto[p]=(costoPuesto[p]||0)+t.salario_diario*30.4; });
+    const costoPuestoOrden = Object.entries(costoPuesto).sort(function(a,b){ return b[1]-a[1]; }).slice(0,6);
+    const maxCP = costoPuestoOrden[0]?.[1] || 1;
+    const topSalarios = conSalario.slice().sort(function(a,b){ return b.salario_diario-a.salario_diario; }).slice(0,5);
+
     const fmt = d => d ? new Date(d+'T12:00:00').toLocaleDateString('es-MX',{day:'2-digit',month:'short',year:'numeric'}) : '—';
     const antig = fi => { if(!fi) return '—'; const d=Math.floor((new Date()-new Date(fi+'T12:00:00'))/86400000); if(d<30) return d+'d'; if(d<365) return Math.floor(d/30)+'m'; return (d/365).toFixed(1)+' años'; };
     const bar = (v,max,col='var(--navy2)') => `<div style="height:8px;background:#f1f5f9;border-radius:4px;overflow:hidden;flex:1;"><div style="height:100%;width:${Math.round(v/max*100)}%;background:${col};border-radius:4px;"></div></div>`;
@@ -1252,6 +1264,7 @@ async function renderReportes() {
     html += kpiCard('Rotación', rotacion + '%', bajasPeriodo + ' baja(s)', rotacion > 15 ? '#dc2626' : rotacion > 5 ? '#d97706' : '#16a34a');
     html += kpiCard('Documentos', docsFiltrados.length, docsFiltrados.filter(function(d){return d.tipo&&/contrato/i.test(d.tipo);}).length + ' contratos', '#0f766e');
     html += kpiCard('Altas en período', altasPeriodo, 'nuevos ingresos', '#16a34a');
+    if (conSalario.length > 0) html += kpiCard('Costo mensual est.', mxn(costoMensualTotal), pctConSalario + '% de plantilla capturado', '#7c3aed');
     html += '</div>';
 
     // Distribución por puesto
@@ -1266,6 +1279,61 @@ async function renderReportes() {
         html += '<div style="font-size:12px;font-weight:700;text-align:right;">' + v + '</div>';
         html += '</div>';
       });
+      html += '</div>';
+    }
+
+    // Costo de plantilla
+    if (conSalario.length > 0) {
+      html += '<div style="background:var(--white);border-radius:10px;padding:16px;border:1px solid var(--border);margin-bottom:14px;">';
+      html += '<div style="font-size:13px;font-weight:700;color:var(--navy);margin-bottom:12px;">💰 Costo de plantilla</div>';
+
+      // Mini KPIs
+      html += '<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(130px,1fr));gap:10px;margin-bottom:16px;">';
+      html += '<div style="background:var(--surface);border-radius:8px;padding:10px 12px;">';
+      html += '<div style="font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:var(--ink3);margin-bottom:3px;">Total mensual</div>';
+      html += '<div style="font-size:20px;font-weight:800;color:#7c3aed;">' + mxn(costoMensualTotal) + '</div>';
+      html += '<div style="font-size:10px;color:var(--ink3);">salario × 30.4 días</div></div>';
+
+      html += '<div style="background:var(--surface);border-radius:8px;padding:10px 12px;">';
+      html += '<div style="font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:var(--ink3);margin-bottom:3px;">Promedio por trabajador</div>';
+      html += '<div style="font-size:20px;font-weight:800;color:var(--navy);">' + mxn(salPromedio) + '</div>';
+      html += '<div style="font-size:10px;color:var(--ink3);">' + conSalario.length + ' de ' + activos.length + ' activos</div></div>';
+
+      html += '<div style="background:var(--surface);border-radius:8px;padding:10px 12px;">';
+      html += '<div style="font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:var(--ink3);margin-bottom:3px;">Cobertura</div>';
+      html += '<div style="font-size:20px;font-weight:800;color:' + (pctConSalario < 70 ? '#d97706' : '#16a34a') + ';">' + pctConSalario + '%</div>';
+      html += '<div style="font-size:10px;color:var(--ink3);">' + (activos.length - conSalario.length) + ' sin salario registrado</div></div>';
+      html += '</div>';
+
+      // Barras por puesto
+      if (costoPuestoOrden.length > 0) {
+        html += '<div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.05em;color:var(--ink3);margin-bottom:8px;">Costo mensual por puesto</div>';
+        costoPuestoOrden.forEach(function(entry) {
+          var k = entry[0], v = entry[1];
+          html += '<div style="display:grid;grid-template-columns:140px 1fr 90px;align-items:center;gap:8px;margin-bottom:6px;">';
+          html += '<div style="font-size:12px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;" title="' + k.replace(/"/g,'') + '">' + k + '</div>';
+          html += '<div style="height:8px;background:#f1f5f9;border-radius:4px;overflow:hidden;"><div style="height:100%;width:' + Math.round(v/maxCP*100) + '%;background:#7c3aed;border-radius:4px;"></div></div>';
+          html += '<div style="font-size:12px;font-weight:700;text-align:right;color:#7c3aed;">' + mxn(v) + '</div>';
+          html += '</div>';
+        });
+      }
+
+      // Top 5 por salario
+      if (topSalarios.length > 0) {
+        html += '<div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.05em;color:var(--ink3);margin-top:16px;margin-bottom:8px;">Mayores salarios individuales</div>';
+        html += '<table style="width:100%;border-collapse:collapse;font-size:12px;">';
+        topSalarios.forEach(function(t, i) {
+          var bg = i % 2 === 0 ? '' : 'background:var(--surface);';
+          html += '<tr style="' + bg + '">';
+          html += '<td style="padding:5px 8px;font-weight:600;">' + (t.nombre||'') + '</td>';
+          html += '<td style="padding:5px 8px;color:var(--ink3);">' + (t.puesto||'—') + '</td>';
+          html += '<td style="padding:5px 8px;text-align:right;font-weight:700;color:#7c3aed;font-variant-numeric:tabular-nums;">' + mxn(t.salario_diario * 30.4) + '/mes</td>';
+          html += '<td style="padding:5px 8px;text-align:right;color:var(--ink3);font-variant-numeric:tabular-nums;">' + mxn(t.salario_diario) + '/día</td>';
+          html += '</tr>';
+        });
+        html += '</table>';
+      }
+
       html += '</div>';
     }
 

@@ -11,7 +11,15 @@
 -- únicamente sus propios registros de firma.
 -- ════════════════════════════════════════════════════════════════
 
+-- La tabla fue creada sin columna de RFC — la agregamos primero.
+-- Si ya existe (segunda ejecución), el IF NOT EXISTS la omite sin error.
+ALTER TABLE firmas_electronicas
+  ADD COLUMN IF NOT EXISTS cliente_rfc TEXT;
+
 ALTER TABLE firmas_electronicas ENABLE ROW LEVEL SECURITY;
+
+-- Eliminar política previa si existía (idempotente)
+DROP POLICY IF EXISTS "cliente_ve_sus_firmas" ON firmas_electronicas;
 
 -- Los clientes ven solo las firmas de su propia empresa (matched por RFC
 -- almacenado en la metadata del JWT de Supabase Auth).

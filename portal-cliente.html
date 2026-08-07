@@ -6,8 +6,8 @@
 <title>Mi Portal · ClickLaboral.mx</title>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
-<script src="faq-data.js"></script>
-<script src="lft-glosario.js"></script>
+<script src="faq-data.js?v=20260807"></script>
+<script src="lft-glosario.js?v=20260807"></script>
 <style>
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
 :root{
@@ -1065,6 +1065,12 @@ let clienteActual = null;
 // Variables globales de datos — accesibles por renderReportes y otras funciones
 let _gTrabajadores = [], _gTrabajadoresBaja = [], _gDocumentos = [], _gSolicitudes = [];
 let _sbAuth  = null;   // cliente Supabase autenticado (global para reportes)
+
+// esc() — escapa HTML antes de insertar datos de usuario vía innerHTML
+function esc(s){
+  if(s==null)return'';
+  return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;');
+}
 let _rfcReal = null;   // RFC del cliente autenticado (global para reportes)
 
 
@@ -1486,8 +1492,8 @@ async function renderReportes() {
         var urgText  = x.diasFalta === 0 ? '¡Hoy!' : x.diasFalta + 'd';
         var fechaStr = x.nextAniv.toISOString().split('T')[0];
         html += '<tr style="border-bottom:1px solid var(--border);">';
-        html += '<td style="padding:7px 8px;font-weight:600;">' + (x.t.nombre||'') + '</td>';
-        html += '<td style="padding:7px 8px;color:var(--ink3);">' + (x.t.puesto||'—') + '</td>';
+        html += '<td style="padding:7px 8px;font-weight:600;">' + esc(x.t.nombre) + '</td>';
+        html += '<td style="padding:7px 8px;color:var(--ink3);">' + esc(x.t.puesto||'—') + '</td>';
         html += '<td style="padding:7px 8px;text-align:center;">' + fmt(fechaStr) + '</td>';
         html += '<td style="padding:7px 8px;text-align:center;font-weight:700;">' + x.aniosSig + '</td>';
         html += '<td style="padding:7px 8px;text-align:center;color:#0f766e;font-weight:700;">' + x.vacDias + ' días (Art. 76 LFT)</td>';
@@ -1547,8 +1553,8 @@ async function renderReportes() {
         var col = x.pct>=80 ? '#16a34a' : x.pct>=50 ? '#d97706' : '#dc2626';
         var bg  = x.pct>=80 ? '#dcfce7'  : x.pct>=50 ? '#fef3c7'  : '#fee2e2';
         html += '<tr>';
-        html += '<td style="padding:8px 8px 6px;font-weight:600;vertical-align:top;">' + (x.t.nombre||'') + '</td>';
-        html += '<td style="padding:8px 8px 6px;color:var(--ink2);white-space:nowrap;vertical-align:top;">' + (x.t.puesto||'—') + '</td>';
+        html += '<td style="padding:8px 8px 6px;font-weight:600;vertical-align:top;">' + esc(x.t.nombre) + '</td>';
+        html += '<td style="padding:8px 8px 6px;color:var(--ink2);white-space:nowrap;vertical-align:top;">' + esc(x.t.puesto||'—') + '</td>';
         html += '<td style="padding:8px 8px 6px;vertical-align:top;">';
         html += '<div style="display:flex;align-items:center;gap:8px;margin-bottom:' + (x.faltantes.length ? '6' : '0') + 'px;">';
         html += '<div style="flex:1;height:8px;background:#e2e8f0;border-radius:4px;overflow:hidden;min-width:80px;">';
@@ -1631,8 +1637,8 @@ async function renderReportes() {
         topSalarios.forEach(function(t, i) {
           var bg = i % 2 === 0 ? '' : 'background:var(--surface);';
           html += '<tr style="' + bg + '">';
-          html += '<td style="padding:5px 8px;font-weight:600;">' + (t.nombre||'') + '</td>';
-          html += '<td style="padding:5px 8px;color:var(--ink3);">' + (t.puesto||'—') + '</td>';
+          html += '<td style="padding:5px 8px;font-weight:600;">' + esc(t.nombre) + '</td>';
+          html += '<td style="padding:5px 8px;color:var(--ink3);">' + esc(t.puesto||'—') + '</td>';
           html += '<td style="padding:5px 8px;text-align:right;font-weight:700;color:#7c3aed;font-variant-numeric:tabular-nums;">' + mxn(t.salario_diario * 30.4) + '/mes</td>';
           html += '<td style="padding:5px 8px;text-align:right;color:var(--ink3);font-variant-numeric:tabular-nums;">' + mxn(t.salario_diario) + '/día</td>';
           html += '</tr>';
@@ -1691,11 +1697,11 @@ async function renderReportes() {
           + ' data-ingreso="' + (t.fecha_ingreso||'') + '"'
           + ' data-antig="' + diasAntigSort + '"'
           + ' data-nss="' + (t.nss||'') + '">';
-        html += '<td style="padding:8px 10px;border-bottom:1px solid var(--border);font-weight:600;">' + (t.nombre||'') + '</td>';
-        html += '<td style="padding:8px 10px;border-bottom:1px solid var(--border);color:var(--ink2);">' + (t.puesto||'—') + '</td>';
+        html += '<td style="padding:8px 10px;border-bottom:1px solid var(--border);font-weight:600;">' + esc(t.nombre) + '</td>';
+        html += '<td style="padding:8px 10px;border-bottom:1px solid var(--border);color:var(--ink2);">' + esc(t.puesto||'—') + '</td>';
         html += '<td style="padding:8px 10px;border-bottom:1px solid var(--border);color:var(--ink2);">' + fmt(t.fecha_ingreso) + '</td>';
         html += '<td style="padding:8px 10px;border-bottom:1px solid var(--border);color:var(--ink2);">' + antig(t.fecha_ingreso) + '</td>';
-        html += '<td style="padding:8px 10px;border-bottom:1px solid var(--border);color:var(--ink2);">' + (t.nss||'—') + '</td>';
+        html += '<td style="padding:8px 10px;border-bottom:1px solid var(--border);color:var(--ink2);">' + esc(t.nss||'—') + '</td>';
         var docCnt = docsPorTrab[t.id] || 0;
         var tSet = docsPorTrabSet[t.id] || new Set();
         var tPct = Math.round(tSet.size / DOCS_REQUERIDOS.length * 100);
@@ -1721,10 +1727,10 @@ async function renderReportes() {
       html += '<tbody>';
       bajas.forEach(function(t) {
         html += '<tr>';
-        html += '<td style="padding:8px 10px;border-bottom:1px solid var(--border);font-weight:600;">' + (t.nombre||'') + '</td>';
-        html += '<td style="padding:8px 10px;border-bottom:1px solid var(--border);color:var(--ink2);">' + (t.puesto||'—') + '</td>';
+        html += '<td style="padding:8px 10px;border-bottom:1px solid var(--border);font-weight:600;">' + esc(t.nombre) + '</td>';
+        html += '<td style="padding:8px 10px;border-bottom:1px solid var(--border);color:var(--ink2);">' + esc(t.puesto||'—') + '</td>';
         html += '<td style="padding:8px 10px;border-bottom:1px solid var(--border);color:var(--ink2);">' + fmt(t.fecha_baja) + '</td>';
-        html += '<td style="padding:8px 10px;border-bottom:1px solid var(--border);color:var(--ink2);">' + (t.motivo_baja||'—') + '</td>';
+        html += '<td style="padding:8px 10px;border-bottom:1px solid var(--border);color:var(--ink2);">' + esc(t.motivo_baja||'—') + '</td>';
         html += '</tr>';
       });
       html += '</tbody></table></div>';
@@ -1764,8 +1770,8 @@ async function renderReportes() {
         var pct = r.total>0 ? Math.round(r.presentes/r.total*100) : 0;
         var col = pct>=90?'#16a34a':pct>=70?'#d97706':'#dc2626';
         html += '<tr>';
-        html += '<td style="padding:8px 10px;border-bottom:1px solid var(--border);font-weight:600;">'+(r.nombre||'')+'</td>';
-        html += '<td style="padding:8px 10px;border-bottom:1px solid var(--border);color:var(--ink2);">'+(r.puesto||'—')+'</td>';
+        html += '<td style="padding:8px 10px;border-bottom:1px solid var(--border);font-weight:600;">'+esc(r.nombre)+'</td>';
+        html += '<td style="padding:8px 10px;border-bottom:1px solid var(--border);color:var(--ink2);">'+esc(r.puesto||'—')+'</td>';
         html += '<td style="padding:8px 10px;border-bottom:1px solid var(--border);text-align:right;">'+r.total+'</td>';
         html += '<td style="padding:8px 10px;border-bottom:1px solid var(--border);text-align:right;color:#16a34a;font-weight:600;">'+r.presentes+'</td>';
         html += '<td style="padding:8px 10px;border-bottom:1px solid var(--border);text-align:right;color:#dc2626;">'+r.faltas+'</td>';
@@ -2205,8 +2211,8 @@ async function exportarConstanciaPortal() {
       sections += '<thead><tr><th style="'+thS+'">Nombre</th><th style="'+thS+'">Puesto</th><th style="'+thS+'">Ingreso</th></tr></thead><tbody>';
       activos.forEach(function(t){
         sections += '<tr>'
-          +'<td style="'+tdS+'">'+t.nombre+'</td>'
-          +'<td style="'+tdS+'">'+(t.puesto||'—')+'</td>'
+          +'<td style="'+tdS+'">'+esc(t.nombre)+'</td>'
+          +'<td style="'+tdS+'">'+esc(t.puesto||'—')+'</td>'
           +'<td style="'+tdS+'">'+(t.fecha_ingreso ? fmt(t.fecha_ingreso) : '—')+'</td>'
           +'</tr>';
       });
@@ -2224,7 +2230,7 @@ async function exportarConstanciaPortal() {
 
       sections += '<div style="margin-bottom:20px;page-break-inside:avoid;">';
       sections += '<div style="font-size:12px;font-weight:700;color:#0f2640;border-bottom:2px solid #0f2640;padding-bottom:4px;margin-bottom:5px;">'
-        +trab.nombre+(trab.puesto?' &nbsp;·&nbsp; '+trab.puesto:'')+'</div>';
+        +esc(trab.nombre)+(trab.puesto?' &nbsp;·&nbsp; '+esc(trab.puesto):'')+'</div>';
       sections += '<div style="font-size:10px;color:#555;margin-bottom:7px;">Registros: '+recs.length
         +' &nbsp;|&nbsp; Presentes/puntual: '+pres
         +' &nbsp;|&nbsp; Faltas: '+faltas

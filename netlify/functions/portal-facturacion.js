@@ -16,6 +16,8 @@
 const Stripe = require('stripe');
 const { createClient } = require('@supabase/supabase-js');
 const { verificarSesion, puedeAccederRFC, cabecerasCORS } = require('./_admin-auth');
+const { clientIp } = require('./_security');
+const { checkRateLimit, rateLimitResponse } = require('./_rate-limiter');
 
 exports.handler = async (event) => {
   const headers = cabecerasCORS(event);
@@ -26,6 +28,8 @@ exports.handler = async (event) => {
   if (event.httpMethod !== 'POST') {
     return { statusCode: 405, headers, body: JSON.stringify({ error: 'Método no permitido' }) };
   }
+  const rl = await checkRateLimit(clientIp(event), 'portal-facturacion', 10, 300);
+  if (rl.limited) return rateLimitResponse(headers, rl.resetAt);
   if (!process.env.STRIPE_SECRET_KEY || !process.env.SUPABASE_URL || !process.env.SUPABASE_SERVICE_KEY) {
     return { statusCode: 500, headers, body: JSON.stringify({ error: 'El servidor no está configurado correctamente (faltan variables de entorno).' }) };
   }

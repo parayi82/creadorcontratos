@@ -20,6 +20,7 @@
 // Variables de entorno requeridas: SUPABASE_URL, SUPABASE_SERVICE_KEY
 
 const { handleCors, clientIp, reportError } = require('./_security');
+const { checkRateLimit, rateLimitResponse } = require('./_rate-limiter');
 const { createClient } = require('@supabase/supabase-js');
 const { verificarAdmin } = require('./_admin-auth');
 
@@ -28,6 +29,8 @@ exports.handler = async (event) => {
   if (corsResult.body !== undefined) return corsResult;
   const headers = corsResult._corsHeaders;
   if (event.httpMethod !== 'POST') return { statusCode: 405, headers, body: JSON.stringify({ error: 'Método no permitido' }) };
+  const rl = await checkRateLimit(clientIp(event), 'gestionar-despachos', 20, 60);
+  if (rl.limited) return rateLimitResponse(headers, rl.resetAt);
   if (!process.env.SUPABASE_URL || !process.env.SUPABASE_SERVICE_KEY) {
     return { statusCode: 500, headers, body: JSON.stringify({ error: 'Faltan variables de entorno de Supabase.' }) };
   }

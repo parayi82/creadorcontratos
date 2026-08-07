@@ -1,5 +1,6 @@
 // stripe-webhook.js — Recibe eventos de Stripe y actualiza user_metadata en Supabase Auth
 const { createClient } = require('@supabase/supabase-js');
+const { reportError } = require('./_security');
 
 exports.handler = async (event) => {
   const stripe = require('stripe')(process.env.STRIPE_SECRET_KEY);
@@ -123,7 +124,7 @@ exports.handler = async (event) => {
 
     return { statusCode: 200, body: JSON.stringify({ received: true }) };
   } catch (err) {
-    console.error('Error procesando webhook:', err.message || err);
+    await reportError('stripe-webhook', err, { type: stripeEvent?.type });
     return { statusCode: 500, body: JSON.stringify({ error: err.message }) };
   }
 };

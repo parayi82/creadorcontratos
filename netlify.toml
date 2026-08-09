@@ -150,6 +150,16 @@
   to = "/.netlify/functions/health"
   status = 200
 
+[[redirects]]
+  from = "/api/mifiel-enviar"
+  to = "/.netlify/functions/mifiel-enviar"
+  status = 200
+
+[[redirects]]
+  from = "/api/mifiel-webhook"
+  to = "/.netlify/functions/mifiel-webhook"
+  status = 200
+
 # Caché largo para assets estáticos con cache-busting en URL
 [[headers]]
   for = "/*.js"

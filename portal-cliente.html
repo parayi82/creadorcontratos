@@ -729,6 +729,7 @@ body{font-family:var(--font);background:var(--surface);color:var(--ink);min-heig
               <option value="todo" selected>Todo el tiempo</option>
             </select>
             <button onclick="exportarPDFReporte()" class="btn btn-outline" style="font-size:12px;">📥 Exportar PDF</button>
+            <button onclick="abrirModalMifiel('reporte')" class="btn btn-outline" style="font-size:12px;border-color:#6366f1;color:#6366f1;">✍️ Firmar con e.firma</button>
           </div>
         </div>
         <div id="rep-contenido"><div style="text-align:center;padding:40px;color:var(--ink3);">Cargando reportes…</div></div>
@@ -4673,6 +4674,206 @@ function bajaWizardNext() {
 function bajaWizardPrev() {
   if (_baja.paso > 1) { _baja.paso--; bajaRender(); }
 }
+</script>
+
+<!-- ── Modal: Firma electrónica con Mifiel ── -->
+<div id="mifiel-overlay" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.55);z-index:10001;align-items:center;justify-content:center;padding:20px;box-sizing:border-box;">
+  <div style="background:var(--white);border-radius:14px;width:100%;max-width:500px;max-height:90vh;display:flex;flex-direction:column;box-shadow:0 20px 60px rgba(0,0,0,.3);">
+    <div style="padding:18px 20px 14px;border-bottom:1px solid var(--border);flex-shrink:0;">
+      <div style="display:flex;justify-content:space-between;align-items:center;">
+        <div>
+          <div style="font-size:15px;font-weight:800;color:var(--navy);">✍️ Firma electrónica avanzada</div>
+          <div style="font-size:11px;color:var(--ink3);margin-top:2px;">Powered by Mifiel · e.firma (FIEL) + NOM-151</div>
+        </div>
+        <button onclick="cerrarModalMifiel()" style="background:none;border:none;font-size:22px;cursor:pointer;color:var(--ink3);padding:0 4px;line-height:1;">×</button>
+      </div>
+    </div>
+    <div id="mifiel-body" style="padding:20px;overflow-y:auto;flex:1;">
+      <!-- Estado: formulario -->
+      <div id="mifiel-form">
+        <div style="font-size:12px;font-weight:700;color:var(--navy);margin-bottom:12px;">Firmantes</div>
+        <div id="mifiel-firmantes-list"></div>
+        <button onclick="mifilelAgregarFirmante()" style="margin-top:8px;padding:7px 14px;background:none;border:1.5px dashed var(--border);border-radius:8px;font-size:12px;color:var(--ink2);cursor:pointer;width:100%;">+ Agregar firmante</button>
+        <div style="margin-top:16px;padding:12px;background:#f0f4ff;border-radius:8px;font-size:11px;color:#4338ca;">
+          ℹ️ Cada firmante recibirá un correo de Mifiel para firmar con su e.firma del SAT. El documento firmado quedará con constancia NOM-151.
+        </div>
+      </div>
+      <!-- Estado: enviando -->
+      <div id="mifiel-sending" style="display:none;text-align:center;padding:30px 0;">
+        <div style="font-size:28px;margin-bottom:12px;">⏳</div>
+        <div style="font-size:13px;font-weight:700;color:var(--navy);">Generando PDF y enviando a Mifiel…</div>
+        <div style="font-size:11px;color:var(--ink3);margin-top:6px;">Esto puede tardar unos segundos</div>
+      </div>
+      <!-- Estado: éxito -->
+      <div id="mifiel-success" style="display:none;">
+        <div style="text-align:center;padding:16px 0 20px;">
+          <div style="font-size:32px;margin-bottom:8px;">✅</div>
+          <div style="font-size:14px;font-weight:800;color:var(--navy);">Documento enviado a firma</div>
+          <div style="font-size:11px;color:var(--ink3);margin-top:4px;">Se enviaron correos de invitación a cada firmante</div>
+        </div>
+        <div id="mifiel-firmantes-result" style="display:flex;flex-direction:column;gap:8px;"></div>
+        <div style="margin-top:16px;padding:10px 14px;background:#f0fdf4;border-radius:8px;font-size:11px;color:#166534;">
+          ✅ Recibirás una notificación cuando todos hayan firmado. El PDF y XML firmados quedarán guardados automáticamente en tu expediente.
+        </div>
+      </div>
+      <!-- Estado: error -->
+      <div id="mifiel-error" style="display:none;text-align:center;padding:20px 0;">
+        <div style="font-size:28px;margin-bottom:10px;">❌</div>
+        <div id="mifiel-error-msg" style="font-size:13px;color:#991b1b;font-weight:600;"></div>
+        <button onclick="mifilelMostrarForm()" style="margin-top:14px;padding:8px 18px;background:var(--navy);color:#fff;border:none;border-radius:8px;font-size:12px;cursor:pointer;">Reintentar</button>
+      </div>
+    </div>
+    <div id="mifiel-footer" style="padding:14px 20px;border-top:1px solid var(--border);display:flex;gap:8px;justify-content:flex-end;flex-shrink:0;">
+      <button onclick="cerrarModalMifiel()" style="padding:9px 16px;background:var(--white);color:var(--ink3);border:1.5px solid var(--border);border-radius:8px;font-size:13px;cursor:pointer;">Cancelar</button>
+      <button id="mifiel-btn-enviar" onclick="mifilelEnviar()" style="padding:9px 20px;background:#4f46e5;color:#fff;border:none;border-radius:8px;font-size:13px;font-weight:700;cursor:pointer;">✍️ Enviar a firma</button>
+    </div>
+  </div>
+</div>
+
+<script>
+// ── Integración Mifiel ──────────────────────────────────────────────────────
+var _mifiel = { tipo: null, firmantes: [] };
+
+function abrirModalMifiel(tipo) {
+  _mifiel.tipo = tipo || 'documento';
+  _mifiel.firmantes = [];
+  mifilelMostrarForm();
+  mifilelRenderFirmantes();
+  // Pre-cargar con el RFC del cliente si está disponible
+  if (window._sb_user?.user_metadata) {
+    var meta = window._sb_user.user_metadata;
+    if (_mifiel.firmantes.length === 0) {
+      _mifiel.firmantes.push({ nombre: meta.empresa || meta.rfc || '', email: meta.email_contacto || '', rfc: meta.rfc || '' });
+      mifilelRenderFirmantes();
+    }
+  } else {
+    mifilelAgregarFirmante();
+  }
+  var overlay = document.getElementById('mifiel-overlay');
+  overlay.style.display = 'flex';
+}
+
+function cerrarModalMifiel() {
+  document.getElementById('mifiel-overlay').style.display = 'none';
+}
+
+function mifilelMostrarForm() {
+  document.getElementById('mifiel-form').style.display = '';
+  document.getElementById('mifiel-sending').style.display = 'none';
+  document.getElementById('mifiel-success').style.display = 'none';
+  document.getElementById('mifiel-error').style.display = 'none';
+  document.getElementById('mifiel-footer').style.display = 'flex';
+}
+
+function mifilelAgregarFirmante() {
+  _mifiel.firmantes.push({ nombre: '', email: '', rfc: '' });
+  mifilelRenderFirmantes();
+}
+
+function mifilelRenderFirmantes() {
+  var cont = document.getElementById('mifiel-firmantes-list');
+  if (!cont) return;
+  cont.innerHTML = '';
+  _mifiel.firmantes.forEach(function(f, i) {
+    var div = document.createElement('div');
+    div.style.cssText = 'background:var(--surface);border-radius:8px;padding:12px;margin-bottom:8px;position:relative;';
+    div.innerHTML = '<div style="font-size:11px;font-weight:700;color:var(--ink3);margin-bottom:8px;">Firmante ' + (i+1) + '</div>'
+      + '<div style="display:grid;gap:6px;">'
+      + '<input placeholder="Nombre completo *" value="' + esc(f.nombre) + '" oninput="_mifiel.firmantes['+i+'].nombre=this.value" style="padding:7px 10px;border:1.5px solid var(--border);border-radius:6px;font-size:12px;background:var(--white);width:100%;box-sizing:border-box;">'
+      + '<input placeholder="Correo electrónico *" type="email" value="' + esc(f.email) + '" oninput="_mifiel.firmantes['+i+'].email=this.value" style="padding:7px 10px;border:1.5px solid var(--border);border-radius:6px;font-size:12px;background:var(--white);width:100%;box-sizing:border-box;">'
+      + '<input placeholder="RFC (opcional — para validar FIEL)" value="' + esc(f.rfc) + '" oninput="_mifiel.firmantes['+i+'].rfc=this.value" style="padding:7px 10px;border:1.5px solid var(--border);border-radius:6px;font-size:12px;background:var(--white);width:100%;box-sizing:border-box;">'
+      + '</div>';
+    if (_mifiel.firmantes.length > 1) {
+      var btn = document.createElement('button');
+      btn.textContent = '✕';
+      btn.style.cssText = 'position:absolute;top:8px;right:10px;background:none;border:none;cursor:pointer;font-size:14px;color:var(--ink3);';
+      btn.onclick = (function(idx){ return function(){ _mifiel.firmantes.splice(idx,1); mifilelRenderFirmantes(); }; })(i);
+      div.appendChild(btn);
+    }
+    cont.appendChild(div);
+  });
+}
+
+async function mifilelEnviar() {
+  // Validar firmantes
+  var validos = _mifiel.firmantes.filter(function(f){ return f.nombre.trim() && f.email.trim(); });
+  if (validos.length === 0) { alert('Agrega al menos un firmante con nombre y correo.'); return; }
+
+  // Mostrar estado "enviando"
+  document.getElementById('mifiel-form').style.display = 'none';
+  document.getElementById('mifiel-sending').style.display = '';
+  document.getElementById('mifiel-footer').style.display = 'none';
+
+  try {
+    // Generar PDF del contenido de reportes usando html2pdf
+    var contenido = document.getElementById('rep-contenido');
+    if (!contenido) throw new Error('No hay contenido para generar el PDF.');
+
+    var empresa = window._repEmpresa || window._repRFC || 'Empresa';
+    var hoy = new Date().toISOString().split('T')[0];
+    var filename = 'Reporte-' + empresa.replace(/\s+/g,'-') + '-' + hoy + '.pdf';
+
+    var pdfBlob = await html2pdf().set({
+      filename: filename,
+      html2canvas: { scale: 2, useCORS: true, logging: false },
+      jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' },
+    }).from(contenido).outputPdf('blob');
+
+    // Convertir a base64
+    var pdfBase64 = await new Promise(function(resolve, reject) {
+      var reader = new FileReader();
+      reader.onload = function(){ resolve(reader.result.split(',')[1]); };
+      reader.onerror = reject;
+      reader.readAsDataURL(pdfBlob);
+    });
+
+    // Obtener token de sesión
+    var token = '';
+    try {
+      var { data: { session } } = await window._sbClient.auth.getSession();
+      token = session?.access_token || '';
+    } catch(e) {}
+    if (!token) throw new Error('Sesión expirada. Recarga la página.');
+
+    var meta = window._sb_user?.user_metadata || {};
+    var clienteRfc = meta.rfc || '';
+
+    var res = await fetch('/api/mifiel-enviar', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + token },
+      body: JSON.stringify({
+        pdf_base64: pdfBase64,
+        filename: filename,
+        tipo: _mifiel.tipo || 'reporte_gerencial',
+        folio: 'REP-' + hoy,
+        firmantes: validos,
+        cliente_rfc: clienteRfc,
+      }),
+    });
+
+    var data = await res.json();
+    if (!res.ok || !data.ok) throw new Error(data.error || data.detalle?.errors?.[0]?.message || 'Error al enviar a Mifiel.');
+
+    // Mostrar éxito
+    document.getElementById('mifiel-sending').style.display = 'none';
+    document.getElementById('mifiel-success').style.display = '';
+
+    var resContainer = document.getElementById('mifiel-firmantes-result');
+    resContainer.innerHTML = (data.firmantes_con_widget || []).map(function(f) {
+      return '<div style="padding:10px 14px;background:var(--surface);border-radius:8px;font-size:12px;">'
+        + '<div style="font-weight:700;color:var(--navy);">' + esc(f.nombre || f.email) + '</div>'
+        + '<div style="color:var(--ink3);margin-top:2px;">' + esc(f.email) + '</div>'
+        + '<div style="margin-top:6px;color:#166534;font-size:11px;">📧 Invitación enviada por Mifiel</div>'
+        + '</div>';
+    }).join('');
+
+  } catch(err) {
+    document.getElementById('mifiel-sending').style.display = 'none';
+    document.getElementById('mifiel-error').style.display = '';
+    document.getElementById('mifiel-error-msg').textContent = err.message || 'Error inesperado.';
+  }
+}
+// ── Fin Mifiel ──────────────────────────────────────────────────────────────
 </script>
 </body>
 </html>

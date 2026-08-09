@@ -6,17 +6,14 @@
 --   2. despacho         → es_cliente_de_despacho(cliente_rfc) = true
 --   3. admin            → role = 'admin' en user_metadata
 --
--- Requiere que 20260809000300_multitenant_despachos.sql ya esté
--- aplicado (crea la función es_cliente_de_despacho).
+-- Las tablas del schema base se actualizan directamente.
+-- Las tablas opcionales (migradas después) usan DO $$ con
+-- to_regclass() para no fallar si aún no existen en producción.
 -- ════════════════════════════════════════════════════════════════
-
--- ── Helper: expresión de acceso reutilizable ──────────────────────────────────
--- La función se referencia directamente en cada policy; no hay macro en SQL,
--- así que se repite el patrón (es lo que hace el planner de Postgres de todas
--- formas después de inline expansion).
 
 -- ── trabajadores ──────────────────────────────────────────────────────────────
 DROP POLICY IF EXISTS "Clientes ven y editan solo sus trabajadores" ON trabajadores;
+DROP POLICY IF EXISTS "acceso_trabajadores" ON trabajadores;
 CREATE POLICY "acceso_trabajadores" ON trabajadores FOR ALL
   USING (
     cliente_rfc = (auth.jwt()::jsonb -> 'user_metadata' ->> 'rfc')
@@ -31,6 +28,7 @@ CREATE POLICY "acceso_trabajadores" ON trabajadores FOR ALL
 
 -- ── asistencias ───────────────────────────────────────────────────────────────
 DROP POLICY IF EXISTS "Clientes ven y editan solo sus asistencias" ON asistencias;
+DROP POLICY IF EXISTS "acceso_asistencias" ON asistencias;
 CREATE POLICY "acceso_asistencias" ON asistencias FOR ALL
   USING (
     cliente_rfc = (auth.jwt()::jsonb -> 'user_metadata' ->> 'rfc')
@@ -45,6 +43,7 @@ CREATE POLICY "acceso_asistencias" ON asistencias FOR ALL
 
 -- ── actas_inasistencia ────────────────────────────────────────────────────────
 DROP POLICY IF EXISTS "Clientes ven y editan solo sus actas de inasistencia" ON actas_inasistencia;
+DROP POLICY IF EXISTS "acceso_actas_inasistencia" ON actas_inasistencia;
 CREATE POLICY "acceso_actas_inasistencia" ON actas_inasistencia FOR ALL
   USING (
     cliente_rfc = (auth.jwt()::jsonb -> 'user_metadata' ->> 'rfc')
@@ -59,6 +58,7 @@ CREATE POLICY "acceso_actas_inasistencia" ON actas_inasistencia FOR ALL
 
 -- ── solicitudes ───────────────────────────────────────────────────────────────
 DROP POLICY IF EXISTS "Clientes ven y crean solo sus solicitudes" ON solicitudes;
+DROP POLICY IF EXISTS "acceso_solicitudes" ON solicitudes;
 CREATE POLICY "acceso_solicitudes" ON solicitudes FOR ALL
   USING (
     cliente_rfc = (auth.jwt()::jsonb -> 'user_metadata' ->> 'rfc')
@@ -72,9 +72,9 @@ CREATE POLICY "acceso_solicitudes" ON solicitudes FOR ALL
   );
 
 -- ── firmas_electronicas ───────────────────────────────────────────────────────
--- (admin policy ya existe; agregar despacho sin tocar cliente ni admin)
 DROP POLICY IF EXISTS "cliente_ve_sus_firmas" ON firmas_electronicas;
 DROP POLICY IF EXISTS "admin_ve_todas_las_firmas" ON firmas_electronicas;
+DROP POLICY IF EXISTS "acceso_firmas_electronicas" ON firmas_electronicas;
 CREATE POLICY "acceso_firmas_electronicas" ON firmas_electronicas FOR SELECT
   USING (
     cliente_rfc = (auth.jwt()::jsonb -> 'user_metadata' ->> 'rfc')
@@ -84,6 +84,7 @@ CREATE POLICY "acceso_firmas_electronicas" ON firmas_electronicas FOR SELECT
 
 -- ── documentos_expediente ─────────────────────────────────────────────────────
 DROP POLICY IF EXISTS "Clientes ven y editan solo sus documentos de expediente" ON documentos_expediente;
+DROP POLICY IF EXISTS "acceso_documentos_expediente" ON documentos_expediente;
 CREATE POLICY "acceso_documentos_expediente" ON documentos_expediente FOR ALL
   USING (
     cliente_rfc = (auth.jwt()::jsonb -> 'user_metadata' ->> 'rfc')
@@ -98,6 +99,7 @@ CREATE POLICY "acceso_documentos_expediente" ON documentos_expediente FOR ALL
 
 -- ── documentos_identidad ──────────────────────────────────────────────────────
 DROP POLICY IF EXISTS "Clientes ven y editan solo sus documentos de identidad" ON documentos_identidad;
+DROP POLICY IF EXISTS "acceso_documentos_identidad" ON documentos_identidad;
 CREATE POLICY "acceso_documentos_identidad" ON documentos_identidad FOR ALL
   USING (
     cliente_rfc = (auth.jwt()::jsonb -> 'user_metadata' ->> 'rfc')
@@ -113,6 +115,7 @@ CREATE POLICY "acceso_documentos_identidad" ON documentos_identidad FOR ALL
 -- ── tipos_documento_personalizado ─────────────────────────────────────────────
 DROP POLICY IF EXISTS "cliente_ve_sus_tipos" ON tipos_documento_personalizado;
 DROP POLICY IF EXISTS "Clientes ven y editan solo sus tipos de documento" ON tipos_documento_personalizado;
+DROP POLICY IF EXISTS "acceso_tipos_documento" ON tipos_documento_personalizado;
 CREATE POLICY "acceso_tipos_documento" ON tipos_documento_personalizado FOR ALL
   USING (
     cliente_rfc = (auth.jwt()::jsonb -> 'user_metadata' ->> 'rfc')
@@ -125,85 +128,116 @@ CREATE POLICY "acceso_tipos_documento" ON tipos_documento_personalizado FOR ALL
     OR (auth.jwt()::jsonb -> 'user_metadata' ->> 'role') = 'admin'
   );
 
--- ── vacaciones_programadas ────────────────────────────────────────────────────
-DROP POLICY IF EXISTS "cliente_ve_sus_vacaciones" ON vacaciones_programadas;
-DROP POLICY IF EXISTS "Clientes ven y editan sus vacaciones" ON vacaciones_programadas;
-CREATE POLICY "acceso_vacaciones_programadas" ON vacaciones_programadas FOR ALL
-  USING (
-    cliente_rfc = (auth.jwt()::jsonb -> 'user_metadata' ->> 'rfc')
-    OR es_cliente_de_despacho(cliente_rfc)
-    OR (auth.jwt()::jsonb -> 'user_metadata' ->> 'role') = 'admin'
-  )
-  WITH CHECK (
-    cliente_rfc = (auth.jwt()::jsonb -> 'user_metadata' ->> 'rfc')
-    OR es_cliente_de_despacho(cliente_rfc)
-    OR (auth.jwt()::jsonb -> 'user_metadata' ->> 'role') = 'admin'
-  );
+-- ── tablas opcionales (solo si existen en esta instancia) ─────────────────────
 
--- ── movimientos_trabajador ────────────────────────────────────────────────────
-DROP POLICY IF EXISTS "cliente_ve_sus_movimientos" ON movimientos_trabajador;
-DROP POLICY IF EXISTS "Clientes ven y editan sus movimientos" ON movimientos_trabajador;
-CREATE POLICY "acceso_movimientos_trabajador" ON movimientos_trabajador FOR ALL
-  USING (
-    cliente_rfc = (auth.jwt()::jsonb -> 'user_metadata' ->> 'rfc')
-    OR es_cliente_de_despacho(cliente_rfc)
-    OR (auth.jwt()::jsonb -> 'user_metadata' ->> 'role') = 'admin'
-  )
-  WITH CHECK (
-    cliente_rfc = (auth.jwt()::jsonb -> 'user_metadata' ->> 'rfc')
-    OR es_cliente_de_despacho(cliente_rfc)
-    OR (auth.jwt()::jsonb -> 'user_metadata' ->> 'role') = 'admin'
-  );
+DO $$ BEGIN
+  IF to_regclass('public.vacaciones_programadas') IS NOT NULL THEN
+    EXECUTE $p$
+      DROP POLICY IF EXISTS "cliente_ve_sus_vacaciones"      ON vacaciones_programadas;
+      DROP POLICY IF EXISTS "Clientes ven y editan sus vacaciones" ON vacaciones_programadas;
+      DROP POLICY IF EXISTS "acceso_vacaciones_programadas"  ON vacaciones_programadas;
+      CREATE POLICY "acceso_vacaciones_programadas" ON vacaciones_programadas FOR ALL
+        USING (
+          cliente_rfc = (auth.jwt()::jsonb -> 'user_metadata' ->> 'rfc')
+          OR es_cliente_de_despacho(cliente_rfc)
+          OR (auth.jwt()::jsonb -> 'user_metadata' ->> 'role') = 'admin'
+        )
+        WITH CHECK (
+          cliente_rfc = (auth.jwt()::jsonb -> 'user_metadata' ->> 'rfc')
+          OR es_cliente_de_despacho(cliente_rfc)
+          OR (auth.jwt()::jsonb -> 'user_metadata' ->> 'role') = 'admin'
+        );
+    $p$;
+  END IF;
+END $$;
 
--- ── alertas_laborales ─────────────────────────────────────────────────────────
-DROP POLICY IF EXISTS "cliente_ve_sus_alertas" ON alertas_laborales;
-DROP POLICY IF EXISTS "Clientes ven sus alertas" ON alertas_laborales;
-CREATE POLICY "acceso_alertas_laborales" ON alertas_laborales FOR ALL
-  USING (
-    cliente_rfc = (auth.jwt()::jsonb -> 'user_metadata' ->> 'rfc')
-    OR es_cliente_de_despacho(cliente_rfc)
-    OR (auth.jwt()::jsonb -> 'user_metadata' ->> 'role') = 'admin'
-  )
-  WITH CHECK (
-    cliente_rfc = (auth.jwt()::jsonb -> 'user_metadata' ->> 'rfc')
-    OR es_cliente_de_despacho(cliente_rfc)
-    OR (auth.jwt()::jsonb -> 'user_metadata' ->> 'role') = 'admin'
-  );
+DO $$ BEGIN
+  IF to_regclass('public.movimientos_trabajador') IS NOT NULL THEN
+    EXECUTE $p$
+      DROP POLICY IF EXISTS "cliente_ve_sus_movimientos"         ON movimientos_trabajador;
+      DROP POLICY IF EXISTS "Clientes ven y editan sus movimientos" ON movimientos_trabajador;
+      DROP POLICY IF EXISTS "acceso_movimientos_trabajador"      ON movimientos_trabajador;
+      CREATE POLICY "acceso_movimientos_trabajador" ON movimientos_trabajador FOR ALL
+        USING (
+          cliente_rfc = (auth.jwt()::jsonb -> 'user_metadata' ->> 'rfc')
+          OR es_cliente_de_despacho(cliente_rfc)
+          OR (auth.jwt()::jsonb -> 'user_metadata' ->> 'role') = 'admin'
+        )
+        WITH CHECK (
+          cliente_rfc = (auth.jwt()::jsonb -> 'user_metadata' ->> 'rfc')
+          OR es_cliente_de_despacho(cliente_rfc)
+          OR (auth.jwt()::jsonb -> 'user_metadata' ->> 'role') = 'admin'
+        );
+    $p$;
+  END IF;
+END $$;
 
--- ── evaluaciones_psicometricas ────────────────────────────────────────────────
-DROP POLICY IF EXISTS "cliente_ve_sus_evaluaciones" ON evaluaciones_psicometricas;
-DROP POLICY IF EXISTS "Clientes ven sus evaluaciones" ON evaluaciones_psicometricas;
-CREATE POLICY "acceso_evaluaciones_psicometricas" ON evaluaciones_psicometricas FOR ALL
-  USING (
-    cliente_rfc = (auth.jwt()::jsonb -> 'user_metadata' ->> 'rfc')
-    OR es_cliente_de_despacho(cliente_rfc)
-    OR (auth.jwt()::jsonb -> 'user_metadata' ->> 'role') = 'admin'
-  )
-  WITH CHECK (
-    cliente_rfc = (auth.jwt()::jsonb -> 'user_metadata' ->> 'rfc')
-    OR es_cliente_de_despacho(cliente_rfc)
-    OR (auth.jwt()::jsonb -> 'user_metadata' ->> 'role') = 'admin'
-  );
+DO $$ BEGIN
+  IF to_regclass('public.alertas_laborales') IS NOT NULL THEN
+    EXECUTE $p$
+      DROP POLICY IF EXISTS "cliente_ve_sus_alertas"    ON alertas_laborales;
+      DROP POLICY IF EXISTS "Clientes ven sus alertas"  ON alertas_laborales;
+      DROP POLICY IF EXISTS "acceso_alertas_laborales"  ON alertas_laborales;
+      CREATE POLICY "acceso_alertas_laborales" ON alertas_laborales FOR ALL
+        USING (
+          cliente_rfc = (auth.jwt()::jsonb -> 'user_metadata' ->> 'rfc')
+          OR es_cliente_de_despacho(cliente_rfc)
+          OR (auth.jwt()::jsonb -> 'user_metadata' ->> 'role') = 'admin'
+        )
+        WITH CHECK (
+          cliente_rfc = (auth.jwt()::jsonb -> 'user_metadata' ->> 'rfc')
+          OR es_cliente_de_despacho(cliente_rfc)
+          OR (auth.jwt()::jsonb -> 'user_metadata' ->> 'role') = 'admin'
+        );
+    $p$;
+  END IF;
+END $$;
 
--- ── comisiones_mixtas ─────────────────────────────────────────────────────────
-DROP POLICY IF EXISTS "cliente_ve_sus_comisiones_mixtas" ON comisiones_mixtas;
-DROP POLICY IF EXISTS "Clientes ven sus comisiones mixtas" ON comisiones_mixtas;
-CREATE POLICY "acceso_comisiones_mixtas" ON comisiones_mixtas FOR ALL
-  USING (
-    cliente_rfc = (auth.jwt()::jsonb -> 'user_metadata' ->> 'rfc')
-    OR es_cliente_de_despacho(cliente_rfc)
-    OR (auth.jwt()::jsonb -> 'user_metadata' ->> 'role') = 'admin'
-  )
-  WITH CHECK (
-    cliente_rfc = (auth.jwt()::jsonb -> 'user_metadata' ->> 'rfc')
-    OR es_cliente_de_despacho(cliente_rfc)
-    OR (auth.jwt()::jsonb -> 'user_metadata' ->> 'role') = 'admin'
-  );
+DO $$ BEGIN
+  IF to_regclass('public.evaluaciones_psicometricas') IS NOT NULL THEN
+    EXECUTE $p$
+      DROP POLICY IF EXISTS "cliente_ve_sus_evaluaciones"   ON evaluaciones_psicometricas;
+      DROP POLICY IF EXISTS "Clientes ven sus evaluaciones" ON evaluaciones_psicometricas;
+      DROP POLICY IF EXISTS "acceso_evaluaciones_psicometricas" ON evaluaciones_psicometricas;
+      CREATE POLICY "acceso_evaluaciones_psicometricas" ON evaluaciones_psicometricas FOR ALL
+        USING (
+          cliente_rfc = (auth.jwt()::jsonb -> 'user_metadata' ->> 'rfc')
+          OR es_cliente_de_despacho(cliente_rfc)
+          OR (auth.jwt()::jsonb -> 'user_metadata' ->> 'role') = 'admin'
+        )
+        WITH CHECK (
+          cliente_rfc = (auth.jwt()::jsonb -> 'user_metadata' ->> 'rfc')
+          OR es_cliente_de_despacho(cliente_rfc)
+          OR (auth.jwt()::jsonb -> 'user_metadata' ->> 'role') = 'admin'
+        );
+    $p$;
+  END IF;
+END $$;
+
+DO $$ BEGIN
+  IF to_regclass('public.comisiones_mixtas') IS NOT NULL THEN
+    EXECUTE $p$
+      DROP POLICY IF EXISTS "cliente_ve_sus_comisiones_mixtas"    ON comisiones_mixtas;
+      DROP POLICY IF EXISTS "Clientes ven sus comisiones mixtas"  ON comisiones_mixtas;
+      DROP POLICY IF EXISTS "acceso_comisiones_mixtas"            ON comisiones_mixtas;
+      CREATE POLICY "acceso_comisiones_mixtas" ON comisiones_mixtas FOR ALL
+        USING (
+          cliente_rfc = (auth.jwt()::jsonb -> 'user_metadata' ->> 'rfc')
+          OR es_cliente_de_despacho(cliente_rfc)
+          OR (auth.jwt()::jsonb -> 'user_metadata' ->> 'role') = 'admin'
+        )
+        WITH CHECK (
+          cliente_rfc = (auth.jwt()::jsonb -> 'user_metadata' ->> 'rfc')
+          OR es_cliente_de_despacho(cliente_rfc)
+          OR (auth.jwt()::jsonb -> 'user_metadata' ->> 'role') = 'admin'
+        );
+    $p$;
+  END IF;
+END $$;
 
 -- ── storage.objects (expedientes) ─────────────────────────────────────────────
--- Los archivos se guardan como  {cliente_rfc}/...  en el bucket "expedientes".
--- El despacho puede leer/escribir archivos de sus clientes.
-DROP POLICY IF EXISTS "Clientes suben archivos a su propia carpeta" ON storage.objects;
+DROP POLICY IF EXISTS "Clientes suben archivos a su propia carpeta"  ON storage.objects;
+DROP POLICY IF EXISTS "acceso_storage_upload"                        ON storage.objects;
 CREATE POLICY "acceso_storage_upload" ON storage.objects
   FOR INSERT WITH CHECK (
     bucket_id = 'expedientes'
@@ -214,7 +248,8 @@ CREATE POLICY "acceso_storage_upload" ON storage.objects
     )
   );
 
-DROP POLICY IF EXISTS "Clientes ven archivos de su propia carpeta" ON storage.objects;
+DROP POLICY IF EXISTS "Clientes ven archivos de su propia carpeta"   ON storage.objects;
+DROP POLICY IF EXISTS "acceso_storage_select"                        ON storage.objects;
 CREATE POLICY "acceso_storage_select" ON storage.objects
   FOR SELECT USING (
     bucket_id = 'expedientes'
@@ -226,6 +261,7 @@ CREATE POLICY "acceso_storage_select" ON storage.objects
   );
 
 DROP POLICY IF EXISTS "Clientes borran archivos de su propia carpeta" ON storage.objects;
+DROP POLICY IF EXISTS "acceso_storage_delete"                         ON storage.objects;
 CREATE POLICY "acceso_storage_delete" ON storage.objects
   FOR DELETE USING (
     bucket_id = 'expedientes'

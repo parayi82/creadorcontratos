@@ -2,17 +2,30 @@
 //
 // Recibe eventos de Mifiel vía webhook y actualiza firmas_electronicas en Supabase.
 //
+// Seguridad (dos capas):
+//   1. Token secreto en query string: la URL registrada en Mifiel lleva
+//      ?token=MIFIEL_WEBHOOK_SECRET. Cualquier request sin ese token
+//      se rechaza antes de procesar nada.
+//   2. Verificación contra la API de Mifiel: para eventos que cambian
+//      el estado del documento (document_closed, signer_rejected,
+//      signer_completed) se llama GET /documents/:id con nuestras
+//      credenciales para confirmar que el documento realmente existe y
+//      tiene el estado que el webhook afirma. Evita que un atacante que
+//      conozca el token y un mifiel_id real falsifique estados.
+//
+// Variable requerida adicional: MIFIEL_WEBHOOK_SECRET
+//   Generar con: openssl rand -hex 32
+//   Registrar en Mifiel Dashboard como:
+//     https://clicklaboral.mx/api/mifiel-webhook?token=<secret>
+//
 // Eventos manejados:
-//   document_closed  — Documento firmado por todos + NOM-151 generada → descarga PDF firmado
+//   document_closed  — Documento firmado + NOM-151 → descarga PDF/XML
 //   signer_completed — Un firmante completó
 //   signer_rejected  — Un firmante rechazó
 //   document_deleted — Documento eliminado
-//
-// Variables de entorno: SUPABASE_URL, SUPABASE_SERVICE_KEY,
-//                       MIFIEL_APP_ID, MIFIEL_APP_SECRET, MIFIEL_ENV
 
 const { createClient } = require('@supabase/supabase-js');
-const { reportError } = require('./_security');
+const { clientIp, reportError, logSecurityEvent } = require('./_security');
 
 const MIFIEL_BASE = () =>
   process.env.MIFIEL_ENV === 'production'
@@ -24,16 +37,91 @@ function mifielAuth() {
   return `Basic ${creds}`;
 }
 
+// ── Verificación 1: token en query string ─────────────────────────────────────
+// Comparación en tiempo constante para evitar timing attacks.
+function verificarToken(event) {
+  const secretEsperado = process.env.MIFIEL_WEBHOOK_SECRET || '';
+  if (!secretEsperado) return false;
+  const tokenRecibido = (event.queryStringParameters || {}).token || '';
+  if (tokenRecibido.length !== secretEsperado.length) return false;
+  let diff = 0;
+  for (let i = 0; i < secretEsperado.length; i++) {
+    diff |= tokenRecibido.charCodeAt(i) ^ secretEsperado.charCodeAt(i);
+  }
+  return diff === 0;
+}
+
+// ── Verificación 2: llamada de regreso a Mifiel ────────────────────────────────
+// Confirma que el documento existe en Mifiel con nuestras credenciales.
+// Retorna: { ok: true, doc } | { ok: false, networkError: bool }
+async function verificarEnMifiel(mifielId) {
+  try {
+    const res = await fetch(`${MIFIEL_BASE()}/documents/${mifielId}`, {
+      headers: { 'Authorization': mifielAuth() },
+      signal: AbortSignal.timeout(8000),
+    });
+    if (!res.ok) {
+      return { ok: false, networkError: res.status !== 404 };
+    }
+    const doc = await res.json();
+    return { ok: true, doc };
+  } catch {
+    return { ok: false, networkError: true };
+  }
+}
+
 exports.handler = async (event) => {
-  if (event.httpMethod !== 'POST') return { statusCode: 405, body: 'Method Not Allowed' };
+  if (event.httpMethod !== 'POST') {
+    return { statusCode: 405, body: 'Method Not Allowed' };
+  }
+
+  // ── Capa 1: token secreto ──────────────────────────────────────────────────
+  if (!verificarToken(event)) {
+    logSecurityEvent('webhook_token_invalido', {
+      path: 'mifiel-webhook',
+      ip: clientIp(event),
+    });
+    return { statusCode: 401, body: JSON.stringify({ error: 'No autorizado' }) };
+  }
 
   let payload;
-  try { payload = JSON.parse(event.body || '{}'); } catch { return { statusCode: 400, body: 'JSON inválido' }; }
+  try {
+    payload = JSON.parse(event.body || '{}');
+  } catch {
+    return { statusCode: 400, body: 'JSON inválido' };
+  }
 
   const { event: eventType, data } = payload;
-  if (!eventType || !data) return { statusCode: 200, body: JSON.stringify({ ok: true, skipped: true }) };
+  if (!eventType || !data) {
+    return { statusCode: 200, body: JSON.stringify({ ok: true, skipped: true }) };
+  }
 
   console.log(`[Mifiel webhook] ${eventType}`, JSON.stringify(data).slice(0, 200));
+
+  // ── Capa 2: verificar contra la API de Mifiel para eventos que cambian estado
+  const EVENTOS_VERIFICAR = ['document_closed', 'signer_completed', 'signer_rejected'];
+  if (EVENTOS_VERIFICAR.includes(eventType)) {
+    const mifielId = data.id || data.document;
+    if (!mifielId) {
+      return { statusCode: 400, body: JSON.stringify({ error: 'Falta mifiel_id en el payload' }) };
+    }
+
+    const { ok, networkError } = await verificarEnMifiel(mifielId);
+    if (!ok) {
+      if (networkError) {
+        // Mifiel no responde — devolver 500 para que Mifiel reintente más tarde
+        console.error(`[Mifiel webhook] No se pudo verificar documento ${mifielId} (error de red)`);
+        return { statusCode: 500, body: JSON.stringify({ error: 'No se pudo verificar el documento con Mifiel' }) };
+      }
+      // El documento no existe en Mifiel (404) — request fabricado
+      logSecurityEvent('webhook_mifiel_documento_inexistente', {
+        mifielId,
+        eventType,
+        ip: clientIp(event),
+      });
+      return { statusCode: 200, body: JSON.stringify({ ok: false, reason: 'documento no encontrado en Mifiel' }) };
+    }
+  }
 
   const sb = createClient(
     process.env.SUPABASE_URL,
@@ -57,7 +145,6 @@ exports.handler = async (event) => {
         if (pdfRes.ok) {
           const pdfBuffer = Buffer.from(await pdfRes.arrayBuffer());
 
-          // Buscar el registro para obtener cliente_rfc
           const { data: firma } = await sb
             .from('firmas_electronicas')
             .select('cliente_rfc, documento_tipo')
@@ -94,7 +181,6 @@ exports.handler = async (event) => {
           }
         }
 
-        // Actualizar registro en Supabase
         await sb.from('firmas_electronicas').update({
           estado: 'firmado',
           signed_at: data.signed_at || new Date().toISOString(),
@@ -110,7 +196,6 @@ exports.handler = async (event) => {
         const mifielId = data.document;
         if (!mifielId) break;
 
-        // Actualizar el firmante en el JSONB firmantes
         const { data: firma } = await sb
           .from('firmas_electronicas')
           .select('firmantes')

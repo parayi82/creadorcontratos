@@ -53,7 +53,7 @@ exports.handler = async (event) => {
   if (!usuario) {
     return { statusCode: 401, headers, body: JSON.stringify({ error: 'Inicie sesión para acceder a su facturación.' }) };
   }
-  if (!puedeAccederRFC(usuario, rfc)) {
+  if (!await puedeAccederRFC(supabase, usuario, rfc)) {
     return { statusCode: 403, headers, body: JSON.stringify({ error: 'No está autorizado para acceder a la facturación de este cliente.' }) };
   }
 

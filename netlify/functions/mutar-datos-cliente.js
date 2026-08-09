@@ -19,6 +19,7 @@
 const { handleCors, clientIp, reportError } = require('./_security');
 const { checkRateLimit, rateLimitResponse } = require('./_rate-limiter');
 const { createClient } = require('@supabase/supabase-js');
+const { puedeAccederRFC } = require('./_admin-auth');
 
 const TABLAS_PERMITIDAS = ['trabajadores', 'asistencias', 'evaluaciones_psicometricas', 'movimientos_trabajador', 'vacaciones_programadas'];
 const TABLAS_LECTURA   = ['trabajadores', 'asistencias', 'documentos_identidad', 'documentos_expediente', 'evaluaciones_psicometricas', 'movimientos_trabajador', 'vacaciones_programadas'];
@@ -50,16 +51,8 @@ exports.handler = async (event) => {
 
   if (!rfcU) return { statusCode: 400, headers, body: JSON.stringify({ error: 'cliente_rfc es obligatorio.' }) };
 
-  // ── Verificar autorización ──
-  if (meta.tipo === 'despacho') {
-    const autorizados = (meta.despacho_clientes || []).map(c => String(c.rfc || '').toUpperCase());
-    if (!autorizados.includes(rfcU)) {
-      return { statusCode: 403, headers, body: JSON.stringify({ error: 'Despacho no autorizado para este cliente.' }) };
-    }
-  } else {
-    if (String(meta.rfc || '').toUpperCase() !== rfcU) {
-      return { statusCode: 403, headers, body: JSON.stringify({ error: 'No autorizado para este cliente.' }) };
-    }
+  if (!await puedeAccederRFC(sb, uData.user, rfcU)) {
+    return { statusCode: 403, headers, body: JSON.stringify({ error: 'No autorizado para este cliente.' }) };
   }
 
   // ── Storage remove ──

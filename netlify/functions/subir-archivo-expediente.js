@@ -17,6 +17,7 @@
 const { handleCors, clientIp, reportError } = require('./_security');
 const { checkRateLimit, rateLimitResponse } = require('./_rate-limiter');
 const { createClient } = require('@supabase/supabase-js');
+const { puedeAccederRFC } = require('./_admin-auth');
 
 exports.handler = async (event) => {
   const corsResult = handleCors(event);
@@ -55,16 +56,8 @@ exports.handler = async (event) => {
     return { statusCode: 400, headers, body: JSON.stringify({ error: 'Faltan campos: path, cliente_rfc y file son obligatorios.' }) };
   }
 
-  // Verificar autorización
-  if (meta.tipo === 'despacho') {
-    const autorizados = (meta.despacho_clientes || []).map(c => String(c.rfc || '').toUpperCase());
-    if (!autorizados.includes(clienteRfc)) {
-      return { statusCode: 403, headers, body: JSON.stringify({ error: 'Despacho no autorizado para este cliente.' }) };
-    }
-  } else {
-    if (String(meta.rfc || '').toUpperCase() !== clienteRfc) {
-      return { statusCode: 403, headers, body: JSON.stringify({ error: 'No autorizado.' }) };
-    }
+  if (!await puedeAccederRFC(sb, uData.user, clienteRfc)) {
+    return { statusCode: 403, headers, body: JSON.stringify({ error: 'No autorizado para este cliente.' }) };
   }
 
   const fileContentType = filePart.contentType || 'application/octet-stream';

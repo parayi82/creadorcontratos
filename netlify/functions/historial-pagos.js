@@ -47,7 +47,7 @@ exports.handler = async (event) => {
   if (!usuario) {
     return { statusCode: 401, headers, body: JSON.stringify({ error: 'Inicie sesión para consultar su historial de pagos.' }) };
   }
-  if (!puedeAccederRFC(usuario, rfc)) {
+  if (!await puedeAccederRFC(supabase, usuario, rfc)) {
     return { statusCode: 403, headers, body: JSON.stringify({ error: 'No está autorizado para consultar los pagos de este cliente.' }) };
   }
 

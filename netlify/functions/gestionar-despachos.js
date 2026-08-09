@@ -88,12 +88,11 @@ exports.handler = async (event) => {
           password,
           email_confirm: true,
           user_metadata: {
-            tipo:              'despacho',
-            nombre_despacho:   nombre_despacho.trim(),
-            color:             color || '#1e3a5f',
-            tipo_despacho:     tipo_despacho || 'contador',
-            rango_clientes:    rango_clientes || '3-9',
-            despacho_clientes: clientesArr,
+            tipo:            'despacho',
+            nombre_despacho: nombre_despacho.trim(),
+            color:           color || '#1e3a5f',
+            tipo_despacho:   tipo_despacho || 'contador',
+            rango_clientes:  rango_clientes || '3-9',
           },
         });
         if (authErr) {
@@ -166,9 +165,6 @@ exports.handler = async (event) => {
         }, { onConflict: 'despacho_id,cliente_rfc' });
         if (insErr) throw insErr;
 
-        // Sincronizar user_metadata (backward compat para RLS basada en JWT)
-        await sincronizarMetadata(supabase, desp.auth_user_id, despacho_id);
-
         return ok({ ok: true });
       }
 
@@ -180,7 +176,7 @@ exports.handler = async (event) => {
 
         const { data: desp } = await supabase
           .from('despachos')
-          .select('auth_user_id')
+          .select('id')
           .eq('id', despacho_id)
           .single();
         if (!desp) return err(404, 'Despacho no encontrado.');
@@ -189,8 +185,6 @@ exports.handler = async (event) => {
           .update({ activo: false })
           .eq('despacho_id', despacho_id)
           .eq('cliente_rfc', rfcU);
-
-        await sincronizarMetadata(supabase, desp.auth_user_id, despacho_id);
 
         return ok({ ok: true });
       }
@@ -205,22 +199,3 @@ exports.handler = async (event) => {
   }
 };
 
-// Mantiene user_metadata.despacho_clientes sincronizado con la tabla
-// para que el JWT siga funcionando en RLS durante la transición.
-async function sincronizarMetadata(supabase, authUserId, despachoId) {
-  const { data: clientes } = await supabase
-    .from('despacho_clientes')
-    .select('cliente_rfc, empresa')
-    .eq('despacho_id', despachoId)
-    .eq('activo', true);
-
-  const lista = (clientes || []).map(c => ({ rfc: c.cliente_rfc, empresa: c.empresa }));
-
-  const { data: user } = await supabase.auth.admin.getUserById(authUserId);
-  await supabase.auth.admin.updateUserById(authUserId, {
-    user_metadata: {
-      ...(user?.user?.user_metadata || {}),
-      despacho_clientes: lista,
-    },
-  });
-}

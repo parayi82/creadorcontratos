@@ -194,7 +194,7 @@ async function cargarPanel(user){
       <div class="rfc">${esc(c.rfc)}</div>
       <div class="stats" id="stats-${i}"><span class="stat" style="color:var(--ink3);">Cargando…</span></div>
       <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;">
-        <button class="btn btn-p" onclick="gestionar(${i})">Gestionar cliente →</button>
+        <button class="btn btn-p" onclick="entrarAlDashboard(${i})">Entrar al dashboard →</button>
         <button class="btn btn-o" style="color:var(--red);border-color:var(--red);" onclick="quitarCliente(${i})">✕ Quitar</button>
       </div>
     </div>`).join('');
@@ -353,6 +353,14 @@ async function altaCliente(){
     msg.style.color = 'var(--red)';
     msg.textContent = 'No se pudo agregar: ' + (e.message||e);
   }
+}
+
+function entrarAlDashboard(i){
+  const c = despacho.clientes[i];
+  sessionStorage.setItem('cl_gestion', JSON.stringify({
+    rfc: c.rfc, empresa: c.empresa || c.rfc, despacho: despacho.nombre, color: despacho.color,
+  }));
+  window.location.href = 'portal-cliente.html';
 }
 
 async function quitarCliente(i){

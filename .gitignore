@@ -1,11 +1,66 @@
-node_modules/
+# ── Variables de entorno y secretos ──────────────────────────────
 .env
 .env.local
-.env*.local
-.netlify/
+.env.*.local
+.env.production
+.env.development
+.env.test
+*.env
+
+# ── Dependencias ──────────────────────────────────────────────────
+node_modules/
+.pnp
+.pnp.js
+
+# ── Build / Netlify ───────────────────────────────────────────────
 dist/
+.netlify/
+.cache/
+
+# ── Backups y dumps de base de datos ─────────────────────────────
+# CRÍTICO: nunca subir backups de Supabase/Postgres — contienen datos reales de clientes
+*.sql.bak
+*.dump
+*.backup
+*backup*.sql
+clicklaboral_backup.sql
+*.pg_dump
+
+# EXCEPCIÓN: los archivos SQL del directorio _db son migraciones de esquema
+# (sin datos de clientes) y SÍ deben subirse. El bloque de arriba solo
+# protege archivos de backup con nombres específicos.
+
+# ── Documentación interna (no va al repo público) ─────────────────
+_interno/
+
+# ── Archivos del sistema operativo ───────────────────────────────
 .DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
 Thumbs.db
+Desktop.ini
+
+# ── Editores e IDEs ───────────────────────────────────────────────
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+.project
+.classpath
+.settings/
+
+# ── Logs ─────────────────────────────────────────────────────────
 *.log
 npm-debug.log*
-.cache/
+yarn-debug.log*
+yarn-error.log*
+
+# ── Archivos temporales ───────────────────────────────────────────
+*.tmp
+*.temp
+*.bak
+*.orig

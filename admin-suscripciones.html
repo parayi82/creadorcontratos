@@ -183,6 +183,7 @@ header{background:var(--navy);color:#fff;padding:0 28px;height:54px;display:flex
 
     <div class="sb-sec">Operación</div>
     <div class="nav-item" onclick="goPanel('onboarding')"><span class="nav-icon">🚀</span> Onboarding</div>
+    <div class="nav-item" onclick="goPanel('despachos')"><span class="nav-icon">🏢</span> Despachos</div>
     <div class="nav-item" onclick="window.open('launcher.html')"><span class="nav-icon">🧭</span> Centro de acceso</div>
   </div>
 
@@ -344,6 +345,18 @@ header{background:var(--navy);color:#fff;padding:0 28px;height:54px;display:flex
       </div>
     </div>
 
+    <!-- ══ DESPACHOS ══ -->
+    <div class="panel" id="panel-despachos">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;flex-wrap:wrap;gap:10px;">
+        <div>
+          <div style="font-size:18px;font-weight:800;color:var(--navy);">Despachos</div>
+          <div style="font-size:12px;color:var(--ink3);margin-top:2px;" id="desp-sub">Cargando...</div>
+        </div>
+        <button class="btn btn-green" onclick="abrirModalDespacho()">+ Nuevo despacho</button>
+      </div>
+      <div id="desp-lista"></div>
+    </div>
+
   </div>
 </div>
 
@@ -379,6 +392,62 @@ header{background:var(--navy);color:#fff;padding:0 28px;height:54px;display:flex
     <div class="modal-footer">
       <button class="btn btn-ghost btn-sm" onclick="cerrarModal()">Cancelar</button>
       <button class="btn btn-green btn-sm" onclick="guardarNuevo()">✓ Crear suscripción</button>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL NUEVO DESPACHO -->
+<div class="modal-overlay" id="modal-despacho" style="display:none;" onclick="if(event.target===this)cerrarModalDespacho()">
+  <div class="modal">
+    <div class="modal-header">
+      <div class="modal-title">Nuevo despacho</div>
+      <button class="modal-close" onclick="cerrarModalDespacho()">✕</button>
+    </div>
+    <div class="modal-body">
+      <div class="mf"><label>Nombre del despacho *</label><input type="text" id="nd-nombre" placeholder="Despacho Contable González"></div>
+      <div class="mf"><label>Correo de acceso *</label><input type="email" id="nd-email" placeholder="despacho@correo.mx"></div>
+      <div class="mf-row">
+        <div class="mf"><label>Tipo de despacho</label>
+          <select id="nd-tipo">
+            <option value="contable">Contable</option>
+            <option value="juridico">Jurídico</option>
+            <option value="rrhh">RRHH</option>
+            <option value="mixto">Mixto</option>
+          </select>
+        </div>
+        <div class="mf"><label>Rango de clientes</label>
+          <select id="nd-rango">
+            <option value="3-9">3–9 clientes</option>
+            <option value="10-24">10–24 clientes</option>
+            <option value="25-49">25–49 clientes</option>
+            <option value="50+">50+ clientes</option>
+          </select>
+        </div>
+      </div>
+      <div class="mf"><label>Color de marca</label><input type="color" id="nd-color" value="#1e3a5f" style="height:38px;cursor:pointer;padding:2px 4px;"></div>
+      <div style="background:var(--surface);border-radius:var(--r-sm);padding:10px 12px;font-size:12px;color:var(--ink3);">La contraseña se genera automáticamente y se mostrará al crear el despacho.</div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-ghost btn-sm" onclick="cerrarModalDespacho()">Cancelar</button>
+      <button class="btn btn-green btn-sm" id="btn-guardar-despacho" onclick="guardarDespacho()">✓ Crear despacho</button>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL AGREGAR CLIENTE A DESPACHO -->
+<div class="modal-overlay" id="modal-agregar-cli" style="display:none;" onclick="if(event.target===this)cerrarModalAgregarCliente()">
+  <div class="modal">
+    <div class="modal-header">
+      <div class="modal-title" id="modal-agregar-cli-titulo">Agregar cliente a despacho</div>
+      <button class="modal-close" onclick="cerrarModalAgregarCliente()">✕</button>
+    </div>
+    <div class="modal-body">
+      <div class="mf"><label>RFC de la empresa *</label><input type="text" id="ac-rfc" placeholder="ABC010101AB1" maxlength="13" oninput="this.value=this.value.toUpperCase()"></div>
+      <div class="mf"><label>Nombre de la empresa</label><input type="text" id="ac-empresa" placeholder="Empresa S.A. de C.V."></div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-ghost btn-sm" onclick="cerrarModalAgregarCliente()">Cancelar</button>
+      <button class="btn btn-green btn-sm" id="btn-guardar-cli" onclick="guardarClienteDespacho()">✓ Agregar</button>
     </div>
   </div>
 </div>
@@ -472,6 +541,7 @@ function goPanel(id){
   if(id==='retencion') renderRetencion();
   if(id==='planes') renderPlanes();
   if(id==='onboarding') renderOnboarding();
+  if(id==='despachos') renderDespachos();
 }
 
 function calcularMRRTotal(){
@@ -674,6 +744,155 @@ function renderOnboarding(){
       </div>
       <button class="btn btn-primary btn-sm" onclick="window.open('paquete-bienvenida.html')">Enviar bienvenida</button>
     </div>`).join('');
+}
+
+// ════════════════════════════════════════════════════════
+// DESPACHOS
+// ════════════════════════════════════════════════════════
+function esc(s){ return String(s??'').replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m])); }
+
+let _despachos = [];
+let _despDespachoIdx = null;
+
+async function adminFetch(fn, body){
+  const { data: ses } = await sbData.auth.getSession();
+  const tok = ses?.session?.access_token;
+  if (!tok) throw new Error('Sesión no válida.');
+  const resp = await fetch(`/.netlify/functions/${fn}`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + tok },
+    body: JSON.stringify(body),
+  });
+  const json = await resp.json();
+  if (!resp.ok) throw new Error(json.error || `Error ${resp.status}`);
+  return json;
+}
+
+async function renderDespachos(){
+  const cont = document.getElementById('desp-lista');
+  const sub  = document.getElementById('desp-sub');
+  cont.innerHTML = '<div style="text-align:center;padding:24px;color:var(--ink3);">Cargando…</div>';
+  try {
+    const json = await adminFetch('gestionar-despachos', { accion: 'listar' });
+    _despachos = json.despachos || [];
+    const totalCli = _despachos.reduce((a,d)=>a+(d.clientes||[]).length, 0);
+    sub.textContent = `${_despachos.length} despacho${_despachos.length===1?'':'s'} · ${totalCli} cliente${totalCli===1?'':'s'} en cartera`;
+    if (!_despachos.length) {
+      cont.innerHTML = '<div style="text-align:center;padding:40px;color:var(--ink3);border:1px dashed var(--border);border-radius:var(--r);">Sin despachos registrados todavía.</div>';
+      return;
+    }
+    cont.innerHTML = _despachos.map((d,i)=>{
+      const clientes = d.clientes || [];
+      const colorSafe = /^#[0-9a-fA-F]{3,6}$/.test(d.color||'') ? d.color : '#1e3a5f';
+      return `<div class="card" style="margin-bottom:12px;">
+        <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px;margin-bottom:12px;">
+          <div style="display:flex;align-items:center;gap:10px;">
+            <div style="width:14px;height:14px;border-radius:50%;background:${colorSafe};flex-shrink:0;border:1px solid rgba(0,0,0,.12);"></div>
+            <div>
+              <div style="font-size:14px;font-weight:700;">${esc(d.nombre)}</div>
+              <div style="font-size:11px;color:var(--ink3);">${esc(d.tipo||'—')} · Rango: ${esc(d.rango||'—')} · ${clientes.length} cliente${clientes.length===1?'':'s'}</div>
+            </div>
+          </div>
+          <button class="btn btn-primary btn-sm" onclick="abrirModalAgregarCliente(${i})">+ Agregar cliente</button>
+        </div>
+        ${clientes.length ? `
+        <table style="width:100%;border-collapse:collapse;font-size:12px;">
+          <thead><tr>
+            <th style="text-align:left;padding:6px 8px;border-bottom:1px solid var(--border);color:var(--ink3);font-weight:600;text-transform:uppercase;font-size:10px;letter-spacing:.06em;">Empresa</th>
+            <th style="text-align:left;padding:6px 8px;border-bottom:1px solid var(--border);color:var(--ink3);font-weight:600;text-transform:uppercase;font-size:10px;letter-spacing:.06em;">RFC</th>
+            <th style="text-align:left;padding:6px 8px;border-bottom:1px solid var(--border);color:var(--ink3);font-weight:600;text-transform:uppercase;font-size:10px;letter-spacing:.06em;">Desde</th>
+            <th style="padding:6px 8px;border-bottom:1px solid var(--border);"></th>
+          </tr></thead>
+          <tbody>${clientes.map(c=>`<tr>
+            <td style="padding:7px 8px;border-bottom:1px solid var(--border);">${esc(c.empresa||c.rfc)}</td>
+            <td style="padding:7px 8px;border-bottom:1px solid var(--border);font-family:monospace;color:var(--ink3);">${esc(c.rfc)}</td>
+            <td style="padding:7px 8px;border-bottom:1px solid var(--border);color:var(--ink3);">${esc((c.desde||'').slice(0,10)||'—')}</td>
+            <td style="padding:7px 8px;border-bottom:1px solid var(--border);text-align:right;">
+              <button class="btn btn-red btn-sm" data-di="${i}" data-rfc="${esc(c.rfc)}" data-emp="${esc(c.empresa||c.rfc)}" onclick="quitarClienteAdmin(+this.dataset.di,this.dataset.rfc,this.dataset.emp)">Quitar</button>
+            </td>
+          </tr>`).join('')}</tbody>
+        </table>` : `<div style="font-size:12px;color:var(--ink3);text-align:center;padding:12px;">Sin clientes en cartera.</div>`}
+      </div>`;
+    }).join('');
+  } catch(e) {
+    cont.innerHTML = `<div style="color:var(--red);font-size:12px;padding:16px;">Error al cargar despachos: ${esc(e.message||e)}</div>`;
+  }
+}
+
+function abrirModalDespacho(){
+  document.getElementById('nd-nombre').value = '';
+  document.getElementById('nd-email').value = '';
+  document.getElementById('nd-tipo').value = 'contable';
+  document.getElementById('nd-rango').value = '3-9';
+  document.getElementById('nd-color').value = '#1e3a5f';
+  document.getElementById('modal-despacho').style.display = 'flex';
+}
+function cerrarModalDespacho(){ document.getElementById('modal-despacho').style.display = 'none'; }
+
+async function guardarDespacho(){
+  const nombre = document.getElementById('nd-nombre').value.trim();
+  const email  = document.getElementById('nd-email').value.trim();
+  const tipo   = document.getElementById('nd-tipo').value;
+  const rango  = document.getElementById('nd-rango').value;
+  const color  = document.getElementById('nd-color').value;
+  if (!nombre || !email) { alert('Nombre y correo son obligatorios.'); return; }
+  const pass = Math.random().toString(36).slice(2,8).toUpperCase() + Math.random().toString(36).slice(2,5) + '!';
+  const btn = document.getElementById('btn-guardar-despacho');
+  btn.disabled = true; btn.textContent = 'Creando...';
+  try {
+    await adminFetch('gestionar-despachos', {
+      accion: 'crear', email, password: pass,
+      nombre_despacho: nombre, color, tipo_despacho: tipo, rango_clientes: rango,
+    });
+    cerrarModalDespacho();
+    alert(`✅ Despacho creado\n\nNombre: ${nombre}\nCorreo: ${email}\nContraseña: ${pass}\n\nGuarda estos datos para entregárselos al despacho.`);
+    renderDespachos();
+  } catch(e) {
+    alert('Error al crear despacho: ' + (e.message||e));
+  }
+  btn.disabled = false; btn.textContent = '✓ Crear despacho';
+}
+
+function abrirModalAgregarCliente(despachoIdx){
+  _despDespachoIdx = despachoIdx;
+  const nombre = _despachos[despachoIdx]?.nombre || '';
+  document.getElementById('modal-agregar-cli-titulo').textContent = 'Agregar cliente a ' + nombre;
+  document.getElementById('ac-rfc').value = '';
+  document.getElementById('ac-empresa').value = '';
+  document.getElementById('modal-agregar-cli').style.display = 'flex';
+}
+function cerrarModalAgregarCliente(){ document.getElementById('modal-agregar-cli').style.display = 'none'; }
+
+async function guardarClienteDespacho(){
+  const rfc     = document.getElementById('ac-rfc').value.trim().toUpperCase();
+  const empresa = document.getElementById('ac-empresa').value.trim();
+  if (!rfc) { alert('El RFC es obligatorio.'); return; }
+  const d = _despachos[_despDespachoIdx];
+  if (!d) { alert('Error: no se identificó el despacho.'); return; }
+  const btn = document.getElementById('btn-guardar-cli');
+  btn.disabled = true; btn.textContent = 'Agregando...';
+  try {
+    await adminFetch('gestionar-despachos', {
+      accion: 'agregar_cliente', despacho_id: d.id, rfc, empresa: empresa || rfc,
+    });
+    cerrarModalAgregarCliente();
+    renderDespachos();
+  } catch(e) {
+    alert('Error al agregar cliente: ' + (e.message||e));
+  }
+  btn.disabled = false; btn.textContent = '✓ Agregar';
+}
+
+async function quitarClienteAdmin(despachoIdx, rfc, empresa){
+  const d = _despachos[despachoIdx];
+  if (!d) return;
+  if (!confirm(`¿Quitar "${empresa}" (${rfc}) de la cartera de "${d.nombre}"?`)) return;
+  try {
+    await adminFetch('gestionar-despachos', { accion: 'quitar_cliente', despacho_id: d.id, rfc });
+    renderDespachos();
+  } catch(e) {
+    alert('Error al quitar cliente: ' + (e.message||e));
+  }
 }
 
 function abrirModalNuevo(){

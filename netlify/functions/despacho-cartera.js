@@ -111,6 +111,19 @@ exports.handler = async (event) => {
         return ok({ ok: true, rfc: rfcU });
       }
 
+      case 'quitar': {
+        const { rfc } = body;
+        if (!rfc) return err(400, 'Falta el RFC del cliente.');
+        const rfcU = String(rfc).toUpperCase().trim();
+        const { error: updErr } = await sb
+          .from('despacho_clientes')
+          .update({ activo: false })
+          .eq('despacho_id', desp.id)
+          .eq('cliente_rfc', rfcU);
+        if (updErr) throw updErr;
+        return ok({ ok: true, rfc: rfcU });
+      }
+
       default:
         return err(400, 'Acción no reconocida.');
     }

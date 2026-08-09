@@ -21,13 +21,22 @@ ALTER TABLE firmas_electronicas ENABLE ROW LEVEL SECURITY;
 -- Eliminar política previa si existía (idempotente)
 DROP POLICY IF EXISTS "cliente_ve_sus_firmas" ON firmas_electronicas;
 
--- Los clientes ven solo las firmas de su propia empresa (matched por RFC
--- almacenado en la metadata del JWT de Supabase Auth).
+-- Los clientes ven solo las firmas de su propia empresa.
+-- El RFC vive en user_metadata del JWT (no en el nivel raíz).
 CREATE POLICY "cliente_ve_sus_firmas"
   ON firmas_electronicas
   FOR SELECT
   USING (
-    cliente_rfc = (auth.jwt() ->> 'rfc')
+    cliente_rfc = (auth.jwt()::jsonb -> 'user_metadata' ->> 'rfc')
+  );
+
+-- El administrador puede ver todos los registros.
+DROP POLICY IF EXISTS "admin_ve_todas_las_firmas" ON firmas_electronicas;
+CREATE POLICY "admin_ve_todas_las_firmas"
+  ON firmas_electronicas
+  FOR SELECT
+  USING (
+    (auth.jwt()::jsonb -> 'user_metadata' ->> 'role') = 'admin'
   );
 
 -- Las escrituras siguen llegando exclusivamente desde el backend

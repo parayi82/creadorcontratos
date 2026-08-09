@@ -52,15 +52,17 @@ exports.handler = async (event) => {
   }
 
   try {
-    const { data: usersData } = await supabase.auth.admin.listUsers({ perPage: 1000 });
-    const user = (usersData?.users || []).find(u => (u.user_metadata?.rfc || '').toUpperCase() === rfc.toUpperCase());
+    const { data: billingRow } = await supabase
+      .from('clientes_billing').select('auth_user_id, stripe_customer_id').eq('rfc', rfc.toUpperCase()).maybeSingle();
+    if (!billingRow) return { statusCode: 404, headers, body: JSON.stringify({ error: 'Cliente no encontrado.' }) };
+    const { data: { user } } = await supabase.auth.admin.getUserById(billingRow.auth_user_id);
     if (!user) return { statusCode: 404, headers, body: JSON.stringify({ error: 'Cliente no encontrado.' }) };
 
-    let customerId = user.user_metadata?.stripe_customer_id || null;
+    let customerId = billingRow.stripe_customer_id || user.user_metadata?.stripe_customer_id || null;
 
     // Auto-reparación: si el usuario no tiene el vínculo con Stripe (p. ej. pagó
     // cuando su usuario ya existía y createUser falló), buscar su customer en
-    // Stripe por RFC y guardarlo en la metadata para futuras consultas.
+    // Stripe por RFC y guardarlo en la metadata y en clientes_billing.
     if (!customerId) {
       try {
         let candidato = null;
@@ -79,9 +81,15 @@ exports.handler = async (event) => {
         }
         if (candidato) {
           customerId = candidato.id;
-          await supabase.auth.admin.updateUserById(user.id, {
-            user_metadata: { ...user.user_metadata, stripe_customer_id: candidato.id },
-          });
+          await Promise.all([
+            supabase.auth.admin.updateUserById(user.id, {
+              user_metadata: { ...user.user_metadata, stripe_customer_id: candidato.id },
+            }),
+            supabase.from('clientes_billing').upsert({
+              rfc: rfc.toUpperCase(), auth_user_id: user.id,
+              stripe_customer_id: candidato.id, updated_at: new Date().toISOString(),
+            }, { onConflict: 'rfc' }),
+          ]);
           console.log(`🔗 Auto-vinculado ${rfc} con Stripe customer ${candidato.id}`);
         }
       } catch (e) {

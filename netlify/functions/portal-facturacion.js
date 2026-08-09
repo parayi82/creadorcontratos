@@ -58,13 +58,10 @@ exports.handler = async (event) => {
   }
 
   try {
-    // Buscar stripe_customer_id en user_metadata
-    const { data: usersData2 } = await supabase.auth.admin.listUsers({ perPage: 1000 });
-    const userFound2 = (usersData2?.users || []).find(u => (u.user_metadata?.rfc||'').toUpperCase() === rfc.toUpperCase());
-    const cliente = { stripe_customer_id: userFound2?.user_metadata?.stripe_customer_id || null };
-    if (!userFound2) {
-      return { statusCode: 404, headers, body: JSON.stringify({ error: 'Cliente no encontrado.' }) };
-    }
+    const { data: billing2 } = await supabase
+      .from('clientes_billing').select('stripe_customer_id').eq('rfc', rfc.toUpperCase()).maybeSingle();
+    if (!billing2) return { statusCode: 404, headers, body: JSON.stringify({ error: 'Cliente no encontrado.' }) };
+    const cliente = { stripe_customer_id: billing2.stripe_customer_id || null };
     if (!cliente.stripe_customer_id) {
       return { statusCode: 400, headers, body: JSON.stringify({ error: 'Este cliente no tiene un método de pago registrado en Stripe (puede ser una suscripción dada de alta manualmente). No hay facturas que mostrar.' }) };
     }

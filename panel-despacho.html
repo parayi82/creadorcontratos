@@ -9,24 +9,20 @@
   PANEL DE DESPACHO (marca blanca) — contadores, abogados, RRHH
   ═══════════════════════════════════════════════════════════════════
   CÓMO DAR DE ALTA UN DESPACHO (lo hace el administrador de Clicklaboral):
-  Supabase → Authentication → Add user → correo y contraseña del despacho.
-  Luego, en ese usuario → editar "User Metadata" y pegar:
+  Usar la función admin gestionar-despachos con accion:'crear'.
+  User Metadata mínimo requerido:
 
   {
     "tipo": "despacho",
     "nombre_despacho": "Despacho Contable González",
-    "color": "#0f766e",
-    "despacho_clientes": [
-      { "rfc": "AAA010101AAA", "empresa": "Clínica Dental Sonrisa" },
-      { "rfc": "BBB020202BBB", "empresa": "Veterinaria Patitas" }
-    ]
+    "color": "#0f766e"
   }
 
-  · "color" es opcional (color de acento de su marca).
-  · Cada cliente de la lista debe existir ya como cliente normal (con sus
-    trabajadores dados de alta bajo su RFC).
-  · El despacho solo puede ver/gestionar los RFC de su lista. Los datos de
-    cada cliente permanecen separados: todas las consultas de la plataforma
+  · La relación despacho ↔ clientes vive en la tabla despacho_clientes (DB).
+  · Para agregar clientes al despacho usar gestionar-despachos (admin)
+    o el formulario de alta de este panel (si el RFC no tiene datos previos).
+  · El despacho solo puede ver/gestionar los RFC de su cartera.
+  · Los datos de cada cliente permanecen separados: todas las consultas
     filtran por un solo RFC a la vez.
   ═══════════════════════════════════════════════════════════════════
 -->
@@ -167,10 +163,14 @@ async function cargarPanel(user){
     await sb.auth.signOut();
     return;
   }
+  const { data: dcRows } = await sb.from('despacho_clientes')
+    .select('cliente_rfc, empresa')
+    .eq('activo', true)
+    .order('empresa');
   despacho = {
     nombre: meta.nombre_despacho || 'Mi Despacho',
     color: meta.color || '#1e3a5f',
-    clientes: Array.isArray(meta.despacho_clientes) ? meta.despacho_clientes : [],
+    clientes: (dcRows || []).map(c => ({ rfc: c.cliente_rfc, empresa: c.empresa || c.cliente_rfc })),
   };
 
   // Marca blanca: nombre y color del despacho
@@ -331,18 +331,21 @@ async function altaCliente(){
       msg.textContent = 'Este RFC ya tiene información registrada en la plataforma. Para vincularlo a su cartera, solicítelo a su asesor.';
       return;
     }
-    const nuevaLista = [...despacho.clientes, { rfc: rfcLimpio, empresa }];
-    const { data: updData, error } = await sb.auth.updateUser({ data: { despacho_clientes: nuevaLista } });
-    if(error) throw error;
-    despacho.clientes = nuevaLista;
+    const { data: sd3 } = await sb.auth.getSession();
+    const _tok3 = sd3?.session?.access_token || '';
+    const respAgregar = await fetch('/api/despacho-cartera', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + _tok3 },
+      body: JSON.stringify({ accion: 'agregar', rfc: rfcLimpio, empresa }),
+    });
+    const resAgregar = await respAgregar.json().catch(() => ({}));
+    if (!respAgregar.ok) throw new Error(resAgregar.error || 'Error al agregar cliente.');
     document.getElementById('nc-empresa').value = '';
     document.getElementById('nc-rfc').value = '';
     document.getElementById('form-alta-cliente').style.display = 'none';
-    // Repintar con los datos actualizados (updateUser devuelve el usuario fresco;
-    // la sesión en caché aún puede traer la metadata anterior)
-    cargarPanel(updData?.user || { user_metadata: {
-      tipo:'despacho', nombre_despacho: despacho.nombre, color: despacho.color, despacho_clientes: nuevaLista,
-    }});
+    // Recargar el panel leyendo la lista actualizada desde la DB
+    const { data: { user: userActual } } = await sb.auth.getUser();
+    cargarPanel(userActual);
   } catch(e){
     msg.style.color = 'var(--red)';
     msg.textContent = 'No se pudo agregar: ' + (e.message||e);

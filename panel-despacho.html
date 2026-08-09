@@ -193,7 +193,10 @@ async function cargarPanel(user){
       <h3>${esc(c.empresa || c.rfc)}</h3>
       <div class="rfc">${esc(c.rfc)}</div>
       <div class="stats" id="stats-${i}"><span class="stat" style="color:var(--ink3);">Cargando…</span></div>
-      <button class="btn btn-p" onclick="gestionar(${i})">Gestionar cliente →</button>
+      <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;">
+        <button class="btn btn-p" onclick="gestionar(${i})">Gestionar cliente →</button>
+        <button class="btn btn-o" style="color:var(--red);border-color:var(--red);" onclick="quitarCliente(${i})">✕ Quitar</button>
+      </div>
     </div>`).join('');
 
   // Estadísticas en paralelo, un cliente a la vez sin mezclar RFCs
@@ -349,6 +352,26 @@ async function altaCliente(){
   } catch(e){
     msg.style.color = 'var(--red)';
     msg.textContent = 'No se pudo agregar: ' + (e.message||e);
+  }
+}
+
+async function quitarCliente(i){
+  const c = despacho.clientes[i];
+  if (!confirm(`¿Quitar "${c.empresa || c.rfc}" de su cartera?\n\nEsta acción desvincula al cliente de su despacho. Sus datos no se eliminan de la plataforma.`)) return;
+  try {
+    const { data: sd } = await sb.auth.getSession();
+    const tok = sd?.session?.access_token || '';
+    const resp = await fetch('/api/despacho-cartera', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + tok },
+      body: JSON.stringify({ accion: 'quitar', rfc: c.rfc }),
+    });
+    const res = await resp.json().catch(()=>({}));
+    if (!resp.ok) throw new Error(res.error || 'Error al quitar cliente.');
+    const { data: { user: userActual } } = await sb.auth.getUser();
+    cargarPanel(userActual);
+  } catch(e) {
+    alert('No se pudo quitar: ' + (e.message||e));
   }
 }
 

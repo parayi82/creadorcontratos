@@ -9,9 +9,9 @@
 //   { accion:'crear', email, password, nombre_despacho, color?, clientes? }
 //       → crea el usuario tipo despacho en Auth + tabla despachos
 //   { accion:'agregar_cliente', despacho_id, rfc, empresa }
-//       → agrega cliente a despacho_clientes + sincroniza user_metadata
+//       → agrega cliente a despacho_clientes
 //   { accion:'quitar_cliente', despacho_id, rfc }
-//       → desactiva cliente en despacho_clientes + sincroniza user_metadata
+//       → desactiva cliente en despacho_clientes
 //
 // Variables de entorno requeridas: SUPABASE_URL, SUPABASE_SERVICE_KEY
 

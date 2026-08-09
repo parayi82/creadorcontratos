@@ -217,7 +217,8 @@ async function initAuth(){
   if (esDespacho) {
     let g = null;
     try { g = JSON.parse(sessionStorage.getItem('cl_gestion')||'null'); } catch(_){}
-    const aut = (meta.despacho_clientes||[]).map(c=>String(c.rfc||'').toUpperCase());
+    const { data: _dcPsi } = await sb.from('despacho_clientes').select('cliente_rfc').eq('activo', true);
+    const aut = (_dcPsi||[]).map(c=>String(c.cliente_rfc||'').toUpperCase());
     if (!g || !aut.includes(String(g.rfc||'').toUpperCase())) { location.href='panel-despacho.html'; return; }
     clienteRFC = g.rfc;
     const lnk = document.getElementById('link-volver-portal');

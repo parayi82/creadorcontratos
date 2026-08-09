@@ -884,7 +884,8 @@ async function init() {
     if (_esDespacho) {
       let _g = null;
       try { _g = JSON.parse(sessionStorage.getItem('cl_gestion')||'null'); } catch(_){}
-      const _aut = (_meta.despacho_clientes||[]).map(c=>String(c.rfc||'').toUpperCase());
+      const { data: _dcRows } = await sb.from('despacho_clientes').select('cliente_rfc').eq('activo', true);
+      const _aut = (_dcRows||[]).map(c=>String(c.cliente_rfc||'').toUpperCase());
       if (!_g || !_aut.includes(String(_g.rfc||'').toUpperCase())) {
         location.href = 'panel-despacho.html'; return true;
       }
@@ -5418,7 +5419,8 @@ async function iniciarApp(session) {
   if (_esDespacho) {
     let _g = null;
     try { _g = JSON.parse(sessionStorage.getItem('cl_gestion')||'null'); } catch(_){}
-    const _aut = (meta.despacho_clientes||[]).map(c=>String(c.rfc||'').toUpperCase());
+    const { data: _dcRows2 } = await sb.from('despacho_clientes').select('cliente_rfc').eq('activo', true);
+    const _aut = (_dcRows2||[]).map(c=>String(c.cliente_rfc||'').toUpperCase());
     if (!_g || !_aut.includes(String(_g.rfc||'').toUpperCase())) {
       location.href = 'panel-despacho.html'; return;
     }

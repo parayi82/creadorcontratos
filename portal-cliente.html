@@ -473,6 +473,10 @@ body{font-family:var(--font);background:var(--surface);color:var(--ink);min-heig
       <div class="sb-logo-name" id="sb-empresa-name">Empresa</div>
       <div><span class="sb-logo-plan" id="sb-plan-badge">Plan</span></div>
     </div>
+    <div id="sb-despacho-banner" style="display:none;padding:8px 14px;background:rgba(255,255,255,.07);font-size:11px;border-bottom:1px solid rgba(255,255,255,.07);">
+      <div style="color:rgba(255,255,255,.45);margin-bottom:2px;">Gestionado por</div>
+      <div id="sb-despacho-nombre" style="color:#fff;font-weight:600;font-size:12px;"></div>
+    </div>
     <div class="sb-nav">
       <div class="sb-sec">Mi empresa</div>
       <div class="nav-item active" onclick="goPanel('inicio')"><span class="nav-icon">⊞</span> Inicio</div>
@@ -499,15 +503,17 @@ body{font-family:var(--font);background:var(--surface);color:var(--ink);min-heig
       <div class="nav-item" onclick="goPanel('calculadora')"><span class="nav-icon">🧮</span> Calculadora laboral</div>
       <div class="nav-item" onclick="goPanel('asistente')"><span class="nav-icon">⚖️</span> Consultas legales</div>
 
-      <div class="sb-sec">Mi cuenta</div>
-      <div class="nav-item" onclick="goPanel('suscripcion')"><span class="nav-icon">💳</span> Suscripción</div>
-      <div class="nav-item" onclick="goPanel('configuracion')"><span class="nav-icon">⚙️</span> Configuración</div>
+      <div id="sb-mi-cuenta-sec">
+        <div class="sb-sec">Mi cuenta</div>
+        <div class="nav-item" onclick="goPanel('suscripcion')"><span class="nav-icon">💳</span> Suscripción</div>
+        <div class="nav-item" onclick="goPanel('configuracion')"><span class="nav-icon">⚙️</span> Configuración</div>
+      </div>
     </div>
     <div class="sb-scroll-hint" id="sb-scroll-hint">⌄ más opciones</div>
     <div class="sb-user">
       <div class="sb-user-name" id="sb-contacto-name">Contacto</div>
       <div class="sb-user-rfc" id="sb-rfc-display">RFC</div>
-      <div class="sb-logout" onclick="logout()">← Cerrar sesión</div>
+      <div id="sb-logout-btn" class="sb-logout" onclick="logout()">← Cerrar sesión</div>
     </div>
   </aside>
 
@@ -1073,6 +1079,7 @@ function esc(s){
   return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;');
 }
 let _rfcReal = null;   // RFC del cliente autenticado (global para reportes)
+let _modoDespacho = null; // {rfc, empresa, despacho, color} cuando viene desde panel-despacho
 
 
 async function cargarDatosCliente(rfc){
@@ -1205,8 +1212,8 @@ async function cargarDatosCliente(rfc){
 
   clienteActual = {
     rfc:             rfcReal,
-    empresa:         meta.empresa    || rfcReal,
-    contacto:        meta.contacto_rrhh || meta.empresa || rfcReal,
+    empresa:         _modoDespacho?.empresa || meta.empresa || rfcReal,
+    contacto:        _modoDespacho?.empresa || meta.contacto_rrhh || meta.empresa || rfcReal,
     email:           meta.email_contacto || user.email || '',
     tel:             meta.tel         || '',
     plan:            capitalize((meta.plan || 'Básico').replace(/^plan\s+/i,'')),
@@ -2289,6 +2296,12 @@ async function exportarConstanciaPortal() {
 }
 
 async function logout(){
+  if (_modoDespacho) {
+    _modoDespacho = null;
+    clienteActual = null;
+    window.location.href = 'panel-despacho.html';
+    return;
+  }
   await sbAuth.auth.signOut();
   clienteActual = null;
   document.getElementById('portal-app').style.display = 'none';
@@ -2312,6 +2325,15 @@ function initPortal(){
   const planSlug = {'Básico':'basico','Estándar':'estandar','Pro':'pro'}[c.plan] || 'estandar';
   planBadge.className = 'sb-logo-plan plan-'+planSlug;
   document.getElementById('sb-alert-badge').textContent = c.alertas.length;
+
+  // Despacho mode
+  if (_modoDespacho) {
+    const banner = document.getElementById('sb-despacho-banner');
+    document.getElementById('sb-despacho-nombre').textContent = _modoDespacho.despacho || '';
+    banner.style.display = 'block';
+    document.getElementById('sb-mi-cuenta-sec').style.display = 'none';
+    document.getElementById('sb-logout-btn').textContent = '← Volver a mi cartera';
+  }
 
   // Topbar fecha
   document.getElementById('topbar-fecha').textContent = new Date().toLocaleDateString('es-MX',{weekday:'long',day:'numeric',month:'long',year:'numeric'});
@@ -4245,12 +4267,29 @@ function calcAntiguedad(){
   try {
     const { data } = await sbAuth.auth.getSession();
     const session = data?.session;
-    const rfc = session?.user?.user_metadata?.rfc;
-    if (!session || !rfc) return; // sin sesión activa — se queda en la pantalla de login normal
+    if (!session) return;
+    const meta = session.user?.user_metadata || {};
+    // Despacho mode: viene desde panel-despacho.html con cl_gestion en sessionStorage
+    if (meta.tipo === 'despacho') {
+      const gestionRaw = sessionStorage.getItem('cl_gestion');
+      if (gestionRaw) {
+        try {
+          const cl = JSON.parse(gestionRaw);
+          if (cl?.rfc) {
+            _modoDespacho = cl;
+            await cargarDatosCliente(cl.rfc);
+            return;
+          }
+        } catch(e) { /* JSON inválido — dejar en login */ }
+      }
+      return; // despacho sin cl_gestion — no autoentrar
+    }
+    // Cliente directo normal
+    const rfc = meta.rfc;
+    if (!rfc) return; // sin sesión activa — se queda en la pantalla de login normal
     await cargarDatosCliente(rfc);
   } catch (e) {
     console.error('No se pudo restaurar la sesión existente, se mostrará el login:', e.message || e);
-    // Si algo falla al restaurar, simplemente se queda en login-screen (comportamiento normal)
   }
 })();
 

@@ -77,11 +77,13 @@ async function verificarAdmin(event, supabase) {
 // ─────────────────────────────────────────────────────────────────────────────
 // Autorización por RFC
 // ─────────────────────────────────────────────────────────────────────────────
-// Mismo criterio que ya usa guardar-documento-expediente.js:
+// Tres niveles:
 //   · admin      → puede operar sobre cualquier RFC
-//   · despacho   → solo sobre los RFC de su lista despacho_clientes
+//   · despacho   → solo sobre RFC que tiene en despacho_clientes (tabla DB)
 //   · cliente    → solo sobre su propio RFC
-function puedeAccederRFC(user, rfc) {
+//
+// Requiere supabase con service_role para leer despachos/despacho_clientes.
+async function puedeAccederRFC(supabase, user, rfc) {
   if (!user || !rfc) return false;
   const meta = user.user_metadata || {};
   const rfcU = String(rfc).toUpperCase().trim();
@@ -89,9 +91,20 @@ function puedeAccederRFC(user, rfc) {
   if (meta.role === 'admin') return true;
 
   if (meta.tipo === 'despacho') {
-    const autorizados = (meta.despacho_clientes || [])
-      .map(function (c) { return String((c && c.rfc) || '').toUpperCase().trim(); });
-    return autorizados.indexOf(rfcU) !== -1;
+    const { data: desp } = await supabase
+      .from('despachos')
+      .select('id')
+      .eq('auth_user_id', user.id)
+      .eq('activo', true)
+      .maybeSingle();
+    if (!desp) return false;
+    const { count } = await supabase
+      .from('despacho_clientes')
+      .select('*', { count: 'exact', head: true })
+      .eq('despacho_id', desp.id)
+      .eq('cliente_rfc', rfcU)
+      .eq('activo', true);
+    return (count || 0) > 0;
   }
 
   const rfcPropio = String(meta.rfc || '').toUpperCase().trim();

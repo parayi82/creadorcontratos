@@ -29,7 +29,8 @@
       if (_meta.tipo === 'despacho') {
         let _g = null;
         try { _g = JSON.parse(sessionStorage.getItem('cl_gestion')||'null'); } catch(_) {}
-        const _aut = (_meta.despacho_clientes||[]).map(c=>String(c.rfc||'').toUpperCase());
+        const { data: _dcRows } = await getClient().from('despacho_clientes').select('cliente_rfc').eq('activo', true);
+        const _aut = (_dcRows||[]).map(c=>String(c.cliente_rfc||'').toUpperCase());
         rfcCliente = (_g && _aut.includes(String(_g.rfc||'').toUpperCase())) ? _g.rfc : null;
       } else {
         rfcCliente = data?.session?.user?.user_metadata?.rfc || null;
@@ -148,7 +149,8 @@
         if (_m2.tipo === 'despacho') {
           let _g2 = null;
           try { _g2 = JSON.parse(sessionStorage.getItem('cl_gestion')||'null'); } catch(_e){}
-          const _a2 = (_m2.despacho_clientes||[]).map(c=>String(c.rfc||'').toUpperCase());
+          const { data: _dc2 } = await sb2.from('despacho_clientes').select('cliente_rfc').eq('activo', true);
+          const _a2 = (_dc2||[]).map(c=>String(c.cliente_rfc||'').toUpperCase());
           rfcCliente = (_g2 && _a2.includes(String(_g2.rfc||'').toUpperCase())) ? _g2.rfc : null;
         } else {
           rfcCliente = _m2.rfc || null;

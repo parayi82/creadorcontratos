@@ -15,6 +15,7 @@
 const { handleCors, clientIp, reportError } = require('./_security');
 const { checkRateLimit, rateLimitResponse } = require('./_rate-limiter');
 const { createClient } = require('@supabase/supabase-js');
+const { puedeAccederRFC } = require('./_admin-auth');
 
 exports.handler = async (event) => {
   const corsResult = handleCors(event);
@@ -46,20 +47,9 @@ exports.handler = async (event) => {
     return { statusCode: 400, headers, body: JSON.stringify({ error: 'Faltan campos: cliente_rfc, tipo y nombre son obligatorios.' }) };
   }
 
-  // Verificar autorización:
-  // · Cliente normal → su RFC debe coincidir con cliente_rfc
-  // · Despacho → cliente_rfc debe estar en su lista de clientes autorizados
   const rfcU = String(cliente_rfc).toUpperCase().trim();
-  if (meta.tipo === 'despacho') {
-    const autorizados = (meta.despacho_clientes || []).map(c => String(c.rfc || '').toUpperCase());
-    if (!autorizados.includes(rfcU)) {
-      return { statusCode: 403, headers, body: JSON.stringify({ error: 'El despacho no está autorizado para gestionar este cliente.' }) };
-    }
-  } else {
-    const rfcPropio = String(meta.rfc || '').toUpperCase().trim();
-    if (!rfcPropio || rfcPropio !== rfcU) {
-      return { statusCode: 403, headers, body: JSON.stringify({ error: 'No autorizado para guardar documentos de este cliente.' }) };
-    }
+  if (!await puedeAccederRFC(sb, user, rfcU)) {
+    return { statusCode: 403, headers, body: JSON.stringify({ error: 'No autorizado para guardar documentos de este cliente.' }) };
   }
 
   // tabla puede ser 'documentos_expediente' (default) o 'documentos_identidad'

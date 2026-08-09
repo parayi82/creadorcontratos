@@ -18,6 +18,7 @@
 const { handleCors, clientIp, reportError } = require('./_security');
 const { checkRateLimit, rateLimitResponse } = require('./_rate-limiter');
 const { createClient } = require('@supabase/supabase-js');
+const { puedeAccederRFC } = require('./_admin-auth');
 
 const MIFIEL_BASE = () =>
   process.env.MIFIEL_ENV === 'production'
@@ -60,14 +61,9 @@ exports.handler = async (event) => {
     return { statusCode: 400, headers, body: JSON.stringify({ error: 'Faltan campos requeridos: pdf_base64, filename, firmantes, cliente_rfc.' }) };
   }
 
-  // Verificar que el cliente pueda operar este RFC
-  const rfcSesion = String(meta.rfc || '').toUpperCase();
   const rfcTarget = cliente_rfc.toUpperCase();
-  if (meta.tipo === 'despacho') {
-    const autorizados = (meta.despacho_clientes || []).map(c => String(c.rfc || '').toUpperCase());
-    if (!autorizados.includes(rfcTarget)) return { statusCode: 403, headers, body: JSON.stringify({ error: 'No autorizado para este cliente.' }) };
-  } else if (rfcSesion !== rfcTarget) {
-    return { statusCode: 403, headers, body: JSON.stringify({ error: 'No autorizado.' }) };
+  if (!await puedeAccederRFC(sb, uData.user, rfcTarget)) {
+    return { statusCode: 403, headers, body: JSON.stringify({ error: 'No autorizado para este cliente.' }) };
   }
 
   try {

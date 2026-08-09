@@ -21,10 +21,13 @@ exports.handler = async (event) => {
     { auth: { autoRefreshToken: false, persistSession: false } }
   );
 
-  // Helper: buscar usuario por stripe_customer_id en user_metadata
+  // Helper: buscar usuario por stripe_customer_id en clientes_billing (O(1))
   async function getUserByCustomerId(customerId) {
-    const { data } = await supabase.auth.admin.listUsers({ perPage: 1000 });
-    return (data?.users || []).find(u => u.user_metadata?.stripe_customer_id === customerId);
+    const { data: billing } = await supabase
+      .from('clientes_billing').select('auth_user_id').eq('stripe_customer_id', customerId).maybeSingle();
+    if (!billing) return null;
+    const { data: { user } } = await supabase.auth.admin.getUserById(billing.auth_user_id);
+    return user || null;
   }
 
   try {

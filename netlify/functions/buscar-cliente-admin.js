@@ -37,10 +37,15 @@ exports.handler = async (event) => {
     if (event.httpMethod === 'GET') {
       const rfc = (event.queryStringParameters?.rfc || '').trim();
       if (!rfc) return responder(400, { error: 'Falta el parámetro rfc.' });
-      const { data } = await supabase.auth.admin.listUsers({ perPage: 1000 });
-      const usuarios = data?.users || [];
-      if (rfc.toUpperCase() === 'TODOS') return responder(200, { users: usuarios });
-      const user = usuarios.find(u => (u.user_metadata?.rfc || '').toUpperCase() === rfc.toUpperCase());
+      if (rfc.toUpperCase() === 'TODOS') {
+        const { data } = await supabase.auth.admin.listUsers({ perPage: 1000 });
+        return responder(200, { users: data?.users || [] });
+      }
+      const { data: billingRow } = await supabase
+        .from('clientes_billing').select('auth_user_id').eq('rfc', rfc.toUpperCase()).maybeSingle();
+      if (!billingRow) return responder(404, { error: 'No se encontró ningún usuario con ese RFC.', user: null });
+      const { data: uData } = await supabase.auth.admin.getUserById(billingRow.auth_user_id);
+      const user = uData?.user || null;
       if (!user) return responder(404, { error: 'No se encontró ningún usuario con ese RFC.', user: null });
       return responder(200, { user });
     }

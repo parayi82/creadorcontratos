@@ -164,26 +164,35 @@ exports.handler = async (event) => {
 
       // 5. Crear el usuario de acceso al portal de cliente — contraseña aleatoria,
       // NUNCA predecible a partir del RFC (el RFC no es secreto, aparece en facturas/contratos).
+      const emailPortal = `${rfc.toLowerCase()}@clicklaboral.mx`;
+      const passwordPortal = Math.random().toString(36).slice(2, 8).toUpperCase() + Math.random().toString(36).slice(2, 6) + '!';
       try {
-        const emailPortal = `${rfc.toLowerCase()}@clicklaboral.mx`;
-        const passwordPortal = Math.random().toString(36).slice(2, 8).toUpperCase() + Math.random().toString(36).slice(2, 6) + '!';
-        await supabase.auth.admin.createUser({
+        const { data: newUserData } = await supabase.auth.admin.createUser({
           email: emailPortal,
           password: passwordPortal,
           email_confirm: true,
           user_metadata: { rfc, plan: NOMBRES_PLAN[plan].toLowerCase(), empresa, email_contacto: email, stripe_customer_id: customer.id, stripe_subscription_id: subscriptionId || null },
         });
         credencialesPortal = { email: emailPortal, password: passwordPortal };
+        if (newUserData?.user?.id) {
+          await supabase.from('clientes_billing').upsert({
+            rfc: rfc.toUpperCase(), auth_user_id: newUserData.user.id,
+            stripe_customer_id: customer.id, updated_at: new Date().toISOString(),
+          }, { onConflict: 'rfc' }).catch(e => console.error('clientes_billing upsert:', e.message || e));
+        }
       } catch (authErr) {
         // Si el usuario ya existía (cliente que regresa, alta manual previa, o reintento),
         // NO perder el vínculo con Stripe: actualizar la metadata del usuario existente.
         console.error('createUser falló, intentando actualizar usuario existente:', authErr.message || authErr);
         try {
-          const { data: usersData } = await supabase.auth.admin.listUsers({ perPage: 1000 });
-          const existente = (usersData?.users || []).find(u =>
-            (u.user_metadata?.rfc || '').toUpperCase() === rfc.toUpperCase() ||
-            (u.email || '').toLowerCase() === emailPortal.toLowerCase()
-          );
+          // Look up via clientes_billing (O(1)) instead of listUsers(1000)
+          const { data: billingFallback } = await supabase
+            .from('clientes_billing').select('auth_user_id').eq('rfc', rfc.toUpperCase()).maybeSingle();
+          let existente = null;
+          if (billingFallback) {
+            const { data: { user: u } } = await supabase.auth.admin.getUserById(billingFallback.auth_user_id);
+            existente = u || null;
+          }
           if (existente) {
             await supabase.auth.admin.updateUserById(existente.id, {
               user_metadata: {
@@ -197,9 +206,15 @@ exports.handler = async (event) => {
                 suscripcion_activa: true,
               },
             });
+            await supabase.from('clientes_billing').upsert({
+              rfc: rfc.toUpperCase(), auth_user_id: existente.id,
+              stripe_customer_id: customer.id, updated_at: new Date().toISOString(),
+            }, { onConflict: 'rfc' }).catch(e => console.error('clientes_billing upsert (fallback):', e.message || e));
             console.log('✅ Usuario existente vinculado con Stripe:', rfc, customer.id);
           } else {
-            console.error('No se encontró usuario existente para vincular con Stripe:', rfc);
+            // Not yet in clientes_billing (run migration 000700 backfill). The Stripe
+            // webhook (invoice.payment_succeeded) will set suscripcion_activa when the payment confirms.
+            console.error('No se encontró usuario existente en clientes_billing para RFC:', rfc);
           }
         } catch (updErr) {
           console.error('Aviso: no se pudo vincular el usuario existente con Stripe:', updErr.message || updErr);

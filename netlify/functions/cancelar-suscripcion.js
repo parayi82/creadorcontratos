@@ -54,12 +54,11 @@ exports.handler = async (event) => {
   }
 
   try {
-    // Buscar en auth.users por RFC
-    const { data: usersData } = await supabase.auth.admin.listUsers({ perPage: 1000 });
-    const userFound = (usersData?.users || []).find(u => (u.user_metadata?.rfc||'').toUpperCase() === rfc.toUpperCase());
-    if (!userFound) {
-      return { statusCode: 404, headers, body: JSON.stringify({ error: 'Cliente no encontrado.' }) };
-    }
+    const { data: billing } = await supabase
+      .from('clientes_billing').select('auth_user_id').eq('rfc', rfc.toUpperCase()).maybeSingle();
+    if (!billing) return { statusCode: 404, headers, body: JSON.stringify({ error: 'Cliente no encontrado.' }) };
+    const { data: { user: userFound } } = await supabase.auth.admin.getUserById(billing.auth_user_id);
+    if (!userFound) return { statusCode: 404, headers, body: JSON.stringify({ error: 'Cliente no encontrado.' }) };
     const cliente = { stripe_subscription_id: userFound.user_metadata?.stripe_subscription_id || null };
 
     // Solo los planes mensuales tienen suscripción recurrente en Stripe que cancelar.

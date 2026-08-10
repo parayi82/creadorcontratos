@@ -482,6 +482,37 @@ footer a:hover{color:var(--teal-bright);}
 }
 @media(min-width:481px){.sticky-cta-bar{display:none!important;}}
 
+/* ── PARA QUIÉN SIRVE ── */
+.quien-sec{background:var(--white);padding:52px 32px;border-bottom:1px solid var(--border);}
+.quien-grid{display:grid;grid-template-columns:repeat(6,1fr);gap:12px;max-width:1080px;margin:28px auto 0;}
+.quien-card{background:var(--surface);border:1px solid var(--border);border-radius:14px;padding:18px 14px;text-align:center;transition:transform .3s var(--ease),box-shadow .3s var(--ease),border-color .3s;}
+.quien-card:hover{transform:translateY(-3px);box-shadow:0 12px 30px -14px rgba(var(--shadow),.2);border-color:rgba(13,148,136,.3);}
+.quien-icon{font-size:26px;margin-bottom:8px;line-height:1;}
+.quien-title{font-size:13px;font-weight:700;color:var(--navy);margin-bottom:4px;line-height:1.25;}
+.quien-desc{font-size:11.5px;color:var(--ink3);line-height:1.5;}
+@media(max-width:900px){.quien-grid{grid-template-columns:repeat(3,1fr);}}
+@media(max-width:560px){.quien-grid{grid-template-columns:repeat(2,1fr);}}
+
+/* ── WhatsApp CTAs ── */
+.cta-wa{background:#25D366!important;color:#fff!important;box-shadow:0 10px 30px -10px rgba(37,211,102,.6)!important;}
+.cta-wa::after{background:#128C7E!important;color:#fff!important;}
+.cta-wa:hover{background:#22c55e!important;box-shadow:0 16px 40px -12px rgba(37,211,102,.75)!important;}
+.precio-cta-wa{background:#25D366;color:#fff;box-shadow:0 8px 20px -8px rgba(37,211,102,.5);}
+.precio-cta-wa:hover{background:#22c55e;transform:translateY(-2px);box-shadow:0 12px 28px -8px rgba(37,211,102,.65);}
+.precio-cta-link{display:block;text-align:center;margin-top:9px;font-size:11.5px;color:var(--ink3);text-decoration:none;font-weight:500;transition:color .2s;}
+.precio-cta-link:hover{color:var(--navy2);}
+
+/* ── Floating WhatsApp FAB ── */
+.wa-fab{position:fixed;bottom:28px;right:24px;z-index:350;width:62px;height:62px;background:#25D366;border-radius:50%;display:flex;align-items:center;justify-content:center;box-shadow:0 8px 28px -4px rgba(37,211,102,.6);text-decoration:none;transition:transform .3s,box-shadow .3s;animation:waPulse 4s ease-in-out infinite;}
+.wa-fab:hover{transform:scale(1.08) translateY(-2px);box-shadow:0 14px 36px -6px rgba(37,211,102,.75);animation:none;}
+.wa-fab-tip{position:absolute;right:74px;background:var(--navy-deep);color:#fff;font-size:12px;font-weight:600;padding:6px 12px;border-radius:8px;white-space:nowrap;opacity:0;transform:translateX(8px);transition:opacity .2s,transform .2s;pointer-events:none;}
+.wa-fab-tip::after{content:'';position:absolute;right:-6px;top:50%;transform:translateY(-50%);border:6px solid transparent;border-left-color:var(--navy-deep);border-right:none;}
+.wa-fab:hover .wa-fab-tip{opacity:1;transform:translateX(0);}
+.wa-fab svg{width:32px;height:32px;fill:#fff;}
+@keyframes waPulse{0%,100%{box-shadow:0 8px 28px -4px rgba(37,211,102,.55);}50%{box-shadow:0 8px 34px 2px rgba(37,211,102,.7),0 0 0 10px rgba(37,211,102,.08);}}
+@media(max-width:480px){.wa-fab{bottom:80px;right:16px;width:56px;height:56px;}.wa-fab svg{width:28px;height:28px;}.wa-fab-tip{display:none;}}
+@media(prefers-reduced-motion:reduce){.wa-fab{animation:none;}}
+
 </style>
 
 <!-- Meta Pixel Code -->
@@ -535,7 +566,7 @@ src="https://www.facebook.com/tr?id=772478098942349&ev=PageView&noscript=1"
       <a class="nav-link" href="#faq">FAQ</a>
       <a class="nav-link" href="/blog/">Blog</a>
       <a class="nav-link" href="portal-cliente.html" style="opacity:.85;">🔐 Acceso clientes</a>
-      <button class="nav-cta" onclick="abrirContacto('Consulta desde nav')">Consulta gratuita</button>
+      <a class="nav-cta" href="https://wa.me/5213339263817?text=Hola%2C%20me%20interesa%20ClickLaboral.mx" target="_blank" rel="noopener">💬 WhatsApp gratis</a>
     </div>
   </div>
 </nav>
@@ -614,7 +645,7 @@ src="https://www.facebook.com/tr?id=772478098942349&ev=PageView&noscript=1"
       <div class="req-chip"><span class="rc-ic">🖐️</span> Registro de horas digital <span class="rc-ck">✓</span></div>
     </div>
     <div class="hero-ctas">
-      <a class="cta-primary" href="diagnostico-cumplimiento.html">Hacer mi diagnóstico gratuito →</a>
+      <a class="cta-primary cta-wa" href="https://wa.me/5213339263817?text=Hola%2C%20vi%20ClickLaboral.mx%20y%20quiero%20m%C3%A1s%20informaci%C3%B3n" target="_blank" rel="noopener">💬 Hablar por WhatsApp ahora</a>
       <a class="cta-secondary" href="#precios">Ver planes desde $899/mes</a>
     </div>
     <div class="hero-trial-pill">⚖️ <strong>Asesoría de abogados</strong> siempre incluida <span class="sep">•</span> sin contratos de permanencia</div>
@@ -626,6 +657,24 @@ src="https://www.facebook.com/tr?id=772478098942349&ev=PageView&noscript=1"
       <div class="trust-item">✓ <strong>LFT vigente</strong> — actualización continua</div>
 
     </div>
+  </div>
+</section>
+
+<!-- PARA QUIÉN SIRVE -->
+<section class="quien-sec">
+  <div class="section-inner" style="text-align:center;">
+    <div class="section-label">¿Es para mi empresa?</div>
+    <h2 class="section-title" style="margin-bottom:4px;">Funciona para cualquier empresa con trabajadores en México</h2>
+    <p style="font-size:14px;color:var(--ink3);margin-bottom:0;">Desde la primera contratación hasta la reforma de 40 horas — sin importar su giro.</p>
+    <div class="quien-grid">
+      <div class="quien-card"><div class="quien-icon">🏪</div><div class="quien-title">PyMEs y comercios</div><div class="quien-desc">Contratos, actas y expedientes desde el primer trabajador</div></div>
+      <div class="quien-card"><div class="quien-icon">🏥</div><div class="quien-title">Clínicas y consultorios</div><div class="quien-desc">NOM-004, confidencialidad médica y personal paramédico</div></div>
+      <div class="quien-card"><div class="quien-icon">🍽️</div><div class="quien-title">Restaurantes y hoteles</div><div class="quien-desc">Propinas (Art. 346), jornada mixta, alta rotación</div></div>
+      <div class="quien-card"><div class="quien-icon">🏗️</div><div class="quien-title">Construcción y REPSE</div><div class="quien-desc">Obra determinada, subcontratación y EPP documentado</div></div>
+      <div class="quien-card"><div class="quien-icon">🧮</div><div class="quien-title">Contadores y abogados</div><div class="quien-desc">Panel despacho para gestionar múltiples clientes</div></div>
+      <div class="quien-card"><div class="quien-icon">🏢</div><div class="quien-title">Multi-sucursal</div><div class="quien-desc">Control centralizado de todas sus unidades de negocio</div></div>
+    </div>
+    <p style="margin-top:22px;font-size:13px;color:var(--ink3);">¿Duda si aplica para su giro? <a href="https://wa.me/5213339263817?text=Hola%2C%20quiero%20saber%20si%20ClickLaboral%20aplica%20para%20mi%20giro%20de%20negocio" target="_blank" rel="noopener" style="color:var(--teal-deep);font-weight:600;">Pregúntenos por WhatsApp →</a></p>
   </div>
 </section>
 
@@ -858,7 +907,8 @@ src="https://www.facebook.com/tr?id=772478098942349&ev=PageView&noscript=1"
           <div class="pf"><span class="pf-check">✓</span> Asistente legal IA 24/7</div>
           <div class="pf pf-ticket"><span class="pf-check">⚖️</span> <strong>1 ticket</strong> de asesoría legal / mes <button class="ticket-info-btn" onclick="abrirTicketModal(event)" aria-label="¿Qué es un ticket?">ⓘ ¿qué incluye?</button></div>
         </div>
-        <a class="precio-cta precio-cta-ghost" href="checkout.html?plan=micro" style="display:block;">Contratar →</a>
+        <a class="precio-cta precio-cta-wa" href="https://wa.me/5213339263817?text=Hola%2C%20quiero%20contratar%20el%20Plan%20Micro%20%28%24899%2Fmes%29%20de%20ClickLaboral.mx" target="_blank" rel="noopener" style="display:block;">💬 Contratar por WhatsApp</a>
+        <a href="checkout.html?plan=micro" class="precio-cta-link">o pagar en línea →</a>
       </div>
 
       <!-- PYME -->
@@ -874,7 +924,8 @@ src="https://www.facebook.com/tr?id=772478098942349&ev=PageView&noscript=1"
           <div class="pf"><span class="pf-check">✓</span> Soporte prioritario por WhatsApp</div>
           <div class="pf pf-ticket"><span class="pf-check">⚖️</span> <strong>3 tickets</strong> de asesoría legal / mes <button class="ticket-info-btn" onclick="abrirTicketModal(event)" aria-label="¿Qué es un ticket?">ⓘ ¿qué incluye?</button></div>
         </div>
-        <a class="precio-cta precio-cta-main" href="checkout.html?plan=pyme" style="display:block;">Contratar →</a>
+        <a class="precio-cta precio-cta-wa" href="https://wa.me/5213339263817?text=Hola%2C%20quiero%20contratar%20el%20Plan%20PyME%20%28%241%2C999%2Fmes%29%20de%20ClickLaboral.mx" target="_blank" rel="noopener" style="display:block;">💬 Contratar por WhatsApp</a>
+        <a href="checkout.html?plan=pyme" class="precio-cta-link">o pagar en línea →</a>
       </div>
 
       <!-- MEDIANA -->
@@ -888,7 +939,8 @@ src="https://www.facebook.com/tr?id=772478098942349&ev=PageView&noscript=1"
           <div class="pf"><span class="pf-check">✓</span> Auditoría semestral de compliance</div>
           <div class="pf pf-ticket"><span class="pf-check">⚖️</span> <strong>5 tickets</strong> de asesoría legal / mes <button class="ticket-info-btn" onclick="abrirTicketModal(event)" aria-label="¿Qué es un ticket?">ⓘ ¿qué incluye?</button></div>
         </div>
-        <a class="precio-cta precio-cta-ghost" href="checkout.html?plan=mediana" style="display:block;">Contratar →</a>
+        <a class="precio-cta precio-cta-wa" href="https://wa.me/5213339263817?text=Hola%2C%20quiero%20contratar%20el%20Plan%20Mediana%20%28%244%2C499%2Fmes%29%20de%20ClickLaboral.mx" target="_blank" rel="noopener" style="display:block;">💬 Contratar por WhatsApp</a>
+        <a href="checkout.html?plan=mediana" class="precio-cta-link">o pagar en línea →</a>
       </div>
 
       <!-- EMPRESA -->
@@ -902,7 +954,8 @@ src="https://www.facebook.com/tr?id=772478098942349&ev=PageView&noscript=1"
           <div class="pf"><span class="pf-check">✓</span> Respuesta garantizada en 24 horas</div>
           <div class="pf pf-ticket"><span class="pf-check">⚖️</span> <strong>8 tickets</strong> de asesoría legal / mes <button class="ticket-info-btn" onclick="abrirTicketModal(event)" aria-label="¿Qué es un ticket?">ⓘ ¿qué incluye?</button></div>
         </div>
-        <a class="precio-cta precio-cta-ghost" href="checkout.html?plan=empresa" style="display:block;">Contratar →</a>
+        <a class="precio-cta precio-cta-wa" href="https://wa.me/5213339263817?text=Hola%2C%20quiero%20contratar%20el%20Plan%20Empresa%20%28%249%2C999%2Fmes%29%20de%20ClickLaboral.mx" target="_blank" rel="noopener" style="display:block;">💬 Contratar por WhatsApp</a>
+        <a href="checkout.html?plan=empresa" class="precio-cta-link">o pagar en línea →</a>
       </div>
 
     </div>
@@ -1088,8 +1141,8 @@ src="https://www.facebook.com/tr?id=772478098942349&ev=PageView&noscript=1"
     <h2>¿Su empresa está expuesta <em>hoy mismo</em>?</h2>
     <p>Solicite un diagnóstico gratuito de compliance laboral. En 24 horas sabrá exactamente qué riesgos enfrenta y cómo resolverlos.</p>
     <div style="display:flex;justify-content:center;gap:12px;flex-wrap:wrap;">
-      <button class="cta-primary" onclick="abrirContacto('CTA final')">Diagnóstico gratuito →</button>
-      <a class="cta-secondary" href="portal-cliente.html">Ver demo del portal</a>
+      <a class="cta-primary cta-wa" href="https://wa.me/5213339263817?text=Hola%2C%20quiero%20el%20diagn%C3%B3stico%20gratuito%20de%20ClickLaboral.mx" target="_blank" rel="noopener">💬 Hablar por WhatsApp →</a>
+      <a class="cta-secondary" href="diagnostico-cumplimiento.html">Diagnóstico gratuito</a>
     </div>
     <div style="margin-top:32px;display:flex;justify-content:center;gap:32px;flex-wrap:wrap;">
       <div class="trust-item">📞 Respuesta en menos de 2 horas</div>
@@ -1201,7 +1254,14 @@ src="https://www.facebook.com/tr?id=772478098942349&ev=PageView&noscript=1"
 
 <script>
 function abrirContacto(origen){
-  document.getElementById('modal-contacto').style.display='flex';
+  const textos = {
+    'CTA final':       'Hola, quiero el diagnóstico gratuito de ClickLaboral.mx',
+    'Calculadora ROI': 'Hola, vi la calculadora de ClickLaboral.mx y me interesa saber mi ahorro potencial',
+    'Empresa grande':  'Hola, tenemos más de 500 trabajadores y necesitamos un plan a medida de ClickLaboral.mx',
+  };
+  const msg = textos[origen] || 'Hola, me interesa ClickLaboral.mx';
+  if(typeof fbq==='function') fbq('track','Contact',{content_name:origen||'WhatsApp'});
+  window.open('https://wa.me/'+WHATSAPP_NUMERO+'?text='+encodeURIComponent(msg),'_blank');
 }
 function cerrarContacto(){
   document.getElementById('modal-contacto').style.display='none';
@@ -1314,8 +1374,8 @@ calcROI();
 
 <!-- STICKY MOBILE CTA (#11) -->
 <div class="sticky-cta-bar" id="stickyCta">
-  <p>¿Su empresa cumple con la LFT?<br><strong style="color:#fff;">Haga su diagnóstico gratis en 2 min</strong></p>
-  <a href="diagnostico-cumplimiento.html">Diagnóstico →</a>
+  <p>Compliance laboral desde $899/mes<br><strong style="color:#fff;">Sin permanencia · Sin formularios</strong></p>
+  <a href="https://wa.me/5213339263817?text=Hola%2C%20me%20interesa%20ClickLaboral.mx" target="_blank" rel="noopener" style="background:#25D366;color:#fff;">💬 WhatsApp</a>
 </div>
 
 <!-- TICKET MODAL -->
@@ -1362,6 +1422,20 @@ calcROI();
 function abrirTicketModal(e){if(e)e.stopPropagation();document.getElementById('ticketModal').classList.add('open');document.body.style.overflow='hidden';}
 function cerrarTicketModal(){document.getElementById('ticketModal').classList.remove('open');document.body.style.overflow='';}
 document.addEventListener('keydown',function(e){if(e.key==='Escape')cerrarTicketModal();});
+</script>
+<!-- WhatsApp FAB -->
+<a class="wa-fab" href="https://wa.me/5213339263817?text=Hola%2C%20me%20interesa%20ClickLaboral.mx" target="_blank" rel="noopener" aria-label="Chatear por WhatsApp">
+  <span class="wa-fab-tip">Hablar por WhatsApp</span>
+  <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/></svg>
+</a>
+
+<script>
+/* Tracking de clics en cualquier enlace a WhatsApp */
+document.querySelectorAll('a[href*="wa.me"]').forEach(function(el){
+  el.addEventListener('click',function(){
+    if(typeof fbq==='function') fbq('track','Contact',{content_name:'WhatsApp click'});
+  });
+});
 </script>
 </body>
 </html>

@@ -1,18 +1,18 @@
 #!/usr/bin/env node
 /**
  * generate-linkedin-post.js
- * Genera y publica diariamente en LinkedIn contenido de valor para ClickLaboral.mx.
- * Audiencias rotativas: reclutadores, contadores, abogados, patrones.
+ * Genera contenido diario de LinkedIn para ClickLaboral.mx y lo envía por email
+ * listo para copiar y pegar. Sin API de LinkedIn — cero configuración extra.
  *
  * Required env vars:
- *   ANTHROPIC_API_KEY      — Claude API key (GitHub Secret)
- *   LINKEDIN_ACCESS_TOKEN  — OAuth 2.0 token (GitHub Secret, válido 60 días)
- *   LINKEDIN_AUTHOR_URN    — urn:li:person:XXX  o  urn:li:organization:XXX
+ *   ANTHROPIC_API_KEY   — Claude API key (GitHub Secret)
+ *   RESEND_API_KEY      — Resend API key (mismo que usa Netlify, añadir a GitHub Secrets)
+ *   NOTIFY_EMAIL        — Email destino del post diario (ej: serjuemsa@gmail.com)
  *
  * Optional:
- *   DRY_RUN=true           — genera contenido pero NO publica en LinkedIn
- *   AUDIENCE=reclutadores  — fuerza una audiencia específica
- *   TOPIC="texto del tema" — fuerza un tema específico
+ *   DRY_RUN=true        — genera contenido y lo imprime pero NO envía email
+ *   AUDIENCE=reclutadores — fuerza una audiencia específica
+ *   TOPIC="texto"       — fuerza un tema específico
  */
 
 'use strict';
@@ -23,23 +23,23 @@ const path  = require('path');
 
 const ROOT = path.join(__dirname, '..', '..');
 
-// ─── Configuración ────────────────────────────────────────────────────────────
+// ─── Config ───────────────────────────────────────────────────────────────────
 
 const CLAUDE_MODEL = 'claude-sonnet-4-6';
 const DRY_RUN      = process.env.DRY_RUN === 'true';
 
-// Mapeo día de semana → audiencia (0=Dom, 1=Lun, …, 5=Vie, 6=Sáb)
+// Audiencia rotativa por día de semana (0=Dom … 6=Sáb)
 const AUDIENCE_BY_DAY = {
-  0: 'patrones',      // Dom — publicación especial fin de semana
-  1: 'reclutadores',  // Lun — inicio de semana, RRHH activo
-  2: 'contadores',    // Mar
-  3: 'abogados',      // Mié
-  4: 'patrones',      // Jue
-  5: 'reclutadores',  // Vie — segunda rotación semanal
-  6: 'contadores',    // Sáb
+  0: 'patrones',
+  1: 'reclutadores',
+  2: 'contadores',
+  3: 'abogados',
+  4: 'patrones',
+  5: 'reclutadores',
+  6: 'contadores',
 };
 
-// ─── Pools de temas por audiencia ────────────────────────────────────────────
+// ─── Pool de temas por audiencia (60 temas totales) ──────────────────────────
 
 const TOPICS = {
   reclutadores: [
@@ -115,32 +115,36 @@ const TOPICS = {
   ],
 };
 
-// ─── Descripciones de audiencia para el prompt ───────────────────────────────
+// ─── Contexto por audiencia ───────────────────────────────────────────────────
 
 const AUDIENCE_CONTEXT = {
   reclutadores: {
-    descripcion: 'reclutadores, gerentes de Recursos Humanos y directores de Capital Humano de empresas mexicanas',
-    dolores:     'contratos mal redactados, expedientes incompletos, actas administrativas inválidas, demandas laborales por errores en la contratación',
-    cta:         'Genera contratos laborales correctos y expedientes digitales en minutos — prueba gratis en',
-    utm:         'reclutadores',
+    label:    'Reclutadores / RH',
+    desc:     'reclutadores, gerentes de Recursos Humanos y directores de Capital Humano de empresas mexicanas',
+    dolores:  'contratos mal redactados, expedientes incompletos, actas administrativas inválidas, demandas por errores en contratación',
+    cta:      'Genera contratos laborales correctos y expedientes digitales en minutos — prueba gratis en https://clicklaboral.mx/?utm_source=linkedin&utm_medium=social&utm_campaign=organic&utm_content=reclutadores',
+    hashtags: '#RecursosHumanos #RRHH #Reclutamiento #ContratosLaborales #LeyFederalDelTrabajo #TalentoHumano #CumplimientoLaboral #ClickLaboralmx',
   },
   contadores: {
-    descripcion: 'contadores públicos, administradores de nómina y CFOs de PyMEs mexicanas',
-    dolores:     'errores en el cálculo de nómina, multas IMSS y SAT, CFDI de nómina con errores, discrepancias fiscales',
-    cta:         'Automatiza el cumplimiento laboral de tus clientes y evita multas — explora ClickLaboral.mx en',
-    utm:         'contadores',
+    label:    'Contadores / Nómina',
+    desc:     'contadores públicos, administradores de nómina y CFOs de PyMEs mexicanas',
+    dolores:  'errores en cálculo de nómina, multas IMSS y SAT, CFDI con errores, discrepancias fiscales',
+    cta:      'Automatiza el cumplimiento laboral de tus clientes — explora ClickLaboral.mx en https://clicklaboral.mx/?utm_source=linkedin&utm_medium=social&utm_campaign=organic&utm_content=contadores',
+    hashtags: '#Nómina #Contabilidad #IMSS #INFONAVIT #PTU #Aguinaldo #CFDINomina #CumplimientoFiscal #ClickLaboralmx',
   },
   abogados: {
-    descripcion: 'abogados laboralistas, asesores legales empresariales y socios de despachos laborales en México',
-    dolores:     'clientes sin documentación laboral, pérdida de juicios por falta de actas, contratos sin cláusulas clave',
-    cta:         'Equipa a tus clientes para que tengan toda la documentación laboral lista antes del juicio — conoce el panel para despachos en',
-    utm:         'abogados',
+    label:    'Abogados Laboralistas',
+    desc:     'abogados laboralistas, asesores legales empresariales y socios de despachos en México',
+    dolores:  'clientes sin documentación laboral, pérdida de juicios por falta de actas, contratos sin cláusulas clave',
+    cta:      'Equipa a tus clientes con documentación laboral impecable — conoce el panel para despachos en https://clicklaboral.mx/?utm_source=linkedin&utm_medium=social&utm_campaign=organic&utm_content=abogados',
+    hashtags: '#DerechoLaboral #AbogadoLaboral #LFT #ReformaLaboral #ComplianceMéxico #DerechoEmpresarial #ClickLaboralmx',
   },
   patrones: {
-    descripcion: 'dueños de PyMEs, directores generales y gerentes administrativos de empresas mexicanas',
-    dolores:     'multas STPS inesperadas, demandas laborales, costos ocultos de nómina, inspecciones sin preparación',
-    cta:         'Haz el diagnóstico de cumplimiento laboral de tu empresa gratis — sin tarjeta de crédito — en',
-    utm:         'patrones',
+    label:    'Patrones / Dueños de PyME',
+    desc:     'dueños de PyMEs, directores generales y gerentes administrativos de empresas mexicanas',
+    dolores:  'multas STPS inesperadas, demandas laborales, costos ocultos de nómina, inspecciones sin preparación',
+    cta:      'Haz el diagnóstico de cumplimiento laboral de tu empresa gratis — sin tarjeta — en https://clicklaboral.mx/?utm_source=linkedin&utm_medium=social&utm_campaign=organic&utm_content=patrones',
+    hashtags: '#PyME #Emprendimiento #GestiónEmpresarial #STPS #CumplimientoLaboral #DerechoEmpresarial #ClickLaboralmx',
   },
 };
 
@@ -175,18 +179,13 @@ function getWeekNumber(date) {
 }
 
 function selectAudienceAndTopic() {
-  const now    = new Date();
-  const day    = now.getDay();
-  const week   = getWeekNumber(now);
-  const date   = now.toISOString().slice(0, 10);
-
-  // Audiencia forzada por env var o rotación por día de semana
+  const now     = new Date();
+  const day     = now.getDay();
+  const week    = getWeekNumber(now);
+  const date    = now.toISOString().slice(0, 10);
   const audience = process.env.AUDIENCE || AUDIENCE_BY_DAY[day] || 'patrones';
-  const pool     = TOPICS[audience];
-
-  // Forzar tema por env var, o rotar por semana del año dentro del pool
-  const topic = process.env.TOPIC || pool[(week - 1) % pool.length];
-
+  const pool    = TOPICS[audience];
+  const topic   = process.env.TOPIC || pool[(week - 1) % pool.length];
   return { audience, topic, date, week };
 }
 
@@ -194,85 +193,157 @@ function selectAudienceAndTopic() {
 
 async function generatePost(audience, topic) {
   const ctx = AUDIENCE_CONTEXT[audience];
-  const url = `https://clicklaboral.mx/?utm_source=linkedin&utm_medium=social&utm_campaign=organic&utm_content=${ctx.utm}`;
 
   const prompt = `Eres el community manager de ClickLaboral.mx, la plataforma mexicana de referencia para el cumplimiento laboral de PyMEs.
 
-AUDIENCIA OBJETIVO: ${ctx.descripcion}
+AUDIENCIA OBJETIVO: ${ctx.desc}
 Sus principales dolores profesionales: ${ctx.dolores}
 
 TEMA DEL POST: ${topic}
 
-INSTRUCCIONES PARA EL POST DE LINKEDIN:
+INSTRUCCIONES:
 
-1. PRIMERA LÍNEA (el gancho): Pregunta retórica poderosa, dato impactante o afirmación que genere urgencia. Máximo 15 palabras. Sin emojis en esta línea.
+1. PRIMERA LÍNEA (gancho): Pregunta retórica poderosa, dato impactante o afirmación que genere urgencia. Máximo 15 palabras. Sin emojis en esta línea.
 
-2. CUERPO (150-200 palabras en 2-3 párrafos):
-   - Desarrolla el tema con datos específicos y vigentes: artículos de la LFT, montos reales de multas STPS en UMAs, plazos del IMSS/SAT, etc.
+2. CUERPO (150-200 palabras en 2-3 párrafos separados por línea vacía):
+   - Desarrolla el tema con datos específicos y vigentes: artículos de la LFT, montos reales de multas STPS en UMAs, plazos del IMSS/SAT 2025
    - Usa español mexicano formal pero accesible ("el patrón", "la empresa", "su nómina")
-   - En el último párrafo menciona ClickLaboral.mx de forma NATURAL como herramienta que resuelve el problema descrito (no como anuncio)
+   - En el último párrafo menciona ClickLaboral.mx de forma NATURAL como herramienta que resuelve el problema (no como anuncio forzado)
 
-3. CALL TO ACTION (1 línea):
-   "${ctx.cta} ${url}"
+3. CALL TO ACTION (1 sola línea):
+   "${ctx.cta}"
 
-4. HASHTAGS (4-6 al final, en una sola línea):
-   Relevantes al tema y la audiencia, incluir siempre #ClickLaboralmx
+4. HASHTAGS: escribe exactamente estos en una sola línea al final:
+   ${ctx.hashtags}
 
-REGLAS ABSOLUTAS:
-- Máximo 2 emojis en todo el post (✅ ⚠️ 📊 — solo si añaden valor)
-- NO uses listas con guiones ni bullet points (párrafos fluidos)
-- NO inventes artículos de ley; si no estás seguro del número exacto, describe el principio
-- El post completo debe tener entre 200-270 palabras (sin contar hashtags)
+REGLAS:
+- Máximo 2 emojis en todo el post (✅ ⚠️ 📊 — solo si añaden valor real)
+- NO uses listas con guiones ni bullet points — párrafos fluidos únicamente
+- NO inventes artículos de ley; si no estás seguro del número, describe el principio
+- El post debe tener entre 200-270 palabras (sin contar hashtags)
 - Deja una línea vacía entre párrafos
 
-RETORNA ÚNICAMENTE el texto del post, listo para copiar y pegar en LinkedIn. Sin explicaciones previas.`;
+Retorna ÚNICAMENTE el texto del post, sin explicaciones previas ni comillas alrededor.`;
 
   const response = await httpsPost('api.anthropic.com', '/v1/messages', {
-    'x-api-key':          process.env.ANTHROPIC_API_KEY,
-    'anthropic-version':  '2023-06-01',
-    'content-type':       'application/json',
+    'x-api-key':         process.env.ANTHROPIC_API_KEY,
+    'anthropic-version': '2023-06-01',
+    'content-type':      'application/json',
   }, {
-    model:      CLAUDE_MODEL,
+    model:    CLAUDE_MODEL,
     max_tokens: 700,
-    messages:   [{ role: 'user', content: prompt }],
+    messages: [{ role: 'user', content: prompt }],
   });
 
   return response.content[0].text.trim();
 }
 
-// ─── LinkedIn API (UGC Posts) ─────────────────────────────────────────────────
+// ─── Email via Resend ─────────────────────────────────────────────────────────
 
-async function publishToLinkedIn(postText) {
-  const body = {
-    author:         process.env.LINKEDIN_AUTHOR_URN,
-    lifecycleState: 'PUBLISHED',
-    specificContent: {
-      'com.linkedin.ugc.ShareContent': {
-        shareCommentary:    { text: postText },
-        shareMediaCategory: 'NONE',
-      },
-    },
-    visibility: {
-      'com.linkedin.ugc.MemberNetworkVisibility': 'PUBLIC',
-    },
-  };
+function buildEmailHtml({ audience, topic, date, week, postText }) {
+  const ctx        = AUDIENCE_CONTEXT[audience];
+  const wordCount  = postText.split(/\s+/).filter(Boolean).length;
+  const textLines  = postText.split('\n').map(l =>
+    `<p style="margin:0 0 10px;white-space:pre-wrap;">${l || '&nbsp;'}</p>`
+  ).join('');
 
-  return httpsPost('api.linkedin.com', '/v2/ugcPosts', {
-    'Authorization':              `Bearer ${process.env.LINKEDIN_ACCESS_TOKEN}`,
-    'Content-Type':               'application/json',
-    'X-Restli-Protocol-Version':  '2.0.0',
-  }, body);
+  return `<!DOCTYPE html>
+<html lang="es">
+<head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0"></head>
+<body style="margin:0;padding:0;background:#f1f5f9;font-family:Arial,sans-serif;">
+<div style="max-width:620px;margin:32px auto;border-radius:12px;overflow:hidden;box-shadow:0 4px 24px rgba(0,0,0,0.10);">
+
+  <!-- Cabecera -->
+  <div style="background:#1a1a2e;padding:28px 32px;">
+    <p style="margin:0;color:#ffffff;font-size:20px;font-weight:bold;">Click<span style="color:#f97316;">Laboral.mx</span></p>
+    <p style="margin:6px 0 0;color:#94a3b8;font-size:14px;">Post de LinkedIn generado automáticamente</p>
+  </div>
+
+  <!-- Metadatos -->
+  <div style="background:#f8fafc;padding:16px 32px;border-bottom:1px solid #e2e8f0;">
+    <table style="width:100%;font-size:13px;color:#475569;border-collapse:collapse;">
+      <tr>
+        <td style="padding:4px 0;width:110px;font-weight:bold;">📅 Fecha</td>
+        <td style="padding:4px 0;">${date} (semana ${week})</td>
+      </tr>
+      <tr>
+        <td style="padding:4px 0;font-weight:bold;">🎯 Audiencia</td>
+        <td style="padding:4px 0;">${ctx.label}</td>
+      </tr>
+      <tr>
+        <td style="padding:4px 0;font-weight:bold;">📝 Tema</td>
+        <td style="padding:4px 0;">${topic}</td>
+      </tr>
+      <tr>
+        <td style="padding:4px 0;font-weight:bold;">📊 Palabras</td>
+        <td style="padding:4px 0;">${wordCount} palabras</td>
+      </tr>
+    </table>
+  </div>
+
+  <!-- Instrucciones -->
+  <div style="background:#eff6ff;border-left:4px solid #2563eb;padding:14px 32px;font-size:13px;color:#1e40af;">
+    <strong>Cómo publicar (30 segundos):</strong>
+    <ol style="margin:6px 0 0;padding-left:18px;line-height:1.8;">
+      <li>Copia el texto del recuadro de abajo</li>
+      <li>Ve a <a href="https://www.linkedin.com/feed/" style="color:#2563eb;">linkedin.com</a> y haz click en <strong>"Comenzar una publicación"</strong></li>
+      <li>Pega el texto y haz click en <strong>Publicar</strong></li>
+    </ol>
+  </div>
+
+  <!-- Texto del post -->
+  <div style="background:#ffffff;padding:28px 32px;">
+    <p style="margin:0 0 16px;font-size:13px;font-weight:bold;color:#64748b;text-transform:uppercase;letter-spacing:0.05em;">Texto del post:</p>
+    <div style="background:#f8fafc;border:2px solid #e2e8f0;border-radius:8px;padding:20px 24px;font-size:15px;line-height:1.7;color:#1e293b;">
+      ${textLines}
+    </div>
+  </div>
+
+  <!-- Nota -->
+  <div style="background:#fefce8;border-top:1px solid #fde68a;padding:12px 32px;font-size:12px;color:#92400e;">
+    💡 <strong>Tip:</strong> Publica entre 8–10am o 12–2pm hora de Ciudad de México para mayor alcance.
+    El algoritmo de LinkedIn favorece los primeros 60 minutos — responde cualquier comentario pronto.
+  </div>
+
+  <!-- Footer -->
+  <div style="background:#1a1a2e;padding:20px 32px;text-align:center;">
+    <p style="margin:0;color:#94a3b8;font-size:12px;">
+      ClickLaboral.mx — Sistema de contenido automático para LinkedIn<br>
+      <a href="https://clicklaboral.mx" style="color:#f97316;text-decoration:none;">clicklaboral.mx</a>
+    </p>
+  </div>
+
+</div>
+</body>
+</html>`;
 }
 
-// ─── Registro de posts publicados ────────────────────────────────────────────
+async function sendEmail({ audience, topic, date, week, postText }) {
+  const ctx     = AUDIENCE_CONTEXT[audience];
+  const to      = process.env.NOTIFY_EMAIL || 'serjuemsa@gmail.com';
+  const subject = `LinkedIn hoy — ${ctx.label} | ${date}`;
+  const html    = buildEmailHtml({ audience, topic, date, week, postText });
 
-function logPost({ date, audience, topic, postId, postUrl, postText }) {
+  await httpsPost('api.resend.com', '/emails', {
+    'Authorization': `Bearer ${process.env.RESEND_API_KEY}`,
+    'Content-Type':  'application/json',
+  }, {
+    from:    'ClickLaboral <alertas@clicklaboral.mx>',
+    to:      [to],
+    subject,
+    html,
+  });
+}
+
+// ─── Log de publicaciones ────────────────────────────────────────────────────
+
+function logPost({ date, audience, topic, postText }) {
   const logFile = path.join(ROOT, 'linkedin-posts-log.json');
   let log = [];
   if (fs.existsSync(logFile)) {
     try { log = JSON.parse(fs.readFileSync(logFile, 'utf8')); } catch (_) { log = []; }
   }
-  log.unshift({ date, audience, topic, postId, postUrl, preview: postText.slice(0, 100) + '…' });
+  log.unshift({ date, audience, topic, preview: postText.slice(0, 120) + '…' });
   fs.writeFileSync(logFile, JSON.stringify(log, null, 2) + '\n');
 }
 
@@ -280,16 +351,15 @@ function logPost({ date, audience, topic, postId, postUrl, postText }) {
 
 async function main() {
   if (!process.env.ANTHROPIC_API_KEY) throw new Error('ANTHROPIC_API_KEY no definida');
-  if (!DRY_RUN && !process.env.LINKEDIN_ACCESS_TOKEN) throw new Error('LINKEDIN_ACCESS_TOKEN no definida');
-  if (!DRY_RUN && !process.env.LINKEDIN_AUTHOR_URN)   throw new Error('LINKEDIN_AUTHOR_URN no definida');
+  if (!DRY_RUN && !process.env.RESEND_API_KEY) throw new Error('RESEND_API_KEY no definida');
 
   const { audience, topic, date, week } = selectAudienceAndTopic();
 
   console.log('─────────────────────────────────────────────────');
   console.log(`📅 Fecha:     ${date}  (semana ${week})`);
-  console.log(`🎯 Audiencia: ${audience}`);
+  console.log(`🎯 Audiencia: ${AUDIENCE_CONTEXT[audience].label}`);
   console.log(`📝 Tema:      ${topic}`);
-  if (DRY_RUN) console.log('🔵 Modo DRY RUN — no se publicará en LinkedIn');
+  if (DRY_RUN) console.log('🔵 Modo DRY RUN — no se enviará email');
   console.log('─────────────────────────────────────────────────');
 
   console.log('\n⏳ Generando contenido con Claude...\n');
@@ -301,19 +371,15 @@ async function main() {
   console.log(`\n📊 Palabras: ${postText.split(/\s+/).filter(Boolean).length}`);
 
   if (DRY_RUN) {
-    console.log('\n✅ DRY RUN completo — contenido generado pero no publicado.');
+    console.log('\n✅ DRY RUN completo — contenido generado, email no enviado.');
     return;
   }
 
-  console.log('\n⏳ Publicando en LinkedIn...');
-  const result  = await publishToLinkedIn(postText);
-  const postId  = result.id || result.value || 'unknown';
-  const postUrl = `https://www.linkedin.com/feed/update/${postId}/`;
+  console.log('\n⏳ Enviando email con Resend...');
+  await sendEmail({ audience, topic, date, week, postText });
+  console.log(`✅ Email enviado a ${process.env.NOTIFY_EMAIL || 'serjuemsa@gmail.com'}`);
 
-  console.log(`✅ Publicado en LinkedIn`);
-  console.log(`🔗 URL: ${postUrl}`);
-
-  logPost({ date, audience, topic, postId, postUrl, postText });
+  logPost({ date, audience, topic, postText });
   console.log('📋 Registro guardado en linkedin-posts-log.json');
 }
 

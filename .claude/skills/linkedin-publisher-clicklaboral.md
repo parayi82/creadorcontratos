@@ -12,14 +12,21 @@ de referencia para el cumplimiento laboral de PyMEs.
 ## Arquitectura del Sistema
 
 ```
-GitHub Actions (cron diario 9am CST)
+GitHub Actions (cron diario 9am CST, Lun–Vie)
   └── generate-linkedin-post.js
         ├── Selecciona audiencia del día (rotación semanal)
-        ├── Selecciona tema (rotación por semana del año)
-        ├── Llama Claude API → genera post
-        ├── Llama LinkedIn API → publica
+        ├── Selecciona tema (rotación por semana del año — 60 temas, sin repetir)
+        ├── Llama Claude API → genera post de 200-270 palabras
+        ├── Envía el texto por email via Resend → listo para copiar/pegar
         └── Registra en linkedin-posts-log.json
+
+Flujo de publicación (30 segundos):
+  1. Recibes el email con el post generado
+  2. Copias el texto
+  3. Lo pegas en LinkedIn → Publicar
 ```
+
+**Sin API de LinkedIn. Sin tokens que expiren. Sin pagos extra.**
 
 ---
 
@@ -37,60 +44,23 @@ GitHub Actions (cron diario 9am CST)
 
 ## Secretos de GitHub Requeridos
 
-| Secreto               | Descripción                                    | Cómo obtener                                                                    |
-|-----------------------|------------------------------------------------|---------------------------------------------------------------------------------|
-| `ANTHROPIC_API_KEY`   | Ya configurado en el repositorio               | —                                                                               |
-| `LINKEDIN_ACCESS_TOKEN` | Token OAuth 2.0 de LinkedIn (válido 60 días) | Ver sección "Configuración OAuth" abajo                                         |
-| `LINKEDIN_AUTHOR_URN`  | URN del autor (persona u organización)         | `urn:li:person:XXXXXXXX` o `urn:li:organization:XXXXXXXX` (ver sección abajo)  |
+Solo necesitas agregar **un secreto** a los que ya tienes. El `RESEND_API_KEY` lo tienes
+configurado en Netlify — solo cópialo a GitHub Secrets.
 
----
+| Secreto             | Descripción                          | Estado                                |
+|---------------------|--------------------------------------|---------------------------------------|
+| `ANTHROPIC_API_KEY` | Claude API key                       | ✅ Ya configurado                     |
+| `RESEND_API_KEY`    | Resend API key (misma que en Netlify)| ⚠️ Añadir a GitHub Secrets           |
+| `NOTIFY_EMAIL`      | Email donde recibirás los posts      | Opcional (default: serjuemsa@gmail.com) |
 
-## Configuración de LinkedIn API (paso a paso)
+### Cómo añadir RESEND_API_KEY a GitHub Secrets
+1. En Netlify: **Site settings → Environment variables → Copiar valor de RESEND_API_KEY**
+2. En GitHub: **Settings → Secrets and variables → Actions → New repository secret**
+   - Name: `RESEND_API_KEY`
+   - Value: el valor copiado de Netlify
+3. Click **Add secret**
 
-### 1. Crear LinkedIn App
-1. Entrar a https://www.linkedin.com/developers/apps/new
-2. Crear app con nombre "ClickLaboral.mx"
-3. En **Products** solicitar: **Share on LinkedIn** + **Sign In with LinkedIn**
-4. Scopes necesarios: `w_member_social` (para perfil personal) o `w_organization_social` (para página empresa)
-
-### 2. Obtener Access Token (flujo Authorization Code)
-
-```bash
-# Paso A: Autorización (abrir en navegador)
-https://www.linkedin.com/oauth/v2/authorization
-  ?response_type=code
-  &client_id=TU_CLIENT_ID
-  &redirect_uri=https://clicklaboral.mx/oauth/callback
-  &scope=w_member_social%20r_liteprofile
-
-# Paso B: Canjear código por token
-curl -X POST https://www.linkedin.com/oauth/v2/accessToken \
-  -d "grant_type=authorization_code" \
-  -d "code=CODIGO_DE_RESPUESTA" \
-  -d "client_id=TU_CLIENT_ID" \
-  -d "client_secret=TU_CLIENT_SECRET" \
-  -d "redirect_uri=https://clicklaboral.mx/oauth/callback"
-```
-
-El token dura **60 días**. Programar renovación cada 50 días (hay workflow de renovación incluido).
-
-### 3. Obtener Author URN
-
-```bash
-# Para perfil personal:
-curl -H "Authorization: Bearer TU_TOKEN" https://api.linkedin.com/v2/me
-# Responder con: {"id": "XXXXXXXX"} → URN: urn:li:person:XXXXXXXX
-
-# Para página empresa (organización):
-curl -H "Authorization: Bearer TU_TOKEN" \
-  "https://api.linkedin.com/v2/organizationAcls?q=roleAssignee&role=ADMINISTRATOR&projection=(elements*(organization~))"
-# Responder con el ID de la org → URN: urn:li:organization:XXXXXXXX
-```
-
-### 4. Guardar en GitHub Secrets
-En el repositorio: **Settings → Secrets → Actions → New repository secret**
-- `LINKEDIN_ACCESS_TOKEN` = el token obtenido en paso B
-- `LINKEDIN_AUTHOR_URN` = `urn:li:person:XXXXXXXX` o `urn:li:organization:XXXXXXXX`
+**Eso es todo. Sin LinkedIn API. Sin tokens OAuth.**
 
 ---
 
@@ -150,19 +120,19 @@ URL base: `https://clicklaboral.mx/?utm_source=linkedin&utm_medium=social&utm_ca
 ## Ejecución Manual
 
 ### Activar desde GitHub Actions
-1. Ir a **Actions → LinkedIn Daily Publish — ClickLaboral.mx**
+1. Ir a **Actions → LinkedIn — Post diario ClickLaboral.mx**
 2. Click en **Run workflow**
-3. Opcionalmente especificar audiencia y tema
+3. Opcionalmente especificar audiencia y/o tema; activar DRY RUN para previsualizar sin enviar
 
 ### Ejecutar localmente (testing)
 ```bash
 ANTHROPIC_API_KEY=sk-ant-xxx \
-LINKEDIN_ACCESS_TOKEN=AQV... \
-LINKEDIN_AUTHOR_URN=urn:li:person:XXXXXXXX \
+RESEND_API_KEY=re_xxx \
+NOTIFY_EMAIL=serjuemsa@gmail.com \
 node .github/scripts/generate-linkedin-post.js
 ```
 
-Para modo dry-run (generar contenido sin publicar):
+Para solo generar el texto sin enviar email:
 ```bash
 DRY_RUN=true \
 ANTHROPIC_API_KEY=sk-ant-xxx \
@@ -181,13 +151,10 @@ node .github/scripts/generate-linkedin-post.js
 
 ---
 
-## Renovación del Access Token
+## Sin tokens que renovar
 
-El token de LinkedIn expira cada 60 días. El workflow `linkedin-token-refresh.yml`
-envía un recordatorio por email 10 días antes del vencimiento.
-
-Para renovar manualmente ejecutar el flujo OAuth del paso 2 y actualizar
-el secreto `LINKEDIN_ACCESS_TOKEN` en GitHub Settings.
+Al usar Resend en lugar de la API de LinkedIn, no hay tokens OAuth que caduquen.
+El único mantenimiento necesario es si cambias tu API key de Resend (muy raro).
 
 ---
 

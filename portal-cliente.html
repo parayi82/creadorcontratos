@@ -483,6 +483,7 @@ body{font-family:var(--font);background:var(--surface);color:var(--ink);min-heig
       <div class="nav-item" onclick="window.open('simulador-riesgo.html')"><span class="nav-icon">⚠️</span> Simulador de riesgo</div>
       <div class="nav-item" onclick="window.open('contratos-por-sector.html')"><span class="nav-icon">🏭</span> Contratos por sector</div>
       <div class="nav-item" onclick="goPanel('reportes')"><span class="nav-icon">📊</span> Reportes gerenciales</div>
+      <div class="nav-item" onclick="goPanel('firmas')"><span class="nav-icon">✍️</span> Mis firmas</div>
       <div class="nav-item" onclick="goPanel('compliance')"><span class="nav-icon">📊</span> Mi compliance</div>
       <div class="nav-item" onclick="goPanel('alertas')"><span class="nav-icon">🔔</span> Alertas <span class="nav-badge" id="sb-alert-badge">0</span></div>
       <div class="nav-item" onclick="goPanel('comisiones')"><span class="nav-icon">🏛</span> Comisiones mixtas</div>
@@ -743,6 +744,19 @@ body{font-family:var(--font);background:var(--surface);color:var(--ink);min-heig
 
       <!-- ── PANEL: Reportes gerenciales ── -->
 
+      <!-- ── PANEL: Mis Firmas ── -->
+      <div class="panel" id="panel-firmas">
+        <div class="card" style="margin-bottom:14px;">
+          <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px;">
+            <div>
+              <div class="card-title">Mis firmas electrónicas</div>
+              <div style="font-size:12px;color:var(--ink3);margin-top:2px;">Documentos enviados a firmar con e.firma (NOM-151)</div>
+            </div>
+            <button onclick="cargarMisFirmas(true)" class="btn btn-outline" style="font-size:12px;">↻ Actualizar</button>
+          </div>
+        </div>
+        <div id="firmas-lista"><div style="text-align:center;padding:48px;color:var(--ink3);">Cargando…</div></div>
+      </div>
 
       <!-- ── CALCULADORA LABORAL ── -->
       <div class="panel" id="panel-calculadora">
@@ -3124,6 +3138,7 @@ const panelTitles = {
   asistente:'Asistente Legal IA',
   nom035:'NOM-035 — Dashboard de cumplimiento',
   historial:'Historial de movimientos de plantilla',
+  firmas:'Mis firmas electrónicas',
   suscripcion:'Mi suscripción', configuracion:'Configuración'
 };
 
@@ -3142,6 +3157,7 @@ function goPanel(id){
   if(id==='asistente' && !window._asistInited) asistInit();
   if(id==='nom035') renderNom035();
   if(id==='historial') renderHistorial();
+  if(id==='firmas') cargarMisFirmas();
   cerrarSidebarMobile();
 }
 
@@ -4898,11 +4914,18 @@ async function mifilelEnviar() {
     document.getElementById('mifiel-success').style.display = '';
 
     var resContainer = document.getElementById('mifiel-firmantes-result');
+    var mifilelBase = 'https://app.mifiel.com/sign/';
     resContainer.innerHTML = (data.firmantes_con_widget || []).map(function(f) {
+      var linkHtml = f.widget_id
+        ? '<a href="' + mifilelBase + esc(f.widget_id) + '" target="_blank" rel="noopener" '
+          + 'style="display:inline-flex;align-items:center;gap:5px;margin-top:6px;padding:5px 10px;'
+          + 'background:#6366f1;color:#fff;border-radius:6px;font-size:11px;font-weight:600;text-decoration:none;">'
+          + '✍️ Firmar ahora</a>'
+        : '<div style="margin-top:6px;color:#166534;font-size:11px;">📧 Invitación enviada por Mifiel</div>';
       return '<div style="padding:10px 14px;background:var(--surface);border-radius:8px;font-size:12px;">'
         + '<div style="font-weight:700;color:var(--navy);">' + esc(f.nombre || f.email) + '</div>'
         + '<div style="color:var(--ink3);margin-top:2px;">' + esc(f.email) + '</div>'
-        + '<div style="margin-top:6px;color:#166534;font-size:11px;">📧 Invitación enviada por Mifiel</div>'
+        + linkHtml
         + '</div>';
     }).join('');
 
@@ -4910,6 +4933,98 @@ async function mifilelEnviar() {
     document.getElementById('mifiel-sending').style.display = 'none';
     document.getElementById('mifiel-error').style.display = '';
     document.getElementById('mifiel-error-msg').textContent = err.message || 'Error inesperado.';
+  }
+}
+// ── Mis Firmas ──────────────────────────────────────────────────────────────
+var _firmasLoaded = false;
+
+async function cargarMisFirmas(force) {
+  if (_firmasLoaded && !force) return;
+  _firmasLoaded = true;
+  var contenedor = document.getElementById('firmas-lista');
+  if (!contenedor) return;
+  contenedor.innerHTML = '<div style="text-align:center;padding:48px;color:var(--ink3);">Cargando…</div>';
+  try {
+    var rfc = clienteActual && clienteActual.rfc;
+    if (!rfc) throw new Error('No se pudo identificar el RFC del cliente.');
+    var { data, error } = await window._sb
+      .from('firmas_electronicas')
+      .select('*')
+      .eq('cliente_rfc', rfc)
+      .order('timestamp_servidor', { ascending: false });
+    if (error) throw error;
+    renderFirmas(data || []);
+  } catch (err) {
+    contenedor.innerHTML = '<div style="text-align:center;padding:48px;color:var(--error);">Error al cargar firmas: ' + esc(err.message) + '</div>';
+  }
+}
+
+function renderFirmas(rows) {
+  var contenedor = document.getElementById('firmas-lista');
+  if (!rows.length) {
+    contenedor.innerHTML = '<div class="card" style="text-align:center;padding:48px;color:var(--ink3);">'
+      + '<div style="font-size:32px;margin-bottom:12px;">✍️</div>'
+      + '<div style="font-size:14px;font-weight:600;color:var(--navy2);">Sin documentos firmados todavía</div>'
+      + '<div style="font-size:12px;margin-top:4px;">Usa el botón "Firmar con e.firma" en Reportes gerenciales para iniciar una firma.</div>'
+      + '</div>';
+    return;
+  }
+  var estadoColor = { pendiente: '#d97706', firmado: '#166534', rechazado: '#dc2626', eliminado: '#6b7280' };
+  var estadoBg    = { pendiente: '#fef3c7', firmado: '#dcfce7', rechazado: '#fee2e2', eliminado: '#f3f4f6' };
+  var mifilelBase = 'https://app.mifiel.com/sign/';
+
+  contenedor.innerHTML = rows.map(function(r) {
+    var firmantes = Array.isArray(r.firmantes) ? r.firmantes : [];
+    var estado = r.estado || 'pendiente';
+    var fecha = r.timestamp_servidor ? new Date(r.timestamp_servidor).toLocaleDateString('es-MX', { day:'2-digit', month:'short', year:'numeric' }) : '—';
+    var firmanteHtml = firmantes.map(function(f) {
+      var link = (estado === 'pendiente' && f.widget_id)
+        ? ' <a href="' + mifilelBase + esc(f.widget_id) + '" target="_blank" rel="noopener" '
+          + 'style="font-size:10px;padding:2px 7px;background:#6366f1;color:#fff;border-radius:4px;text-decoration:none;font-weight:600;">Firmar</a>'
+        : '';
+      return '<div style="font-size:11px;color:var(--ink2);padding:2px 0;">'
+        + '• ' + esc(f.nombre || f.email) + ' <span style="color:var(--ink3);">(' + esc(f.email) + ')</span>' + link + '</div>';
+    }).join('');
+    var descargas = '';
+    if (r.signed_pdf_path) {
+      descargas += '<button onclick="descargarFirma(\'' + r.signed_pdf_path.replace(/'/g,"\'") + '\',\'pdf\')" '
+        + 'class="btn btn-outline" style="font-size:11px;padding:4px 10px;">📄 Descargar PDF</button> ';
+    }
+    if (r.signed_xml_path) {
+      descargas += '<button onclick="descargarFirma(\'' + r.signed_xml_path.replace(/'/g,"\'") + '\',\'xml\')" '
+        + 'class="btn btn-outline" style="font-size:11px;padding:4px 10px;">🗂 Descargar XML</button>';
+    }
+    return '<div class="card" style="margin-bottom:10px;">'
+      + '<div style="display:flex;align-items:flex-start;justify-content:space-between;gap:8px;flex-wrap:wrap;">'
+      + '<div>'
+      + '<div style="font-weight:700;color:var(--navy);font-size:13px;">'
+        + esc(r.documento_tipo || 'Documento') + (r.documento_folio ? ' — ' + esc(r.documento_folio) : '') + '</div>'
+      + '<div style="font-size:11px;color:var(--ink3);margin-top:2px;">' + fecha + (r.folio_firma ? ' · Folio ' + esc(r.folio_firma) : '') + '</div>'
+      + '</div>'
+      + '<span style="font-size:11px;font-weight:700;padding:3px 9px;border-radius:99px;'
+        + 'color:' + (estadoColor[estado]||'#374151') + ';background:' + (estadoBg[estado]||'#f3f4f6') + ';">'
+        + estado.charAt(0).toUpperCase() + estado.slice(1) + '</span>'
+      + '</div>'
+      + (firmanteHtml ? '<div style="margin-top:10px;padding-top:10px;border-top:1px solid var(--border);">' + firmanteHtml + '</div>' : '')
+      + (descargas ? '<div style="margin-top:10px;display:flex;gap:8px;flex-wrap:wrap;">' + descargas + '</div>' : '')
+      + '</div>';
+  }).join('');
+}
+
+async function descargarFirma(path, ext) {
+  try {
+    var { data, error } = await window._sb.storage.from('expedientes').createSignedUrl(path, 300);
+    if (error) throw error;
+    var a = document.createElement('a');
+    a.href = data.signedUrl;
+    a.download = path.split('/').pop() || ('firma.' + ext);
+    a.target = '_blank';
+    a.rel = 'noopener';
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+  } catch (err) {
+    alert('Error al descargar: ' + err.message);
   }
 }
 // ── Fin Mifiel ──────────────────────────────────────────────────────────────

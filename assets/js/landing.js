@@ -19,7 +19,7 @@ function abrirContacto(origen) {
     'CTA final':       'Hola, quiero el diagnóstico gratuito de ClickLaboral.mx',
     'Calculadora ROI': 'Hola, vi la calculadora de ClickLaboral.mx y me interesa saber mi ahorro potencial',
     'Empresa grande':  'Hola, tenemos más de 500 trabajadores y necesitamos un plan a medida de ClickLaboral.mx',
-    'Consulta desde nav': 'Hola, me interesa ClickLaboral.mx',
+    'Consulta desde nav': 'Hola, quiero el diagnóstico gratuito de ClickLaboral.mx',
   };
   const msg = textos[origen] || 'Hola, me interesa ClickLaboral.mx';
   if (typeof fbq === 'function') fbq('track', 'Contact', {content_name: origen || 'WhatsApp'});

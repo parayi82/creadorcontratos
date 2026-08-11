@@ -160,6 +160,11 @@
   to = "/.netlify/functions/mifiel-webhook"
   status = 200
 
+[[redirects]]
+  from = "/api/whatsapp-bot"
+  to = "/.netlify/functions/whatsapp-bot"
+  status = 200
+
 # Caché largo para assets estáticos con cache-busting en URL
 [[headers]]
   for = "/*.js"

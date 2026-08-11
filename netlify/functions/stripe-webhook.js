@@ -1,6 +1,7 @@
 // stripe-webhook.js — Recibe eventos de Stripe y actualiza user_metadata en Supabase Auth
 const { createClient } = require('@supabase/supabase-js');
 const { reportError } = require('./_security');
+const { waTexto } = require('./_whatsapp');
 
 exports.handler = async (event) => {
   const stripe = require('stripe')(process.env.STRIPE_SECRET_KEY);
@@ -40,6 +41,14 @@ exports.handler = async (event) => {
           await supabase.auth.admin.updateUserById(user.id, {
             user_metadata: { ...user.user_metadata, suscripcion_activa: false }
           });
+          const tel = user.user_metadata?.tel;
+          if (tel) {
+            await waTexto(tel,
+              `👋 *ClickLaboral.mx* — Su suscripción ha sido cancelada.\n\n` +
+              `Su acceso al portal estará disponible hasta el fin del periodo pagado.\n\n` +
+              `Si canceló por error o desea reactivar, escríbanos:\nhttps://wa.me/5213339263817`
+            ).catch(() => {});
+          }
         }
         break;
       }
@@ -101,6 +110,15 @@ exports.handler = async (event) => {
         }
 
         await supabase.auth.admin.updateUserById(user.id, { user_metadata: metaUpdate });
+
+        // Notificar al cliente por WhatsApp en cada fallo
+        const telCliente = user.user_metadata?.tel;
+        if (telCliente) {
+          const msg = intentos >= 3
+            ? `⛔ *ClickLaboral.mx* — Su cuenta *${empresa}* ha sido suspendida por ${intentos} pagos fallidos.\n\nActualice su método de pago para reactivarla:\nhttps://clicklaboral.mx/portal-cliente.html`
+            : `⚠️ *ClickLaboral.mx* — No pudimos procesar el pago de su suscripción (intento ${intentos}/3).\n\nActualice su método de pago para evitar la suspensión:\nhttps://clicklaboral.mx/portal-cliente.html`;
+          await waTexto(telCliente, msg).catch(() => {});
+        }
 
         // Notificar al admin en el primer fallo
         if (process.env.RESEND_API_KEY && intentos === 1) {

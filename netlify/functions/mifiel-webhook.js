@@ -26,6 +26,7 @@
 
 const { createClient } = require('@supabase/supabase-js');
 const { clientIp, reportError, logSecurityEvent } = require('./_security');
+const { waTexto } = require('./_whatsapp');
 
 const MIFIEL_BASE = () =>
   process.env.MIFIEL_ENV === 'production'
@@ -181,12 +182,32 @@ exports.handler = async (event) => {
           }
         }
 
-        await sb.from('firmas_electronicas').update({
+        const { data: firmaFinal } = await sb.from('firmas_electronicas').update({
           estado: 'firmado',
           signed_at: data.signed_at || new Date().toISOString(),
           signed_pdf_path: pdfPath,
           signed_xml_path: xmlPath,
-        }).eq('mifiel_id', mifielId);
+        }).eq('mifiel_id', mifielId).select('cliente_rfc, documento_tipo, documento_folio').single();
+
+        // Notificar al cliente por WhatsApp
+        if (firmaFinal?.cliente_rfc) {
+          try {
+            const emailLogin = `${firmaFinal.cliente_rfc.toLowerCase()}@clicklaboral.mx`;
+            const { data: { user: clienteUser } } = await sb.auth.admin.getUserByEmail(emailLogin);
+            const tel = clienteUser?.user_metadata?.tel;
+            if (tel) {
+              const docDesc = [firmaFinal.documento_tipo, firmaFinal.documento_folio].filter(Boolean).join(' — ');
+              await waTexto(tel,
+                `✅ *ClickLaboral.mx* — Documento firmado exitosamente.\n\n` +
+                (docDesc ? `📄 ${docDesc}\n\n` : '') +
+                `El PDF y XML con validez NOM-151 ya están disponibles en el portal:\n` +
+                `https://clicklaboral.mx/portal-cliente.html`
+              );
+            }
+          } catch (e) {
+            console.warn('WA notify mifiel error:', e.message);
+          }
+        }
 
         console.log(`✅ Documento ${mifielId} firmado y guardado.`);
         break;

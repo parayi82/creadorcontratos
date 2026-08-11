@@ -1,4 +1,5 @@
 // netlify/functions/crear-suscripcion.js
+const { randomBytes } = require('crypto');
 //
 // Backend real que tokeniza el pago, crea el cliente + la suscripción en Stripe,
 // guarda al cliente en Supabase, y envía el email de bienvenida con credenciales
@@ -89,6 +90,25 @@ exports.handler = async (event) => {
     return { statusCode: 500, headers, body: JSON.stringify({ error: 'Este plan todavía no está configurado para cobro. Contacte al administrador.' }) };
   }
 
+  // Validar formato de RFC mexicano (personas morales: 3 letras + 6 dígitos + 3 alfanum;
+  // personas físicas: 4 letras + 6 dígitos + 3 alfanum)
+  const rfcRegex = /^[A-ZÑ&]{3,4}[0-9]{2}(0[1-9]|1[0-2])(0[1-9]|[12][0-9]|3[01])[A-Z0-9]{2}[0-9A]$/i;
+  if (!rfcRegex.test(rfc)) {
+    return { statusCode: 400, headers, body: JSON.stringify({ error: 'RFC inválido. Verifique el formato (ej: XAXX010101000).' }) };
+  }
+  // Validar email básico
+  const emailRegex = /^[^\s@]{1,64}@[^\s@]{1,253}\.[^\s@]{2,}$/;
+  if (!emailRegex.test(email)) {
+    return { statusCode: 400, headers, body: JSON.stringify({ error: 'Correo electrónico inválido.' }) };
+  }
+  // Límites de longitud para prevenir payloads abusivos
+  if (empresa.length > 200) {
+    return { statusCode: 400, headers, body: JSON.stringify({ error: 'Nombre de empresa demasiado largo (máximo 200 caracteres).' }) };
+  }
+  if (contacto && contacto.length > 120) {
+    return { statusCode: 400, headers, body: JSON.stringify({ error: 'Nombre de contacto demasiado largo (máximo 120 caracteres).' }) };
+  }
+
   try {
     // 1. Crear el customer en Stripe con el método de pago ya tokenizado por el navegador
     const customer = await stripe.customers.create({
@@ -165,7 +185,8 @@ exports.handler = async (event) => {
       // 5. Crear el usuario de acceso al portal de cliente — contraseña aleatoria,
       // NUNCA predecible a partir del RFC (el RFC no es secreto, aparece en facturas/contratos).
       const emailPortal = `${rfc.toLowerCase()}@clicklaboral.mx`;
-      const passwordPortal = Math.random().toString(36).slice(2, 8).toUpperCase() + Math.random().toString(36).slice(2, 6) + '!';
+      const passwordPortal = randomBytes(9).toString('base64url').slice(0, 8).toUpperCase()
+        + randomBytes(4).toString('base64url').slice(0, 4) + '!';
       try {
         const { data: newUserData } = await supabase.auth.admin.createUser({
           email: emailPortal,

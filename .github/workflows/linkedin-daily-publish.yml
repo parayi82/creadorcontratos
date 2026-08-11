@@ -1,0 +1,79 @@
+name: LinkedIn — Publicación diaria ClickLaboral.mx
+
+on:
+  schedule:
+    # 9:00am CST (UTC-6) de lunes a viernes
+    - cron: '0 15 * * 1-5'
+  workflow_dispatch:
+    inputs:
+      audience:
+        description: 'Audiencia objetivo (reclutadores, contadores, abogados, patrones)'
+        required: false
+        default: ''
+      topic:
+        description: 'Tema específico del post (dejar vacío para selección automática)'
+        required: false
+        default: ''
+      dry_run:
+        description: 'DRY RUN — genera contenido sin publicar en LinkedIn'
+        required: false
+        default: 'false'
+        type: choice
+        options:
+          - 'false'
+          - 'true'
+
+jobs:
+  publish-linkedin:
+    name: Generar y publicar post en LinkedIn
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+
+    steps:
+      - name: Checkout repositorio
+        uses: actions/checkout@v4
+
+      - name: Configurar Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Generar contenido y publicar en LinkedIn
+        env:
+          ANTHROPIC_API_KEY:      ${{ secrets.ANTHROPIC_API_KEY }}
+          LINKEDIN_ACCESS_TOKEN:  ${{ secrets.LINKEDIN_ACCESS_TOKEN }}
+          LINKEDIN_AUTHOR_URN:    ${{ secrets.LINKEDIN_AUTHOR_URN }}
+          DRY_RUN:                ${{ github.event.inputs.dry_run || 'false' }}
+          AUDIENCE:               ${{ github.event.inputs.audience || '' }}
+          TOPIC:                  ${{ github.event.inputs.topic || '' }}
+        run: node .github/scripts/generate-linkedin-post.js
+
+      - name: Detectar si se generó log
+        id: check_log
+        run: |
+          if git diff --name-only | grep -q "linkedin-posts-log.json"; then
+            echo "LOG_UPDATED=true" >> $GITHUB_ENV
+          else
+            echo "LOG_UPDATED=false" >> $GITHUB_ENV
+          fi
+
+      - name: Commit del registro de posts
+        if: env.LOG_UPDATED == 'true'
+        run: |
+          git config user.name  "ClickLaboral Bot"
+          git config user.email "bot@clicklaboral.mx"
+          git add linkedin-posts-log.json
+          git commit -m "linkedin: post publicado [$(date '+%Y-%m-%d')]"
+          git push origin HEAD
+
+      - name: Resumen del workflow
+        if: always()
+        run: |
+          echo "### LinkedIn Daily Publish — ClickLaboral.mx" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "| Campo | Valor |" >> $GITHUB_STEP_SUMMARY
+          echo "|-------|-------|" >> $GITHUB_STEP_SUMMARY
+          echo "| Fecha | $(date '+%Y-%m-%d %H:%M UTC') |" >> $GITHUB_STEP_SUMMARY
+          echo "| DRY RUN | ${{ github.event.inputs.dry_run || 'false' }} |" >> $GITHUB_STEP_SUMMARY
+          echo "| Audiencia forzada | ${{ github.event.inputs.audience || 'automática' }} |" >> $GITHUB_STEP_SUMMARY
+          echo "| Tema forzado | ${{ github.event.inputs.topic || 'automático' }} |" >> $GITHUB_STEP_SUMMARY

@@ -109,7 +109,7 @@
     Referrer-Policy = "strict-origin-when-cross-origin"
     Permissions-Policy = "camera=(), microphone=(), geolocation=(), payment=(self)"
     Strict-Transport-Security = "max-age=63072000; includeSubDomains; preload"
-    Content-Security-Policy = "default-src 'self'; script-src 'self' 'sha256-oHuwlIoLTUqS/4deW2muTMe6w/0YWsBz4Slp9/28o1o=' https://cdn.jsdelivr.net https://cdnjs.cloudflare.com https://js.stripe.com https://connect.facebook.net; style-src 'self' https://fonts.googleapis.com https://cdnjs.cloudflare.com; font-src 'self' https://fonts.gstatic.com; img-src 'self' data: https: blob:; connect-src 'self' https://*.supabase.co https://api.stripe.com https://api.resend.com https://www.facebook.com; frame-src https://js.stripe.com https://hooks.stripe.com https://www.youtube.com https://www.youtube-nocookie.com; object-src 'none'; base-uri 'self'; form-action 'self';"
+    Content-Security-Policy = "default-src 'self'; script-src 'self' 'sha256-oHuwlIoLTUqS/4deW2muTMe6w/0YWsBz4Slp9/28o1o=' https://cdn.jsdelivr.net https://cdnjs.cloudflare.com https://js.stripe.com https://connect.facebook.net; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com https://cdnjs.cloudflare.com; font-src 'self' https://fonts.gstatic.com; img-src 'self' data: https: blob:; connect-src 'self' https://*.supabase.co https://api.stripe.com https://api.resend.com https://www.facebook.com; frame-src https://js.stripe.com https://hooks.stripe.com https://www.youtube.com https://www.youtube-nocookie.com; object-src 'none'; base-uri 'self'; form-action 'self';"
     Cross-Origin-Opener-Policy = "same-origin-allow-popups"
     Cross-Origin-Resource-Policy = "same-site"
 

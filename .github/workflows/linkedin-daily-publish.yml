@@ -1,0 +1,70 @@
+name: LinkedIn — Post diario ClickLaboral.mx
+
+on:
+  schedule:
+    # 9:00am CST (UTC-6) de lunes a viernes
+    - cron: '0 15 * * 1-5'
+  workflow_dispatch:
+    inputs:
+      audience:
+        description: 'Audiencia (reclutadores, contadores, abogados, patrones — vacío = automático)'
+        required: false
+        default: ''
+      topic:
+        description: 'Tema específico (vacío = selección automática por semana del año)'
+        required: false
+        default: ''
+      dry_run:
+        description: 'DRY RUN — genera el texto pero NO envía el email'
+        required: false
+        default: 'false'
+        type: choice
+        options:
+          - 'false'
+          - 'true'
+
+jobs:
+  generar-post:
+    name: Generar post y enviar por email
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+
+    steps:
+      - name: Checkout repositorio
+        uses: actions/checkout@v4
+
+      - name: Configurar Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Generar contenido y enviar email
+        env:
+          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+          RESEND_API_KEY:    ${{ secrets.RESEND_API_KEY }}
+          NOTIFY_EMAIL:      ${{ secrets.NOTIFY_EMAIL || 'serjuemsa@gmail.com' }}
+          DRY_RUN:           ${{ github.event.inputs.dry_run || 'false' }}
+          AUDIENCE:          ${{ github.event.inputs.audience || '' }}
+          TOPIC:             ${{ github.event.inputs.topic || '' }}
+        run: node .github/scripts/generate-linkedin-post.js
+
+      - name: Guardar registro de posts
+        run: |
+          if git diff --name-only | grep -q "linkedin-posts-log.json"; then
+            git config user.name  "ClickLaboral Bot"
+            git config user.email "bot@clicklaboral.mx"
+            git add linkedin-posts-log.json
+            git commit -m "linkedin: post generado [$(date '+%Y-%m-%d')]"
+            git push origin HEAD
+          fi
+
+      - name: Resumen
+        if: always()
+        run: |
+          echo "### LinkedIn Post — ClickLaboral.mx" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "| Campo | Valor |" >> $GITHUB_STEP_SUMMARY
+          echo "|-------|-------|" >> $GITHUB_STEP_SUMMARY
+          echo "| Fecha | $(date '+%Y-%m-%d %H:%M UTC') |" >> $GITHUB_STEP_SUMMARY
+          echo "| DRY RUN | ${{ github.event.inputs.dry_run || 'false' }} |" >> $GITHUB_STEP_SUMMARY
+          echo "| Audiencia forzada | ${{ github.event.inputs.audience || 'automática' }} |" >> $GITHUB_STEP_SUMMARY

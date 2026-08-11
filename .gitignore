@@ -66,3 +66,4 @@ yarn-error.log*
 *.orig
 tests/screenshots/
 test-results/
+strix_runs/

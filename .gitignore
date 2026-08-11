@@ -64,3 +64,6 @@ yarn-error.log*
 *.temp
 *.bak
 *.orig
+tests/screenshots/
+test-results/
+strix_runs/

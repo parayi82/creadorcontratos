@@ -90,472 +90,10 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,500;0,9..144,600;0,9..144,700;1,9..144,500;1,9..144,600&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 <script>document.documentElement.className+=" has-js";</script>
-<style>
-*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-:root {
-  --navy:#0f2640; --navy-deep:#091a2e; --navy2:#1a3a5c; --navy3:#24507a;
-  --teal:#0d9488; --teal-bright:#2dd4bf; --teal-deep:#0b5f57; --teal-soft:#d4f5ee;
-  --sky:#eef5fb; --sky2:#cfe2f5;
-  --white:#fff; --surface:#faf8f4; --surface2:#f2efe8;
-  --ink:#1a1815; --ink2:#4b4741; --ink3:#8a857c;
-  --border:rgba(26,24,21,.09); --border2:rgba(26,24,21,.16);
-  --green:#16a34a; --green-bg:#dcfce7;
-  --amber:#c8830a;
-  --red:#c0392b;
-  --shadow:15,38,64;
-  --r:12px; --r-lg:18px; --r-xl:26px;
-  --font:'Plus Jakarta Sans','Segoe UI',system-ui,-apple-system,sans-serif;
-  --display:'Fraunces','Times New Roman',Georgia,serif;
-  /* Apple easing curves */
-  --ease:        cubic-bezier(0.25, 0.46, 0.45, 0.94);
-  --ease-spring: cubic-bezier(0.34, 1.56, 0.64, 1);
-  --ease-decel:  cubic-bezier(0.0,  0.0,  0.2,  1.0);
-  --ease-accel:  cubic-bezier(0.4,  0.0,  1.0,  1.0);
-  /* Duration tokens */
-  --dur-instant: 0.10s;
-  --dur-quick:   0.18s;
-  --dur-std:     0.28s;
-  --dur-reveal:  0.42s;
-}
-html{scroll-behavior:smooth;-webkit-text-size-adjust:100%;}
-body{font-family:var(--font);color:var(--ink);line-height:1.6;background:var(--surface);-webkit-font-smoothing:antialiased;text-rendering:optimizeLegibility;}
-::selection{background:var(--teal-soft);color:var(--teal-deep);}
-:focus-visible{outline:2px solid var(--teal);outline-offset:2px;border-radius:4px;}
-img{max-width:100%;display:block;}
+<link rel="stylesheet" href="/assets/css/landing.css">
 
-/* GRANO — textura fija sutil para romper la planitud digital */
-.grain{position:fixed;inset:0;z-index:200;pointer-events:none;opacity:.5;mix-blend-mode:multiply;
-  background-image:url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='140' height='140'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='2' stitchTiles='stitch'/><feColorMatrix type='saturate' values='0'/></filter><rect width='100%25' height='100%25' filter='url(%23n)' opacity='0.06'/></svg>");}
 
-/* REVEAL on scroll (solo con JS) */
-.has-js .reveal-init{opacity:0;transform:translateY(14px);transition:opacity var(--dur-reveal) var(--ease-decel),transform var(--dur-reveal) var(--ease-decel);will-change:transform,opacity;}
-.has-js .reveal-init.in{opacity:1;transform:none;}
-.has-js .risk-grid .reveal-init:nth-child(2),.has-js .steps-grid .reveal-init:nth-child(2){transition-delay:60ms;}
-.has-js .risk-grid .reveal-init:nth-child(3),.has-js .steps-grid .reveal-init:nth-child(3){transition-delay:120ms;}
-.has-js .steps-grid .reveal-init:nth-child(4){transition-delay:180ms;}
-.has-js .hero-sub{transition-delay:80ms;}
-.has-js .hero-ctas{transition-delay:160ms;}
-.has-js .hero-trust > *{transition-delay:240ms;}
-@media(prefers-reduced-motion:reduce){.has-js .reveal-init{opacity:1!important;transform:none!important;}html{scroll-behavior:auto;}}
-
-/* NAV */
-nav{position:fixed;top:0;left:0;right:0;z-index:100;background:rgba(11,26,44,.82);backdrop-filter:blur(16px) saturate(140%);-webkit-backdrop-filter:blur(16px) saturate(140%);border-bottom:1px solid rgba(255,255,255,.08);}
-.nav-inner{max-width:1180px;margin:0 auto;padding:0 32px;height:64px;display:flex;align-items:center;justify-content:space-between;}
-.nav-logo{font-size:16px;font-weight:800;color:#fff;letter-spacing:-.02em;display:flex;align-items:center;}
-.nav-logo span{color:var(--teal-bright);font-weight:400;}
-.nav-links{display:flex;align-items:center;gap:4px;}
-.nav-link{color:rgba(255,255,255,.68);font-size:13.5px;font-weight:500;padding:8px 14px;border-radius:8px;cursor:pointer;transition:color var(--dur-quick) var(--ease),background var(--dur-quick) var(--ease);text-decoration:none;}
-.nav-link:hover{color:#fff;background:rgba(255,255,255,.08);}
-.nav-link:active{background:rgba(255,255,255,.13);transition-duration:var(--dur-instant);}
-.nav-cta{background:var(--teal-bright);color:#053730;font-size:13px;font-weight:700;padding:9px 20px;border-radius:999px;cursor:pointer;transition:transform var(--dur-quick) var(--ease-spring),box-shadow var(--dur-quick) var(--ease),background var(--dur-quick) var(--ease);border:none;font-family:var(--font);box-shadow:0 4px 14px -4px rgba(45,212,191,.55);}
-.nav-cta:hover{background:#5eead4;transform:translateY(-1px) scale(1.02);box-shadow:0 8px 22px -6px rgba(45,212,191,.7);}
-.nav-cta:active{transform:scale(.96);transition-duration:var(--dur-instant);}
-
-/* HERO */
-.hero{background:radial-gradient(120% 130% at 82% 8%,#183a5e 0%,var(--navy) 42%,var(--navy-deep) 100%);color:#fff;padding:150px 32px 108px;text-align:left;position:relative;overflow:hidden;}
-.hero::after{content:'';position:absolute;left:0;right:0;bottom:0;height:120px;background:linear-gradient(180deg,transparent,rgba(9,26,46,.6));pointer-events:none;}
-.hero-bg{position:absolute;inset:0;width:100%;height:100%;z-index:0;}
-.hero-content{position:relative;z-index:1;max-width:1180px;margin:0 auto;}
-.hero-content > *{max-width:720px;}
-.hero-eyebrow{display:inline-flex;align-items:center;gap:8px;background:rgba(45,212,191,.1);border:1px solid rgba(45,212,191,.28);border-radius:999px;padding:7px 16px;font-size:11.5px;font-weight:600;letter-spacing:.1em;text-transform:uppercase;color:var(--teal-bright);margin-bottom:26px;}
-.hero h1{font-family:var(--display);font-size:clamp(34px,5vw,62px);font-weight:600;line-height:1.04;letter-spacing:-.026em;margin-bottom:22px;text-wrap:balance;}
-.hero h1 em{font-style:italic;font-weight:500;color:var(--teal-bright);}
-.hero-sub{font-size:clamp(16px,1.4vw,19px);color:rgba(255,255,255,.72);max-width:600px;margin:0 0 38px;line-height:1.6;}
-.hero-ctas{display:flex;align-items:center;justify-content:flex-start;gap:14px;flex-wrap:wrap;margin-bottom:60px;}
-.cta-primary{display:inline-flex;align-items:center;gap:10px;background:#fff;color:var(--navy);font-size:14.5px;font-weight:700;padding:15px 16px 15px 26px;border-radius:999px;cursor:pointer;border:none;font-family:var(--font);transition:transform var(--dur-std) var(--ease-spring),box-shadow var(--dur-std) var(--ease),background var(--dur-quick) var(--ease);text-decoration:none;box-shadow:0 10px 30px -10px rgba(0,0,0,.5);}
-.cta-primary::after{content:'→';display:inline-flex;align-items:center;justify-content:center;width:26px;height:26px;border-radius:50%;background:var(--teal-bright);color:#053730;font-weight:800;font-size:14px;transition:transform var(--dur-std) var(--ease-spring);}
-.cta-primary:hover{transform:translateY(-2px) scale(1.02);background:#fff;box-shadow:0 18px 44px -12px rgba(0,0,0,.55);}
-.cta-primary:hover::after{transform:translateX(4px);}
-.cta-primary:active{transform:scale(.96) translateY(0);transition-duration:var(--dur-instant);}
-.cta-secondary{display:inline-flex;align-items:center;color:rgba(255,255,255,.82);font-size:14.5px;font-weight:600;padding:15px 26px;border-radius:999px;cursor:pointer;border:1px solid rgba(255,255,255,.22);background:rgba(255,255,255,.02);font-family:var(--font);transition:background var(--dur-quick) var(--ease),border-color var(--dur-quick) var(--ease),color var(--dur-quick) var(--ease),transform var(--dur-quick) var(--ease);text-decoration:none;}
-.cta-secondary:hover{background:rgba(255,255,255,.09);color:#fff;border-color:rgba(255,255,255,.35);}
-.cta-secondary:active{transform:scale(.97);transition-duration:var(--dur-instant);}
-
-.hero-trust{display:flex;align-items:center;justify-content:flex-start;gap:14px 28px;flex-wrap:wrap;max-width:none;}
-.trust-item{font-size:12.5px;color:rgba(255,255,255,.5);display:flex;align-items:center;gap:6px;}
-.trust-item strong{color:rgba(255,255,255,.85);font-weight:600;}
-
-/* SECTIONS base */
-.riesgo{background:var(--surface);padding:96px 32px;}
-.section-inner{max-width:1180px;margin:0 auto;}
-.section-label{font-size:11px;font-weight:700;letter-spacing:.18em;text-transform:uppercase;color:var(--teal);margin-bottom:14px;text-align:center;}
-.section-title{font-family:var(--display);font-size:clamp(26px,3.4vw,42px);font-weight:600;letter-spacing:-.022em;text-align:center;margin-bottom:14px;line-height:1.1;text-wrap:balance;}
-.section-title em{font-style:italic;color:var(--teal);}
-.section-sub{text-align:center;color:var(--ink3);font-size:15.5px;max-width:540px;margin:0 auto 56px;line-height:1.65;}
-
-.risk-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:18px;}
-.risk-card{background:var(--white);border:1px solid var(--border);border-radius:var(--r-lg);padding:26px;position:relative;overflow:hidden;transition:transform 0.4s var(--ease-spring),box-shadow 0.4s var(--ease),border-color var(--dur-quick) var(--ease);box-shadow:0 1px 2px rgba(var(--shadow),.04);}
-.risk-card:hover{transform:translateY(-5px) scale(1.008);box-shadow:0 22px 48px -16px rgba(var(--shadow),.22);border-color:rgba(var(--shadow),.12);}
-.risk-card:active{transform:translateY(-2px) scale(1.002);transition-duration:var(--dur-instant);}
-.risk-card::before{content:'';position:absolute;top:0;left:0;right:0;height:3px;}
-.risk-red::before{background:var(--red);}
-.risk-amber::before{background:var(--amber);}
-.risk-navy::before{background:var(--navy2);}
-.risk-icon{font-size:30px;margin-bottom:14px;}
-.risk-title{font-size:15px;font-weight:700;margin-bottom:7px;letter-spacing:-.01em;}
-.risk-desc{font-size:13.5px;color:var(--ink2);line-height:1.65;}
-.risk-sancion{display:inline-block;margin-top:12px;font-size:11px;font-weight:600;padding:4px 11px;border-radius:20px;background:#fbe9e7;color:var(--red);}
-
-/* FEATURE CARDS (rejilla de servicios) */
-.feature-card{position:relative;background:var(--white);border:1px solid var(--border);border-radius:var(--r-lg);padding:28px 26px;transition:transform 0.4s var(--ease-spring),box-shadow 0.4s var(--ease),border-color var(--dur-quick) var(--ease);box-shadow:0 1px 2px rgba(var(--shadow),.04);}
-.feature-card::after{content:'';position:absolute;left:26px;right:26px;top:0;height:2px;border-radius:2px;background:linear-gradient(90deg,var(--teal),var(--teal-bright));transform:scaleX(0);transform-origin:left;transition:transform 0.4s var(--ease-spring);}
-.feature-card:hover{transform:translateY(-5px) scale(1.008);box-shadow:0 24px 52px -18px rgba(var(--shadow),.22);border-color:rgba(13,148,136,.28);}
-.feature-card:hover::after{transform:scaleX(1);}
-.feature-card:active{transform:translateY(-2px) scale(1.002);transition-duration:var(--dur-instant);}
-.feature-card--amber{border-color:#eecb86;background:linear-gradient(180deg,#fffdf7,#fefaf0);}
-.feature-card--amber::after{background:linear-gradient(90deg,#c8830a,#eab308);}
-.feature-card--accent{border-color:rgba(13,148,136,.4);background:linear-gradient(180deg,#f5fdfb,#ecfbf6);}
-.feature-card--navy{border-color:rgba(26,58,92,.35);background:linear-gradient(180deg,#f7fafd,#eef4fb);}
-.feature-card--navy::after{background:linear-gradient(90deg,var(--navy2),var(--navy3));}
-.fc-icon{font-size:30px;margin-bottom:14px;line-height:1;}
-.fc-title{font-family:var(--font);font-size:15.5px;font-weight:700;color:var(--navy);margin-bottom:8px;letter-spacing:-.013em;line-height:1.28;}
-.fc-title--teal{color:var(--teal-deep);}
-.fc-title--navy2{color:var(--navy2);}
-.fc-body{font-family:var(--font);font-size:13.5px;color:var(--ink3);line-height:1.72;}
-
-/* SERVICIO (columna izquierda con lista) */
-.servicio{padding:96px 32px;background:var(--white);}
-.service-grid{display:grid;grid-template-columns:1fr 1.15fr;gap:64px;align-items:center;}
-.service-list{display:flex;flex-direction:column;gap:22px;}
-.service-item{display:flex;gap:16px;align-items:flex-start;}
-.service-num{width:40px;height:40px;border-radius:11px;background:var(--teal-soft);color:var(--teal-deep);font-size:15px;font-weight:800;display:flex;align-items:center;justify-content:center;flex-shrink:0;font-variant-numeric:tabular-nums;}
-.service-title{font-size:14.5px;font-weight:700;margin-bottom:5px;letter-spacing:-.01em;}
-.service-desc{font-size:13.5px;color:var(--ink2);line-height:1.65;}
-.doc-showcase{background:var(--surface);border:1px solid var(--border);border-radius:var(--r-xl);padding:14px;display:grid;grid-template-columns:1fr 1fr;gap:10px;box-shadow:0 24px 60px -30px rgba(var(--shadow),.35);}
-.doc-pill{display:flex;align-items:center;gap:11px;background:var(--white);border:1px solid var(--border);border-radius:12px;padding:12px 15px;transition:transform 0.35s var(--ease-spring),box-shadow 0.35s var(--ease),border-color var(--dur-quick) var(--ease);cursor:default;}
-.doc-pill:hover{transform:translateY(-3px) scale(1.01);border-color:rgba(13,148,136,.35);box-shadow:0 10px 24px -12px rgba(var(--shadow),.25);}
-.doc-pill:active{transform:scale(.98);transition-duration:var(--dur-instant);}
-.doc-pill-icon{font-size:19px;}
-.doc-pill-name{font-size:12.5px;font-weight:600;line-height:1.3;}
-.doc-pill-art{font-size:10.5px;color:var(--ink3);}
-
-/* COMO FUNCIONA */
-.como{background:radial-gradient(110% 120% at 20% 0%,#173a5e 0%,var(--navy) 48%,var(--navy-deep) 100%);color:#fff;padding:100px 32px;position:relative;}
-.como .section-label{color:var(--teal-bright);}
-.como .section-title{color:#fff;}
-.como .section-sub{color:rgba(255,255,255,.6);}
-.steps-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:28px;position:relative;}
-.steps-grid::before{content:'';position:absolute;top:30px;left:12.5%;right:12.5%;height:1px;background:linear-gradient(90deg,transparent,rgba(45,212,191,.4),transparent);}
-.step{text-align:center;}
-.step-num{width:60px;height:60px;border-radius:50%;background:rgba(45,212,191,.1);border:1px solid rgba(45,212,191,.35);display:flex;align-items:center;justify-content:center;font-family:var(--display);font-size:22px;font-weight:600;color:var(--teal-bright);margin:0 auto 18px;position:relative;z-index:1;backdrop-filter:blur(4px);transition:transform 0.4s var(--ease-spring),background 0.3s var(--ease),border-color 0.3s var(--ease),box-shadow 0.3s var(--ease);}
-.step:hover .step-num{transform:scale(1.12);background:rgba(45,212,191,.18);border-color:rgba(45,212,191,.65);box-shadow:0 0 24px -4px rgba(45,212,191,.4);}
-.step-title{font-size:15px;font-weight:700;margin-bottom:7px;letter-spacing:-.01em;}
-.step-desc{font-size:12.5px;color:rgba(255,255,255,.55);line-height:1.65;}
-
-/* PRECIOS */
-.precios{padding:96px 32px;background:var(--surface);}
-.precio-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:22px;max-width:900px;margin:0 auto;}
-.precio-card{background:var(--white);border:1px solid var(--border);border-radius:var(--r-xl);padding:32px 30px;position:relative;transition:transform 0.45s var(--ease-spring),box-shadow 0.45s var(--ease),border-color var(--dur-quick) var(--ease);box-shadow:0 2px 6px rgba(var(--shadow),.05);}
-.precio-card:hover{transform:translateY(-5px) scale(1.01);box-shadow:0 28px 58px -22px rgba(var(--shadow),.24);}
-.precio-card:active{transform:translateY(-2px) scale(1.003);transition-duration:var(--dur-instant);}
-.precio-card.featured{border-color:transparent;box-shadow:0 30px 70px -26px rgba(13,148,136,.4),0 0 0 2px var(--teal);}
-.precio-card.featured::before{content:'';position:absolute;inset:0;border-radius:var(--r-xl);padding:0;background:linear-gradient(180deg,rgba(45,212,191,.06),transparent 40%);pointer-events:none;}
-.precio-badge{position:absolute;top:-13px;left:50%;transform:translateX(-50%);background:linear-gradient(90deg,var(--teal-deep),var(--teal));color:#fff;font-size:10px;font-weight:700;padding:5px 16px;border-radius:999px;white-space:nowrap;letter-spacing:.08em;box-shadow:0 6px 16px -6px rgba(13,148,136,.6);}
-.precio-plan{font-size:13px;font-weight:700;color:var(--teal-deep);margin-bottom:10px;letter-spacing:.02em;text-transform:uppercase;}
-.precio-monto{font-size:40px;font-weight:800;color:var(--navy);line-height:1;margin-bottom:5px;letter-spacing:-.03em;font-variant-numeric:tabular-nums;}
-.precio-monto span{font-size:14px;font-weight:400;color:var(--ink3);letter-spacing:normal;}
-.precio-desc{font-size:12.5px;color:var(--ink3);margin-bottom:22px;padding-bottom:22px;border-bottom:1px solid var(--border);}
-.precio-features{display:flex;flex-direction:column;gap:10px;margin-bottom:26px;}
-.pf{display:flex;align-items:flex-start;gap:9px;font-size:12.5px;color:var(--ink2);line-height:1.5;}
-.pf-check{color:var(--teal);font-size:14px;flex-shrink:0;margin-top:1px;font-weight:700;}
-.pf-x{color:var(--ink3);font-size:14px;flex-shrink:0;margin-top:1px;}
-.precio-cta{display:block;text-align:center;padding:13px;border-radius:999px;font-size:13.5px;font-weight:700;cursor:pointer;transition:transform var(--dur-std) var(--ease-spring),box-shadow var(--dur-std) var(--ease),background var(--dur-quick) var(--ease);text-decoration:none;border:none;width:100%;font-family:var(--font);}
-.precio-cta:active{transform:scale(.96)!important;transition-duration:var(--dur-instant)!important;}
-.precio-cta-main{background:var(--navy);color:#fff;box-shadow:0 10px 26px -10px rgba(var(--shadow),.5);}
-.precio-cta-main:hover{background:var(--navy2);transform:translateY(-2px) scale(1.02);box-shadow:0 16px 34px -12px rgba(var(--shadow),.55);}
-.precio-cta-ghost{background:transparent;color:var(--navy2);border:1.5px solid var(--border2);}
-.precio-cta-ghost:hover{background:var(--navy);color:#fff;border-color:var(--navy);transform:translateY(-2px) scale(1.02);}
-
-/* TICKET MODAL + INFO BUTTON */
-.pf-ticket{background:rgba(13,148,136,.08);border-radius:8px;padding:8px 10px;margin-top:4px;}
-.ticket-info-btn{background:none;border:none;cursor:pointer;color:var(--teal-deep);font-size:11px;font-family:var(--font);font-weight:700;padding:0 3px;vertical-align:baseline;opacity:.85;transition:opacity .2s;white-space:nowrap;}
-.ticket-info-btn:hover{opacity:1;text-decoration:underline;}
-.tm-overlay{position:fixed;inset:0;background:rgba(9,26,46,.65);backdrop-filter:blur(6px);z-index:600;display:none;align-items:center;justify-content:center;padding:20px;}
-.tm-overlay.open{display:flex;}
-.tm-box{background:var(--white);border-radius:var(--r-xl);width:100%;max-width:500px;overflow:hidden;box-shadow:0 40px 100px -30px rgba(0,0,0,.55);}
-.tm-hdr{background:radial-gradient(120% 160% at 100% 0%,#173a5e,var(--navy));color:#fff;padding:22px 26px;}
-.tm-hdr h3{font-size:16px;font-weight:700;margin-bottom:4px;}
-.tm-hdr p{font-size:12px;opacity:.6;}
-.tm-bdy{padding:22px 26px;}
-.tm-meta{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:18px;}
-.tm-meta-item .lbl{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.08em;color:var(--ink3);margin-bottom:3px;}
-.tm-meta-item .val{font-size:13px;font-weight:600;color:var(--ink);}
-.tm-sep{height:1px;background:var(--border);margin:16px 0;}
-.tm-sec-title{font-size:10.5px;font-weight:700;text-transform:uppercase;letter-spacing:.08em;margin-bottom:9px;}
-.tm-sec-title.ok{color:var(--teal-deep);}
-.tm-sec-title.no{color:var(--ink3);}
-.tm-list-items{list-style:none;display:flex;flex-direction:column;gap:6px;margin-bottom:14px;}
-.tm-list-items li{font-size:12.5px;color:var(--ink2);display:flex;gap:8px;line-height:1.5;}
-.tm-list-items li::before{flex-shrink:0;font-weight:700;}
-.tm-list-items.inc li::before{content:'✓';color:var(--teal);}
-.tm-list-items.exc li::before{content:'✕';color:var(--ink3);}
-.tm-list-items.exc li{color:var(--ink3);}
-.tm-example{background:var(--surface);border-radius:10px;padding:13px 15px;font-size:12px;color:var(--ink2);line-height:1.65;}
-.tm-example strong{color:var(--ink);display:block;margin-bottom:3px;font-size:12.5px;}
-.tm-ftr{padding:14px 26px;border-top:1px solid var(--border);display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap;}
-.tm-close-btn{background:none;border:1.5px solid var(--border2);border-radius:999px;padding:8px 20px;cursor:pointer;font-family:var(--font);font-size:12.5px;font-weight:600;color:var(--ink2);transition:background .2s,border-color .2s;}
-.tm-close-btn:hover{background:var(--surface);border-color:var(--ink3);}
-.tm-ftr-note{font-size:11px;color:var(--ink3);line-height:1.5;}
-@media(max-width:520px){.tm-meta{grid-template-columns:1fr;}}
-
-/* CALCULADORA */
-.calculadora{padding:96px 32px;background:var(--white);}
-.calc-inner{max-width:860px;margin:0 auto;background:var(--surface);border-radius:var(--r-xl);padding:44px;border:1px solid var(--border);box-shadow:0 30px 70px -34px rgba(var(--shadow),.3);}
-.calc-grid{display:grid;grid-template-columns:1fr 1fr;gap:36px;align-items:start;}
-.calc-field{margin-bottom:22px;}
-.calc-label{font-size:13px;font-weight:600;margin-bottom:9px;display:block;}
-.calc-input{width:100%;padding:11px 14px;border:1px solid var(--border2);border-radius:10px;font-size:14px;font-family:var(--font);color:var(--ink);background:var(--white);transition:border-color .25s,box-shadow .25s;}
-.calc-input:focus{outline:none;border-color:var(--teal);box-shadow:0 0 0 3px var(--teal-soft);}
-.calc-slider{width:100%;margin-top:6px;accent-color:var(--teal);}
-.calc-result{background:radial-gradient(120% 130% at 100% 0%,#173a5e,var(--navy) 55%,var(--navy-deep));color:#fff;border-radius:var(--r-lg);padding:30px;}
-.calc-result-title{font-size:11px;font-weight:700;letter-spacing:.14em;text-transform:uppercase;color:var(--teal-bright);margin-bottom:22px;}
-.calc-row{display:flex;justify-content:space-between;align-items:center;padding:11px 0;border-bottom:1px solid rgba(255,255,255,.08);font-size:13px;font-variant-numeric:tabular-nums;}
-.calc-row:last-child{border:none;padding-top:16px;font-size:15px;font-weight:700;}
-.calc-row span:last-child{font-weight:700;color:var(--teal-bright);}
-.calc-ahorro{text-align:center;margin-top:18px;padding:16px;background:rgba(45,212,191,.12);border-radius:12px;border:1px solid rgba(45,212,191,.3);}
-.calc-ahorro-num{font-size:28px;font-weight:800;color:var(--teal-bright);font-variant-numeric:tabular-nums;letter-spacing:-.02em;}
-.calc-ahorro-lbl{font-size:12px;opacity:.7;margin-top:4px;}
-
-/* FAQ */
-.faq{padding:96px 32px;background:var(--surface);}
-.faq-grid{display:grid;grid-template-columns:1fr 1fr;gap:16px;max-width:900px;margin:0 auto;}
-.faq-item{background:var(--white);border:1px solid var(--border);border-radius:var(--r);overflow:hidden;transition:border-color var(--dur-quick) var(--ease),box-shadow var(--dur-std) var(--ease);height:fit-content;}
-.faq-item:hover{border-color:rgba(13,148,136,.3);box-shadow:0 8px 24px -14px rgba(var(--shadow),.2);}
-.faq-q{padding:18px 20px;font-size:13.5px;font-weight:600;cursor:pointer;display:flex;justify-content:space-between;align-items:center;gap:12px;user-select:none;transition:color var(--dur-quick) var(--ease);}
-.faq-q:hover{color:var(--teal-deep);}
-.faq-chevron{font-size:12px;color:var(--teal);transition:transform var(--dur-std) var(--ease-spring);flex-shrink:0;}
-.faq-a{max-height:0;overflow:hidden;opacity:0;padding:0 20px;font-size:13px;color:var(--ink2);line-height:1.7;transition:max-height var(--dur-std) var(--ease),opacity var(--dur-std) var(--ease),padding var(--dur-std) var(--ease);}
-.faq-item.open .faq-a{max-height:400px;opacity:1;padding:0 20px 18px;}
-.faq-item.open .faq-chevron{transform:rotate(180deg);}
-
-/* CTA FINAL */
-.cta-final{background:radial-gradient(120% 140% at 50% 0%,#173a5e,var(--navy) 50%,var(--navy-deep));color:#fff;padding:104px 32px;text-align:center;position:relative;overflow:hidden;}
-.cta-final h2{font-family:var(--display);font-size:clamp(28px,4vw,48px);font-weight:600;letter-spacing:-.024em;margin-bottom:16px;line-height:1.08;text-wrap:balance;}
-.cta-final h2 em{font-style:italic;color:var(--teal-bright);}
-.cta-final p{font-size:15.5px;color:rgba(255,255,255,.65);max-width:500px;margin:0 auto 34px;}
-
-/* MODAL */
-.modal-overlay{position:fixed;inset:0;background:rgba(9,26,46,.6);backdrop-filter:blur(6px);z-index:500;display:flex;align-items:center;justify-content:center;padding:20px;}
-.modal{background:var(--white);border-radius:var(--r-xl);width:100%;max-width:480px;overflow:hidden;box-shadow:0 40px 100px -30px rgba(0,0,0,.5);}
-.modal-header{background:radial-gradient(120% 160% at 100% 0%,#173a5e,var(--navy));color:#fff;padding:26px 30px;}
-.modal-header h3{font-family:var(--display);font-size:20px;font-weight:600;margin-bottom:4px;}
-.modal-header p{font-size:13px;opacity:.65;}
-.modal-body{padding:26px 30px;}
-.mf{margin-bottom:15px;}
-.mf label{display:block;font-size:12px;font-weight:600;color:var(--ink2);margin-bottom:6px;}
-.mf input,.mf select,.mf textarea{width:100%;padding:11px 13px;border:1px solid var(--border2);border-radius:10px;font-size:13px;font-family:var(--font);color:var(--ink);transition:border-color .25s,box-shadow .25s;}
-.mf input:focus,.mf select:focus,.mf textarea:focus{outline:none;border-color:var(--teal);box-shadow:0 0 0 3px var(--teal-soft);}
-.mf textarea{min-height:80px;resize:vertical;}
-.mf-row{display:grid;grid-template-columns:1fr 1fr;gap:12px;}
-.modal-footer{padding:18px 30px;border-top:1px solid var(--border);display:flex;gap:10px;justify-content:flex-end;}
-.modal-close-btn{background:none;border:1px solid var(--border2);border-radius:999px;padding:9px 18px;cursor:pointer;font-family:var(--font);font-size:13px;font-weight:600;color:var(--ink2);transition:background .25s;}
-.modal-close-btn:hover{background:var(--surface);}
-.modal-submit{background:var(--navy);color:#fff;border:none;border-radius:999px;padding:11px 26px;cursor:pointer;font-family:var(--font);font-size:13px;font-weight:700;transition:background .25s,transform .25s;}
-.modal-submit:hover{background:var(--navy2);transform:translateY(-1px);}
-
-/* FOOTER */
-footer{background:var(--navy-deep);color:rgba(255,255,255,.5);padding:52px 32px;text-align:center;font-size:12.5px;line-height:1.9;}
-footer a{color:rgba(255,255,255,.7);text-decoration:none;transition:color .2s;}
-footer a:hover{color:var(--teal-bright);}
-
-@media(max-width:768px){
-  .risk-grid,.precio-grid,.steps-grid,.service-grid,.calc-grid,.faq-grid,.cont-abog-grid{grid-template-columns:1fr;}
-  .steps-grid::before{display:none;}
-  .hero{padding:120px 22px 80px;}
-  .hero h1{font-size:33px;}
-  .hero-ctas{flex-direction:column;align-items:stretch;}
-  .cta-primary,.cta-secondary{justify-content:center;}
-  .riesgo,.servicio,.como,.precios,.calculadora,.faq{padding:64px 22px;}
-  .calc-inner{padding:28px;}
-  .doc-showcase{grid-template-columns:1fr 1fr;}
-
-  /* ══ NAV MÓVIL — menú hamburguesa ══ */
-  .nav-inner{padding:0 18px;}
-  .nav-burger{display:flex!important;}
-  .nav-links-desktop{display:none!important;}
-  .nav-links-mobile{
-    display:flex;position:fixed;top:64px;left:0;right:0;bottom:0;
-    flex-direction:column;align-items:stretch;gap:0;
-    background:rgba(9,26,46,.99);
-    padding:12px 18px 24px;overflow-y:auto;
-    transform:translateX(100%);transition:transform .3s var(--ease);
-    z-index:99;
-  }
-  .nav-links-mobile.open{transform:translateX(0);}
-  .nav-link{padding:15px 10px;font-size:15px;border-bottom:1px solid rgba(255,255,255,.06);border-radius:0;}
-  .nav-link:hover{background:transparent;}
-  .nav-cta{margin-top:16px;padding:14px 20px;font-size:14px;text-align:center;}
-}
-@media(min-width:769px){
-  .nav-burger{display:none;}
-  .nav-links-mobile{display:none!important;}
-}
-
-/* ===== Add-ons: prueba gratis, asesoría, oferta micro y regalo ===== */
-.hero-trial-pill{display:inline-flex;flex-wrap:wrap;align-items:center;gap:6px 12px;margin:22px 0 30px;background:rgba(45,212,191,.12);border:1px solid rgba(45,212,191,.35);color:#d7fbf4;border-radius:14px;padding:11px 18px;font-size:12.5px;font-weight:600;}
-.hero-trial-pill strong{color:var(--teal-bright);font-weight:800;}
-.hero-trial-pill .sep{opacity:.4;}
-
-.offer-banner{background:linear-gradient(100deg,var(--teal-deep),var(--teal) 55%,#12b3a0);color:#fff;}
-.offer-inner{max-width:1180px;margin:0 auto;padding:18px 32px;display:flex;align-items:center;justify-content:center;gap:12px 26px;flex-wrap:wrap;text-align:center;}
-.offer-inner .oi-tag{background:rgba(255,255,255,.18);border:1px solid rgba(255,255,255,.42);border-radius:999px;padding:4px 13px;font-size:11px;font-weight:800;letter-spacing:.07em;text-transform:uppercase;}
-.offer-inner .oi-txt{font-size:15px;font-weight:600;line-height:1.4;}
-.offer-inner .oi-txt strong{font-weight:800;}
-.offer-btn{background:#fff;color:var(--teal-deep);font-weight:800;font-size:13.5px;padding:11px 22px;border-radius:999px;border:none;cursor:pointer;font-family:var(--font);white-space:nowrap;transition:transform var(--dur-std) var(--ease-spring),box-shadow var(--dur-std) var(--ease);box-shadow:0 8px 22px -8px rgba(0,0,0,.4);text-decoration:none;display:inline-flex;align-items:center;gap:8px;}
-.offer-btn:hover{transform:translateY(-2px) scale(1.03);box-shadow:0 14px 32px -10px rgba(0,0,0,.5);}
-.offer-btn:active{transform:scale(.96);transition-duration:var(--dur-instant);}
-
-.precios-bene{display:flex;flex-wrap:wrap;justify-content:center;gap:10px 20px;margin:-6px auto 30px;max-width:780px;}
-.precios-bene span{background:var(--teal-soft);color:var(--teal-deep);border-radius:999px;padding:7px 16px;font-size:12.5px;font-weight:700;}
-.precio-trial{text-align:center;font-size:11.5px;color:var(--teal-deep);font-weight:700;margin-top:10px;}
-
-.regalo{background:var(--navy);position:relative;overflow:hidden;padding:80px 32px;}
-.regalo-inner{max-width:920px;margin:0 auto;background:linear-gradient(135deg,#12324f,#0d2740);border:1px solid rgba(45,212,191,.25);border-radius:var(--r-xl);padding:44px 40px;display:grid;grid-template-columns:1.25fr 1fr;gap:36px;align-items:center;box-shadow:0 40px 90px -40px rgba(0,0,0,.6);}
-.regalo-eyebrow{display:inline-flex;align-items:center;gap:8px;background:rgba(45,212,191,.14);border:1px solid rgba(45,212,191,.32);color:var(--teal-bright);border-radius:999px;padding:6px 14px;font-size:11px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;margin-bottom:16px;}
-.regalo h2{font-family:var(--display);color:#fff;font-size:29px;line-height:1.15;font-weight:600;letter-spacing:-.01em;}
-.regalo h2 em{color:var(--teal-bright);font-style:italic;}
-.regalo>.regalo-inner p{color:rgba(255,255,255,.72);font-size:14px;line-height:1.65;margin-top:14px;}
-.regalo-list{margin-top:18px;display:flex;flex-direction:column;gap:9px;}
-.regalo-list div{color:rgba(255,255,255,.85);font-size:13px;display:flex;gap:9px;align-items:flex-start;}
-.regalo-list .rk{color:var(--teal-bright);font-weight:800;flex-shrink:0;}
-.regalo-card{background:#fff;border-radius:var(--r-lg);padding:26px;text-align:center;box-shadow:0 20px 50px -20px rgba(0,0,0,.5);}
-.regalo-card .gift{font-size:44px;line-height:1;}
-.regalo-card h3{font-family:var(--display);color:var(--navy);font-size:19px;margin:10px 0 4px;font-weight:600;}
-.regalo-card>p{color:var(--ink3);font-size:12px;margin:0 0 18px;}
-.regalo-cta{background:linear-gradient(90deg,var(--teal-deep),var(--teal));color:#fff;font-weight:800;font-size:14px;padding:14px 20px;border-radius:999px;border:none;cursor:pointer;font-family:var(--font);width:100%;transition:transform var(--dur-std) var(--ease-spring),box-shadow var(--dur-std) var(--ease);box-shadow:0 10px 26px -10px rgba(13,148,136,.7);}
-.regalo-cta:hover{transform:translateY(-2px) scale(1.02);box-shadow:0 14px 32px -10px rgba(13,148,136,.75);}
-.regalo-cta:active{transform:scale(.96);transition-duration:var(--dur-instant);}
-.regalo-note{font-size:11px;color:var(--ink3);margin-top:12px;}
-@media(max-width:760px){.regalo-inner{grid-template-columns:1fr;padding:30px 24px;gap:24px;}.regalo h2{font-size:24px;}.offer-inner{padding:16px 20px;}}
-
-.precios-grid4{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:16px;max-width:1120px;margin:0 auto;}
-.precios-grid4 .precio-card{padding:30px 22px;}
-.precio-anual-nota{font-size:11px;font-weight:700;color:#15803d;background:#f0fdf4;border:1px solid #bbf7d0;border-radius:8px;padding:6px 10px;text-align:center;margin-bottom:10px;}
-.precio-extras{display:grid;grid-template-columns:1fr 1fr;gap:16px;max-width:1120px;margin:26px auto 0;}
-.precio-extra{background:var(--white);border:1px solid var(--border);border-radius:var(--r-lg);padding:20px 24px;}
-.precio-extra h4{font-size:14px;color:var(--navy);font-weight:800;margin-bottom:8px;}
-.precio-extra p{font-size:12.5px;color:var(--ink2);line-height:1.6;}
-.precio-extra .hl{color:var(--teal-deep);font-weight:800;}
-@media(max-width:980px){.precios-grid4{grid-template-columns:repeat(2,1fr);max-width:640px;}}
-@media(max-width:760px){.precio-extras{grid-template-columns:1fr;}}
-@media(max-width:560px){.precios-grid4{grid-template-columns:1fr;max-width:380px;}}
-
-/* ===== Hero 2027: urgencia + fondo tecnológico animado ===== */
-.hero-eyebrow--urgent{background:rgba(216,162,56,.15);border-color:rgba(216,162,56,.5);color:#fbdca0;}
-.pulse-dot{display:inline-block;width:8px;height:8px;border-radius:50%;background:#f4c66a;animation:dotPulse 1.8s ease-out infinite;}
-@keyframes dotPulse{0%{box-shadow:0 0 0 0 rgba(244,198,106,.6);}70%{box-shadow:0 0 0 9px rgba(244,198,106,0);}100%{box-shadow:0 0 0 0 rgba(244,198,106,0);}}
-
-.hero-req{display:flex;flex-wrap:wrap;gap:10px;margin:0 0 34px;max-width:660px;}
-.req-chip{display:inline-flex;align-items:center;gap:8px;background:rgba(45,212,191,.1);border:1px solid rgba(45,212,191,.32);color:#d7fbf4;border-radius:12px;padding:9px 14px;font-size:13px;font-weight:600;animation:chipGlow 4.5s ease-in-out infinite;}
-.req-chip:nth-child(2){animation-delay:1.5s;}
-.req-chip:nth-child(3){animation-delay:3s;}
-.req-chip .rc-ic{font-size:15px;}
-.req-chip .rc-ck{color:#34d399;font-weight:800;}
-@keyframes chipGlow{0%,100%{border-color:rgba(45,212,191,.3);box-shadow:0 0 0 0 rgba(45,212,191,0);}50%{border-color:rgba(45,212,191,.78);box-shadow:0 0 18px -2px rgba(45,212,191,.5);}}
-
-@keyframes heroNodePulse{0%,100%{opacity:.4;}50%{opacity:1;}}
-@keyframes heroFloat{0%,100%{transform:translateY(0);}50%{transform:translateY(-10px);}}
-@keyframes heroDashFlow{to{stroke-dashoffset:-160;}}
-@keyframes heroScanMove{0%{transform:translateX(0);opacity:0;}15%{opacity:.55;}85%{opacity:.55;}100%{transform:translateX(520px);opacity:0;}}
-.hero-bg g{animation:heroFloat 10s ease-in-out infinite;transform-box:fill-box;transform-origin:center;}
-.hero-bg g circle{animation:heroNodePulse 3.6s ease-in-out infinite;}
-.hero-bg g circle:nth-child(2n){animation-duration:4.8s;animation-delay:.7s;}
-.hero-bg g circle:nth-child(3n){animation-duration:5.6s;animation-delay:1.3s;}
-.hero-bg g line{stroke-dasharray:5 7;animation:heroDashFlow 2.8s linear infinite;}
-.hero-scan{animation:heroScanMove 6s ease-in-out infinite;}
-@media (prefers-reduced-motion: reduce){.hero-bg *,.req-chip,.pulse-dot,.hero-scan{animation:none!important;}}
-
-/* ── TESTIMONIALES (#06) ── */
-.testimonials{padding:80px 32px;background:var(--surface);}
-.testimonials-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:18px;max-width:1100px;margin:36px auto 0;}
-.tc{background:var(--white);border:1px solid var(--border);border-radius:var(--r);padding:24px 22px;display:flex;flex-direction:column;gap:14px;transition:transform 0.38s var(--ease-spring),box-shadow var(--dur-std) var(--ease),border-color var(--dur-quick) var(--ease);}
-.tc:hover{transform:translateY(-4px) scale(1.007);border-color:rgba(13,148,136,.28);box-shadow:0 12px 30px -12px rgba(9,26,46,.2);}
-.tc:active{transform:scale(.98);transition-duration:var(--dur-instant);}
-.tc-stars{color:#f59e0b;font-size:13px;letter-spacing:1px;}
-.tc-quote{font-size:13.5px;color:var(--ink2);line-height:1.72;flex:1;}
-.tc-sep{height:1px;background:var(--border);}
-.tc-author{font-size:13px;font-weight:700;color:var(--ink);}
-.tc-meta{font-size:11.5px;color:var(--ink3);margin-top:2px;}
-.tc-plan-tag{display:inline-block;background:rgba(13,148,136,.1);color:var(--teal-deep);border-radius:20px;padding:2px 9px;font-size:10.5px;font-weight:700;margin-top:4px;}
-
-/* ── TRUST BADGES (#10) ── */
-.trust-badges{display:flex;flex-wrap:wrap;justify-content:center;gap:10px 20px;margin:20px 0 8px;}
-.trust-badge{display:inline-flex;align-items:center;gap:6px;font-size:12px;font-weight:600;color:var(--ink3);background:var(--white);border:1px solid var(--border);border-radius:20px;padding:5px 12px;}
-.trust-badge span{font-size:13px;}
-
-/* ── STICKY MOBILE CTA (#11) ── */
-.sticky-cta-bar{display:none;position:fixed;bottom:0;left:0;right:0;z-index:400;background:var(--navy-deep);padding:12px 16px;border-top:1px solid rgba(255,255,255,.12);gap:8px;align-items:center;justify-content:space-between;}
-.sticky-cta-bar p{color:rgba(255,255,255,.75);font-size:11.5px;line-height:1.3;margin:0;flex:1;}
-.sticky-cta-bar a{flex-shrink:0;background:var(--teal);color:var(--navy-deep);font-size:12px;font-weight:800;border-radius:999px;padding:9px 16px;text-decoration:none;white-space:nowrap;}
-
-/* ── URGENCY CALLOUT (#12) ── */
-.urgency-callout{background:linear-gradient(100deg,rgba(220,38,38,.08),rgba(220,38,38,.03));border:1px solid rgba(220,38,38,.25);border-radius:var(--r);padding:14px 18px;display:flex;align-items:flex-start;gap:12px;margin:0 0 28px;max-width:900px;margin-left:auto;margin-right:auto;}
-.urgency-callout .uc-icon{font-size:20px;flex-shrink:0;margin-top:1px;}
-.urgency-callout .uc-body{font-size:13px;color:var(--ink2);line-height:1.6;}
-.urgency-callout .uc-body strong{color:var(--red,#dc2626);}
-
-@media(max-width:768px){
-  .testimonials-grid{grid-template-columns:1fr;}
-  .testimonials{padding:60px 20px;}
-  .sticky-cta-bar{display:flex;}
-  .urgency-callout{margin:0 0 20px;}
-}
-@media(min-width:481px){.sticky-cta-bar{display:none!important;}}
-
-/* ── PARA QUIÉN SIRVE ── */
-.quien-sec{background:var(--white);padding:52px 32px;border-bottom:1px solid var(--border);}
-.quien-grid{display:grid;grid-template-columns:repeat(6,1fr);gap:12px;max-width:1080px;margin:28px auto 0;}
-.quien-card{background:var(--surface);border:1px solid var(--border);border-radius:14px;padding:18px 14px;text-align:center;transition:transform 0.36s var(--ease-spring),box-shadow 0.36s var(--ease),border-color var(--dur-quick) var(--ease);}
-.quien-card:hover{transform:translateY(-4px) scale(1.01);box-shadow:0 14px 32px -14px rgba(var(--shadow),.22);border-color:rgba(13,148,136,.3);}
-.quien-card:active{transform:scale(.97);transition-duration:var(--dur-instant);}
-.quien-icon{font-size:26px;margin-bottom:8px;line-height:1;}
-.quien-title{font-size:13px;font-weight:700;color:var(--navy);margin-bottom:4px;line-height:1.25;}
-.quien-desc{font-size:11.5px;color:var(--ink3);line-height:1.5;}
-@media(max-width:900px){.quien-grid{grid-template-columns:repeat(3,1fr);}}
-@media(max-width:560px){.quien-grid{grid-template-columns:repeat(2,1fr);}}
-
-/* ── WhatsApp CTAs ── */
-.cta-wa{background:#25D366!important;color:#fff!important;box-shadow:0 10px 30px -10px rgba(37,211,102,.6)!important;}
-.cta-wa::after{background:#128C7E!important;color:#fff!important;}
-.cta-wa:hover{background:#22c55e!important;box-shadow:0 16px 40px -12px rgba(37,211,102,.75)!important;}
-.precio-cta-wa{background:#25D366;color:#fff;box-shadow:0 8px 20px -8px rgba(37,211,102,.5);}
-.precio-cta-wa:hover{background:#22c55e;transform:translateY(-2px) scale(1.02);box-shadow:0 14px 30px -8px rgba(37,211,102,.65);}
-.precio-cta-wa:active{transform:scale(.96);transition-duration:var(--dur-instant);}
-.precio-cta-link{display:block;text-align:center;margin-top:9px;font-size:11.5px;color:var(--ink3);text-decoration:none;font-weight:500;transition:color .2s;}
-.precio-cta-link:hover{color:var(--navy2);}
-
-/* ── Floating WhatsApp FAB ── */
-.wa-fab{position:fixed;bottom:28px;right:24px;z-index:350;width:62px;height:62px;background:#25D366;border-radius:50%;display:flex;align-items:center;justify-content:center;box-shadow:0 8px 28px -4px rgba(37,211,102,.6);text-decoration:none;transition:transform 0.4s var(--ease-spring),box-shadow 0.3s var(--ease);animation:waPulse 4.5s cubic-bezier(0.25,0.46,0.45,0.94) infinite;}
-.wa-fab:hover{transform:scale(1.1) translateY(-3px);box-shadow:0 16px 38px -6px rgba(37,211,102,.78);animation:none;}
-.wa-fab:active{transform:scale(.93);transition-duration:var(--dur-instant);}
-.wa-fab-tip{position:absolute;right:74px;background:var(--navy-deep);color:#fff;font-size:12px;font-weight:600;padding:6px 12px;border-radius:8px;white-space:nowrap;opacity:0;transform:translateX(8px);transition:opacity .2s,transform .2s;pointer-events:none;}
-.wa-fab-tip::after{content:'';position:absolute;right:-6px;top:50%;transform:translateY(-50%);border:6px solid transparent;border-left-color:var(--navy-deep);border-right:none;}
-.wa-fab:hover .wa-fab-tip{opacity:1;transform:translateX(0);}
-.wa-fab svg{width:32px;height:32px;fill:#fff;}
-@keyframes waPulse{0%,100%{box-shadow:0 8px 28px -4px rgba(37,211,102,.55);}50%{box-shadow:0 8px 34px 2px rgba(37,211,102,.7),0 0 0 10px rgba(37,211,102,.08);}}
-@media(max-width:480px){.wa-fab{bottom:80px;right:16px;width:56px;height:56px;}.wa-fab svg{width:28px;height:28px;}.wa-fab-tip{display:none;}}
-@media(prefers-reduced-motion:reduce){.wa-fab{animation:none;}}
-
-</style>
-
-<!-- Meta Pixel Code -->
-<script>
-!function(f,b,e,v,n,t,s)
-{if(f.fbq)return;n=f.fbq=function(){n.callMethod?
-n.callMethod.apply(n,arguments):n.queue.push(arguments)};
-if(!f._fbq)f._fbq=n;n.push=n;n.loaded=!0;n.version='2.0';
-n.queue=[];t=b.createElement(e);t.async=!0;
-t.src=v;s=b.getElementsByTagName(e)[0];
-s.parentNode.insertBefore(t,s)}(window, document,'script',
-'https://connect.facebook.net/en_US/fbevents.js');
-fbq('init', '772478098942349');
-fbq('track', 'PageView');
-</script>
-<noscript><img height="1" width="1" style="display:none"
-src="https://www.facebook.com/tr?id=772478098942349&ev=PageView&noscript=1"
-/></noscript>
-<!-- End Meta Pixel Code -->
-
+<script defer src="/assets/js/landing.js"></script>
 </head>
 <body>
 <div class="grain" aria-hidden="true"></div>
@@ -576,7 +114,7 @@ src="https://www.facebook.com/tr?id=772478098942349&ev=PageView&noscript=1"
         <path d="M29 61 L45 77 L78 40" fill="none" stroke="#e8f2fc" stroke-width="9" stroke-linecap="round" stroke-linejoin="round"/>
       </svg>Click<span>Laboral.mx</span>
     </div>
-    <button class="nav-burger" id="nav-burger" onclick="toggleNavMobile()" aria-label="Abrir menú" style="display:none;background:none;border:none;cursor:pointer;width:36px;height:36px;align-items:center;justify-content:center;flex-direction:column;gap:5px;">
+    <button class="nav-burger" id="nav-burger" aria-label="Abrir menú" style="display:none;background:none;border:none;cursor:pointer;width:36px;height:36px;align-items:center;justify-content:center;flex-direction:column;gap:5px;">
       <span style="width:22px;height:2px;background:#fff;border-radius:2px;transition:all .2s;" id="burger-line-1"></span>
       <span style="width:22px;height:2px;background:#fff;border-radius:2px;transition:all .2s;" id="burger-line-2"></span>
       <span style="width:22px;height:2px;background:#fff;border-radius:2px;transition:all .2s;" id="burger-line-3"></span>
@@ -589,7 +127,7 @@ src="https://www.facebook.com/tr?id=772478098942349&ev=PageView&noscript=1"
       <a class="nav-link" href="#faq">FAQ</a>
       <a class="nav-link" href="/blog/">Blog</a>
       <a class="nav-link" href="portal-cliente.html" style="opacity:.85;">🔐 Acceso clientes</a>
-      <a class="nav-cta" href="https://wa.me/5213339263817?text=Hola%2C%20me%20interesa%20ClickLaboral.mx" target="_blank" rel="noopener">💬 WhatsApp gratis</a>
+      <a class="nav-cta" href="https://wa.me/5213339263817?text=Hola%2C%20quiero%20el%20diagn%C3%B3stico%20gratuito%20de%20ClickLaboral.mx" target="_blank" rel="noopener">💬 Diagnóstico gratis</a>
     </div>
   </div>
 </nav>
@@ -605,7 +143,7 @@ src="https://www.facebook.com/tr?id=772478098942349&ev=PageView&noscript=1"
   <a class="nav-link" href="#faq">FAQ</a>
   <a class="nav-link" href="/blog/">Blog</a>
   <a class="nav-link" href="portal-cliente.html" style="opacity:.85;">🔐 Acceso clientes</a>
-  <button class="nav-cta" onclick="abrirContacto('Consulta desde nav')">Consulta gratuita</button>
+  <button class="nav-cta">Diagnóstico gratis</button>
 </div>
 
 <!-- HERO -->
@@ -668,7 +206,7 @@ src="https://www.facebook.com/tr?id=772478098942349&ev=PageView&noscript=1"
       <div class="req-chip"><span class="rc-ic">🖐️</span> Registro de horas digital <span class="rc-ck">✓</span></div>
     </div>
     <div class="hero-ctas">
-      <a class="cta-primary cta-wa" href="https://wa.me/5213339263817?text=Hola%2C%20vi%20ClickLaboral.mx%20y%20quiero%20m%C3%A1s%20informaci%C3%B3n" target="_blank" rel="noopener">💬 Hablar por WhatsApp ahora</a>
+      <a class="cta-primary cta-wa" href="https://wa.me/5213339263817?text=Hola%2C%20quiero%20el%20diagn%C3%B3stico%20gratuito%20de%20ClickLaboral.mx" target="_blank" rel="noopener">💬 Diagnóstico gratuito →</a>
       <a class="cta-secondary" href="#precios">Ver planes desde $899/mes</a>
     </div>
     <div class="hero-trial-pill">⚖️ <strong>Asesoría de abogados</strong> siempre incluida <span class="sep">•</span> sin contratos de permanencia</div>
@@ -928,7 +466,7 @@ src="https://www.facebook.com/tr?id=772478098942349&ev=PageView&noscript=1"
           <div class="pf"><span class="pf-check">✓</span> Registro de jornada — reforma 40h</div>
           <div class="pf"><span class="pf-check">✓</span> Actas administrativas (Art. 47 LFT)</div>
           <div class="pf"><span class="pf-check">✓</span> Asistente legal IA 24/7</div>
-          <div class="pf pf-ticket"><span class="pf-check">⚖️</span> <strong>1 ticket</strong> de asesoría legal / mes <button class="ticket-info-btn" onclick="abrirTicketModal(event)" aria-label="¿Qué es un ticket?">ⓘ ¿qué incluye?</button></div>
+          <div class="pf pf-ticket"><span class="pf-check">⚖️</span> <strong>1 ticket</strong> de asesoría legal / mes <button class="ticket-info-btn" aria-label="¿Qué es un ticket?">ⓘ ¿qué incluye?</button></div>
         </div>
         <a class="precio-cta precio-cta-main" href="checkout.html?plan=micro">Contratar ahora →</a>
       </div>
@@ -944,7 +482,7 @@ src="https://www.facebook.com/tr?id=772478098942349&ev=PageView&noscript=1"
           <div class="pf"><span class="pf-check">✓</span> Reportes gerenciales en PDF</div>
           <div class="pf"><span class="pf-check">✓</span> Contratos por sector económico</div>
           <div class="pf"><span class="pf-check">✓</span> Soporte prioritario por WhatsApp</div>
-          <div class="pf pf-ticket"><span class="pf-check">⚖️</span> <strong>3 tickets</strong> de asesoría legal / mes <button class="ticket-info-btn" onclick="abrirTicketModal(event)" aria-label="¿Qué es un ticket?">ⓘ ¿qué incluye?</button></div>
+          <div class="pf pf-ticket"><span class="pf-check">⚖️</span> <strong>3 tickets</strong> de asesoría legal / mes <button class="ticket-info-btn" aria-label="¿Qué es un ticket?">ⓘ ¿qué incluye?</button></div>
         </div>
         <a class="precio-cta precio-cta-main" href="checkout.html?plan=pyme">Contratar ahora →</a>
       </div>
@@ -958,7 +496,7 @@ src="https://www.facebook.com/tr?id=772478098942349&ev=PageView&noscript=1"
           <div class="pf"><span class="pf-check">✓</span> Todo lo del plan PyME</div>
           <div class="pf"><span class="pf-check">✓</span> Gestión multi-sucursal centralizada</div>
           <div class="pf"><span class="pf-check">✓</span> Auditoría semestral de compliance</div>
-          <div class="pf pf-ticket"><span class="pf-check">⚖️</span> <strong>5 tickets</strong> de asesoría legal / mes <button class="ticket-info-btn" onclick="abrirTicketModal(event)" aria-label="¿Qué es un ticket?">ⓘ ¿qué incluye?</button></div>
+          <div class="pf pf-ticket"><span class="pf-check">⚖️</span> <strong>5 tickets</strong> de asesoría legal / mes <button class="ticket-info-btn" aria-label="¿Qué es un ticket?">ⓘ ¿qué incluye?</button></div>
         </div>
         <a class="precio-cta precio-cta-main" href="checkout.html?plan=mediana">Contratar ahora →</a>
       </div>
@@ -972,7 +510,7 @@ src="https://www.facebook.com/tr?id=772478098942349&ev=PageView&noscript=1"
           <div class="pf"><span class="pf-check">✓</span> Todo lo del plan Mediana</div>
           <div class="pf"><span class="pf-check">✓</span> Abogado laboralista asignado</div>
           <div class="pf"><span class="pf-check">✓</span> Respuesta garantizada en 24 horas</div>
-          <div class="pf pf-ticket"><span class="pf-check">⚖️</span> <strong>8 tickets</strong> de asesoría legal / mes <button class="ticket-info-btn" onclick="abrirTicketModal(event)" aria-label="¿Qué es un ticket?">ⓘ ¿qué incluye?</button></div>
+          <div class="pf pf-ticket"><span class="pf-check">⚖️</span> <strong>8 tickets</strong> de asesoría legal / mes <button class="ticket-info-btn" aria-label="¿Qué es un ticket?">ⓘ ¿qué incluye?</button></div>
         </div>
         <a class="precio-cta precio-cta-main" href="checkout.html?plan=empresa">Contratar ahora →</a>
       </div>
@@ -994,7 +532,7 @@ src="https://www.facebook.com/tr?id=772478098942349&ev=PageView&noscript=1"
       </div>
     </div>
 
-    <p style="text-align:center;font-size:12px;color:var(--ink3);margin-top:24px;">¿Más de 500 trabajadores o múltiples centros de trabajo? <a href="#" onclick="abrirContacto('Empresa grande')" style="color:var(--navy2);font-weight:600;">Contáctenos para un plan a medida →</a></p>
+    <p style="text-align:center;font-size:12px;color:var(--ink3);margin-top:24px;">¿Más de 500 trabajadores o múltiples centros de trabajo? <a href="#" data-wa-origen="Empresa grande" style="color:var(--navy2);font-weight:600;">Contáctenos para un plan a medida →</a></p>
   </div>
 </section>
 
@@ -1009,17 +547,17 @@ src="https://www.facebook.com/tr?id=772478098942349&ev=PageView&noscript=1"
         <div>
           <div class="calc-field">
             <label class="calc-label">Número de trabajadores</label>
-            <input type="range" class="calc-slider" id="c-trab" min="5" max="200" value="30" oninput="calcROI()">
+            <input type="range" class="calc-slider" id="c-trab" min="5" max="200" value="30">
             <div style="font-size:20px;font-weight:700;color:var(--navy2);margin-top:4px;" id="c-trab-val">30 trabajadores</div>
           </div>
           <div class="calc-field">
             <label class="calc-label">Salario promedio mensual</label>
-            <input type="range" class="calc-slider" id="c-sal" min="5000" max="50000" value="12000" step="500" oninput="calcROI()">
+            <input type="range" class="calc-slider" id="c-sal" min="5000" max="50000" value="12000" step="500">
             <div style="font-size:20px;font-weight:700;color:var(--navy2);margin-top:4px;" id="c-sal-val">$12,000 MXN</div>
           </div>
           <div class="calc-field">
             <label class="calc-label">Rotación anual estimada (%)</label>
-            <input type="range" class="calc-slider" id="c-rot" min="5" max="50" value="20" oninput="calcROI()">
+            <input type="range" class="calc-slider" id="c-rot" min="5" max="50" value="20">
             <div style="font-size:20px;font-weight:700;color:var(--navy2);margin-top:4px;" id="c-rot-val">20% anual</div>
           </div>
         </div>
@@ -1037,7 +575,7 @@ src="https://www.facebook.com/tr?id=772478098942349&ev=PageView&noscript=1"
         </div>
       </div>
       <div style="text-align:center;margin-top:28px;">
-        <button class="cta-primary" style="color:var(--navy);" onclick="abrirContacto('Calculadora ROI')">Solicitar diagnóstico gratuito para mi empresa →</button>
+        <button class="cta-primary" style="color:var(--navy);" data-wa-calc="1">Solicitar diagnóstico gratuito para mi empresa →</button>
       </div>
     </div>
   </div>
@@ -1115,39 +653,39 @@ src="https://www.facebook.com/tr?id=772478098942349&ev=PageView&noscript=1"
     <h2 class="section-title" style="margin-bottom:40px;">Lo que más nos preguntan los patrones</h2>
     <div class="faq-grid">
       <div class="faq-item">
-        <div class="faq-q" onclick="toggleFaq(this)">¿Necesito un abogado laboral de planta? <span class="faq-chevron">▼</span></div>
+        <div class="faq-q">¿Necesito un abogado laboral de planta? <span class="faq-chevron">▼</span></div>
         <div class="faq-a">No. Nuestro servicio de suscripción reemplaza las funciones preventivas de un abogado de planta a una fracción del costo. Un abogado laboral de planta en México cuesta entre $8,000 y $25,000 MXN mensuales. Nuestros planes van de $899 a $9,999 MXN/mes, IVA incluido, según el tamaño de su empresa. Todos dan acceso total al software; cambian los tickets de asesoría legal incluidos cada mes.</div>
       </div>
       <div class="faq-item">
-        <div class="faq-q" onclick="toggleFaq(this)">¿Qué pasa si tengo una demanda laboral? <span class="faq-chevron">▼</span></div>
+        <div class="faq-q">¿Qué pasa si tengo una demanda laboral? <span class="faq-chevron">▼</span></div>
         <div class="faq-a">El servicio de suscripción es preventivo. Si enfrenta una demanda laboral, la asesoría reactiva está incluida en su plan, sin importar cuál de los dos haya elegido. Con documentación en orden desde el inicio, las demandas sin fundamento se resuelven más rápido y con menor costo.</div>
       </div>
       <div class="faq-item">
-        <div class="faq-q" onclick="toggleFaq(this)">¿Los documentos tienen validez legal? <span class="faq-chevron">▼</span></div>
+        <div class="faq-q">¿Los documentos tienen validez legal? <span class="faq-chevron">▼</span></div>
         <div class="faq-a">Sí. Todos los documentos son redactados por abogado laboralista colegiado, conforme a la LFT vigente. Los contratos, actas y reglamento interior generados en nuestra plataforma son instrumentos jurídicamente válidos ante los Tribunales Laborales y la STPS.</div>
       </div>
       <div class="faq-item">
-        <div class="faq-q" onclick="toggleFaq(this)">¿Con qué rapidez recibo los documentos? <span class="faq-chevron">▼</span></div>
+        <div class="faq-q">¿Con qué rapidez recibo los documentos? <span class="faq-chevron">▼</span></div>
         <div class="faq-a">Los documentos se generan en tiempo real en su portal. Usted completa el formulario con los datos del trabajador y en segundos obtiene el documento listo para imprimir y firmar. Para documentos complejos como el Reglamento Interior personalizamos en 24 horas.</div>
       </div>
       <div class="faq-item">
-        <div class="faq-q" onclick="toggleFaq(this)">¿Puedo cancelar el servicio cuando quiera? <span class="faq-chevron">▼</span></div>
+        <div class="faq-q">¿Puedo cancelar el servicio cuando quiera? <span class="faq-chevron">▼</span></div>
         <div class="faq-a">Sí. No exigimos contratos de permanencia mínima. Puede cancelar con 30 días de anticipación. Los documentos ya generados son de su propiedad y permanecen válidos independientemente de si continúa con el servicio.</div>
       </div>
       <div class="faq-item">
-        <div class="faq-q" onclick="toggleFaq(this)">¿Qué pasa cuando cambia la ley laboral? <span class="faq-chevron">▼</span></div>
+        <div class="faq-q">¿Qué pasa cuando cambia la ley laboral? <span class="faq-chevron">▼</span></div>
         <div class="faq-a">Nuestros documentos se actualizan automáticamente ante reformas a la LFT, nuevas NOMs o cambios en tablas del IMSS. Le enviamos alerta inmediata ante cualquier cambio legislativo que afecte a su empresa, incluido en su suscripción.</div>
       </div>
       <div class="faq-item">
-        <div class="faq-q" onclick="toggleFaq(this)">¿Mis datos y los de mis trabajadores están protegidos? <span class="faq-chevron">▼</span></div>
+        <div class="faq-q">¿Mis datos y los de mis trabajadores están protegidos? <span class="faq-chevron">▼</span></div>
         <div class="faq-a">Sí. Toda la información se almacena cifrada en servidores con SSL 256-bit. Los pagos se procesan exclusivamente a través de Stripe, nunca almacenamos datos de tarjeta. El acceso al portal requiere autenticación y cada empresa tiene su entorno aislado; ningún otro cliente puede ver su información.</div>
       </div>
       <div class="faq-item">
-        <div class="faq-q" onclick="toggleFaq(this)">¿Puedo cambiar de plan si mi empresa crece? <span class="faq-chevron">▼</span></div>
+        <div class="faq-q">¿Puedo cambiar de plan si mi empresa crece? <span class="faq-chevron">▼</span></div>
         <div class="faq-a">Sí, puede cambiar de plan en cualquier momento desde el portal del cliente. El cambio aplica en el siguiente ciclo de facturación y se prorratean los días restantes. No hay costo por cambiar de plan ni penalización por hacerlo.</div>
       </div>
       <div class="faq-item">
-        <div class="faq-q" onclick="toggleFaq(this)">¿La reforma de jornada 40 horas ya exige algo a mi empresa? <span class="faq-chevron">▼</span></div>
+        <div class="faq-q">¿La reforma de jornada 40 horas ya exige algo a mi empresa? <span class="faq-chevron">▼</span></div>
         <div class="faq-a">La reforma publicada en el DOF reduce la jornada máxima a 40 horas semanales y obliga a las empresas a llevar un registro electrónico de jornada por trabajador a partir de 2027. Nuestro módulo de registro de jornada ya está disponible en todos los planes para que empiece a documentar desde hoy y llegue cumplido a la fecha límite.</div>
       </div>
     </div>
@@ -1160,7 +698,7 @@ src="https://www.facebook.com/tr?id=772478098942349&ev=PageView&noscript=1"
     <h2>¿Su empresa está expuesta <em>hoy mismo</em>?</h2>
     <p>Solicite un diagnóstico gratuito de compliance laboral. En 24 horas sabrá exactamente qué riesgos enfrenta y cómo resolverlos.</p>
     <div style="display:flex;justify-content:center;gap:12px;flex-wrap:wrap;">
-      <a class="cta-primary cta-wa" href="https://wa.me/5213339263817?text=Hola%2C%20quiero%20el%20diagn%C3%B3stico%20gratuito%20de%20ClickLaboral.mx" target="_blank" rel="noopener">💬 Hablar por WhatsApp →</a>
+      <a class="cta-primary cta-wa" href="https://wa.me/5213339263817?text=Hola%2C%20quiero%20el%20diagn%C3%B3stico%20gratuito%20de%20ClickLaboral.mx" target="_blank" rel="noopener">💬 Diagnóstico gratuito →</a>
       <a class="cta-secondary" href="diagnostico-cumplimiento.html">Diagnóstico gratuito</a>
     </div>
     <div style="margin-top:32px;display:flex;justify-content:center;gap:32px;flex-wrap:wrap;">
@@ -1227,7 +765,7 @@ src="https://www.facebook.com/tr?id=772478098942349&ev=PageView&noscript=1"
 </footer>
 
 <!-- MODAL CONTACTO -->
-<div class="modal-overlay" id="modal-contacto" style="display:none;" onclick="if(event.target===this)cerrarContacto()">
+<div class="modal-overlay" id="modal-contacto" style="display:none;">
   <div class="modal">
     <div class="modal-header">
       <h3>Solicitar diagnóstico gratuito</h3>
@@ -1265,140 +803,21 @@ src="https://www.facebook.com/tr?id=772478098942349&ev=PageView&noscript=1"
       </div>
     </div>
     <div class="modal-footer">
-      <button class="modal-close-btn" onclick="cerrarContacto()">Cancelar</button>
-      <button class="modal-submit" onclick="enviarContacto()">Solicitar diagnóstico gratuito →</button>
+      <button class="modal-close-btn">Cancelar</button>
+      <button class="modal-submit">Solicitar diagnóstico gratuito →</button>
     </div>
   </div>
 </div>
 
-<script>
-function abrirContacto(origen){
-  const textos = {
-    'CTA final':       'Hola, quiero el diagnóstico gratuito de ClickLaboral.mx',
-    'Calculadora ROI': 'Hola, vi la calculadora de ClickLaboral.mx y me interesa saber mi ahorro potencial',
-    'Empresa grande':  'Hola, tenemos más de 500 trabajadores y necesitamos un plan a medida de ClickLaboral.mx',
-  };
-  const msg = textos[origen] || 'Hola, me interesa ClickLaboral.mx';
-  if(typeof fbq==='function') fbq('track','Contact',{content_name:origen||'WhatsApp'});
-  window.open('https://wa.me/'+WHATSAPP_NUMERO+'?text='+encodeURIComponent(msg),'_blank');
-}
-function cerrarContacto(){
-  document.getElementById('modal-contacto').style.display='none';
-}
-
-// ════════════════════════════════════════════
-// MENÚ MÓVIL — hamburguesa para pantallas ≤768px
-// ════════════════════════════════════════════
-function toggleNavMobile(){
-  const links = document.getElementById('nav-links');
-  const abierto = links.classList.toggle('open');
-  document.getElementById('burger-line-1').style.transform = abierto ? 'translateY(7px) rotate(45deg)' : 'none';
-  document.getElementById('burger-line-2').style.opacity = abierto ? '0' : '1';
-  document.getElementById('burger-line-3').style.transform = abierto ? 'translateY(-7px) rotate(-45deg)' : 'none';
-  document.body.style.overflow = abierto ? 'hidden' : '';
-}
-function cerrarNavMobile(){
-  const links = document.getElementById('nav-links');
-  if (!links.classList.contains('open')) return;
-  links.classList.remove('open');
-  document.getElementById('burger-line-1').style.transform = 'none';
-  document.getElementById('burger-line-2').style.opacity = '1';
-  document.getElementById('burger-line-3').style.transform = 'none';
-  document.body.style.overflow = '';
-}
-// Cierra el menú automáticamente al navegar a un enlace o anclaje
-document.querySelectorAll('.nav-links a, .nav-links button').forEach(el=>{
-  el.addEventListener('click', cerrarNavMobile);
-});
-
-// ⚠️ Número real de WhatsApp del despacho — mismo número usado en faq-app.js y portal-cliente.html
-const WHATSAPP_NUMERO = '5213339263817';
-
-function enviarContacto(){
-  const nombre=document.getElementById('f-nombre').value.trim();
-  const empresa=document.getElementById('f-empresa').value.trim();
-  const email=document.getElementById('f-email').value.trim();
-  const tel=document.getElementById('f-tel').value.trim();
-  const trab=document.getElementById('f-trab').value;
-  const plan=document.getElementById('f-plan').value;
-  const mensaje=document.getElementById('f-mensaje').value.trim();
-  if(!nombre||!empresa||!email){alert('Por favor complete nombre, empresa y email');return;}
-
-  // Meta Pixel — registrar como Lead calificado
-  if (typeof fbq === 'function') {
-    fbq('track', 'Lead', { content_name: plan || 'Contacto general', value: 0, currency: 'MXN' });
-  }
-
-  const texto = `Hola, soy ${nombre} de ${empresa}.\nEmail: ${email}${tel?'\nTeléfono: '+tel:''}\nTrabajadores: ${trab||'no especificado'}\nPlan de interés: ${plan}${mensaje?'\n\nMensaje: '+mensaje:''}`;
-  window.open(`https://wa.me/${WHATSAPP_NUMERO}?text=${encodeURIComponent(texto)}`, '_blank');
-
-  document.querySelector('.modal-submit').textContent='✓ Abriendo WhatsApp...';
-  document.querySelector('.modal-submit').style.background='var(--green)';
-  setTimeout(()=>{
-    cerrarContacto();
-    document.querySelector('.modal-submit').textContent='Solicitar diagnóstico gratuito →';
-    document.querySelector('.modal-submit').style.background='';
-  },1500);
-}
-
-function toggleFaq(el){
-  const item=el.closest('.faq-item');
-  item.classList.toggle('open');
-}
-
-function planPorTrabajadores(trab){
-  if (trab <= 15) return {nombre:'Plan Micro', precio:899};
-  if (trab <= 50) return {nombre:'Plan PyME', precio:1999};
-  if (trab <= 150) return {nombre:'Plan Mediana', precio:4499};
-  return {nombre:'Plan Empresa', precio:9999};
-}
-
-function calcROI(){
-  const trab=parseInt(document.getElementById('c-trab').value);
-  const sal=parseInt(document.getElementById('c-sal').value);
-  const rot=parseInt(document.getElementById('c-rot').value);
-  document.getElementById('c-trab-val').textContent=trab+' trabajadores';
-  document.getElementById('c-sal-val').textContent='$'+sal.toLocaleString('es-MX')+' MXN';
-  document.getElementById('c-rot-val').textContent=rot+'% anual';
-  const rotan=Math.round(trab*rot/100);
-  const riesgo=rotan*sal*3;
-  const planta=sal>=25000?20000*12:12000*12;
-  const planInfo=planPorTrabajadores(trab);
-  const plan=planInfo.precio*12;
-  const ahorro=Math.max(0,Math.min(riesgo,planta)-plan);
-  const factor=(plan>0?(riesgo/plan):0).toFixed(1);
-  document.getElementById('r-rotan').textContent=rotan;
-  document.getElementById('r-riesgo').textContent='$'+riesgo.toLocaleString('es-MX');
-  document.getElementById('r-planta').textContent='$'+planta.toLocaleString('es-MX');
-  document.getElementById('r-plan-label').textContent='Costo '+planInfo.nombre+' (anual)';
-  document.getElementById('r-plan').textContent='$'+plan.toLocaleString('es-MX');
-  document.getElementById('r-ahorro').textContent='$'+Math.max(0,Math.min(riesgo,planta)-plan).toLocaleString('es-MX');
-  document.getElementById('r-factor').textContent=factor+'×';
-}
-calcROI();
-</script>
-<script>
-/* Entrada al hacer scroll — IntersectionObserver (sin librerías) */
-(function(){
-  var sel = '.section-label,.section-title,.section-sub,.feature-card,.risk-card,.step,.precio-card,.faq-item,.doc-showcase,.service-item,.hero-eyebrow,.hero h1,.hero-sub,.hero-ctas,.hero-trust > *,.cta-final h2,.cta-final p,.calc-inner';
-  var els = Array.prototype.slice.call(document.querySelectorAll(sel));
-  els.forEach(function(e){ e.classList.add('reveal-init'); });
-  if(!('IntersectionObserver' in window)){ els.forEach(function(e){ e.classList.add('in'); }); return; }
-  var io = new IntersectionObserver(function(entries){
-    entries.forEach(function(en){ if(en.isIntersecting){ en.target.classList.add('in'); io.unobserve(en.target); } });
-  }, { threshold:0.12, rootMargin:'0px 0px -7% 0px' });
-  els.forEach(function(e){ io.observe(e); });
-})();
-</script>
 
 <!-- STICKY MOBILE CTA (#11) -->
 <div class="sticky-cta-bar" id="stickyCta">
   <p>Compliance laboral desde $899/mes<br><strong style="color:#fff;">Sin permanencia · Sin formularios</strong></p>
-  <a href="https://wa.me/5213339263817?text=Hola%2C%20me%20interesa%20ClickLaboral.mx" target="_blank" rel="noopener" style="background:#25D366;color:#fff;">💬 WhatsApp</a>
+  <a href="https://wa.me/5213339263817?text=Hola%2C%20quiero%20el%20diagn%C3%B3stico%20gratuito%20de%20ClickLaboral.mx" target="_blank" rel="noopener" style="background:#25D366;color:#fff;">💬 Diagnóstico gratis</a>
 </div>
 
 <!-- TICKET MODAL -->
-<div class="tm-overlay" id="ticketModal" role="dialog" aria-modal="true" aria-labelledby="tmTitle" onclick="if(event.target===this)cerrarTicketModal()">
+<div class="tm-overlay" id="ticketModal" role="dialog" aria-modal="true" aria-labelledby="tmTitle">
   <div class="tm-box">
     <div class="tm-hdr">
       <h3 id="tmTitle">¿Qué incluye un ticket de asesoría legal?</h3>
@@ -1432,29 +851,16 @@ calcROI();
       </div>
     </div>
     <div class="tm-ftr">
-      <button class="tm-close-btn" onclick="cerrarTicketModal()">Entendido</button>
+      <button class="tm-close-btn">Entendido</button>
       <div class="tm-ftr-note">Para trabajo personalizado (contratos colectivos, audiencias) hay tarifas a la medida.</div>
     </div>
   </div>
 </div>
-<script>
-function abrirTicketModal(e){if(e)e.stopPropagation();document.getElementById('ticketModal').classList.add('open');document.body.style.overflow='hidden';}
-function cerrarTicketModal(){document.getElementById('ticketModal').classList.remove('open');document.body.style.overflow='';}
-document.addEventListener('keydown',function(e){if(e.key==='Escape')cerrarTicketModal();});
-</script>
 <!-- WhatsApp FAB -->
-<a class="wa-fab" href="https://wa.me/5213339263817?text=Hola%2C%20me%20interesa%20ClickLaboral.mx" target="_blank" rel="noopener" aria-label="Chatear por WhatsApp">
-  <span class="wa-fab-tip">Hablar por WhatsApp</span>
+<a class="wa-fab" href="https://wa.me/5213339263817?text=Hola%2C%20quiero%20el%20diagn%C3%B3stico%20gratuito%20de%20ClickLaboral.mx" target="_blank" rel="noopener" aria-label="Diagnóstico gratuito por WhatsApp">
+  <span class="wa-fab-tip">Diagnóstico gratuito</span>
   <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/></svg>
 </a>
 
-<script>
-/* Tracking de clics en cualquier enlace a WhatsApp */
-document.querySelectorAll('a[href*="wa.me"]').forEach(function(el){
-  el.addEventListener('click',function(){
-    if(typeof fbq==='function') fbq('track','Contact',{content_name:'WhatsApp click'});
-  });
-});
-</script>
 </body>
 </html>

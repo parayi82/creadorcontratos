@@ -5,9 +5,17 @@
     <link>https://clicklaboral.mx/blog/</link>
     <description>Artículos, noticias y tips de compliance laboral para PyMEs mexicanas</description>
     <language>es-MX</language>
-    <lastBuildDate>Wed, 12 Aug 2026 10:14:34 GMT</lastBuildDate>
+    <lastBuildDate>Wed, 12 Aug 2026 14:51:27 GMT</lastBuildDate>
     <managingEditor>blog@clicklaboral.mx (ClickLaboral.mx)</managingEditor>
     <atom:link href="https://clicklaboral.mx/blog/rss.xml" rel="self" type="application/rss+xml"/>
+    <item>
+      <title>Alerta: IMSS puede rechazar CFDI de nómina con errores en RFC — cómo prevenirlo</title>
+      <link>https://clicklaboral.mx/blog/noticia-alerta-imss-puede-rechazar-cfdi-de-nomina-con-erro-2026-08-12.html</link>
+      <guid isPermaLink="true">https://clicklaboral.mx/blog/noticia-alerta-imss-puede-rechazar-cfdi-de-nomina-con-erro-2026-08-12.html</guid>
+      <pubDate>Wed, 12 Aug 2026 12:00:00 GMT</pubDate>
+      <category>Alerta Legal</category>
+      <description>Un RFC con un solo carácter incorrecto en el CFDI de nómina puede provocar que el IMSS rechace el comprobante como prueba de pago de cuotas obrero-patronales, dejando al patrón sin soporte documental…</description>
+    </item>
     <item>
       <title>Fondo de ahorro para trabajadores: cómo implementarlo y qué dice la LFT</title>
       <link>https://clicklaboral.mx/blog/fondo-de-ahorro-para-trabajadores-como-implementarlo-y-que-dice-la-lft-2026-08-12.html</link>

@@ -306,12 +306,16 @@ exports.handler = async function(event) {
 
       for (const [rfc, items] of Object.entries(porRFC)) {
         try {
-          const res = await fetch(`${SUPA_URL}/auth/v1/admin/users?filter=${encodeURIComponent(rfc)}`, {
-            headers: { apikey: SUPA_KEY, Authorization: 'Bearer ' + SUPA_KEY },
-          });
-          const json = await res.json();
-          const usuario = (json.users || []).find(u => u.user_metadata?.rfc === rfc);
-          const email = usuario?.user_metadata?.email_contacto || usuario?.email;
+          const { data: billing } = await sb
+            .from('clientes_billing')
+            .select('auth_user_id')
+            .eq('rfc', rfc.toUpperCase())
+            .maybeSingle();
+          if (!billing?.auth_user_id) continue;
+          const { data: { user: usuario } } = await sb.auth.admin.getUserById(billing.auth_user_id);
+          if (!usuario) continue;
+          const email = usuario?.user_metadata?.email_contacto ||
+            (usuario?.email?.endsWith('@clicklaboral.mx') ? null : usuario?.email);
           if (!email) continue;
 
           const ICONOS = {

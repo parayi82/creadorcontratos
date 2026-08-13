@@ -357,7 +357,7 @@ exports.handler = async function(event) {
             </div>`
           ).join('');
 
-          await fetch('https://api.resend.com/emails', {
+          const resendRes = await fetch('https://api.resend.com/emails', {
             method: 'POST',
             headers: { Authorization: `Bearer ${RESEND_KEY}`, 'Content-Type': 'application/json' },
             body: JSON.stringify({
@@ -382,7 +382,12 @@ exports.handler = async function(event) {
               </div>`,
             }),
           });
-          emailsEnviados++;
+          const resendData = await resendRes.json();
+          if (!resendRes.ok) {
+            console.error('Resend error:', JSON.stringify({ status: resendRes.status, body: resendData, rfc, email }));
+          } else {
+            emailsEnviados++;
+          }
         } catch(e) { console.error('Email error:', e.message); }
       }
     }

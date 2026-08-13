@@ -314,8 +314,8 @@ exports.handler = async function(event) {
           if (!billing?.auth_user_id) continue;
           const { data: { user: usuario } } = await sb.auth.admin.getUserById(billing.auth_user_id);
           if (!usuario) continue;
-          const email = usuario?.user_metadata?.email_contacto ||
-            (usuario?.email?.endsWith('@clicklaboral.mx') ? null : usuario?.email);
+          const rawEmail = usuario?.user_metadata?.email_contacto || usuario?.email || '';
+          const email = rawEmail.endsWith('@clicklaboral.mx') ? null : rawEmail;
           if (!email) continue;
 
           const ICONOS = {
@@ -357,7 +357,7 @@ exports.handler = async function(event) {
             </div>`
           ).join('');
 
-          await fetch('https://api.resend.com/emails', {
+          const resendRes = await fetch('https://api.resend.com/emails', {
             method: 'POST',
             headers: { Authorization: `Bearer ${RESEND_KEY}`, 'Content-Type': 'application/json' },
             body: JSON.stringify({
@@ -382,7 +382,12 @@ exports.handler = async function(event) {
               </div>`,
             }),
           });
-          emailsEnviados++;
+          const resendData = await resendRes.json();
+          if (!resendRes.ok) {
+            console.error('Resend error:', JSON.stringify({ status: resendRes.status, body: resendData, rfc, email }));
+          } else {
+            emailsEnviados++;
+          }
         } catch(e) { console.error('Email error:', e.message); }
       }
     }

@@ -1,0 +1,638 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Análisis de Jornada IA · ClickLaboral.mx</title>
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
+:root{
+  --navy:#0f2640;--navy2:#1a3a5c;--navy3:#24507a;
+  --sky:#e8f2fc;--sky2:#c5dcf5;
+  --white:#fff;--surface:#f5f4f0;--surface2:#eeede8;
+  --ink:#111110;--ink2:#444440;--ink3:#888880;
+  --border:rgba(0,0,0,.08);--border2:rgba(0,0,0,.14);
+  --green:#16a34a;--green-bg:#dcfce7;
+  --amber:#d97706;--amber-bg:#fef3c7;
+  --red:#dc2626;--red-bg:#fee2e2;
+  --purple:#7c3aed;--purple-bg:#ede9fe;
+  --teal:#0d9488;--teal-bg:#ccfbf1;
+  --r:14px;--r-sm:9px;
+  --font:'Segoe UI',system-ui,-apple-system,sans-serif;
+  --mono:'SF Mono','Fira Code','Courier New',monospace;
+}
+html{scroll-behavior:smooth;}
+body{font-family:var(--font);background:var(--surface);color:var(--ink);line-height:1.6;}
+
+nav{position:sticky;top:0;z-index:100;background:rgba(15,38,64,.97);backdrop-filter:blur(10px);}
+.nav-inner{max-width:960px;margin:0 auto;padding:0 28px;height:58px;display:flex;align-items:center;justify-content:space-between;}
+.nav-logo{font-size:15px;font-weight:800;color:#fff;display:flex;align-items:center;gap:10px;}
+.nav-badge{background:var(--teal);font-size:10px;font-weight:700;padding:2px 8px;border-radius:20px;letter-spacing:.04em;}
+.nav-links{display:flex;gap:4px;}
+.nav-link{color:rgba(255,255,255,.6);text-decoration:none;font-size:13px;padding:6px 12px;border-radius:6px;transition:all .15s;}
+.nav-link:hover{color:#fff;background:rgba(255,255,255,.1);}
+.nav-cta{background:var(--teal);color:#fff;padding:7px 16px;border-radius:6px;font-size:12px;font-weight:600;text-decoration:none;transition:background .15s;}
+.nav-cta:hover{background:#0f766e;}
+
+.wrap{max-width:860px;margin:0 auto;padding:40px 24px 80px;}
+
+.hero{text-align:center;margin-bottom:36px;}
+.eyebrow{font-size:11px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--teal);margin-bottom:10px;}
+.hero h1{font-size:clamp(24px,4vw,34px);font-weight:800;color:var(--navy);letter-spacing:-.02em;margin-bottom:12px;}
+.hero p{font-size:14px;color:var(--ink3);max-width:600px;margin:0 auto;}
+
+/* Tabs de entrada */
+.tabs-row{display:flex;gap:2px;background:var(--white);border:1px solid var(--border);border-radius:var(--r-sm);padding:3px;margin-bottom:24px;}
+.tab-btn{flex:1;padding:9px 16px;border-radius:7px;font-size:13px;font-weight:500;cursor:pointer;color:var(--ink3);border:none;background:transparent;font-family:var(--font);transition:all .15s;text-align:center;}
+.tab-btn.active{background:var(--navy2);color:#fff;}
+
+/* Formulario entrada rápida */
+.form-card{background:var(--white);border-radius:var(--r);padding:26px 28px;margin-bottom:18px;box-shadow:0 1px 4px rgba(0,0,0,.05);}
+.card-title{font-size:13px;font-weight:700;color:var(--navy2);margin-bottom:4px;}
+.card-sub{font-size:12px;color:var(--ink3);margin-bottom:20px;}
+
+.field-row{display:grid;grid-template-columns:1fr 1fr;gap:14px;}
+@media(max-width:600px){.field-row{grid-template-columns:1fr;}}
+.field{margin-bottom:16px;}
+.field label{display:block;font-size:12px;font-weight:600;color:var(--ink2);margin-bottom:6px;}
+.field input,.field select,.field textarea{width:100%;padding:9px 12px;border:1px solid var(--border2);border-radius:var(--r-sm);font-size:13px;font-family:var(--font);color:var(--ink);background:var(--white);transition:border-color .15s;}
+.field input:focus,.field select:focus,.field textarea:focus{outline:none;border-color:var(--teal);box-shadow:0 0 0 3px var(--teal-bg);}
+.field textarea{resize:vertical;min-height:100px;line-height:1.6;font-family:var(--mono);font-size:12px;}
+
+.field-hint{font-size:11px;color:var(--ink3);margin-top:4px;}
+
+/* Tabla de entrada */
+.worker-table-wrap{overflow-x:auto;border-radius:var(--r-sm);border:1px solid var(--border);}
+.worker-table{width:100%;border-collapse:collapse;font-size:12px;}
+.worker-table th{background:var(--navy2);color:#fff;padding:10px 12px;text-align:left;font-weight:600;white-space:nowrap;}
+.worker-table td{padding:8px 10px;border-bottom:1px solid var(--border);vertical-align:middle;}
+.worker-table tr:last-child td{border-bottom:none;}
+.worker-table tr:nth-child(even){background:var(--surface);}
+.worker-table input{border:1px solid var(--border2);border-radius:4px;padding:5px 8px;font-size:12px;font-family:var(--font);width:100%;color:var(--ink);}
+.worker-table input:focus{outline:none;border-color:var(--teal);}
+.btn-add-row{margin-top:10px;font-size:12px;color:var(--teal);border:1px dashed var(--teal);background:transparent;padding:7px 14px;border-radius:var(--r-sm);cursor:pointer;font-family:var(--font);transition:all .15s;}
+.btn-add-row:hover{background:var(--teal-bg);}
+.btn-del-row{background:none;border:none;color:var(--ink3);cursor:pointer;font-size:14px;padding:2px 6px;border-radius:3px;}
+.btn-del-row:hover{color:var(--red);background:var(--red-bg);}
+
+.btn{display:inline-flex;align-items:center;gap:7px;padding:10px 20px;border-radius:var(--r-sm);font-size:13px;font-weight:600;cursor:pointer;border:none;font-family:var(--font);transition:all .15s;}
+.btn-analyze{background:var(--teal);color:#fff;padding:13px 28px;font-size:14px;width:100%;justify-content:center;}
+.btn-analyze:hover{background:#0f766e;}
+.btn-analyze:disabled{background:var(--ink3);cursor:not-allowed;}
+
+.error-msg{background:var(--red-bg);border-radius:var(--r-sm);padding:14px 16px;font-size:13px;color:var(--red);display:none;margin-top:10px;}
+
+/* Loading */
+.loading-state{display:none;text-align:center;padding:60px 20px;}
+.loading-spinner{width:48px;height:48px;border:4px solid var(--teal-bg);border-top-color:var(--teal);border-radius:50%;animation:spin 1s linear infinite;margin:0 auto 16px;}
+@keyframes spin{to{transform:rotate(360deg)}}
+.loading-state strong{color:var(--navy2);display:block;font-size:15px;margin-bottom:8px;}
+.loading-state p{font-size:13px;color:var(--ink3);}
+
+/* Resultado */
+#resultado{display:none;}
+.btn-reset{background:transparent;border:1px solid var(--border2);color:var(--ink3);font-size:12px;padding:8px 16px;border-radius:var(--r-sm);cursor:pointer;font-family:var(--font);margin-bottom:24px;}
+.btn-reset:hover{border-color:var(--teal);color:var(--teal);}
+
+.resumen-banner{border-radius:var(--r);padding:24px 28px;margin-bottom:22px;}
+.resumen-banner.bajo{background:var(--green-bg);}
+.resumen-banner.medio{background:var(--amber-bg);}
+.resumen-banner.alto{background:var(--red-bg);}
+.resumen-banner.critico{background:var(--red-bg);}
+.banner-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;}
+.banner-nivel{display:inline-flex;align-items:center;gap:8px;padding:5px 14px;border-radius:20px;font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:.04em;}
+.banner-nivel.bajo{background:rgba(22,163,74,.15);color:var(--green);}
+.banner-nivel.medio{background:rgba(217,119,6,.15);color:var(--amber);}
+.banner-nivel.alto{background:rgba(220,38,38,.15);color:var(--red);}
+.banner-nivel.critico{background:rgba(220,38,38,.25);color:var(--red);}
+.banner-dot{width:10px;height:10px;border-radius:50%;background:currentColor;}
+.banner-resumen{font-size:14px;color:var(--ink2);line-height:1.6;}
+
+/* Métricas rápidas */
+.metricas-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:12px;margin-bottom:22px;}
+.metrica-card{background:var(--white);border-radius:var(--r-sm);padding:16px 18px;text-align:center;box-shadow:0 1px 3px rgba(0,0,0,.06);}
+.metrica-icon{font-size:22px;margin-bottom:4px;}
+.metrica-valor{font-size:20px;font-weight:800;color:var(--navy2);}
+.metrica-label{font-size:11px;color:var(--ink3);margin-top:2px;}
+.metrica-card.warning .metrica-valor{color:var(--amber);}
+.metrica-card.danger .metrica-valor{color:var(--red);}
+.metrica-card.ok .metrica-valor{color:var(--green);}
+
+/* Anomalías */
+.section-title{font-size:13px;font-weight:700;color:var(--navy2);margin:24px 0 14px;letter-spacing:.02em;text-transform:uppercase;}
+.anomalias-list{display:flex;flex-direction:column;gap:10px;margin-bottom:22px;}
+.anomalia-item{background:var(--white);border-radius:var(--r-sm);padding:16px 18px;box-shadow:0 1px 3px rgba(0,0,0,.06);border-left:4px solid var(--border2);display:grid;grid-template-columns:auto 1fr;gap:14px;align-items:start;}
+.anomalia-item.alto{border-left-color:var(--red);}
+.anomalia-item.medio{border-left-color:var(--amber);}
+.anomalia-item.bajo{border-left-color:var(--green);}
+.anomalia-riesgo-badge{padding:3px 9px;border-radius:10px;font-size:10px;font-weight:700;white-space:nowrap;align-self:start;}
+.riesgo-alto{background:var(--red-bg);color:var(--red);}
+.riesgo-medio{background:var(--amber-bg);color:var(--amber);}
+.riesgo-bajo{background:var(--green-bg);color:var(--green);}
+.anomalia-tipo{font-size:11px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--ink3);margin-bottom:3px;}
+.anomalia-desc{font-size:13px;color:var(--ink);font-weight:600;margin-bottom:3px;}
+.anomalia-freq{font-size:11px;color:var(--ink3);margin-bottom:5px;}
+.anomalia-art{display:inline-block;font-size:10px;font-weight:600;background:var(--sky);color:var(--navy2);padding:2px 7px;border-radius:4px;margin-bottom:5px;}
+.anomalia-accion{font-size:12px;color:var(--ink2);border-top:1px solid var(--border);padding-top:8px;margin-top:5px;}
+
+/* Alertas inmediatas */
+.alertas-wrap{background:var(--red-bg);border-radius:var(--r-sm);padding:16px 18px;margin-bottom:22px;}
+.alertas-titulo{font-size:12px;font-weight:700;color:var(--red);margin-bottom:10px;letter-spacing:.04em;text-transform:uppercase;}
+.alerta-item{display:flex;gap:8px;font-size:13px;color:var(--red);margin-bottom:6px;align-items:flex-start;}
+.alerta-item::before{content:'⚡';flex-shrink:0;}
+.alerta-item:last-child{margin-bottom:0;}
+
+/* Reforma 40h */
+.reforma-card{background:var(--navy);color:#fff;border-radius:var(--r);padding:20px 24px;margin-bottom:22px;display:flex;gap:16px;align-items:center;}
+.reforma-icon{font-size:28px;flex-shrink:0;}
+.reforma-titulo{font-size:13px;font-weight:700;margin-bottom:3px;}
+.reforma-desc{font-size:12px;color:rgba(255,255,255,.65);}
+.reforma-estado{display:inline-block;font-size:11px;font-weight:700;padding:3px 10px;border-radius:10px;margin-top:6px;}
+.estado-cumple{background:rgba(22,163,74,.3);color:#86efac;}
+.estado-pendiente{background:rgba(217,119,6,.3);color:#fcd34d;}
+.estado-incumplimiento{background:rgba(220,38,38,.3);color:#fca5a5;}
+
+/* Eco */
+.eco-banner{background:var(--amber-bg);border-radius:var(--r-sm);padding:16px 20px;display:flex;align-items:center;justify-content:space-between;gap:16px;margin-bottom:24px;}
+.eco-texto{font-size:13px;color:var(--ink2);}
+.eco-monto{font-size:22px;font-weight:800;color:var(--amber);}
+
+/* CTA */
+.cta-footer{background:var(--navy);color:#fff;border-radius:var(--r);padding:28px;text-align:center;}
+.cta-footer h3{font-size:18px;font-weight:800;margin-bottom:8px;}
+.cta-footer p{font-size:13px;color:rgba(255,255,255,.7);margin-bottom:20px;}
+.cta-footer a{display:inline-block;background:#fff;color:var(--navy);padding:11px 24px;border-radius:var(--r-sm);font-size:13px;font-weight:700;text-decoration:none;transition:background .15s;}
+.cta-footer a:hover{background:var(--sky);}
+</style>
+</head>
+<body>
+
+<nav>
+  <div class="nav-inner">
+    <div class="nav-logo">
+      ClickLaboral.mx
+      <span class="nav-badge">IA Jornada</span>
+    </div>
+    <div class="nav-links">
+      <a href="index.html" class="nav-link">Inicio</a>
+      <a href="motor-riesgo-ia.html" class="nav-link">Riesgo IA</a>
+      <a href="portal-cliente.html" class="nav-link">Portal</a>
+    </div>
+    <a href="index.html#planes" class="nav-cta">Ver planes</a>
+  </div>
+</nav>
+
+<div class="wrap">
+
+  <div class="hero">
+    <div class="eyebrow">Análisis de Patrones</div>
+    <h1>Detección de Anomalías en Jornada</h1>
+    <p>Ingresa los datos de asistencia de tu empresa y la IA detecta automáticamente horas extras ilegales, ausentismo sistémico y riesgos bajo los Arts. 59–68 LFT.</p>
+  </div>
+
+  <!-- Modo de entrada -->
+  <div class="tabs-row">
+    <button class="tab-btn active" onclick="setTab('rapido')">Entrada rápida</button>
+    <button class="tab-btn" onclick="setTab('tabla')">Tabla por trabajador</button>
+    <button class="tab-btn" onclick="setTab('texto')">Pegar datos en texto</button>
+  </div>
+
+  <!-- TAB: Entrada rápida -->
+  <div id="tab-rapido">
+    <div class="form-card">
+      <div class="card-title">Resumen de jornada del período</div>
+      <div class="card-sub">Datos promedio del período analizado (semana, quincena o mes).</div>
+
+      <div class="field-row">
+        <div class="field">
+          <label>Período analizado</label>
+          <select id="r_periodo">
+            <option value="semana">Última semana</option>
+            <option value="quincena">Última quincena</option>
+            <option value="mes" selected>Último mes</option>
+            <option value="trimestre">Último trimestre</option>
+          </select>
+        </div>
+        <div class="field">
+          <label>Número de trabajadores</label>
+          <input type="number" id="r_trabajadores" placeholder="Ej: 25" min="1" max="9999">
+        </div>
+      </div>
+
+      <div class="field-row">
+        <div class="field">
+          <label>Jornada pactada (horas/semana)</label>
+          <input type="number" id="r_jornada_pactada" placeholder="Ej: 48" min="1" max="168">
+          <div class="field-hint">La reforma gradual lleva a 40h para 2030</div>
+        </div>
+        <div class="field">
+          <label>Promedio real trabajado (horas/semana)</label>
+          <input type="number" id="r_jornada_real" placeholder="Ej: 52" min="1" max="168">
+        </div>
+      </div>
+
+      <div class="field-row">
+        <div class="field">
+          <label>Horas extras promedio por trabajador/semana</label>
+          <input type="number" id="r_extras" placeholder="Ej: 4.5" step="0.5" min="0">
+          <div class="field-hint">Límite legal: 3h/día, 9h/semana (Art. 68 LFT)</div>
+        </div>
+        <div class="field">
+          <label>% de ausencias sin justificar (período)</label>
+          <input type="number" id="r_ausentismo" placeholder="Ej: 8" min="0" max="100" step="0.1">
+        </div>
+      </div>
+
+      <div class="field-row">
+        <div class="field">
+          <label>Trabajadores que laboraron en día de descanso</label>
+          <input type="number" id="r_descanso" placeholder="Ej: 5" min="0">
+        </div>
+        <div class="field">
+          <label>Horas extras que se pagaron a doble/triple</label>
+          <select id="r_pago_extras">
+            <option value="todas">Todas</option>
+            <option value="algunas">Algunas</option>
+            <option value="ninguna">Ninguna — se compensan con descanso</option>
+            <option value="no_hay">No se realizan horas extras</option>
+          </select>
+        </div>
+      </div>
+
+      <div class="field">
+        <label>Sistema de control de asistencia</label>
+        <select id="r_control">
+          <option value="electronico">Biométrico / electrónico</option>
+          <option value="papel">Hoja de firmas en papel</option>
+          <option value="ninguno">Sin control formal</option>
+        </select>
+      </div>
+
+      <div class="field">
+        <label>Comentarios o situaciones especiales (opcional)</label>
+        <textarea id="r_comentario" placeholder="Ej: temporada alta de producción, inspección STPS reciente, turno nocturno, teletrabajadores..."></textarea>
+      </div>
+    </div>
+  </div>
+
+  <!-- TAB: Tabla por trabajador -->
+  <div id="tab-tabla" style="display:none;">
+    <div class="form-card">
+      <div class="card-title">Datos por trabajador</div>
+      <div class="card-sub">Ingresa hasta 20 trabajadores para un análisis individualizado. Los nombres son opcionales.</div>
+      <div class="worker-table-wrap">
+        <table class="worker-table">
+          <thead>
+            <tr>
+              <th>#</th>
+              <th>Nombre / ID</th>
+              <th>Puesto</th>
+              <th>H. pactadas/sem</th>
+              <th>H. reales/sem</th>
+              <th>H. extras</th>
+              <th>Faltas (período)</th>
+              <th>Descansos laborados</th>
+              <th></th>
+            </tr>
+          </thead>
+          <tbody id="tabla-body"></tbody>
+        </table>
+      </div>
+      <button class="btn-add-row" onclick="agregarFila()">+ Agregar trabajador</button>
+      <div class="field" style="margin-top:16px;">
+        <label>Período analizado</label>
+        <select id="t_periodo">
+          <option value="semana">Última semana</option>
+          <option value="quincena">Última quincena</option>
+          <option value="mes" selected>Último mes</option>
+        </select>
+      </div>
+    </div>
+  </div>
+
+  <!-- TAB: Texto libre -->
+  <div id="tab-texto" style="display:none;">
+    <div class="form-card">
+      <div class="card-title">Pegar datos en texto</div>
+      <div class="card-sub">Copia y pega datos del sistema de nómina, correo o reporte de RRHH. La IA extrae la información relevante automáticamente.</div>
+      <div class="field">
+        <textarea id="tx_datos" style="min-height:200px;" placeholder="Ej:
+Semana del 10 al 16 de agosto 2026
+- Juan García: lun 9h, mar 10h, mié 8h, jue 11h, vie 9h, sáb 4h
+- María López: lun 8h, mar 8h, mié ausente, jue 8h, vie 8h
+- Totales: 12 trabajadores, promedio 51h/sem, 3 faltas sin justificar
+- Horas extras del mes: 120h — no se han pagado"></textarea>
+        <div class="field-hint">Acepta cualquier formato: correos, tablas, reportes internos.</div>
+      </div>
+      <div class="field">
+        <label>Período que cubren los datos</label>
+        <select id="tx_periodo">
+          <option value="semana">Semana</option>
+          <option value="quincena">Quincena</option>
+          <option value="mes" selected>Mes</option>
+          <option value="trimestre">Trimestre</option>
+        </select>
+      </div>
+    </div>
+  </div>
+
+  <div id="error-msg" class="error-msg"></div>
+  <button class="btn btn-analyze" id="btn-analizar" onclick="analizarJornada()">
+    ✦ Detectar anomalías con IA
+  </button>
+
+  <!-- Loading -->
+  <div class="loading-state" id="loading">
+    <div class="loading-spinner"></div>
+    <strong>Analizando patrones de jornada...</strong>
+    <p>La IA está revisando la información bajo los Arts. 59–68 LFT y la reforma de 40 horas.</p>
+  </div>
+
+  <!-- RESULTADO -->
+  <div id="resultado">
+    <button class="btn-reset" onclick="reiniciar()">← Nuevo análisis</button>
+
+    <div class="resumen-banner" id="res-banner">
+      <div class="banner-header">
+        <span class="banner-nivel" id="banner-nivel">
+          <span class="banner-dot"></span>
+          <span id="banner-nivel-texto">—</span>
+        </span>
+      </div>
+      <div class="banner-resumen" id="banner-resumen"></div>
+    </div>
+
+    <!-- Alertas críticas -->
+    <div id="alertas-wrap" style="display:none;">
+      <div class="alertas-wrap">
+        <div class="alertas-titulo">Alertas inmediatas</div>
+        <div id="alertas-list"></div>
+      </div>
+    </div>
+
+    <!-- Métricas -->
+    <div class="metricas-grid" id="metricas-grid">
+      <div class="metrica-card" id="met-extras">
+        <div class="metrica-icon">⏱️</div>
+        <div class="metrica-valor" id="met-extras-val">—</div>
+        <div class="metrica-label">Horas extras detectadas</div>
+      </div>
+      <div class="metrica-card" id="met-anomalias">
+        <div class="metrica-icon">🔍</div>
+        <div class="metrica-valor" id="met-anomalias-val">—</div>
+        <div class="metrica-label">Anomalías identificadas</div>
+      </div>
+      <div class="metrica-card" id="met-eco">
+        <div class="metrica-icon">💰</div>
+        <div class="metrica-valor" id="met-eco-val">—</div>
+        <div class="metrica-label">Exposición económica</div>
+      </div>
+    </div>
+
+    <!-- Reforma 40h -->
+    <div class="reforma-card" id="reforma-card">
+      <div class="reforma-icon">⚖️</div>
+      <div>
+        <div class="reforma-titulo">Cumplimiento reforma jornada 40h (Arts. 66-68 LFT)</div>
+        <div class="reforma-desc">Obligatoria de forma gradual 2026–2030. Registro electrónico requerido desde 2027.</div>
+        <span class="reforma-estado" id="reforma-estado">—</span>
+      </div>
+    </div>
+
+    <!-- Anomalías detalladas -->
+    <div class="section-title">Anomalías detectadas</div>
+    <div class="anomalias-list" id="anomalias-list"></div>
+
+    <!-- Exposición económica -->
+    <div class="eco-banner" id="eco-banner" style="display:none;">
+      <div class="eco-texto">
+        <strong>Exposición por horas extras no pagadas</strong><br>
+        Estimado basado en salario mínimo y horas detectadas
+      </div>
+      <div class="eco-monto" id="eco-monto">—</div>
+    </div>
+
+    <div class="cta-footer">
+      <h3>Regulariza tu jornada antes de la inspección</h3>
+      <p>ClickLaboral puede implementar el sistema de control de asistencia electrónico exigido por la reforma 2027 y ajustar tus contratos a las 40 horas.</p>
+      <a href="portal-cliente.html">Solicitar regularización →</a>
+    </div>
+  </div>
+
+</div>
+
+<script>
+let tabActiva = 'rapido';
+let filaCount = 0;
+
+function setTab(tab) {
+  tabActiva = tab;
+  ['rapido', 'tabla', 'texto'].forEach(t => {
+    document.getElementById(`tab-${t}`).style.display = t === tab ? '' : 'none';
+  });
+  document.querySelectorAll('.tab-btn').forEach((btn, i) => {
+    btn.classList.toggle('active', ['rapido','tabla','texto'][i] === tab);
+  });
+}
+
+function agregarFila() {
+  filaCount++;
+  const tbody = document.getElementById('tabla-body');
+  const tr = document.createElement('tr');
+  tr.id = `fila-${filaCount}`;
+  tr.innerHTML = `
+    <td style="text-align:center;color:var(--ink3);font-size:11px;">${filaCount}</td>
+    <td><input type="text" placeholder="Ana López" style="min-width:100px;"></td>
+    <td><input type="text" placeholder="Operador" style="min-width:90px;"></td>
+    <td><input type="number" placeholder="48" min="1" max="168" style="width:60px;"></td>
+    <td><input type="number" placeholder="52" min="1" max="168" style="width:60px;"></td>
+    <td><input type="number" placeholder="4" min="0" style="width:55px;"></td>
+    <td><input type="number" placeholder="1" min="0" style="width:55px;"></td>
+    <td><input type="number" placeholder="0" min="0" style="width:55px;"></td>
+    <td><button class="btn-del-row" onclick="document.getElementById('fila-${filaCount}').remove()">✕</button></td>`;
+  tbody.appendChild(tr);
+}
+
+// Inicializar tabla con 3 filas
+agregarFila(); agregarFila(); agregarFila();
+
+function obtenerDatos() {
+  if (tabActiva === 'rapido') {
+    return {
+      modo_entrada: 'resumen',
+      periodo: document.getElementById('r_periodo').value,
+      num_trabajadores: document.getElementById('r_trabajadores').value,
+      jornada_pactada_horas_semana: document.getElementById('r_jornada_pactada').value,
+      jornada_real_promedio_horas_semana: document.getElementById('r_jornada_real').value,
+      horas_extras_promedio_semana: document.getElementById('r_extras').value,
+      ausentismo_pct: document.getElementById('r_ausentismo').value,
+      trabajadores_laboraron_descanso: document.getElementById('r_descanso').value,
+      horas_extras_pagadas: document.getElementById('r_pago_extras').value,
+      sistema_control_asistencia: document.getElementById('r_control').value,
+      comentarios: document.getElementById('r_comentario').value,
+    };
+  }
+  if (tabActiva === 'tabla') {
+    const filas = [];
+    document.querySelectorAll('#tabla-body tr').forEach(tr => {
+      const inputs = tr.querySelectorAll('input');
+      if (inputs.length < 7) return;
+      const vals = Array.from(inputs).map(i => i.value.trim());
+      if (vals.some(v => v)) {
+        filas.push({
+          nombre: vals[0], puesto: vals[1],
+          h_pactadas: vals[2], h_reales: vals[3],
+          h_extras: vals[4], faltas: vals[5], descansos_laborados: vals[6],
+        });
+      }
+    });
+    return {
+      modo_entrada: 'tabla',
+      periodo: document.getElementById('t_periodo').value,
+      trabajadores: filas,
+    };
+  }
+  // texto libre
+  return {
+    modo_entrada: 'texto_libre',
+    periodo: document.getElementById('tx_periodo').value,
+    datos_texto: document.getElementById('tx_datos').value,
+  };
+}
+
+async function analizarJornada() {
+  const errorEl = document.getElementById('error-msg');
+  errorEl.style.display = 'none';
+
+  const datos = obtenerDatos();
+
+  if (tabActiva === 'rapido' && !datos.num_trabajadores) {
+    errorEl.textContent = 'Ingresa al menos el número de trabajadores para continuar.';
+    errorEl.style.display = 'block';
+    return;
+  }
+  if (tabActiva === 'texto' && !datos.datos_texto.trim()) {
+    errorEl.textContent = 'Pega los datos de asistencia en el campo de texto.';
+    errorEl.style.display = 'block';
+    return;
+  }
+
+  document.getElementById('btn-analizar').disabled = true;
+  document.getElementById('loading').style.display = 'block';
+  document.getElementById('resultado').style.display = 'none';
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+
+  try {
+    const res = await fetch('/api/ia-claude', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ modo: 'anomalias', datos }),
+    });
+
+    const data = await res.json();
+    if (!res.ok || !data.ok) throw new Error(data.error || 'Error al analizar');
+
+    renderResultado(data.resultado);
+  } catch (err) {
+    document.getElementById('loading').style.display = 'none';
+    document.getElementById('btn-analizar').disabled = false;
+    errorEl.textContent = `Error: ${err.message || 'No se pudo conectar con el servicio de IA.'}`;
+    errorEl.style.display = 'block';
+  }
+}
+
+function renderResultado(r) {
+  document.getElementById('loading').style.display = 'none';
+  document.getElementById('btn-analizar').disabled = false;
+  document.getElementById('resultado').style.display = 'block';
+
+  const nivel = (r.nivel_riesgo_global || 'medio').toLowerCase();
+  const banner = document.getElementById('res-banner');
+  banner.className = `resumen-banner ${nivel}`;
+  document.getElementById('banner-nivel').className = `banner-nivel ${nivel}`;
+  const nivelTexto = { bajo: 'Riesgo Bajo', medio: 'Riesgo Medio', alto: 'Riesgo Alto', critico: 'Riesgo Crítico' };
+  document.getElementById('banner-nivel-texto').textContent = nivelTexto[nivel] || nivel;
+  document.getElementById('banner-resumen').textContent = r.resumen || '';
+
+  // Alertas
+  const alertasWrap = document.getElementById('alertas-wrap');
+  const alertasList = document.getElementById('alertas-list');
+  if (r.alertas_inmediatas?.length) {
+    alertasWrap.style.display = '';
+    alertasList.innerHTML = r.alertas_inmediatas.map(a => `<div class="alerta-item">${escHtml(a)}</div>`).join('');
+  } else {
+    alertasWrap.style.display = 'none';
+  }
+
+  // Métricas
+  document.getElementById('met-extras-val').textContent = r.horas_extras_detectadas ? 'Detectadas' : 'No detectadas';
+  document.getElementById('met-extras').className = `metrica-card ${r.horas_extras_detectadas ? 'danger' : 'ok'}`;
+  document.getElementById('met-anomalias-val').textContent = r.anomalias?.length || 0;
+  document.getElementById('met-anomalias').className = `metrica-card ${(r.anomalias?.length || 0) > 3 ? 'danger' : (r.anomalias?.length || 0) > 0 ? 'warning' : 'ok'}`;
+  const eco = parseInt(r.exposicion_economica_he) || 0;
+  document.getElementById('met-eco-val').textContent = eco ? `$${eco.toLocaleString('es-MX')}` : 'Sin datos';
+  document.getElementById('met-eco').className = `metrica-card ${eco > 50000 ? 'danger' : eco > 0 ? 'warning' : 'ok'}`;
+
+  // Reforma
+  const est = r.cumplimiento_jornada_reforma_40h || 'pendiente_adaptacion';
+  const estadoEl = document.getElementById('reforma-estado');
+  const estadoMap = {
+    cumple: { cls: 'estado-cumple', txt: '✓ Cumple' },
+    pendiente_adaptacion: { cls: 'estado-pendiente', txt: '⚠ Adaptación pendiente' },
+    incumplimiento: { cls: 'estado-incumplimiento', txt: '✕ Incumplimiento' },
+  };
+  const estadoInfo = estadoMap[est] || estadoMap['pendiente_adaptacion'];
+  estadoEl.className = `reforma-estado ${estadoInfo.cls}`;
+  estadoEl.textContent = estadoInfo.txt;
+
+  // Anomalías
+  const anomList = document.getElementById('anomalias-list');
+  anomList.innerHTML = '';
+  if (!r.anomalias?.length) {
+    anomList.innerHTML = `<div style="text-align:center;color:var(--ink3);font-size:13px;padding:24px;">No se detectaron anomalías significativas en el período analizado.</div>`;
+  } else {
+    r.anomalias.forEach(a => {
+      const riesgo = (a.riesgo || 'medio').toLowerCase();
+      const tipoTexto = {
+        horas_extras_excesivas: 'Horas extras excesivas',
+        ausentismo_sistematico: 'Ausentismo sistémico',
+        jornada_irregular: 'Jornada irregular',
+        descanso_omitido: 'Descanso omitido',
+        turno_no_documentado: 'Turno sin documentar',
+        control_ausente: 'Control ausente',
+      }[a.tipo] || a.tipo;
+      anomList.innerHTML += `
+        <div class="anomalia-item ${riesgo}">
+          <span class="anomalia-riesgo-badge riesgo-${riesgo}">${riesgo.toUpperCase()}</span>
+          <div>
+            <div class="anomalia-tipo">${escHtml(tipoTexto)}</div>
+            <div class="anomalia-desc">${escHtml(a.descripcion || '')}</div>
+            <div class="anomalia-freq">${escHtml(a.frecuencia || '')}</div>
+            <span class="anomalia-art">${escHtml(a.articulo_lft || '')}</span>
+            <div class="anomalia-accion">→ ${escHtml(a.accion_recomendada || '')}</div>
+          </div>
+        </div>`;
+    });
+  }
+
+  // Exposición económica
+  if (eco > 0) {
+    document.getElementById('eco-banner').style.display = '';
+    document.getElementById('eco-monto').textContent = `$${eco.toLocaleString('es-MX')} MXN`;
+  }
+
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+
+function reiniciar() {
+  document.getElementById('resultado').style.display = 'none';
+  document.getElementById('btn-analizar').disabled = false;
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+
+function escHtml(s) {
+  return String(s || '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+</script>
+</body>
+</html>

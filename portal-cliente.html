@@ -239,6 +239,40 @@ body{font-family:var(--font);background:var(--surface);color:var(--ink);min-heig
 .ia-widget{background:linear-gradient(135deg,var(--navy) 0%,#24507a 100%);border-radius:var(--r);padding:20px;color:#fff;margin-bottom:16px;}
 .ia-widget-title{font-size:14px;font-weight:700;margin-bottom:6px;display:flex;align-items:center;gap:8px;}
 .ia-badge{background:var(--purple);font-size:9px;font-weight:700;padding:2px 7px;border-radius:20px;letter-spacing:.04em;}
+/* ── Panel IA Proactiva ── */
+.proac-panel{background:var(--white);border-radius:var(--r);border:1px solid var(--border);margin-bottom:16px;overflow:hidden;}
+.proac-header{background:linear-gradient(135deg,var(--teal) 0%,#0f766e 100%);padding:14px 16px;display:flex;align-items:center;justify-content:space-between;}
+.proac-header-left{display:flex;align-items:center;gap:8px;}
+.proac-title{font-size:13px;font-weight:700;color:#fff;}
+.proac-subtitle{font-size:11px;color:rgba(255,255,255,.7);}
+.proac-ia-badge{background:rgba(255,255,255,.2);font-size:9px;font-weight:700;padding:2px 7px;border-radius:20px;letter-spacing:.04em;color:#fff;}
+.proac-refresh{background:none;border:none;color:rgba(255,255,255,.7);cursor:pointer;font-size:16px;padding:2px;transition:transform .4s;}
+.proac-refresh:hover{color:#fff;transform:rotate(180deg);}
+.proac-body{padding:0;}
+.proac-item{padding:12px 16px;border-bottom:1px solid var(--border);display:flex;gap:12px;align-items:flex-start;}
+.proac-item:last-child{border-bottom:none;}
+.proac-urgencia{width:6px;border-radius:3px;flex-shrink:0;align-self:stretch;min-height:42px;}
+.urg-inmediata{background:var(--red);}
+.urg-esta_semana{background:var(--amber);}
+.urg-este_mes{background:var(--teal);}
+.urg-proximo_trimestre{background:var(--sky2);}
+.proac-content{flex:1;min-width:0;}
+.proac-item-titulo{font-size:13px;font-weight:600;color:var(--ink);margin-bottom:2px;}
+.proac-item-msg{font-size:12px;color:var(--ink2);line-height:1.5;margin-bottom:4px;}
+.proac-item-meta{display:flex;align-items:center;gap:8px;flex-wrap:wrap;}
+.proac-fundamento{font-size:10px;background:var(--sky);color:var(--navy2);padding:2px 7px;border-radius:4px;font-weight:600;}
+.proac-urgencia-label{font-size:10px;font-weight:600;}
+.proac-urgencia-label.inmediata{color:var(--red);}
+.proac-urgencia-label.esta_semana{color:var(--amber);}
+.proac-urgencia-label.este_mes{color:var(--teal);}
+.proac-urgencia-label.proximo_trimestre{color:var(--ink3);}
+.proac-loading{padding:24px;text-align:center;font-size:12px;color:var(--ink3);}
+.proac-spinner{width:20px;height:20px;border:2px solid var(--teal-bg);border-top-color:var(--teal);border-radius:50%;animation:spin-proac .8s linear infinite;margin:0 auto 8px;}
+@keyframes spin-proac{to{transform:rotate(360deg)}}
+.proac-eventos{padding:12px 16px;border-top:1px solid var(--border);background:var(--surface);}
+.proac-eventos-title{font-size:10px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--ink3);margin-bottom:8px;}
+.proac-evento-item{display:flex;gap:10px;margin-bottom:6px;font-size:12px;color:var(--ink2);}
+.proac-evento-fecha{font-weight:700;color:var(--navy2);white-space:nowrap;}
 .ia-desc{font-size:12px;opacity:.6;margin-bottom:14px;line-height:1.5;}
 .ia-input{width:100%;padding:10px 12px;background:rgba(255,255,255,.1);border:1px solid rgba(255,255,255,.15);border-radius:8px;font-size:13px;color:#fff;font-family:var(--font);margin-bottom:8px;}
 .ia-input::placeholder{color:rgba(255,255,255,.3);}
@@ -480,6 +514,8 @@ body{font-family:var(--font);background:var(--surface);color:var(--ink);min-heig
     <div class="sb-nav">
       <div class="sb-sec">Mi empresa</div>
       <div class="nav-item active" onclick="goPanel('inicio')"><span class="nav-icon">⊞</span> Inicio</div>
+      <div class="nav-item" onclick="window.open('motor-riesgo-ia.html')"><span class="nav-icon">🔮</span> Motor de Riesgo IA</div>
+      <div class="nav-item" onclick="window.open('analisis-jornada-ia.html')"><span class="nav-icon">📊</span> Análisis de Jornada IA</div>
       <div class="nav-item" onclick="window.open('simulador-riesgo.html')"><span class="nav-icon">⚠️</span> Simulador de riesgo</div>
       <div class="nav-item" onclick="window.open('contratos-por-sector.html')"><span class="nav-icon">🏭</span> Contratos por sector</div>
       <div class="nav-item" onclick="goPanel('reportes')"><span class="nav-icon">📊</span> Reportes gerenciales</div>
@@ -574,6 +610,25 @@ body{font-family:var(--font);background:var(--surface);color:var(--ink);min-heig
               <textarea class="ia-input" id="ia-quick-input" rows="2" placeholder="Ej. ¿Cuándo debo pagar el aguinaldo? ¿Qué ocurre si un trabajador falta 3 días?"></textarea>
               <button class="ia-btn" onclick="preguntarIA()">Consultar →</button>
               <div class="ia-response" id="ia-quick-response"></div>
+            </div>
+
+            <!-- Panel IA Proactiva -->
+            <div class="proac-panel" id="proac-panel">
+              <div class="proac-header">
+                <div class="proac-header-left">
+                  <div>
+                    <div class="proac-title">✦ Recomendaciones IA <span class="proac-ia-badge">IA PREDICTIVA</span></div>
+                    <div class="proac-subtitle">Alertas preventivas personalizadas para tu empresa</div>
+                  </div>
+                </div>
+                <button class="proac-refresh" onclick="cargarRecomendacionesIA(true)" title="Actualizar">↻</button>
+              </div>
+              <div class="proac-body" id="proac-body">
+                <div class="proac-loading" id="proac-loading">
+                  <div class="proac-spinner"></div>
+                  Cargando recomendaciones...
+                </div>
+              </div>
             </div>
 
             <!-- Próximas obligaciones -->
@@ -1187,5 +1242,98 @@ body{font-family:var(--font);background:var(--surface);color:var(--ink);min-heig
 </div>
 
 <script src="assets/js/portal-app.js?v=20260811"></script>
+<script>
+// ── IA Proactiva: recomendaciones personalizadas ──────────────────────────────
+let proacCargado = false;
+
+async function cargarRecomendacionesIA(forzar = false) {
+  if (proacCargado && !forzar) return;
+  const bodyEl = document.getElementById('proac-body');
+  if (!bodyEl) return;
+
+  bodyEl.innerHTML = '<div class="proac-loading"><div class="proac-spinner"></div>Analizando tu perfil...</div>';
+
+  const ctx = {};
+  if (typeof clienteActual !== 'undefined' && clienteActual) {
+    ctx.empresa = clienteActual.empresa || '';
+    ctx.plan = clienteActual.plan || '';
+    ctx.num_trabajadores = clienteActual.num_trabajadores || '';
+    ctx.giro = clienteActual.giro || '';
+  }
+  ctx.fecha_hoy = new Date().toISOString().split('T')[0];
+
+  try {
+    const res = await fetch('/api/ia-claude', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ modo: 'proactivo', contexto: ctx }),
+    });
+    const data = await res.json();
+    if (!res.ok || !data.ok) throw new Error(data.error || 'Error IA');
+
+    renderRecomendaciones(data.resultado);
+    proacCargado = true;
+  } catch (err) {
+    bodyEl.innerHTML = `<div class="proac-loading" style="color:var(--ink3);">No se pudieron cargar las recomendaciones.<br><small>${err.message}</small></div>`;
+  }
+}
+
+function renderRecomendaciones(r) {
+  const bodyEl = document.getElementById('proac-body');
+  if (!bodyEl) return;
+
+  const urgLabels = {
+    inmediata: { cls: 'inmediata', txt: '⚡ Inmediata', barCls: 'urg-inmediata' },
+    esta_semana: { cls: 'esta_semana', txt: '📅 Esta semana', barCls: 'urg-esta_semana' },
+    este_mes: { cls: 'este_mes', txt: '🗓 Este mes', barCls: 'urg-este_mes' },
+    proximo_trimestre: { cls: 'proximo_trimestre', txt: '📆 Próx. trimestre', barCls: 'urg-proximo_trimestre' },
+  };
+
+  const recs = (r.recomendaciones || []).slice(0, 5);
+  const eventos = r.proximos_eventos || [];
+
+  let html = '';
+  recs.forEach(rec => {
+    const urg = urgLabels[rec.urgencia] || urgLabels['este_mes'];
+    html += `
+      <div class="proac-item">
+        <div class="proac-urgencia ${urg.barCls}"></div>
+        <div class="proac-content">
+          <div class="proac-item-titulo">${escH(rec.titulo)}</div>
+          <div class="proac-item-msg">${escH(rec.mensaje)}</div>
+          <div class="proac-item-meta">
+            <span class="proac-urgencia-label ${urg.cls}">${urg.txt}</span>
+            ${rec.fundamento ? `<span class="proac-fundamento">${escH(rec.fundamento)}</span>` : ''}
+          </div>
+        </div>
+      </div>`;
+  });
+
+  if (!recs.length) {
+    html = `<div class="proac-loading">Tu empresa está al día. Sin alertas urgentes en este momento.</div>`;
+  }
+
+  if (eventos.length) {
+    html += `<div class="proac-eventos">
+      <div class="proac-eventos-title">Próximas fechas clave</div>`;
+    eventos.slice(0, 4).forEach(ev => {
+      const fecha = ev.fecha ? new Date(ev.fecha + 'T12:00:00').toLocaleDateString('es-MX', { day: 'numeric', month: 'short' }) : '';
+      html += `<div class="proac-evento-item"><span class="proac-evento-fecha">${fecha}</span> ${escH(ev.descripcion)}</div>`;
+    });
+    html += `</div>`;
+  }
+
+  bodyEl.innerHTML = html;
+}
+
+function escH(s) {
+  return String(s || '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+
+// Cargar cuando el portal ya autenticó al usuario
+document.addEventListener('DOMContentLoaded', () => {
+  setTimeout(() => { cargarRecomendacionesIA(); }, 3000);
+});
+</script>
 </body>
 </html>

@@ -757,30 +757,97 @@ async function enviar() {
     return;
   }
 
-  // ── Modos de generación a la medida (cláusulas, escritos STPS, narrativa de liquidación, dictamen) ──
-  // Estos requieren redactar contenido nuevo según los datos del caso concreto — una base de FAQ no
-  // puede sustituir eso honestamente. Mientras no haya un backend de IA en vivo conectado, lo avisamos:
-  typing.remove();
-  agregarMensajeUI('ai', `Esta función (**${getToolName(herramienta)}**) genera contenido a la medida de cada caso y todavía no está conectada a un servicio de IA en vivo. Por ahora, puede solicitar este documento directamente a su asesor por WhatsApp o desde "Solicitar asesoría" en el portal.`);
-  conversacion.pop();
-  document.getElementById('status-badge').textContent = '● IA no conectada';
-  document.getElementById('status-badge').className = 'badge badge-amber';
-  cargando = false;
-  document.getElementById('send-btn').disabled = false;
-  input.focus();
-  return;
+  // ── Modos de generación a la medida (cláusulas, escritos STPS, liquidación, dictamen) ──
+  // Conectado al backend seguro: netlify/functions/ia-claude.js
+  const modoIA = herramienta; // clausulas | stps | liquidacion | dictamen
+  const contextoEmpresa = obtenerContextoEmpresa();
+
+  try {
+    const res = await fetch('/api/ia-claude', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        modo: modoIA,
+        contexto: contextoEmpresa,
+        pregunta: texto,
+      }),
+    });
+
+    const data = await res.json();
+    typing.remove();
+
+    if (!res.ok || !data.ok) {
+      throw new Error(data.error || 'Error al procesar la solicitud');
+    }
+
+    const respuesta = data.texto || '';
+    agregarMensajeConDocumento(modoIA, respuesta);
+
+    document.getElementById('status-badge').textContent = '● Conectado';
+    document.getElementById('status-badge').className = 'badge badge-green';
+  } catch (err) {
+    typing.remove();
+    const msg = err.message || 'No se pudo conectar con el servicio de IA.';
+    agregarMensajeUI('ai', `Lo siento, ocurrió un error al generar el documento: **${msg}** \n\nIntente de nuevo en unos momentos o contacte a su asesor por WhatsApp.`);
+    conversacion.pop();
+    document.getElementById('status-badge').textContent = '● Error IA';
+    document.getElementById('status-badge').className = 'badge badge-amber';
+  }
 
   cargando = false;
   document.getElementById('send-btn').disabled = false;
   input.focus();
-  return;
+}
 
-  // ── CÓDIGO ORIGINAL (llamada directa a Anthropic) — desactivado.
-  // No funciona desde el navegador: falta clave de API y Anthropic bloquea por
-  // CORS las llamadas directas desde un sitio web. Para activar generación de IA
-  // en vivo en estos modos, se necesita un backend (Netlify Function) con
-  // ANTHROPIC_API_KEY del lado del servidor — ver netlify/functions/crear-suscripcion.js
-  // como referencia del patrón ya usado en este proyecto para Stripe.
+// ════════════════════════════════════════════════════════
+// HELPERS IA EN VIVO
+// ════════════════════════════════════════════════════════
+function obtenerContextoEmpresa() {
+  // Lee los campos del panel de contexto derecho si existen
+  const ctx = {};
+  const camposCtx = ['ctx-empresa', 'ctx-trabajadores', 'ctx-giro', 'ctx-estado'];
+  camposCtx.forEach(id => {
+    const el = document.getElementById(id);
+    if (el?.value?.trim()) ctx[id.replace('ctx-', '')] = el.value.trim();
+  });
+  return ctx;
+}
+
+function agregarMensajeConDocumento(modo, texto) {
+  const welcome = document.getElementById('welcome-state');
+  if (welcome) welcome.remove();
+  const cont = document.getElementById('messages');
+  const div = document.createElement('div');
+  div.className = 'msg ai';
+  const hora = new Date().toLocaleTimeString('es-MX', { hour: '2-digit', minute: '2-digit' });
+  const nombresHerr = { clausulas: 'Cláusulas LFT', stps: 'Escrito STPS', liquidacion: 'Cálculo de liquidación', dictamen: 'Dictamen de compliance' };
+  const nombreH = nombresHerr[modo] || modo;
+  const textoEscapado = escapeHtml(texto);
+  div.innerHTML = `
+    <div class="msg-avatar avatar-ai">IA</div>
+    <div style="flex:1;min-width:0;">
+      <div class="msg-bubble">
+        <div class="doc-bubble">
+          <div class="doc-bubble-header">
+            <span class="doc-bubble-title">📄 ${nombreH}</span>
+            <span class="doc-bubble-copy" onclick="copiarDocumento(this)">Copiar</span>
+          </div>
+          <div class="doc-bubble-content">${textoEscapado}</div>
+        </div>
+      </div>
+      <div class="msg-time" style="text-align:left;">${hora} · Asistente Legal IA</div>
+    </div>`;
+  cont.appendChild(div);
+  cont.scrollTop = cont.scrollHeight;
+  conversacion.push({ role: 'assistant', content: texto });
+}
+
+function copiarDocumento(btn) {
+  const content = btn.closest('.doc-bubble').querySelector('.doc-bubble-content');
+  navigator.clipboard.writeText(content.textContent || '').then(() => {
+    btn.textContent = '¡Copiado!';
+    setTimeout(() => { btn.textContent = 'Copiar'; }, 2000);
+  });
 }
 
 // ════════════════════════════════════════════════════════

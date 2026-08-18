@@ -190,8 +190,8 @@ exports.handler = async (event) => {
     return { statusCode: 429, headers, body: JSON.stringify({ error: 'Límite de consultas alcanzado. Intente en unos minutos.' }) };
   }
 
-  const body = safeJson(event);
-  if (!body) {
+  const { data: body, error: parseError } = safeJson(event);
+  if (parseError || !body) {
     return { statusCode: 400, headers, body: JSON.stringify({ error: 'JSON inválido en el cuerpo de la petición' }) };
   }
 

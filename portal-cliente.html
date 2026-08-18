@@ -514,8 +514,6 @@ body{font-family:var(--font);background:var(--surface);color:var(--ink);min-heig
     <div class="sb-nav">
       <div class="sb-sec">Mi empresa</div>
       <div class="nav-item active" onclick="goPanel('inicio')"><span class="nav-icon">⊞</span> Inicio</div>
-      <div class="nav-item" onclick="window.open('motor-riesgo-ia.html')"><span class="nav-icon">🔮</span> Motor de Riesgo IA</div>
-      <div class="nav-item" onclick="window.open('analisis-jornada-ia.html')"><span class="nav-icon">📊</span> Análisis de Jornada IA</div>
       <div class="nav-item" onclick="window.open('simulador-riesgo.html')"><span class="nav-icon">⚠️</span> Simulador de riesgo</div>
       <div class="nav-item" onclick="window.open('contratos-por-sector.html')"><span class="nav-icon">🏭</span> Contratos por sector</div>
       <div class="nav-item" onclick="goPanel('reportes')"><span class="nav-icon">📊</span> Reportes gerenciales</div>
@@ -610,25 +608,6 @@ body{font-family:var(--font);background:var(--surface);color:var(--ink);min-heig
               <textarea class="ia-input" id="ia-quick-input" rows="2" placeholder="Ej. ¿Cuándo debo pagar el aguinaldo? ¿Qué ocurre si un trabajador falta 3 días?"></textarea>
               <button class="ia-btn" onclick="preguntarIA()">Consultar →</button>
               <div class="ia-response" id="ia-quick-response"></div>
-            </div>
-
-            <!-- Panel IA Proactiva -->
-            <div class="proac-panel" id="proac-panel">
-              <div class="proac-header">
-                <div class="proac-header-left">
-                  <div>
-                    <div class="proac-title">✦ Recomendaciones IA <span class="proac-ia-badge">IA PREDICTIVA</span></div>
-                    <div class="proac-subtitle">Alertas preventivas personalizadas para tu empresa</div>
-                  </div>
-                </div>
-                <button class="proac-refresh" onclick="cargarRecomendacionesIA(true)" title="Actualizar">↻</button>
-              </div>
-              <div class="proac-body" id="proac-body">
-                <div class="proac-loading" id="proac-loading">
-                  <div class="proac-spinner"></div>
-                  Cargando recomendaciones...
-                </div>
-              </div>
             </div>
 
             <!-- Próximas obligaciones -->
@@ -1332,10 +1311,7 @@ function escH(s) {
   return String(s || '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
 }
 
-// Cargar cuando el portal ya autenticó al usuario
-document.addEventListener('DOMContentLoaded', () => {
-  setTimeout(() => { cargarRecomendacionesIA(); }, 3000);
-});
+document.addEventListener('DOMContentLoaded', () => {});
 </script>
 </body>
 </html>

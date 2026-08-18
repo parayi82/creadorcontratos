@@ -36,7 +36,7 @@ exports.handler = async (event) => {
   try { body = JSON.parse(event.body || '{}'); }
   catch { return responder(400, { error: 'JSON inválido' }); }
 
-  const { rfc, empresa, email, tel, plan, pass, enviarEmail } = body;
+  const { rfc, empresa, email, tel, plan, cuota, trial, pass, enviarEmail } = body;
   if (!rfc || !empresa || !email || !pass) {
     return responder(400, { error: 'RFC, empresa, email y contraseña son obligatorios.' });
   }
@@ -57,7 +57,12 @@ exports.handler = async (event) => {
       user_metadata: {
         rfc: rfcLimpio,
         empresa: empresa.trim(),
-        plan: (plan || 'estandar').toLowerCase(),
+        plan: (plan || 'pyme').toLowerCase(),
+        cuota: cuota != null ? Number(cuota) : undefined,
+        trial: !!trial,
+        trial_expires: trial
+          ? new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString()
+          : undefined,
         tel: tel || '',
         email_contacto: emailContacto,
         suscripcion_activa: true,

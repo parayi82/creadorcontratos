@@ -379,13 +379,21 @@ header{background:var(--navy);color:#fff;padding:0 28px;height:54px;display:flex
       <div class="mf"><label>Teléfono</label><input type="text" id="ns-tel" placeholder="+52 33 1234 5678"></div>
       <div class="mf-row">
         <div class="mf"><label>Plan contratado *</label>
-          <select id="ns-plan">
-            <option value="Básico">Básico — $499/mes (legacy, ya no se ofrece)</option>
-            <option value="Estándar" selected>Estándar — $799/mes (1-50 trabajadores)</option>
-            <option value="Pro">Pro — $2,399/mes (51-500 trabajadores)</option>
+          <select id="ns-plan" onchange="onPlanChange(this.value)">
+            <option value="micro">Micro — $899/mes · 1-15 trabajadores</option>
+            <option value="pyme" selected>PyME — $1,999/mes · 16-50 trabajadores</option>
+            <option value="mediana">Mediana — $4,499/mes · 51-150 trabajadores</option>
+            <option value="empresa">Empresa — $9,999/mes · 151-500 trabajadores</option>
+            <option value="personalizado">Precio personalizado</option>
+            <option value="trial">Prueba gratuita (30 días · $0)</option>
           </select>
         </div>
         <div class="mf"><label>Fecha de inicio</label><input type="date" id="ns-inicio"></div>
+      </div>
+      <div class="mf" id="ns-cuota-wrap" style="display:none;">
+        <label>Costo mensual MXN *</label>
+        <input type="number" id="ns-cuota" placeholder="Ej. 1500" min="0" step="1" style="width:100%;padding:8px 10px;border:1px solid var(--border2);border-radius:var(--r-sm);font-size:13px;font-family:var(--font);">
+        <div style="font-size:11px;color:var(--ink3);margin-top:4px;">Ingresa el monto acordado con el cliente, sin IVA.</div>
       </div>
       <div class="mf"><label>Notas internas</label>
         <textarea id="ns-notas" style="width:100%;padding:8px 10px;border:1px solid var(--border2);border-radius:var(--r-sm);font-size:13px;font-family:var(--font);resize:vertical;min-height:60px;" placeholder="Notas para el equipo (no se muestran al cliente)..."></textarea>
@@ -464,14 +472,28 @@ const sbData = supabase.createClient('https://hpzgqaplrywwjuvrzhcp.supabase.co',
 let SUBS = [];          // clientes activos, normalizados desde Supabase
 let SUBS_CANCELADOS = []; // clientes con suscripcion_activa = false (para churn real)
 
-const CUOTAS_PLAN_BASE = { 'Plan Básico':499, 'Plan Estándar':799, 'Plan Pro':2399,
-  'Plan Básico Anual':4990, 'Plan Estándar Anual':7990, 'Plan Pro Anual':23990 }; // Básico = legacy
+const CUOTAS_PLAN_BASE = {
+  // Planes actuales
+  micro:899, pyme:1999, mediana:4499, empresa:9999,
+  'Plan Micro':899, 'Plan PyME':1999, 'Plan Mediana':4499, 'Plan Empresa':9999,
+  // Legacy
+  'Plan Básico':499, 'Plan Estándar':799, 'Plan Pro':2399,
+  'Plan Básico Anual':4990, 'Plan Estándar Anual':7990, 'Plan Pro Anual':23990,
+};
 
 function planCorto(nombrePlan){
-  if(!nombrePlan) return 'Estándar';
-  if(nombrePlan.includes('Pro')) return 'Pro';
-  if(nombrePlan.includes('Básico')) return 'Básico';
-  return 'Estándar';
+  if(!nombrePlan) return 'PyME';
+  const n = nombrePlan.toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g,'');
+  if(n.includes('empresa'))  return 'Empresa';
+  if(n.includes('mediana'))  return 'Mediana';
+  if(n.includes('pyme') || n.includes('pyme')) return 'PyME';
+  if(n.includes('micro'))    return 'Micro';
+  if(n.includes('trial') || n.includes('prueba') || n.includes('gratis')) return 'Trial';
+  if(n.includes('personalizado') || n.includes('custom')) return 'Custom';
+  // legacy
+  if(n.includes('pro'))      return 'Pro';
+  if(n.includes('basico') || n.includes('básico')) return 'Básico';
+  return 'PyME';
 }
 
 async function cargarClientesReales(){
@@ -491,7 +513,10 @@ async function cargarClientesReales(){
     const conteosTrab = {};
     trabs.forEach(t => { conteosTrab[t.cliente_rfc] = (conteosTrab[t.cliente_rfc]||0)+1; });
 
-    const CUOTAS = { basico:499, estandar:799, pro:2399 }; // basico legacy
+    const CUOTAS = {
+      micro:899, pyme:1999, mediana:4499, empresa:9999,
+      basico:499, estandar:799, pro:2399,  // legacy
+    };
     const planKey = p => (p||'').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'');
 
     const clientes = users
@@ -504,8 +529,9 @@ async function cargarClientesReales(){
       .map(u => {
         const meta  = u.user_metadata || {};
         const rfc   = (meta.rfc || '').toUpperCase();
-        const plan  = planKey(meta.plan || 'estandar');
-        const cuota = CUOTAS[plan] || 799;
+        const plan  = planKey(meta.plan || 'pyme');
+        // Preferir cuota guardada expl\u00edcitamente (clientes con precio personalizado o trial)
+        const cuota = meta.cuota != null ? Number(meta.cuota) : (CUOTAS[plan] || 1999);
         return {
           rfc, empresa: meta.empresa || rfc,
           plan: planCorto(meta.plan || 'Básico'),
@@ -902,24 +928,36 @@ function abrirModalNuevo(){
   document.getElementById('modal-nuevo').style.display='flex';
 }
 function cerrarModal(){ document.getElementById('modal-nuevo').style.display='none'; }
+function onPlanChange(val){
+  document.getElementById('ns-cuota-wrap').style.display = val === 'personalizado' ? '' : 'none';
+}
+
 async function guardarNuevo(){
-  const empresa     = document.getElementById('ns-empresa').value.trim();
-  const rfc         = document.getElementById('ns-rfc').value.trim().toUpperCase();
-  const email       = document.getElementById('ns-email').value.trim();
-  const planSel     = document.getElementById('ns-plan').value;
+  const empresa      = document.getElementById('ns-empresa').value.trim();
+  const rfc          = document.getElementById('ns-rfc').value.trim().toUpperCase();
+  const email        = document.getElementById('ns-email').value.trim();
+  const planSel      = document.getElementById('ns-plan').value;
   const trabajadores = parseInt(document.getElementById('ns-trab').value)||0;
 
-  if(!empresa||!rfc||!email){alert('Razón social, RFC y email son obligatorios');return;}
+  if(!empresa||!rfc||!email){ alert('Razón social, RFC y email son obligatorios'); return; }
 
-  const cuotas = {'Básico':499,'Estándar':799,'Pro':2399};
-  const cuota  = cuotas[planSel]||799;
-  const planMap = {'Básico':'basico','Estándar':'estandar','Pro':'pro'};
+  const CUOTAS_FORM = { micro:899, pyme:1999, mediana:4499, empresa:9999, trial:0 };
+  let cuota;
+  if(planSel === 'personalizado'){
+    cuota = parseInt(document.getElementById('ns-cuota').value)||0;
+    if(!cuota){ alert('Ingresa el costo mensual para el precio personalizado.'); return; }
+  } else {
+    cuota = CUOTAS_FORM[planSel] ?? 0;
+  }
+
+  const esTrial = planSel === 'trial';
+  const planLabel = { micro:'Plan Micro', pyme:'Plan PyME', mediana:'Plan Mediana',
+    empresa:'Plan Empresa', personalizado:'Plan Personalizado', trial:'Prueba Gratuita' }[planSel] || planSel;
 
   const btn = document.querySelector('#modal-nuevo .btn-green');
   if(btn){ btn.disabled=true; btn.textContent='Guardando...'; }
 
   try {
-    // Generar contraseña aleatoria
     const pass = Math.random().toString(36).slice(2,8).toUpperCase() +
                  Math.random().toString(36).slice(2,5) + '!';
 
@@ -929,18 +967,24 @@ async function guardarNuevo(){
       body: JSON.stringify({
         rfc, empresa, email,
         tel: document.getElementById('ns-tel')?.value?.trim()||'',
-        plan: planMap[planSel]||'estandar',
+        plan: planSel,
+        cuota,
+        trial: esTrial,
         pass,
         enviarEmail: true,
       })
     });
-    const data = await res.json();
+    const text = await res.text();
+    let data; try{ data=JSON.parse(text); }catch{ throw new Error('Respuesta inválida del servidor'); }
     if(!res.ok||data.error) throw new Error(data.error||'Error al crear cliente');
 
     cerrarModal();
     await cargarClientesReales();
     goPanel('suscripciones');
-    alert(`✅ Cliente creado\n\nEmpresa: ${empresa}\nPlan: ${planSel} · $${cuota.toLocaleString('es-MX')}/mes\nContraseña inicial: ${pass}\n\nSe envió email de bienvenida a ${email}`);
+    const resumen = esTrial
+      ? `Plan: Prueba gratuita 30 días`
+      : `Plan: ${planLabel} · $${cuota.toLocaleString('es-MX')}/mes`;
+    alert(`✅ Cliente creado\n\nEmpresa: ${empresa}\n${resumen}\nContraseña inicial: ${pass}\n\nSe envió email de bienvenida a ${email}`);
   } catch(e) {
     alert('No se pudo crear el cliente: ' + (e.message||e));
   }

@@ -529,7 +529,9 @@ async function analizarJornada() {
       body: JSON.stringify({ modo: 'anomalias', datos }),
     });
 
-    const data = await res.json();
+    const text = await res.text();
+    let data;
+    try { data = JSON.parse(text); } catch { throw new Error('El servicio de IA no está disponible. Intente en unos minutos.'); }
     if (!res.ok || !data.ok) throw new Error(data.error || 'Error al analizar');
 
     renderResultado(data.resultado);

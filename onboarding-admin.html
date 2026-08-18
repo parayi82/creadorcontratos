@@ -1,0 +1,1403 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Playbook de Implementación · Admin · ClickLaboral.mx</title>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Sora:wght@400;600;700;800&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+/* ── Tokens ── */
+:root {
+  --bg:       #f0f5fb;
+  --bg2:      #e4edf7;
+  --surf:     #ffffff;
+  --surf2:    #f7fafd;
+  --border:   #d0dce9;
+  --border2:  #b8cfe0;
+  --text:     #0d1b2a;
+  --text2:    #334d65;
+  --muted:    #5a7591;
+  --teal:     #14b8a6;
+  --navy:     #0f2640;
+
+  --f0: #f59e0b;
+  --f1: #3b82f6;
+  --f2: #14b8a6;
+  --f3: #8b5cf6;
+  --f4: #0ea5e9;
+  --f5: #10b981;
+  --f6: #6366f1;
+
+  --r: 10px;
+  --font: 'Inter', system-ui, sans-serif;
+  --font-d: 'Sora', system-ui, sans-serif;
+  --font-m: 'JetBrains Mono', monospace;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg:      #0b1929;
+    --bg2:     #0f2030;
+    --surf:    #122038;
+    --surf2:   #162840;
+    --border:  #1e3450;
+    --border2: #2a4668;
+    --text:    #c8ddf0;
+    --text2:   #7ca3c0;
+    --muted:   #5a7899;
+  }
+}
+:root[data-theme="dark"] {
+  --bg:      #0b1929;
+  --bg2:     #0f2030;
+  --surf:    #122038;
+  --surf2:   #162840;
+  --border:  #1e3450;
+  --border2: #2a4668;
+  --text:    #c8ddf0;
+  --text2:   #7ca3c0;
+  --muted:   #5a7899;
+}
+
+*,*::before,*::after { box-sizing:border-box; margin:0; padding:0; }
+html { scroll-behavior: smooth; }
+body {
+  font-family: var(--font);
+  background: var(--bg);
+  color: var(--text);
+  font-size: 14px;
+  line-height: 1.6;
+  min-height: 100vh;
+}
+
+/* ── Login gate ── */
+#login-gate {
+  display: none;
+  align-items: center;
+  justify-content: center;
+  min-height: 100vh;
+  background: var(--navy);
+}
+#login-gate.visible { display: flex; }
+.login-box {
+  background: #fff;
+  border-radius: 14px;
+  padding: 40px 36px;
+  width: 100%;
+  max-width: 380px;
+  box-shadow: 0 20px 60px rgba(0,0,0,.35);
+}
+.login-logo {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 28px;
+}
+.login-logo-text {
+  font-family: var(--font-d);
+  font-size: 17px;
+  font-weight: 700;
+  color: var(--navy);
+}
+.login-logo-text em { color: var(--teal); font-style: normal; }
+.login-title {
+  font-family: var(--font-d);
+  font-size: 20px;
+  font-weight: 700;
+  color: #0d1b2a;
+  margin-bottom: 6px;
+}
+.login-subtitle {
+  font-size: 13px;
+  color: #5a7591;
+  margin-bottom: 24px;
+}
+.login-field { margin-bottom: 14px; }
+.login-field label {
+  display: block;
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: .06em;
+  text-transform: uppercase;
+  color: #5a7591;
+  margin-bottom: 6px;
+}
+.login-field input {
+  width: 100%;
+  padding: 10px 14px;
+  border: 1.5px solid #d0dce9;
+  border-radius: 8px;
+  font-family: var(--font);
+  font-size: 14px;
+  color: #0d1b2a;
+  background: #f7fafd;
+  outline: none;
+  transition: border-color .15s;
+}
+.login-field input:focus { border-color: var(--teal); background: #fff; }
+.login-btn {
+  width: 100%;
+  padding: 11px;
+  background: var(--navy);
+  color: #fff;
+  border: none;
+  border-radius: 8px;
+  font-family: var(--font-d);
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  margin-top: 6px;
+  transition: background .15s;
+}
+.login-btn:hover { background: #1a3a5c; }
+.login-btn:disabled { opacity: .5; cursor: not-allowed; }
+.login-error {
+  display: none;
+  margin-top: 12px;
+  background: #fee2e2;
+  border: 1px solid rgba(220,38,38,.3);
+  color: #dc2626;
+  font-size: 12px;
+  padding: 8px 12px;
+  border-radius: 6px;
+}
+.login-error.visible { display: block; }
+
+/* ── App shell ── */
+#app { display: none; }
+#app.visible { display: block; }
+
+/* ── Top bar ── */
+.topbar {
+  background: var(--navy);
+  color: #e8f2fc;
+  padding: 0 24px;
+  height: 52px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  position: sticky;
+  top: 0;
+  z-index: 100;
+  border-bottom: 1px solid rgba(255,255,255,.06);
+}
+.topbar-logo {
+  font-family: var(--font-d);
+  font-weight: 700;
+  font-size: 14px;
+  color: #fff;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+.logo-teal { color: var(--teal); }
+.admin-badge {
+  background: rgba(220,38,38,.18);
+  border: 1px solid rgba(220,38,38,.4);
+  color: #fca5a5;
+  font-family: var(--font-m);
+  font-size: 10px;
+  font-weight: 500;
+  letter-spacing: .08em;
+  padding: 3px 10px;
+  border-radius: 4px;
+  text-transform: uppercase;
+}
+.topbar-right {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+.doc-meta {
+  font-size: 11px;
+  color: rgba(200,221,240,.5);
+  font-family: var(--font-m);
+}
+.topbar-user {
+  font-size: 12px;
+  color: rgba(200,221,240,.7);
+}
+.btn-signout {
+  background: rgba(255,255,255,.08);
+  border: 1px solid rgba(255,255,255,.15);
+  color: rgba(200,221,240,.8);
+  padding: 4px 12px;
+  border-radius: 6px;
+  font-size: 11px;
+  cursor: pointer;
+  font-family: var(--font);
+  transition: background .15s;
+}
+.btn-signout:hover { background: rgba(255,255,255,.15); color: #fff; }
+
+/* ── Phase rail ── */
+.phase-rail {
+  background: var(--surf);
+  border-bottom: 1px solid var(--border);
+  padding: 0 24px;
+  display: flex;
+  gap: 0;
+  overflow-x: auto;
+  position: sticky;
+  top: 52px;
+  z-index: 99;
+  scrollbar-width: none;
+}
+.phase-rail::-webkit-scrollbar { display: none; }
+.phase-pill {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 0 20px;
+  height: 44px;
+  font-size: 11px;
+  font-weight: 600;
+  font-family: var(--font-d);
+  color: var(--muted);
+  border-bottom: 2px solid transparent;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: color .15s, border-color .15s;
+  text-decoration: none;
+}
+.phase-pill:hover { color: var(--text); }
+.phase-pill .pdot {
+  width: 8px; height: 8px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+.phase-pill[data-ph="0"] .pdot { background: var(--f0); }
+.phase-pill[data-ph="1"] .pdot { background: var(--f1); }
+.phase-pill[data-ph="2"] .pdot { background: var(--f2); }
+.phase-pill[data-ph="3"] .pdot { background: var(--f3); }
+.phase-pill[data-ph="4"] .pdot { background: var(--f4); }
+.phase-pill[data-ph="5"] .pdot { background: var(--f5); }
+.phase-pill[data-ph="6"] .pdot { background: var(--f6); }
+.phase-pill[data-ph="0"]:hover { border-bottom-color: var(--f0); color: var(--f0); }
+.phase-pill[data-ph="1"]:hover { border-bottom-color: var(--f1); color: var(--f1); }
+.phase-pill[data-ph="2"]:hover { border-bottom-color: var(--f2); color: var(--f2); }
+.phase-pill[data-ph="3"]:hover { border-bottom-color: var(--f3); color: var(--f3); }
+.phase-pill[data-ph="4"]:hover { border-bottom-color: var(--f4); color: var(--f4); }
+.phase-pill[data-ph="5"]:hover { border-bottom-color: var(--f5); color: var(--f5); }
+.phase-pill[data-ph="6"]:hover { border-bottom-color: var(--f6); color: var(--f6); }
+
+/* ── Main layout ── */
+.page {
+  max-width: 1080px;
+  margin: 0 auto;
+  padding: 32px 24px 80px;
+}
+
+/* ── Page header ── */
+.page-header {
+  margin-bottom: 36px;
+  padding-bottom: 24px;
+  border-bottom: 1px solid var(--border);
+}
+.page-eyebrow {
+  font-family: var(--font-m);
+  font-size: 10px;
+  color: var(--teal);
+  letter-spacing: .12em;
+  text-transform: uppercase;
+  margin-bottom: 10px;
+}
+.page-title {
+  font-family: var(--font-d);
+  font-size: 28px;
+  font-weight: 800;
+  line-height: 1.2;
+  color: var(--text);
+  text-wrap: balance;
+  margin-bottom: 10px;
+}
+.page-subtitle {
+  font-size: 14px;
+  color: var(--muted);
+  max-width: 620px;
+  line-height: 1.65;
+}
+
+/* ── KPI strip ── */
+.kpi-strip {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+  gap: 12px;
+  margin-bottom: 36px;
+}
+.kpi-card {
+  background: var(--surf);
+  border: 1px solid var(--border);
+  border-radius: var(--r);
+  padding: 14px 16px;
+}
+.kpi-label {
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: .1em;
+  text-transform: uppercase;
+  color: var(--muted);
+  margin-bottom: 6px;
+}
+.kpi-value {
+  font-family: var(--font-d);
+  font-size: 22px;
+  font-weight: 700;
+  color: var(--text);
+  line-height: 1;
+  margin-bottom: 3px;
+}
+.kpi-note {
+  font-size: 11px;
+  color: var(--muted);
+}
+
+/* ── Role legend ── */
+.role-legend {
+  background: var(--surf);
+  border: 1px solid var(--border);
+  border-radius: var(--r);
+  padding: 16px 20px;
+  margin-bottom: 36px;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 16px 24px;
+  align-items: center;
+}
+.role-legend-label {
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: .1em;
+  text-transform: uppercase;
+  color: var(--muted);
+  flex-basis: 100%;
+  margin-bottom: 4px;
+}
+.role-chip {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  font-size: 12px;
+  color: var(--text2);
+}
+.role-dot {
+  width: 10px; height: 10px; border-radius: 50%; flex-shrink: 0;
+}
+.role-chip strong { color: var(--text); font-weight: 600; }
+.role-chip span { color: var(--muted); font-size: 11px; }
+
+/* ── Phase section ── */
+.phase-section {
+  margin-bottom: 28px;
+  scroll-margin-top: 108px;
+}
+.phase-card {
+  background: var(--surf);
+  border: 1px solid var(--border);
+  border-radius: var(--r);
+  overflow: hidden;
+}
+.phase-header {
+  display: flex;
+  align-items: flex-start;
+  gap: 16px;
+  padding: 20px 24px 18px;
+  border-left: 4px solid var(--phase-color);
+  cursor: pointer;
+  user-select: none;
+}
+.phase-code {
+  font-family: var(--font-m);
+  font-size: 11px;
+  font-weight: 500;
+  color: var(--phase-color);
+  background: color-mix(in srgb, var(--phase-color) 12%, transparent);
+  border: 1px solid color-mix(in srgb, var(--phase-color) 30%, transparent);
+  padding: 3px 9px;
+  border-radius: 4px;
+  white-space: nowrap;
+  flex-shrink: 0;
+  margin-top: 2px;
+}
+.phase-titles { flex: 1; min-width: 0; }
+.phase-name {
+  font-family: var(--font-d);
+  font-size: 16px;
+  font-weight: 700;
+  color: var(--text);
+  margin-bottom: 4px;
+}
+.phase-desc {
+  font-size: 12px;
+  color: var(--muted);
+  line-height: 1.5;
+}
+.phase-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-top: 10px;
+}
+.chip {
+  font-size: 10px;
+  font-weight: 600;
+  padding: 3px 9px;
+  border-radius: 4px;
+  font-family: var(--font-m);
+  letter-spacing: .03em;
+}
+.chip-time  { background: var(--bg2); color: var(--text2); border: 1px solid var(--border); }
+.chip-owner { background: color-mix(in srgb, var(--phase-color) 10%, transparent); color: var(--phase-color); border: 1px solid color-mix(in srgb, var(--phase-color) 25%, transparent); }
+.chip-exit  { background: color-mix(in srgb, #10b981 10%, transparent); color: #10b981; border: 1px solid color-mix(in srgb, #10b981 25%, transparent); }
+
+.phase-toggle {
+  font-size: 14px;
+  color: var(--muted);
+  flex-shrink: 0;
+  transition: transform .2s;
+  margin-top: 2px;
+}
+.phase-card.open .phase-toggle { transform: rotate(180deg); }
+
+/* ── Phase body ── */
+.phase-body {
+  display: none;
+  border-top: 1px solid var(--border);
+}
+.phase-card.open .phase-body { display: block; }
+
+.tracks {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0;
+}
+.track { padding: 20px 24px 24px; }
+.track + .track { border-left: 1px solid var(--border); }
+.track-header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 14px;
+}
+.track-icon {
+  width: 26px; height: 26px;
+  border-radius: 6px;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 13px;
+  flex-shrink: 0;
+}
+.track-cl .track-icon { background: color-mix(in srgb, var(--phase-color) 15%, transparent); }
+.track-client .track-icon { background: color-mix(in srgb, #10b981 15%, transparent); }
+.track-title {
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: .08em;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+
+/* ── Checklist ── */
+.checklist { list-style: none; display: flex; flex-direction: column; gap: 8px; }
+.check-item {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  font-size: 13px;
+  color: var(--text2);
+  line-height: 1.45;
+  cursor: pointer;
+}
+.check-item input[type=checkbox] {
+  appearance: none;
+  -webkit-appearance: none;
+  width: 16px; height: 16px;
+  border: 1.5px solid var(--border2);
+  border-radius: 4px;
+  background: var(--surf2);
+  cursor: pointer;
+  flex-shrink: 0;
+  margin-top: 1px;
+  position: relative;
+  transition: background .12s, border-color .12s;
+}
+.check-item input[type=checkbox]:checked {
+  background: var(--phase-color);
+  border-color: var(--phase-color);
+}
+.check-item input[type=checkbox]:checked::after {
+  content: '';
+  position: absolute;
+  top: 2px; left: 5px;
+  width: 4px; height: 7px;
+  border: 1.5px solid #fff;
+  border-top: none;
+  border-left: none;
+  transform: rotate(45deg);
+}
+.check-item.done > label { color: var(--muted); text-decoration: line-through; }
+label { cursor: pointer; }
+.check-sub {
+  font-size: 11px;
+  color: var(--muted);
+  display: block;
+  margin-top: 2px;
+}
+
+/* ── Notes ── */
+.phase-notes {
+  background: var(--bg2);
+  border-top: 1px solid var(--border);
+  padding: 14px 24px;
+  display: flex;
+  gap: 20px;
+  flex-wrap: wrap;
+}
+.note-block { flex: 1; min-width: 200px; }
+.note-label {
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: .1em;
+  text-transform: uppercase;
+  color: var(--muted);
+  margin-bottom: 5px;
+}
+.note-text {
+  font-size: 12px;
+  color: var(--text2);
+  line-height: 1.55;
+}
+.note-text strong { color: var(--text); font-weight: 600; }
+.note-term {
+  display: inline-block;
+  font-family: var(--font-m);
+  font-size: 10px;
+  background: var(--surf);
+  border: 1px solid var(--border);
+  color: var(--text2);
+  padding: 2px 7px;
+  border-radius: 3px;
+  margin: 2px 2px 0 0;
+}
+
+/* ── Progress bar ── */
+.progress-bar-wrap { margin-top: 12px; }
+.progress-bar-bg {
+  height: 4px;
+  background: var(--border);
+  border-radius: 2px;
+  overflow: hidden;
+}
+.progress-bar-fill {
+  height: 100%;
+  background: var(--phase-color);
+  border-radius: 2px;
+  transition: width .3s;
+}
+.progress-label {
+  font-family: var(--font-m);
+  font-size: 10px;
+  color: var(--muted);
+  margin-top: 5px;
+}
+
+/* ── Section title ── */
+.section-title {
+  font-family: var(--font-d);
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: .1em;
+  text-transform: uppercase;
+  color: var(--muted);
+  margin: 36px 0 14px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+.section-title::after {
+  content: '';
+  flex: 1;
+  height: 1px;
+  background: var(--border);
+}
+
+/* ── Glossary ── */
+.glossary {
+  background: var(--surf);
+  border: 1px solid var(--border);
+  border-radius: var(--r);
+  padding: 20px 24px;
+}
+.glossary-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+  gap: 14px 24px;
+  margin-top: 12px;
+}
+.gterm-name {
+  font-family: var(--font-m);
+  font-size: 11px;
+  font-weight: 500;
+  color: var(--teal);
+  margin-bottom: 3px;
+}
+.gterm-def {
+  font-size: 12px;
+  color: var(--text2);
+  line-height: 1.5;
+}
+
+/* ── Responsive ── */
+@media (max-width: 680px) {
+  .tracks { grid-template-columns: 1fr; }
+  .track + .track { border-left: none; border-top: 1px solid var(--border); }
+  .page-title { font-size: 22px; }
+  .kpi-strip { grid-template-columns: repeat(2, 1fr); }
+  .topbar-user { display: none; }
+}
+</style>
+</head>
+<body>
+
+<!-- ── Login gate ── -->
+<div id="login-gate">
+  <div class="login-box">
+    <div class="login-logo">
+      <svg width="28" height="28" viewBox="0 0 100 100">
+        <defs><linearGradient id="lg" x1="10" y1="10" x2="90" y2="95" gradientUnits="userSpaceOnUse">
+          <stop offset="0%" stop-color="#1a3a5c"/><stop offset="55%" stop-color="#1e6f6c"/><stop offset="100%" stop-color="#2dd4bf"/>
+        </linearGradient></defs>
+        <path d="M50 7 L83 20 V51 C83 73 68 87 50 95 C32 87 17 73 17 51 V20 Z" fill="none" stroke="url(#lg)" stroke-width="6" stroke-linejoin="round"/>
+        <circle cx="40" cy="38" r="8.5" fill="#5eead4"/>
+        <path d="M25 63 C25 51 31 45 40 45 C49 45 55 51 55 63 Z" fill="#5eead4"/>
+        <circle cx="55" cy="33" r="9.5" fill="#14b8a6"/>
+        <path d="M38 61 C38 48 45.5 41 55 41 C64.5 41 72 48 72 61 Z" fill="#14b8a6"/>
+        <path d="M29 61 L45 77 L78 40" fill="none" stroke="#e8f2fc" stroke-width="9" stroke-linecap="round" stroke-linejoin="round"/>
+      </svg>
+      <span class="login-logo-text">Click<em>Laboral</em>.mx</span>
+    </div>
+    <div class="login-title">Acceso de Administrador</div>
+    <div class="login-subtitle">Playbook de Implementación — solo equipo interno</div>
+    <div class="login-field">
+      <label>Correo</label>
+      <input type="email" id="la-email" placeholder="admin@clicklaboral.mx" autocomplete="email">
+    </div>
+    <div class="login-field">
+      <label>Contraseña</label>
+      <input type="password" id="la-password" placeholder="••••••••" autocomplete="current-password"
+        onkeydown="if(event.key==='Enter') loginAdmin()">
+    </div>
+    <button class="login-btn" id="login-btn" onclick="loginAdmin()">Ingresar →</button>
+    <div class="login-error" id="login-error"></div>
+  </div>
+</div>
+
+<!-- ── App shell ── -->
+<div id="app">
+
+  <!-- Top bar -->
+  <div class="topbar">
+    <div class="topbar-logo">
+      <svg width="22" height="22" viewBox="0 0 100 100">
+        <defs><linearGradient id="lg2" x1="10" y1="10" x2="90" y2="95" gradientUnits="userSpaceOnUse">
+          <stop offset="0%" stop-color="#1a3a5c"/><stop offset="55%" stop-color="#1e6f6c"/><stop offset="100%" stop-color="#2dd4bf"/>
+        </linearGradient></defs>
+        <path d="M50 7 L83 20 V51 C83 73 68 87 50 95 C32 87 17 73 17 51 V20 Z" fill="none" stroke="url(#lg2)" stroke-width="6" stroke-linejoin="round"/>
+        <circle cx="40" cy="38" r="8.5" fill="#5eead4"/>
+        <path d="M25 63 C25 51 31 45 40 45 C49 45 55 51 55 63 Z" fill="#5eead4"/>
+        <circle cx="55" cy="33" r="9.5" fill="#14b8a6"/>
+        <path d="M38 61 C38 48 45.5 41 55 41 C64.5 41 72 48 72 61 Z" fill="#14b8a6"/>
+        <path d="M29 61 L45 77 L78 40" fill="none" stroke="#e8f2fc" stroke-width="9" stroke-linecap="round" stroke-linejoin="round"/>
+      </svg>
+      Click<span class="logo-teal">Laboral</span>.mx
+    </div>
+    <div class="topbar-right">
+      <span class="doc-meta">Playbook v1.0 · 2026</span>
+      <span class="admin-badge">🔒 Solo Admin</span>
+      <span class="topbar-user" id="topbar-user"></span>
+      <button class="btn-signout" onclick="signOut()">Cerrar sesión</button>
+    </div>
+  </div>
+
+  <!-- Phase rail -->
+  <nav class="phase-rail">
+    <a class="phase-pill" href="#f0" data-ph="0"><span class="pdot"></span>F0 · Handoff de ventas</a>
+    <a class="phase-pill" href="#f1" data-ph="1"><span class="pdot"></span>F1 · Provisioning</a>
+    <a class="phase-pill" href="#f2" data-ph="2"><span class="pdot"></span>F2 · Kickoff</a>
+    <a class="phase-pill" href="#f3" data-ph="3"><span class="pdot"></span>F3 · Setup & Config</a>
+    <a class="phase-pill" href="#f4" data-ph="4"><span class="pdot"></span>F4 · Capacitación</a>
+    <a class="phase-pill" href="#f5" data-ph="5"><span class="pdot"></span>F5 · Go-Live</a>
+    <a class="phase-pill" href="#f6" data-ph="6"><span class="pdot"></span>F6 · Steady State</a>
+  </nav>
+
+  <div class="page">
+
+    <!-- Page header -->
+    <div class="page-header">
+      <div class="page-eyebrow">Customer Success · Implementación</div>
+      <h1 class="page-title">Playbook de Onboarding<br>ClickLaboral.mx</h1>
+      <p class="page-subtitle">Guía operativa de implementación llave en mano para nuevos clientes. Cubre el journey completo desde el cierre de venta hasta el steady state. Uso exclusivo del equipo interno.</p>
+    </div>
+
+    <!-- KPI strip -->
+    <div class="kpi-strip">
+      <div class="kpi-card">
+        <div class="kpi-label">TTV objetivo</div>
+        <div class="kpi-value">5 días</div>
+        <div class="kpi-note">hábiles hasta primer documento</div>
+      </div>
+      <div class="kpi-card">
+        <div class="kpi-label">Completion rate</div>
+        <div class="kpi-value">&gt;85%</div>
+        <div class="kpi-note">onboarding completado en 30 días</div>
+      </div>
+      <div class="kpi-card">
+        <div class="kpi-label">Health score W4</div>
+        <div class="kpi-value">≥70</div>
+        <div class="kpi-note">sobre 100 al cierre de mes 1</div>
+      </div>
+      <div class="kpi-card">
+        <div class="kpi-label">Docs mes 1</div>
+        <div class="kpi-value">≥10</div>
+        <div class="kpi-note">documentos generados por cliente</div>
+      </div>
+      <div class="kpi-card">
+        <div class="kpi-label">Roster W2</div>
+        <div class="kpi-value">&gt;80%</div>
+        <div class="kpi-note">empleados registrados semana 2</div>
+      </div>
+      <div class="kpi-card">
+        <div class="kpi-label">Kickoff SLA</div>
+        <div class="kpi-value">48 h</div>
+        <div class="kpi-note">máximo post-pago confirmado</div>
+      </div>
+    </div>
+
+    <!-- Role legend -->
+    <div class="role-legend">
+      <div class="role-legend-label">Roles en el journey</div>
+      <div class="role-chip"><span class="role-dot" style="background:#14b8a6"></span><strong>CSM</strong> <span>Customer Success Manager — ClickLaboral</span></div>
+      <div class="role-chip"><span class="role-dot" style="background:#3b82f6"></span><strong>Ventas</strong> <span>Ejecutivo comercial — ClickLaboral</span></div>
+      <div class="role-chip"><span class="role-dot" style="background:#8b5cf6"></span><strong>Champion</strong> <span>Admin principal del cliente — quien lleva el registro diario</span></div>
+      <div class="role-chip"><span class="role-dot" style="background:#f59e0b"></span><strong>Decisor</strong> <span>Quien firmó y paga — puede ser el mismo que el champion</span></div>
+      <div class="role-chip"><span class="role-dot" style="background:#6366f1"></span><strong>Usuarios sec.</strong> <span>Supervisores / gerentes con acceso de consulta</span></div>
+    </div>
+
+    <!-- ── FASE 0 ── -->
+    <div class="phase-section" id="f0">
+      <div class="phase-card open" style="--phase-color:var(--f0)">
+        <div class="phase-header" onclick="togglePhase(this)">
+          <span class="phase-code">F0 · PRE-ONBOARDING</span>
+          <div class="phase-titles">
+            <div class="phase-name">Handoff de Ventas → Customer Success</div>
+            <div class="phase-desc">El cliente firmó y pagó. Ventas transfiere al CSM con toda la información del deal. Objetivo: provisionar la cuenta el mismo día.</div>
+            <div class="phase-chips">
+              <span class="chip chip-time">⏱ Día 0 — &lt; 2 h post-pago</span>
+              <span class="chip chip-owner">CSM + Ventas</span>
+              <span class="chip chip-exit">✓ Exit: deal brief recibido · pago confirmado · CSM asignado</span>
+            </div>
+          </div>
+          <span class="phase-toggle">▼</span>
+        </div>
+        <div class="phase-body">
+          <div class="tracks">
+            <div class="track track-cl">
+              <div class="track-header">
+                <div class="track-icon">⚡</div>
+                <div class="track-title">ClickLaboral — Ventas / CSM</div>
+              </div>
+              <ul class="checklist" id="cl-f0">
+                <li class="check-item"><input type="checkbox" onchange="onCheck(this)"><label>Confirmar pago procesado en Stripe (webhook o dashboard)<span class="check-sub">Verificar que el charge está en <em>succeeded</em>, no solo en <em>pending</em></span></label></li>
+                <li class="check-item"><input type="checkbox" onchange="onCheck(this)"><label>Completar Deal Brief y pasarlo al CSM asignado<span class="check-sub">Incluye: plan contratado, tamaño empresa, RFC, sector, pain points, nombre del champion y su WhatsApp</span></label></li>
+                <li class="check-item"><input type="checkbox" onchange="onCheck(this)"><label>Asignar CSM antes de que pasen 30 min del pago</label></li>
+                <li class="check-item"><input type="checkbox" onchange="onCheck(this)"><label>Registrar cliente en CRM (HubSpot / Notion) con stage "Onboarding"<span class="check-sub">Fecha de inicio, plan, MRR, contacto principal</span></label></li>
+                <li class="check-item"><input type="checkbox" onchange="onCheck(this)"><label>Identificar y confirmar al Champion (admin principal)<span class="check-sub">¿Es el mismo que el decisor? ¿Tiene acceso directo a los expedientes?</span></label></li>
+                <li class="check-item"><input type="checkbox" onchange="onCheck(this)"><label>Mapear stakeholders: decisor, champion, usuarios secundarios</label></li>
+                <li class="check-item"><input type="checkbox" onchange="onCheck(this)"><label>CSM envía mensaje de presentación por WhatsApp al champion<span class="check-sub">"Hola [nombre], soy [CSM] de ClickLaboral, ya vi que tu acceso está listo, te llamo en unos minutos"</span></label></li>
+              </ul>
+              <div class="progress-bar-wrap" id="prog-cl-f0"></div>
+            </div>
+            <div class="track track-client">
+              <div class="track-header">
+                <div class="track-icon">🏢</div>
+                <div class="track-title">Cliente — Decisor</div>
+              </div>
+              <ul class="checklist" id="cl-f0c">
+                <li class="check-item"><input type="checkbox" onchange="onCheck(this)"><label>Pago procesado y recibo de Stripe recibido en correo</label></li>
+                <li class="check-item"><input type="checkbox" onchange="onCheck(this)"><label>Confirmar nombre y datos de contacto del champion / admin interno<span class="check-sub">Quien usará la plataforma diariamente</span></label></li>
+                <li class="check-item"><input type="checkbox" onchange="onCheck(this)"><label>Compartir RFC de la empresa y nombre de razón social</label></li>
+              </ul>
+              <div class="progress-bar-wrap" id="prog-cl-f0c"></div>
+            </div>
+          </div>
+          <div class="phase-notes">
+            <div class="note-block">
+              <div class="note-label">Argot CS</div>
+              <div class="note-text">
+                <span class="note-term">Sales-to-CS handoff</span>
+                <span class="note-term">Deal brief</span>
+                <span class="note-term">Champion</span>
+                <span class="note-term">Stakeholder mapping</span>
+              </div>
+            </div>
+            <div class="note-block">
+              <div class="note-label">Riesgo si se salta</div>
+              <div class="note-text">El CSM empieza ciego: sin contexto del deal, el kickoff es genérico y el cliente lo nota. <strong>El 60% del churn temprano se origina en un handoff deficiente.</strong></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ── FASE 1 ── -->
+    <div class="phase-section" id="f1">
+      <div class="phase-card" style="--phase-color:var(--f1)">
+        <div class="phase-header" onclick="togglePhase(this)">
+          <span class="phase-code">F1 · PROVISIONING</span>
+          <div class="phase-titles">
+            <div class="phase-name">Creación de Cuenta y Accesos</div>
+            <div class="phase-desc">Aprovisionamiento técnico de la cuenta: creación en Supabase, asignación de plan, envío de credenciales. El cliente debe tener acceso antes de que termine el día.</div>
+            <div class="phase-chips">
+              <span class="chip chip-time">⏱ Día 0 — &lt; 4 h post-pago</span>
+              <span class="chip chip-owner">CSM + Ops</span>
+              <span class="chip chip-exit">✓ Exit: welcome email enviado · kickoff agendado · cliente puede iniciar sesión</span>
+            </div>
+          </div>
+          <span class="phase-toggle">▼</span>
+        </div>
+        <div class="phase-body">
+          <div class="tracks">
+            <div class="track track-cl">
+              <div class="track-header">
+                <div class="track-icon">⚙️</div>
+                <div class="track-title">ClickLaboral — CSM / Ops</div>
+              </div>
+              <ul class="checklist" id="cl-f1">
+                <li class="check-item"><input type="checkbox" onchange="onCheck(this)"><label>Crear cuenta en el sistema (Supabase / Admin ClickLaboral)<span class="check-sub">Correo del champion, empresa, plan, fecha de inicio de ciclo</span></label></li>
+                <li class="check-item"><input type="checkbox" onchange="onCheck(this)"><label>Asignar plan correcto (Micro / PyME / Mediana / Empresa) con sus límites</label></li>
+                <li class="check-item"><input type="checkbox" onchange="onCheck(this)"><label>Generar contraseña temporal segura (mínimo 12 caracteres)<span class="check-sub">Usar generador — nunca "123456" ni el nombre de la empresa</span></label></li>
+                <li class="check-item"><input type="checkbox" onchange="onCheck(this)"><label>Pre-cargar datos de empresa: RFC, razón social, sector, # trabajadores<span class="check-sub">Usar info del deal brief — evitar que el cliente lo llene desde cero</span></label></li>
+                <li class="check-item"><input type="checkbox" onchange="onCheck(this)"><label>Enviar Welcome Email con credenciales, link al portal y próximos pasos<span class="check-sub">Usar plantilla "Bienvenida — acceso listo". CC al decisor si es diferente del champion</span></label></li>
+                <li class="check-item"><input type="checkbox" onchange="onCheck(this)"><label>Enviar WhatsApp al champion con las mismas credenciales<span class="check-sub">El email suele ir al spam. WhatsApp asegura que llegue</span></label></li>
+                <li class="check-item"><input type="checkbox" onchange="onCheck(this)"><label>Agendar Kickoff Call — dentro de las próximas 48 horas<span class="check-sub">Usar Calendly o Google Meet. Mandar invitación al decisor y al champion</span></label></li>
+                <li class="check-item"><input type="checkbox" onchange="onCheck(this)"><label>Compartir Guía de Inicio Rápido (PDF o Notion) con el welcome email</label></li>
+              </ul>
+              <div class="progress-bar-wrap" id="prog-cl-f1"></div>
+            </div>
+            <div class="track track-client">
+              <div class="track-header">
+                <div class="track-icon">🔑</div>
+                <div class="track-title">Cliente — Champion</div>
+              </div>
+              <ul class="checklist" id="cl-f1c">
+                <li class="check-item"><input type="checkbox" onchange="onCheck(this)"><label>Confirmar recepción del welcome email y credenciales</label></li>
+                <li class="check-item"><input type="checkbox" onchange="onCheck(this)"><label>Iniciar sesión por primera vez y cambiar contraseña temporal<span class="check-sub">Contraseña propia: mínimo 8 caracteres, 1 número</span></label></li>
+                <li class="check-item"><input type="checkbox" onchange="onCheck(this)"><label>Explorar el portal brevemente (5-10 min) antes del kickoff<span class="check-sub">No configurar nada aún — el CSM lo guiará</span></label></li>
+                <li class="check-item"><input type="checkbox" onchange="onCheck(this)"><label>Confirmar disponibilidad para el Kickoff Call</label></li>
+              </ul>
+              <div class="progress-bar-wrap" id="prog-cl-f1c"></div>
+            </div>
+          </div>
+          <div class="phase-notes">
+            <div class="note-block">
+              <div class="note-label">Argot CS</div>
+              <div class="note-text">
+                <span class="note-term">Account provisioning</span>
+                <span class="note-term">Welcome email</span>
+                <span class="note-term">Temp credentials</span>
+                <span class="note-term">Time-to-first-login</span>
+              </div>
+            </div>
+            <div class="note-block">
+              <div class="note-label">Riesgo si se salta</div>
+              <div class="note-text">El cliente pagó y no tiene acceso. Cada hora sin credenciales <strong>incrementa la probabilidad de cancelación en las primeras 72 horas</strong> en un 40% según benchmarks SaaS.</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ── FASE 2 ── -->
+    <div class="phase-section" id="f2">
+      <div class="phase-card" style="--phase-color:var(--f2)">
+        <div class="phase-header" onclick="togglePhase(this)">
+          <span class="phase-code">F2 · KICKOFF</span>
+          <div class="phase-titles">
+            <div class="phase-name">Kickoff Call — Primera reunión estructurada</div>
+            <div class="phase-desc">Llamada de 30-45 minutos donde el CSM presenta la plataforma, entiende el contexto del cliente y acuerda el plan de implementación. El kickoff define el tono de todo el onboarding.</div>
+            <div class="phase-chips">
+              <span class="chip chip-time">⏱ Días 1-2 · 30-45 min</span>
+              <span class="chip chip-owner">CSM + Champion + Decisor</span>
+              <span class="chip chip-exit">✓ Exit: quick wins definidos · timeline acordado · champion sabe qué hacer esta semana</span>
+            </div>
+          </div>
+          <span class="phase-toggle">▼</span>
+        </div>
+        <div class="phase-body">
+          <div class="tracks">
+            <div class="track track-cl">
+              <div class="track-header">
+                <div class="track-icon">🎯</div>
+                <div class="track-title">ClickLaboral — CSM (agenda del kickoff)</div>
+              </div>
+              <ul class="checklist" id="cl-f2">
+                <li class="check-item"><input type="checkbox" onchange="onCheck(this)"><label>Revisar Deal Brief antes de la llamada — llegar preparado con contexto del cliente</label></li>
+                <li class="check-item"><input type="checkbox" onchange="onCheck(this)"><label>[En llamada] Presentación del CSM y del equipo de soporte</label></li>
+                <li class="check-item"><input type="checkbox" onchange="onCheck(this)"><label>[En llamada] Confirmar stakeholders: ¿quién más usará la plataforma?<span class="check-sub">Champion (admin diario), decisor (aprueba), usuarios secundarios (supervisores)</span></label></li>
+                <li class="check-item"><input type="checkbox" onchange="onCheck(this)"><label>[En llamada] Tour ejecutivo de 10 min: contratos → expedientes → actas → asistente legal</label></li>
+                <li class="check-item"><input type="checkbox" onchange="onCheck(this)"><label>[En llamada] Definir objetivos de éxito del cliente en 30 días<span class="check-sub">¿Qué necesitan resolver urgente? ¿Hay una inspección del IMSS próxima? ¿Van a contratar?</span></label></li>
+                <li class="check-item"><input type="checkbox" onchange="onCheck(this)"><label>[En llamada] Acordar 3 Quick Wins para la primera semana<span class="check-sub">Quick Win #1: primer contrato laboral · #2: primera acta · #3: primer expediente completo</span></label></li>
+                <li class="check-item"><input type="checkbox" onchange="onCheck(this)"><label>[En llamada] Establecer cadencia de comunicación — email semanal + WhatsApp disponible</label></li>
+                <li class="check-item"><input type="checkbox" onchange="onCheck(this)"><label>Post-llamada: enviar email con resumen de acuerdos y próximos pasos<span class="check-sub">Incluir: fecha de sesión de capacitación, lista de datos que el cliente debe tener listos</span></label></li>
+                <li class="check-item"><input type="checkbox" onchange="onCheck(this)"><label>Agendar Sesión de Capacitación para la semana 2</label></li>
+              </ul>
+              <div class="progress-bar-wrap" id="prog-cl-f2"></div>
+            </div>
+            <div class="track track-client">
+              <div class="track-header">
+                <div class="track-icon">👤</div>
+                <div class="track-title">Cliente — Champion / Decisor</div>
+              </div>
+              <ul class="checklist" id="cl-f2c">
+                <li class="check-item"><input type="checkbox" onchange="onCheck(this)"><label>Asistir al kickoff con acceso al portal abierto<span class="check-sub">Traer laptop o pantalla compartida — no solo escuchar</span></label></li>
+                <li class="check-item"><input type="checkbox" onchange="onCheck(this)"><label>Definir quién será el Admin Principal (champion) si no estaba confirmado</label></li>
+                <li class="check-item"><input type="checkbox" onchange="onCheck(this)"><label>Tener a la mano: número aproximado de empleados, tipo de contratos (indeterminado / obra / tiempo parcial)</label></li>
+                <li class="check-item"><input type="checkbox" onchange="onCheck(this)"><label>Confirmar disponibilidad para sesión de capacitación semana 2</label></li>
+                <li class="check-item"><input type="checkbox" onchange="onCheck(this)"><label>Preparar para la siguiente fase: lista de empleados activos (nombre, puesto, fecha de ingreso)</label></li>
+              </ul>
+              <div class="progress-bar-wrap" id="prog-cl-f2c"></div>
+            </div>
+          </div>
+          <div class="phase-notes">
+            <div class="note-block">
+              <div class="note-label">Argot CS</div>
+              <div class="note-text">
+                <span class="note-term">Kickoff call</span>
+                <span class="note-term">Quick wins</span>
+                <span class="note-term">Success plan</span>
+                <span class="note-term">Champion</span>
+                <span class="note-term">Stakeholder mapping</span>
+                <span class="note-term">Cadencia</span>
+              </div>
+            </div>
+            <div class="note-block">
+              <div class="note-label">Tip del CSM</div>
+              <div class="note-text">Haz preguntas abiertas: "¿Qué los motivó a contratar ClickLaboral ahora?" Esa respuesta define tu narrativa durante todo el onboarding. Si dicen "inspección del IMSS en 60 días", eso es tu north star.</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ── FASE 3 ── -->
+    <div class="phase-section" id="f3">
+      <div class="phase-card" style="--phase-color:var(--f3)">
+        <div class="phase-header" onclick="togglePhase(this)">
+          <span class="phase-code">F3 · SETUP & CONFIG</span>
+          <div class="phase-titles">
+            <div class="phase-name">Configuración y Carga Inicial de Datos</div>
+            <div class="phase-desc">El champion configura la empresa y carga el roster de empleados. El CSM acompaña activamente. Termina cuando el cliente genera su primer contrato real — el TTV empieza aquí.</div>
+            <div class="phase-chips">
+              <span class="chip chip-time">⏱ Días 1-5 (paralelo a F2)</span>
+              <span class="chip chip-owner">Champion · acompañado por CSM</span>
+              <span class="chip chip-exit">✓ Exit: &gt;80% empleados cargados · primer contrato generado (Quick Win #1)</span>
+            </div>
+          </div>
+          <span class="phase-toggle">▼</span>
+        </div>
+        <div class="phase-body">
+          <div class="tracks">
+            <div class="track track-cl">
+              <div class="track-header">
+                <div class="track-icon">🛠</div>
+                <div class="track-title">ClickLaboral — CSM</div>
+              </div>
+              <ul class="checklist" id="cl-f3">
+                <li class="check-item"><input type="checkbox" onchange="onCheck(this)"><label>Verificar que el perfil de empresa está completo en la plataforma<span class="check-sub">RFC, razón social, IMSS, domicilio, actividad económica, representante legal</span></label></li>
+                <li class="check-item"><input type="checkbox" onchange="onCheck(this)"><label>Confirmar que el plan contratado corresponde al número real de empleados</label></li>
+                <li class="check-item"><input type="checkbox" onchange="onCheck(this)"><label>Compartir plantilla de importación de empleados (Excel/CSV)<span class="check-sub">Columnas: nombre completo, RFC, CURP, NSS, fecha ingreso, puesto, departamento, salario diario, tipo contrato</span></label></li>
+                <li class="check-item"><input type="checkbox" onchange="onCheck(this)"><label>Hacer call de 20 min para acompañar la primera importación si el cliente lo necesita</label></li>
+                <li class="check-item"><input type="checkbox" onchange="onCheck(this)"><label>Revisar que la configuración de jornada es correcta (horas/día, días/semana)<span class="check-sub">Crítico para cumplimiento de reforma 40h y cálculo de horas extras</span></label></li>
+                <li class="check-item"><input type="checkbox" onchange="onCheck(this)"><label>Confirmar que el primer contrato generado es correcto legalmente<span class="check-sub">El CSM lo revisa — si algo está mal, corriges antes de que el cliente lo use</span></label></li>
+              </ul>
+              <div class="progress-bar-wrap" id="prog-cl-f3"></div>
+            </div>
+            <div class="track track-client">
+              <div class="track-header">
+                <div class="track-icon">📋</div>
+                <div class="track-title">Cliente — Champion (Admin Principal)</div>
+              </div>
+              <ul class="checklist" id="cl-f3c">
+                <li class="check-item"><input type="checkbox" onchange="onCheck(this)"><label>Completar perfil de empresa: RFC, razón social, IMSS patronal, domicilio</label></li>
+                <li class="check-item"><input type="checkbox" onchange="onCheck(this)"><label>Cargar lista de empleados activos (importación Excel o captura individual)<span class="check-sub">Mínimo para comenzar: nombre, puesto, fecha ingreso, salario. El resto puede completarse después</span></label></li>
+                <li class="check-item"><input type="checkbox" onchange="onCheck(this)"><label>Configurar jornada laboral: tipo (diurna/nocturna/mixta), horas por día</label></li>
+                <li class="check-item"><input type="checkbox" onchange="onCheck(this)"><label>Configurar tipos de contrato predominantes en la empresa</label></li>
+                <li class="check-item"><input type="checkbox" onchange="onCheck(this)"><label>Generar primer contrato laboral real — el del empleado más reciente<span class="check-sub">🏆 Quick Win #1 — primer valor tangible de la plataforma</span></label></li>
+                <li class="check-item"><input type="checkbox" onchange="onCheck(this)"><label>Si aplica (+50 trabajadores): configurar módulo NOM-035<span class="check-sub">Definir período de evaluación, comisión mixta, responsable</span></label></li>
+                <li class="check-item"><input type="checkbox" onchange="onCheck(this)"><label>Confirmar al CSM cuando el roster esté al menos al 80%</label></li>
+              </ul>
+              <div class="progress-bar-wrap" id="prog-cl-f3c"></div>
+            </div>
+          </div>
+          <div class="phase-notes">
+            <div class="note-block">
+              <div class="note-label">Argot CS</div>
+              <div class="note-text">
+                <span class="note-term">Roster import</span>
+                <span class="note-term">Data migration</span>
+                <span class="note-term">TTV — Time to Value</span>
+                <span class="note-term">Quick Win #1</span>
+                <span class="note-term">Configuration review</span>
+              </div>
+            </div>
+            <div class="note-block">
+              <div class="note-label">Datos mínimos del roster</div>
+              <div class="note-text"><strong>Obligatorio:</strong> Nombre completo, RFC, NSS, fecha de ingreso, puesto, salario diario.<br><strong>Opcional (completar después):</strong> CURP, domicilio, beneficiarios, documentos escaneados.</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ── FASE 4 ── -->
+    <div class="phase-section" id="f4">
+      <div class="phase-card" style="--phase-color:var(--f4)">
+        <div class="phase-header" onclick="togglePhase(this)">
+          <span class="phase-code">F4 · CAPACITACIÓN</span>
+          <div class="phase-titles">
+            <div class="phase-name">Entrenamiento del Admin Principal y Medición de Adopción</div>
+            <div class="phase-desc">Sesión de 60 minutos con el champion. Cubre los módulos clave. Al final, el admin debe operar de forma autónoma. Se mide el health score por primera vez.</div>
+            <div class="phase-chips">
+              <span class="chip chip-time">⏱ Semana 2 · 60 min + autoaprendizaje</span>
+              <span class="chip chip-owner">CSM + Champion</span>
+              <span class="chip chip-exit">✓ Exit: admin opera autónomamente · 3 quick wins completados · health score &gt;50</span>
+            </div>
+          </div>
+          <span class="phase-toggle">▼</span>
+        </div>
+        <div class="phase-body">
+          <div class="tracks">
+            <div class="track track-cl">
+              <div class="track-header">
+                <div class="track-icon">🎓</div>
+                <div class="track-title">ClickLaboral — CSM (agenda de capacitación)</div>
+              </div>
+              <ul class="checklist" id="cl-f4">
+                <li class="check-item"><input type="checkbox" onchange="onCheck(this)"><label>[Módulo 1 · 20 min] Contratos y expedientes digitales<span class="check-sub">Generar contrato, adjuntar documentos al expediente, buscar un empleado</span></label></li>
+                <li class="check-item"><input type="checkbox" onchange="onCheck(this)"><label>[Módulo 2 · 15 min] Actas administrativas<span class="check-sub">Generar acta de amonestación, tardanza, ausentismo. Firmar y guardar en expediente</span></label></li>
+                <li class="check-item"><input type="checkbox" onchange="onCheck(this)"><label>[Módulo 3 · 15 min] NOM-035 y Reglamento Interior de Trabajo<span class="check-sub">Si aplica: configurar evaluaciones, generar reglamento personalizado</span></label></li>
+                <li class="check-item"><input type="checkbox" onchange="onCheck(this)"><label>[Módulo 4 · 10 min] Asistente Legal IA — preview de capacidades<span class="check-sub">Mostrar cómo hacer una consulta, qué tipo de preguntas responde</span></label></li>
+                <li class="check-item"><input type="checkbox" onchange="onCheck(this)"><label>Verificar que el admin realiza Quick Win #2 durante la sesión (acta administrativa)<span class="check-sub">🏆 Quick Win #2 — el cliente hace algo, no solo observa</span></label></li>
+                <li class="check-item"><input type="checkbox" onchange="onCheck(this)"><label>Verificar Quick Win #3 antes del cierre de semana (expediente completo de 1 empleado)</label></li>
+                <li class="check-item"><input type="checkbox" onchange="onCheck(this)"><label>Calcular y registrar Health Score semana 2<span class="check-sub">Logins, docs generados, empleados cargados, módulos usados — objetivo &gt;50/100</span></label></li>
+                <li class="check-item"><input type="checkbox" onchange="onCheck(this)"><label>Identificar señales de churn early: ¿El admin logra hacer las cosas solo? ¿Hay fricción?</label></li>
+                <li class="check-item"><input type="checkbox" onchange="onCheck(this)"><label>Compartir links de tutoriales en video (YouTube / Loom)</label></li>
+              </ul>
+              <div class="progress-bar-wrap" id="prog-cl-f4"></div>
+            </div>
+            <div class="track track-client">
+              <div class="track-header">
+                <div class="track-icon">💡</div>
+                <div class="track-title">Cliente — Champion (Admin Principal)</div>
+              </div>
+              <ul class="checklist" id="cl-f4c">
+                <li class="check-item"><input type="checkbox" onchange="onCheck(this)"><label>Asistir a la sesión de capacitación con pantalla compartida y acceso al portal</label></li>
+                <li class="check-item"><input type="checkbox" onchange="onCheck(this)"><label>Durante la sesión: generar una acta administrativa real o de prueba (Quick Win #2)</label></li>
+                <li class="check-item"><input type="checkbox" onchange="onCheck(this)"><label>Completar un expediente digital con todos sus documentos (Quick Win #3)</label></li>
+                <li class="check-item"><input type="checkbox" onchange="onCheck(this)"><label>Hacer al menos una consulta al Asistente Legal IA</label></li>
+                <li class="check-item"><input type="checkbox" onchange="onCheck(this)"><label>Ver tutoriales en video de los módulos que quedaron con dudas</label></li>
+                <li class="check-item"><input type="checkbox" onchange="onCheck(this)"><label>Generar al menos 5 documentos antes del Go-Live sin ayuda del CSM</label></li>
+              </ul>
+              <div class="progress-bar-wrap" id="prog-cl-f4c"></div>
+            </div>
+          </div>
+          <div class="phase-notes">
+            <div class="note-block">
+              <div class="note-label">Argot CS</div>
+              <div class="note-text">
+                <span class="note-term">Product adoption</span>
+                <span class="note-term">Health score</span>
+                <span class="note-term">Churn risk</span>
+                <span class="note-term">Power user</span>
+                <span class="note-term">Feature activation</span>
+                <span class="note-term">Quick Win #2 y #3</span>
+              </div>
+            </div>
+            <div class="note-block">
+              <div class="note-label">Health Score — cómo calcularlo</div>
+              <div class="note-text">
+                <strong>Logins últimos 7 días</strong> (25 pts) + <strong>Docs generados</strong> (25 pts) + <strong>Empleados cargados &gt;80%</strong> (25 pts) + <strong>Módulos usados &gt;2</strong> (25 pts).<br>
+                <strong style="color:#10b981">Verde: ≥70 · Amarillo: 40-69 · Rojo: &lt;40</strong>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ── FASE 5 ── -->
+    <div class="phase-section" id="f5">
+      <div class="phase-card" style="--phase-color:var(--f5)">
+        <div class="phase-header" onclick="togglePhase(this)">
+          <span class="phase-code">F5 · GO-LIVE</span>
+          <div class="phase-titles">
+            <div class="phase-name">Activación Completa y Graduation</div>
+            <div class="phase-desc">El cliente opera de forma completamente autónoma. Cierre formal del onboarding con una "closing call". Se entrega el Índice de Cumplimiento Inicial del primer mes.</div>
+            <div class="phase-chips">
+              <span class="chip chip-time">⏱ Semanas 3-4</span>
+              <span class="chip chip-owner">CSM + Champion + Usuarios secundarios</span>
+              <span class="chip chip-exit">✓ Exit: &gt;90% empleados registrados · closing call completada · health score verde</span>
+            </div>
+          </div>
+          <span class="phase-toggle">▼</span>
+        </div>
+        <div class="phase-body">
+          <div class="tracks">
+            <div class="track track-cl">
+              <div class="track-header">
+                <div class="track-icon">🚀</div>
+                <div class="track-title">ClickLaboral — CSM</div>
+              </div>
+              <ul class="checklist" id="cl-f5">
+                <li class="check-item"><input type="checkbox" onchange="onCheck(this)"><label>Verificar que el 90%+ de empleados están registrados con datos completos</label></li>
+                <li class="check-item"><input type="checkbox" onchange="onCheck(this)"><label>Revisar que todos los contratos activos están en la plataforma<span class="check-sub">Si hay contratos en papel, ofrecer servicio de digitalización</span></label></li>
+                <li class="check-item"><input type="checkbox" onchange="onCheck(this)"><label>Apoyar migración de expedientes históricos si el cliente tiene documentos previos<span class="check-sub">Escaneos, PDFs de contratos anteriores, actas viejas</span></label></li>
+                <li class="check-item"><input type="checkbox" onchange="onCheck(this)"><label>Habilitar acceso a usuarios secundarios (supervisores / gerentes)<span class="check-sub">Crear cuentas con permisos de solo-consulta. Explicar qué pueden y no pueden hacer</span></label></li>
+                <li class="check-item"><input type="checkbox" onchange="onCheck(this)"><label>Realizar Closing Call (20-30 min): validar objetivos del kickoff, celebrar quick wins<span class="check-sub">¿Se cumplió lo que dijeron que necesitaban en 30 días? Documentar</span></label></li>
+                <li class="check-item"><input type="checkbox" onchange="onCheck(this)"><label>Entregar Índice de Cumplimiento Inicial (reporte PDF del mes 1)<span class="check-sub">Documentos generados, empleados registrados, módulos activos, compliance NOM-035</span></label></li>
+                <li class="check-item"><input type="checkbox" onchange="onCheck(this)"><label>Calcular Health Score final de onboarding — registrar en CRM</label></li>
+                <li class="check-item"><input type="checkbox" onchange="onCheck(this)"><label>Actualizar stage en CRM: de "Onboarding" a "Adoptado"</label></li>
+                <li class="check-item"><input type="checkbox" onchange="onCheck(this)"><label>Agendar check-in a los 30 días (post go-live)</label></li>
+              </ul>
+              <div class="progress-bar-wrap" id="prog-cl-f5"></div>
+            </div>
+            <div class="track track-client">
+              <div class="track-header">
+                <div class="track-icon">🎯</div>
+                <div class="track-title">Cliente — Champion + Usuarios secundarios</div>
+              </div>
+              <ul class="checklist" id="cl-f5c">
+                <li class="check-item"><input type="checkbox" onchange="onCheck(this)"><label>Champion opera el portal sin asistencia del CSM por al menos 3 días</label></li>
+                <li class="check-item"><input type="checkbox" onchange="onCheck(this)"><label>Usuarios secundarios reciben acceso y breve explicación del champion</label></li>
+                <li class="check-item"><input type="checkbox" onchange="onCheck(this)"><label>Asistir a closing call y validar que los objetivos se cumplieron</label></li>
+                <li class="check-item"><input type="checkbox" onchange="onCheck(this)"><label>Completar el roster al 90%+ de empleados activos</label></li>
+                <li class="check-item"><input type="checkbox" onchange="onCheck(this)"><label>Haber generado al menos 10 documentos reales en el mes</label></li>
+                <li class="check-item"><input type="checkbox" onchange="onCheck(this)"><label>Tener claro el canal de soporte para dudas post go-live<span class="check-sub">WhatsApp del CSM · email de soporte · base de conocimiento</span></label></li>
+              </ul>
+              <div class="progress-bar-wrap" id="prog-cl-f5c"></div>
+            </div>
+          </div>
+          <div class="phase-notes">
+            <div class="note-block">
+              <div class="note-label">Argot CS</div>
+              <div class="note-text">
+                <span class="note-term">Go-live</span>
+                <span class="note-term">Graduation</span>
+                <span class="note-term">Closing call</span>
+                <span class="note-term">Índice de cumplimiento</span>
+                <span class="note-term">Data migration</span>
+                <span class="note-term">Secondary users</span>
+              </div>
+            </div>
+            <div class="note-block">
+              <div class="note-label">Señal de graduation</div>
+              <div class="note-text">El champion resuelve una duda laboral usando el Asistente Legal IA <strong>sin pedir ayuda al CSM</strong>. Cuando eso pasa, el onboarding fue exitoso.</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ── FASE 6 ── -->
+    <div class="phase-section" id="f6">
+      <div class="phase-card" style="--phase-color:var(--f6)">
+        <div class="phase-header" onclick="togglePhase(this)">
+          <span class="phase-code">F6 · STEADY STATE</span>
+          <div class="phase-titles">
+            <div class="phase-name">Retención, QBRs y Prevención de Churn</div>
+            <div class="phase-desc">El cliente está en producción. El CSM pasa a modo de "success manager" reactivo + proactivo. Check-ins periódicos, NPS, alertas de renovación y detección temprana de churn risk.</div>
+            <div class="phase-chips">
+              <span class="chip chip-time">⏱ Mes 2 en adelante</span>
+              <span class="chip chip-owner">CSM</span>
+              <span class="chip chip-exit">✓ Ongoing: NPS positivo · renovación confirmada · expansión de plan si crece</span>
+            </div>
+          </div>
+          <span class="phase-toggle">▼</span>
+        </div>
+        <div class="phase-body">
+          <div class="tracks">
+            <div class="track track-cl">
+              <div class="track-header">
+                <div class="track-icon">📊</div>
+                <div class="track-title">ClickLaboral — CSM (cadencia mensual)</div>
+              </div>
+              <ul class="checklist" id="cl-f6">
+                <li class="check-item"><input type="checkbox" onchange="onCheck(this)"><label>Check-in a los 30 días post go-live (call de 20 min)<span class="check-sub">¿Qué está funcionando? ¿Qué no? ¿Hay friction en algún módulo?</span></label></li>
+                <li class="check-item"><input type="checkbox" onchange="onCheck(this)"><label>Enviar NPS survey a los 60 días<span class="check-sub">Pregunta única: "¿Qué tan probable es que recomiendes ClickLaboral?" (0-10). Seguimiento inmediato si score &lt;7</span></label></li>
+                <li class="check-item"><input type="checkbox" onchange="onCheck(this)"><label>QBR a los 90 días (Quarterly Business Review — 45 min)<span class="check-sub">Revisión de métricas: docs generados, empleados, módulos activos, ROI percibido</span></label></li>
+                <li class="check-item"><input type="checkbox" onchange="onCheck(this)"><label>Monitorear Health Score mensualmente — alertar si cae a amarillo<span class="check-sub">Si cae a rojo (&lt;40): contacto inmediato en &lt;24 h con plan de recuperación</span></label></li>
+                <li class="check-item"><input type="checkbox" onchange="onCheck(this)"><label>Alerta de renovación: −30 días antes del vencimiento<span class="check-sub">Email automático + WhatsApp del CSM</span></label></li>
+                <li class="check-item"><input type="checkbox" onchange="onCheck(this)"><label>Alerta de renovación: −15 días y −7 días (si no ha renovado)</label></li>
+                <li class="check-item"><input type="checkbox" onchange="onCheck(this)"><label>Detectar oportunidad de upsell: ¿El cliente superó el 85% del límite de trabajadores de su plan?<span class="check-sub">Sugerir upgrade proactivamente — no esperar a que lo soliciten</span></label></li>
+                <li class="check-item"><input type="checkbox" onchange="onCheck(this)"><label>Compartir novedades legales relevantes (reforma, NOMs) — demuestra expertise<span class="check-sub">Esto diferencia a un CSM de un simple soporte técnico</span></label></li>
+              </ul>
+              <div class="progress-bar-wrap" id="prog-cl-f6"></div>
+            </div>
+            <div class="track track-client">
+              <div class="track-header">
+                <div class="track-icon">🔄</div>
+                <div class="track-title">Cliente — Champion / Decisor</div>
+              </div>
+              <ul class="checklist" id="cl-f6c">
+                <li class="check-item"><input type="checkbox" onchange="onCheck(this)"><label>Asistir al check-in de 30 días con el CSM</label></li>
+                <li class="check-item"><input type="checkbox" onchange="onCheck(this)"><label>Completar encuesta NPS cuando llegue el email<span class="check-sub">Feedback honesto — positivo y negativo ayuda a mejorar</span></label></li>
+                <li class="check-item"><input type="checkbox" onchange="onCheck(this)"><label>Asistir al QBR de 90 días con métricas de uso del período</label></li>
+                <li class="check-item"><input type="checkbox" onchange="onCheck(this)"><label>Mantener el roster actualizado — altas y bajas de empleados en tiempo real</label></li>
+                <li class="check-item"><input type="checkbox" onchange="onCheck(this)"><label>Avisar al CSM si hay cambios en el equipo: nuevo admin, reestructura, cambio de plan</label></li>
+              </ul>
+              <div class="progress-bar-wrap" id="prog-cl-f6c"></div>
+            </div>
+          </div>
+          <div class="phase-notes">
+            <div class="note-block">
+              <div class="note-label">Argot CS</div>
+              <div class="note-text">
+                <span class="note-term">QBR</span>
+                <span class="note-term">NPS</span>
+                <span class="note-term">Churn risk</span>
+                <span class="note-term">Upsell</span>
+                <span class="note-term">Expansion revenue</span>
+                <span class="note-term">Renewal rate</span>
+                <span class="note-term">Detractors / Promoters</span>
+              </div>
+            </div>
+            <div class="note-block">
+              <div class="note-label">Señales de churn risk</div>
+              <div class="note-text">
+                ⚠️ Sin login en &gt;7 días · &lt;3 docs generados/mes · champion cambió sin avisar · quejas de "no lo usa nadie" · no renovó al primer recordatorio.
+                <br><strong>Respuesta: llamada de rescate en &lt;24 h.</strong>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Glossary -->
+    <div class="section-title">Glosario de Customer Success</div>
+    <div class="glossary">
+      <div class="glossary-grid">
+        <div class="gterm"><div class="gterm-name">Champion</div><div class="gterm-def">La persona dentro del cliente que usa la plataforma diariamente y "defiende" el producto internamente. Identificarla desde el día 0 es crítico.</div></div>
+        <div class="gterm"><div class="gterm-name">CSM</div><div class="gterm-def">Customer Success Manager — el responsable de ClickLaboral que acompaña al cliente desde la venta hasta la renovación.</div></div>
+        <div class="gterm"><div class="gterm-name">Deal Brief</div><div class="gterm-def">Documento de handoff que ventas entrega al CSM: contexto del cliente, pain points, plan contratado, stakeholders y expectativas.</div></div>
+        <div class="gterm"><div class="gterm-name">Handoff</div><div class="gterm-def">Transferencia formal de un cliente del equipo de ventas al equipo de Customer Success, con toda la información del deal.</div></div>
+        <div class="gterm"><div class="gterm-name">Health Score</div><div class="gterm-def">Métrica 0-100 que combina logins, documentos generados, empleados cargados y módulos activos. Verde ≥70, amarillo 40-69, rojo &lt;40.</div></div>
+        <div class="gterm"><div class="gterm-name">TTV (Time to Value)</div><div class="gterm-def">Tiempo desde el pago hasta que el cliente obtiene su primer valor tangible (primer contrato generado). Objetivo: ≤5 días hábiles.</div></div>
+        <div class="gterm"><div class="gterm-name">Quick Win</div><div class="gterm-def">Logro rápido y visible que demuestra valor antes de que el cliente termine la configuración. Genera confianza y reduce churn temprano.</div></div>
+        <div class="gterm"><div class="gterm-name">Kickoff Call</div><div class="gterm-def">Primera reunión estructurada post-venta donde se establecen objetivos, se mapean stakeholders y se acuerda el plan de implementación.</div></div>
+        <div class="gterm"><div class="gterm-name">QBR</div><div class="gterm-def">Quarterly Business Review — reunión trimestral de revisión de métricas, ROI y alineación estratégica. Aplica a partir del mes 3.</div></div>
+        <div class="gterm"><div class="gterm-name">Churn Risk</div><div class="gterm-def">Señales que indican que un cliente podría cancelar: inactividad, quejas, cambio de champion o no renovar a tiempo.</div></div>
+        <div class="gterm"><div class="gterm-name">Upsell</div><div class="gterm-def">Expansión del plan contratado cuando el cliente crece (más trabajadores) o cuando adopta módulos avanzados. Ingreso incremental.</div></div>
+        <div class="gterm"><div class="gterm-name">NPS</div><div class="gterm-def">Net Promoter Score — encuesta de una pregunta: "¿Qué tan probable es que nos recomiendes?" (0-10). Detractor &lt;7, Pasivo 7-8, Promotor 9-10.</div></div>
+        <div class="gterm"><div class="gterm-name">Llave en mano</div><div class="gterm-def">Entrega completa: el CSM configura todo y el cliente empieza a operar el día 1 sin fricciones. El modelo opuesto al "configúralo tú solo".</div></div>
+        <div class="gterm"><div class="gterm-name">Stakeholder</div><div class="gterm-def">Toda persona en la empresa cliente con interés en la plataforma: decisor (paga), champion (usa), usuarios secundarios (consultan).</div></div>
+      </div>
+    </div>
+
+  </div><!-- /page -->
+</div><!-- /app -->
+
+<script>
+const SB_URL = 'https://hpzgqaplrywwjuvrzhcp.supabase.co';
+const SB_KEY = 'sb_publishable_1g8US8iFJ8CxnSaF_4MHgA_gqyyAr3W';
+const sb = supabase.createClient(SB_URL, SB_KEY);
+
+async function checkAdminSession() {
+  const { data } = await sb.auth.getSession();
+  const session = data?.session;
+  if (session && session.user?.user_metadata?.role === 'admin') {
+    showApp(session.user.email);
+  } else {
+    if (session) await sb.auth.signOut();
+    showLogin();
+  }
+}
+
+async function loginAdmin() {
+  const email = document.getElementById('la-email').value.trim();
+  const password = document.getElementById('la-password').value;
+  const btn = document.getElementById('login-btn');
+  const errEl = document.getElementById('login-error');
+  errEl.classList.remove('visible');
+  if (!email || !password) { showError('Ingrese correo y contraseña.'); return; }
+  btn.disabled = true;
+  btn.textContent = 'Verificando…';
+  try {
+    const { data, error } = await sb.auth.signInWithPassword({ email, password });
+    if (error) throw error;
+    if (data.user?.user_metadata?.role !== 'admin') {
+      await sb.auth.signOut();
+      throw new Error('Esta cuenta no tiene permisos de administrador.');
+    }
+    showApp(data.user.email);
+  } catch (e) {
+    showError(e.message || 'Error al iniciar sesión.');
+  } finally {
+    btn.disabled = false;
+    btn.textContent = 'Ingresar →';
+  }
+}
+
+async function signOut() {
+  await sb.auth.signOut();
+  document.getElementById('app').classList.remove('visible');
+  showLogin();
+}
+
+function showApp(email) {
+  document.getElementById('login-gate').classList.remove('visible');
+  document.getElementById('app').classList.add('visible');
+  const u = document.getElementById('topbar-user');
+  if (u) u.textContent = email;
+  document.querySelectorAll('.checklist').forEach(updateProgress);
+}
+
+function showLogin() {
+  document.getElementById('login-gate').classList.add('visible');
+}
+
+function showError(msg) {
+  const el = document.getElementById('login-error');
+  el.textContent = msg;
+  el.classList.add('visible');
+}
+
+function togglePhase(header) {
+  header.closest('.phase-card').classList.toggle('open');
+}
+
+function onCheck(cb) {
+  const item = cb.closest('.check-item');
+  cb.checked ? item.classList.add('done') : item.classList.remove('done');
+  updateProgress(cb.closest('.checklist'));
+}
+
+function updateProgress(list) {
+  if (!list) return;
+  const total = list.querySelectorAll('input[type=checkbox]').length;
+  const checked = list.querySelectorAll('input[type=checkbox]:checked').length;
+  const pct = total ? Math.round(checked / total * 100) : 0;
+  const wrap = document.getElementById('prog-' + list.id);
+  if (!wrap) return;
+  wrap.innerHTML = `
+    <div class="progress-bar-bg"><div class="progress-bar-fill" style="width:${pct}%"></div></div>
+    <div class="progress-label">${checked}/${total} completados</div>
+  `;
+}
+
+checkAdminSession();
+</script>
+</body>
+</html>

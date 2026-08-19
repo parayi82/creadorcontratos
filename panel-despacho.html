@@ -92,9 +92,10 @@ body{background:var(--bg);color:var(--ink);min-height:100vh;}
     </div>
     <div class="card" id="form-alta-cliente" style="display:none;margin-top:14px;">
       <h3 style="margin-bottom:10px;">Nuevo cliente en su cartera</h3>
-      <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:10px;">
+      <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:10px;">
         <input id="nc-empresa" placeholder="Nombre de la empresa *" style="padding:10px;border:1px solid var(--border);border-radius:8px;font-size:13px;">
         <input id="nc-rfc" placeholder="RFC de la empresa *" maxlength="13" style="padding:10px;border:1px solid var(--border);border-radius:8px;font-size:13px;text-transform:uppercase;">
+        <input id="nc-trab" type="number" min="1" max="9999" placeholder="Número de trabajadores *" style="padding:10px;border:1px solid var(--border);border-radius:8px;font-size:13px;">
       </div>
       <div style="display:flex;gap:10px;align-items:center;margin-top:12px;flex-wrap:wrap;">
         <button class="btn btn-p" onclick="altaCliente()">Agregar a mi cartera</button>
@@ -164,13 +165,13 @@ async function cargarPanel(user){
     return;
   }
   const { data: dcRows } = await sb.from('despacho_clientes')
-    .select('cliente_rfc, empresa')
+    .select('cliente_rfc, empresa, num_trabajadores')
     .eq('activo', true)
     .order('empresa');
   despacho = {
     nombre: meta.nombre_despacho || 'Mi Despacho',
     color: meta.color || '#1e3a5f',
-    clientes: (dcRows || []).map(c => ({ rfc: c.cliente_rfc, empresa: c.empresa || c.cliente_rfc })),
+    clientes: (dcRows || []).map(c => ({ rfc: c.cliente_rfc, empresa: c.empresa || c.cliente_rfc, numTrab: c.num_trabajadores || null })),
   };
 
   // Marca blanca: nombre y color del despacho
@@ -192,6 +193,7 @@ async function cargarPanel(user){
     <div class="card" id="cli-${i}">
       <h3>${esc(c.empresa || c.rfc)}</h3>
       <div class="rfc">${esc(c.rfc)}</div>
+      ${c.numTrab ? `<div style="font-size:11px;color:var(--ink3);margin-bottom:4px;">Planta estimada: <strong>${c.numTrab}</strong> trabajador${c.numTrab===1?'':'es'}</div>` : ''}
       <div class="stats" id="stats-${i}"><span class="stat" style="color:var(--ink3);">Cargando…</span></div>
       <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;">
         <button class="btn btn-p" onclick="entrarAlDashboard(${i})">Entrar al dashboard →</button>
@@ -312,7 +314,9 @@ async function altaCliente(){
   msg.textContent = '';
   const empresa = document.getElementById('nc-empresa').value.trim();
   const rfc = document.getElementById('nc-rfc').value.trim().toUpperCase();
+  const numTrabRaw = parseInt(document.getElementById('nc-trab').value, 10);
   if(!empresa || !rfc){ msg.textContent = 'Complete empresa y RFC.'; return; }
+  if(!numTrabRaw || numTrabRaw < 1){ msg.textContent = 'Indique el número de trabajadores (mínimo 1).'; return; }
   const rfcLimpio = rfc.replace(/[\s-]/g,'');
   if(!/^[A-ZÑ&]{3,4}\d{6}[A-Z0-9]{3}$/.test(rfcLimpio)){
     msg.textContent = 'El RFC "'+rfc+'" no tiene formato válido. Debe ser de 12 caracteres (persona moral, ej. ABC010101AB1) o 13 (persona física, ej. ABCD010101AB1).';
@@ -327,12 +331,13 @@ async function altaCliente(){
     const respAgregar = await fetch('/api/despacho-cartera', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + _tok3 },
-      body: JSON.stringify({ accion: 'agregar', rfc: rfcLimpio, empresa }),
+      body: JSON.stringify({ accion: 'agregar', rfc: rfcLimpio, empresa, num_trabajadores: numTrabRaw }),
     });
     const resAgregar = await respAgregar.json().catch(() => ({}));
     if (!respAgregar.ok) throw new Error(resAgregar.error || 'Error al agregar cliente.');
     document.getElementById('nc-empresa').value = '';
     document.getElementById('nc-rfc').value = '';
+    document.getElementById('nc-trab').value = '';
     document.getElementById('form-alta-cliente').style.display = 'none';
     // Recargar el panel leyendo la lista actualizada desde la DB
     const { data: { user: userActual } } = await sb.auth.getUser();

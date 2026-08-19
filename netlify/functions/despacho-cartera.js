@@ -110,6 +110,18 @@ exports.handler = async (event) => {
         }, { onConflict: 'despacho_id,cliente_rfc' });
         if (insErr) throw insErr;
 
+        // Guardar num_trabajadores en columna separada (requiere migración).
+        // Si la columna aún no existe se ignora el error para no bloquear el alta.
+        const numTrab = num_trabajadores != null ? parseInt(num_trabajadores, 10) : null;
+        if (Number.isFinite(numTrab) && numTrab > 0) {
+          try {
+            await sb.from('despacho_clientes')
+              .update({ num_trabajadores: numTrab })
+              .eq('despacho_id', desp.id)
+              .eq('cliente_rfc', rfcU);
+          } catch (_) { /* columna no existe aún — se ignorará */ }
+        }
+
         return ok({ ok: true, rfc: rfcU });
       }
 

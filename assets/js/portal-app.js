@@ -140,8 +140,8 @@ async function cargarDatosCliente(rfc){
     fecha: d.fecha ? new Date(d.fecha+'T12:00:00').toLocaleDateString('es-MX',{day:'2-digit',month:'short',year:'numeric'}) : '',
   }));
 
-  const CUOTAS = { basico:499, estandar:799, pro:2399 }; // basico se mantiene para clientes existentes (legacy)
-  const cuota  = CUOTAS[plan] || 799;
+  const CUOTAS = { micro:899, pyme:1999, mediana:4499, empresa:9999, basico:499, estandar:799, pro:2399, trial:0, personalizado:0 };
+  const cuota  = meta.cuota != null ? Number(meta.cuota) : (CUOTAS[plan] || 1999);
 
   // Guardar para reportes
   _sbAuth  = sbAuth;
@@ -1883,9 +1883,13 @@ function renderGeneradores(){
 }
 
 const CATALOGO_PLANES = [
-  { nombre:'Básico',   orden:1, cuota:499,   rango:'plan anterior', legacy:true },
-  { nombre:'Estándar', orden:2, cuota:799,   rango:'1 a 50 trabajadores' },
-  { nombre:'Pro',      orden:3, cuota:2399,  rango:'51 a 500 trabajadores' },
+  { nombre:'Micro',    orden:1, cuota:899,   rango:'1 a 15 trabajadores' },
+  { nombre:'PyME',     orden:2, cuota:1999,  rango:'16 a 50 trabajadores' },
+  { nombre:'Mediana',  orden:3, cuota:4499,  rango:'51 a 150 trabajadores' },
+  { nombre:'Empresa',  orden:4, cuota:9999,  rango:'151 a 500 trabajadores' },
+  { nombre:'Básico',   orden:0, cuota:499,   rango:'plan anterior', legacy:true },
+  { nombre:'Estándar', orden:0, cuota:799,   rango:'plan anterior', legacy:true },
+  { nombre:'Pro',      orden:0, cuota:2399,  rango:'plan anterior', legacy:true },
 ];
 // Compara nombres de plan ignorando acentos y mayúsculas ("Estandar" === "Estándar")
 function _normPlan(t){ return String(t||'').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,''); }

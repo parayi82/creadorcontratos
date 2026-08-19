@@ -99,16 +99,26 @@ exports.handler = async (event) => {
           return err(403, `Límite de clientes alcanzado para su plan (${desp.rango}). Contacte a su asesor para ampliar el plan.`);
         }
 
-        const numTrab = num_trabajadores != null ? parseInt(num_trabajadores, 10) : null;
         const { error: insErr } = await sb.from('despacho_clientes').upsert({
-          despacho_id:      desp.id,
-          cliente_rfc:      rfcU,
-          empresa:          (empresa || rfcU).trim(),
-          activo:           true,
-          agregado_at:      new Date().toISOString(),
-          num_trabajadores: Number.isFinite(numTrab) && numTrab > 0 ? numTrab : null,
+          despacho_id: desp.id,
+          cliente_rfc: rfcU,
+          empresa:     (empresa || rfcU).trim(),
+          activo:      true,
+          agregado_at: new Date().toISOString(),
         }, { onConflict: 'despacho_id,cliente_rfc' });
         if (insErr) throw insErr;
+
+        // Guardar num_trabajadores en columna separada (requiere migración).
+        // Si la columna aún no existe se ignora el error para no bloquear el alta.
+        const numTrab = num_trabajadores != null ? parseInt(num_trabajadores, 10) : null;
+        if (Number.isFinite(numTrab) && numTrab > 0) {
+          try {
+            await sb.from('despacho_clientes')
+              .update({ num_trabajadores: numTrab })
+              .eq('despacho_id', desp.id)
+              .eq('cliente_rfc', rfcU);
+          } catch (_) { /* columna no existe aún — se ignorará */ }
+        }
 
         return ok({ ok: true, rfc: rfcU });
       }

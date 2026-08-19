@@ -55,7 +55,8 @@ exports.handler = async (event) => {
       .eq('auth_user_id', user.id)
       .eq('activo', true)
       .maybeSingle();
-    if (despErr || !desp) return err(404, 'No se encontró el perfil de despacho.');
+    if (despErr) return err(500, `Error al buscar perfil de despacho: ${despErr.message}`);
+    if (!desp) return err(404, 'No se encontró perfil de despacho activo. Contacte a su asesor para verificar su cuenta.');
 
     switch (body.accion) {
 

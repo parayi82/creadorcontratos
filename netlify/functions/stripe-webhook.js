@@ -145,7 +145,7 @@ exports.handler = async (event) => {
 
     return { statusCode: 200, body: JSON.stringify({ received: true }) };
   } catch (err) {
-    await reportError('stripe-webhook', err, { type: stripeEvent?.type });
+    reportError('stripe-webhook', err, { type: stripeEvent?.type }).catch(() => {});
     return { statusCode: 500, body: JSON.stringify({ error: err.message }) };
   }
 };

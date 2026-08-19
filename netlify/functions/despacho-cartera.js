@@ -40,12 +40,13 @@ exports.handler = async (event) => {
     return { statusCode: 401, headers, body: JSON.stringify({ error: 'Token de sesión requerido.' }) };
   }
 
-  // Supabase client con timeout de 8 s por llamada (Netlify corta a 10 s)
+  // Supabase client con timeout de 5 s por llamada.
+  // Netlify corta a 10 s; con 5 s queda margen para el manejo de errores.
   const sb = createClient(process.env.SUPABASE_URL, process.env.SUPABASE_SERVICE_KEY, {
     global: {
       fetch: (url, options = {}) => {
         const ctrl = new AbortController();
-        const timer = setTimeout(() => ctrl.abort(), 8000);
+        const timer = setTimeout(() => ctrl.abort(), 5000);
         return fetch(url, { ...options, signal: ctrl.signal }).finally(() => clearTimeout(timer));
       },
     },
@@ -212,7 +213,8 @@ exports.handler = async (event) => {
 
   } catch (e) {
     console.error('despacho-cartera:', e?.message || e);
-    try { await reportError('despacho-cartera', e); } catch (_) {}
+    // Fire-and-forget: no await para no acercarnos al límite de 10 s de Netlify
+    reportError('despacho-cartera', e).catch(() => {});
     return { statusCode: 500, headers, body: JSON.stringify({ error: e?.message || 'Error interno.' }) };
   }
 };

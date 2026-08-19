@@ -368,7 +368,7 @@ async function quitarCliente(i){
       body: JSON.stringify({ accion: 'quitar', rfc: c.rfc }),
     });
     const res = await resp.json().catch(()=>({}));
-    if (!resp.ok) throw new Error(res.error || 'Error al quitar cliente.');
+    if (!resp.ok) throw new Error(res.error || `Error ${resp.status} al quitar cliente.`);
     const { data: { user: userActual } } = await sb.auth.getUser();
     cargarPanel(userActual);
   } catch(e) {

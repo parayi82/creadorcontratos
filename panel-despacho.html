@@ -320,21 +320,8 @@ async function altaCliente(){
   }
   if(despacho.clientes.some(c=>String(c.rfc).toUpperCase()===rfcLimpio)){ msg.textContent = 'Ese RFC ya está en su cartera.'; return; }
 
-  // Candado de seguridad: si el RFC ya tiene datos en la plataforma (es cliente
-  // de alguien más o cliente directo), la vinculación la hace el administrador.
-  msg.style.color = 'var(--ink3)'; msg.textContent = 'Verificando…';
+  msg.style.color = 'var(--ink3)'; msg.textContent = 'Agregando…';
   try {
-    const { data: sd2 } = await sb.auth.getSession();
-    const _tok2 = sd2?.session?.access_token || '';
-    const _r2 = await fetch('/api/mutar-datos-cliente',{method:'POST',
-      headers:{'Content-Type':'application/json','Authorization':'Bearer '+_tok2},
-      body:JSON.stringify({tabla:'trabajadores',accion:'select',cliente_rfc:rfcLimpio,columnas:'id',filtros:{},limit:1})});
-    const _d2 = _r2.ok ? await _r2.json() : {data:[]};
-    if((_d2.data||[]).length > 0){
-      msg.style.color = 'var(--red)';
-      msg.textContent = 'Este RFC ya tiene información registrada en la plataforma. Para vincularlo a su cartera, solicítelo a su asesor.';
-      return;
-    }
     const { data: sd3 } = await sb.auth.getSession();
     const _tok3 = sd3?.session?.access_token || '';
     const respAgregar = await fetch('/api/despacho-cartera', {

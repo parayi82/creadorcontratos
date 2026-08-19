@@ -382,7 +382,7 @@ exports.handler = async (event) => {
   } catch (err) {
     const isCardError = err.type === 'StripeCardError';
     if (!isCardError) {
-      await reportError('crear-suscripcion', err, { plan: body?.plan, empresa: body?.empresa });
+      reportError('crear-suscripcion', err, { plan: body?.plan, empresa: body?.empresa }).catch(() => {});
     }
     const mensaje = isCardError ? err.message : 'No se pudo procesar el pago. Verifique los datos de la tarjeta o intente con otro método de pago.';
     return { statusCode: 402, headers, body: JSON.stringify({ error: mensaje }) };

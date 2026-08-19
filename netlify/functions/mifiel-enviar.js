@@ -162,7 +162,7 @@ exports.handler = async (event) => {
       }),
     };
   } catch (err) {
-    await reportError('mifiel-enviar', err, { cliente_rfc, tipo });
+    reportError('mifiel-enviar', err, { cliente_rfc, tipo }).catch(() => {});
     return { statusCode: 500, headers, body: JSON.stringify({ error: err.message }) };
   }
 };

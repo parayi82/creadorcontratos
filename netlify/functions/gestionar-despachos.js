@@ -194,7 +194,7 @@ exports.handler = async (event) => {
     }
   } catch (e) {
     console.error('gestionar-despachos:', e.message || e);
-    await reportError('gestionar-despachos', e);
+    reportError('gestionar-despachos', e).catch(() => {});
     return err(500, e.message || 'Error interno.');
   }
 };

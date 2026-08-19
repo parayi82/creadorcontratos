@@ -104,6 +104,7 @@ async function reportError(context, err, meta = {}) {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body,
+      signal: AbortSignal.timeout(4000),
     });
   } catch {
     // El webhook falló — ya está logueado arriba, no hacer nada más

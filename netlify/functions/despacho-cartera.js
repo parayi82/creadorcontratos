@@ -41,7 +41,7 @@ exports.handler = async (event) => {
   }
 
   // Supabase client con timeout de 5 s por llamada.
-  // Netlify corta a 10 s; con 5 s queda margen para el manejo de errores.
+  // Netlify corta a 10 s; con 5 s queda margen suficiente para el manejo de errores.
   const sb = createClient(process.env.SUPABASE_URL, process.env.SUPABASE_SERVICE_KEY, {
     global: {
       fetch: (url, options = {}) => {
@@ -71,7 +71,7 @@ exports.handler = async (event) => {
     try { body = JSON.parse(event.body || '{}'); }
     catch { return err(400, 'JSON inválido'); }
 
-    // Obtener perfil del despacho (id + límite manual de clientes)
+    // Obtener perfil del despacho (id + rango para límite de clientes)
     const { data: desp, error: despErr } = await sb
       .from('despachos')
       .select('id, rango')
@@ -79,37 +79,21 @@ exports.handler = async (event) => {
       .eq('activo', true)
       .maybeSingle();
     if (despErr) return err(500, `Error al buscar perfil de despacho: ${despErr.message}`);
-    if (!desp) return err(404, 'No se encontró perfil de despacho activo. Contacte a su asesor.');
+    if (!desp) return err(404, 'No se encontró perfil de despacho activo. Contacte a su asesor para verificar su cuenta.');
 
     // ─────────────────────────────────────────────────────────────────
     switch (body.accion) {
 
       // ── LISTAR ───────────────────────────────────────────────────
       case 'listar': {
-        // Intentar con num_trabajadores; si la columna no existe, listar sin ella
-        let clientes = [];
-        const { data: c1, error: e1 } = await sb
+        const { data: clientes, error: cErr } = await sb
           .from('despacho_clientes')
           .select('cliente_rfc, empresa, num_trabajadores')
           .eq('despacho_id', desp.id)
           .eq('activo', true)
           .order('empresa');
-
-        if (!e1) {
-          clientes = c1 || [];
-        } else {
-          // Columna num_trabajadores aún no migrada — listar sin ella
-          const { data: c2, error: e2 } = await sb
-            .from('despacho_clientes')
-            .select('cliente_rfc, empresa')
-            .eq('despacho_id', desp.id)
-            .eq('activo', true)
-            .order('empresa');
-          if (e2) throw e2;
-          clientes = (c2 || []).map(r => ({ ...r, num_trabajadores: null }));
-        }
-
-        return ok({ clientes });
+        if (cErr) throw cErr;
+        return ok({ clientes: clientes || [] });
       }
 
       // ── AGREGAR ───────────────────────────────────────────────────
@@ -155,26 +139,16 @@ exports.handler = async (event) => {
           }
         }
 
-        // Insertar/reactivar el cliente (sin num_trabajadores para evitar error si columna no existe)
+        const numTrab = num_trabajadores != null ? parseInt(num_trabajadores, 10) : null;
         const { error: insErr } = await sb.from('despacho_clientes').upsert({
-          despacho_id: desp.id,
-          cliente_rfc: rfcU,
-          empresa:     (empresa || rfcU).trim(),
-          activo:      true,
-          agregado_at: new Date().toISOString(),
+          despacho_id:      desp.id,
+          cliente_rfc:      rfcU,
+          empresa:          (empresa || rfcU).trim(),
+          activo:           true,
+          agregado_at:      new Date().toISOString(),
+          num_trabajadores: Number.isFinite(numTrab) && numTrab > 0 ? numTrab : null,
         }, { onConflict: 'despacho_id,cliente_rfc' });
         if (insErr) throw insErr;
-
-        // Intentar guardar planta estimada (falla silenciosamente si la columna aún no existe)
-        const numTrab = num_trabajadores != null ? parseInt(num_trabajadores, 10) : null;
-        if (Number.isFinite(numTrab) && numTrab > 0) {
-          try {
-            await sb.from('despacho_clientes')
-              .update({ num_trabajadores: numTrab })
-              .eq('despacho_id', desp.id)
-              .eq('cliente_rfc', rfcU);
-          } catch (_) { /* columna no migrada aún */ }
-        }
 
         return ok({ ok: true, rfc: rfcU });
       }

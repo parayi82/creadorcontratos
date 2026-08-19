@@ -166,7 +166,7 @@ async function cargarPanel(user){
   }
 
   // Listar clientes VÍA BACKEND para garantizar filtro por despacho_id correcto
-  // (no depende de RLS del lado del navegador ni de columnas pendientes de migración)
+  // (no depende de RLS del lado del navegador)
   let dcRows = [];
   try {
     const { data: sd0 } = await sb.auth.getSession();

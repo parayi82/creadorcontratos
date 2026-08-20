@@ -473,25 +473,58 @@ function renderRotacion() {
 const STATUS_LABEL_RPT = { presente:'Presente', retraso:'Retraso', falta_injustificada:'Falta injustificada',
   falta_justificada:'Falta justificada', vacaciones:'Vacaciones', permiso:'Permiso', incapacidad:'Incapacidad' };
 
+// Devuelve array de fechas YYYY-MM-DD lunes-viernes entre desde y hasta (inclusive).
+function _diasLaboralesArr(desde, hasta) {
+  const dias = [];
+  const cur = new Date(desde + 'T12:00:00Z');
+  const fin = new Date(hasta + 'T12:00:00Z');
+  while (cur <= fin) {
+    const d = cur.getUTCDay();
+    if (d >= 1 && d <= 5) dias.push(cur.toISOString().split('T')[0]);
+    cur.setUTCDate(cur.getUTCDate() + 1);
+  }
+  return dias;
+}
+
 function renderAsistencias() {
   const activos = datos.trabajadores.filter(t=>t.activo!==false&&!t.fecha_baja);
   const asis = datos.asistencias;
+  const { desde, hasta } = getFechas();
+  // Días con registro contabilizan solo hasta ayer (hoy aún no termina)
+  const ayer = new Date(); ayer.setDate(ayer.getDate()-1);
+  const ayerStr = ayer.toISOString().split('T')[0];
+  const hastaEfectivo = hasta < ayerStr ? hasta : ayerStr;
+
   const resumen = activos.map(t=>{
-    const reg = asis.filter(a=>a.trabajador_id===t.id);
-    const pres = reg.filter(a=>a.status==='presente'||a.status==='retraso').length;
-    const faltas = reg.filter(a=>a.status==='falta_injustificada').length;
-    const total = reg.length;
-    const pct = total > 0 ? Math.round(pres/total*100) : null;
-    return {...t, pres, faltas, total, pct};
-  }).sort((a,b)=>(a.pct||0)-(b.pct||0));
+    // Inicio contable: el mayor entre fecha_ingreso del trabajador y el inicio del período
+    const inicio = (t.fecha_ingreso && t.fecha_ingreso > desde) ? t.fecha_ingreso : desde;
+    if (inicio > hastaEfectivo) return {...t, pres:0, faltas:0, diasLab:0, pct:null};
+
+    const diasLab = _diasLaboralesArr(inicio, hastaEfectivo);
+    const diasLabTotal = diasLab.length;
+
+    // Registros del trabajador dentro de ese rango
+    const reg = asis.filter(a=>a.trabajador_id===t.id && a.fecha>=inicio && a.fecha<=hastaEfectivo);
+    const regFechasSet = new Set(reg.map(a=>a.fecha));
+
+    const pres    = reg.filter(a=>a.status==='presente'||a.status==='retraso').length;
+    // Faltas con registro explícito en DB
+    const faltasDB = reg.filter(a=>a.status==='falta_injustificada'||a.status==='sin_registro').length;
+    // Días laborales sin ningún registro (huecos virtuales)
+    const virtGaps = diasLab.filter(d=>!regFechasSet.has(d)).length;
+    const faltas = faltasDB + virtGaps;
+    const pct = diasLabTotal > 0 ? Math.round(pres/diasLabTotal*100) : null;
+    return {...t, pres, faltas, diasLab:diasLabTotal, pct};
+  }).sort((a,b)=>(a.pct??101)-(b.pct??101));
+
   const filas = resumen.map(t=>`
     <tr>
       <td style="font-weight:600;">${t.nombre}</td>
       <td>${t.puesto||'—'}</td>
-      <td>${t.total}</td>
-      <td>${t.pres}</td>
-      <td style="color:${t.faltas>0?'var(--red)':'inherit'};font-weight:${t.faltas>0?'700':'400'};">${t.faltas}</td>
-      <td><span style="font-weight:700;color:${t.pct===null?'var(--ink3)':t.pct>=90?'var(--green)':t.pct>=75?'var(--amber)':'var(--red)'};">${t.pct!==null?t.pct+'%':'—'}</span></td>
+      <td style="text-align:right;">${t.diasLab}</td>
+      <td style="text-align:right;">${t.pres}</td>
+      <td style="text-align:right;color:${t.faltas>0?'var(--red)':'inherit'};font-weight:${t.faltas>0?'700':'400'};">${t.faltas}</td>
+      <td style="text-align:right;"><span style="font-weight:700;color:${t.pct===null?'var(--ink3)':t.pct>=90?'var(--green)':t.pct>=75?'var(--amber)':'var(--red)'};">${t.pct!==null?t.pct+'%':'—'}</span></td>
     </tr>`).join('');
   return `
     <div class="sec-header">
@@ -502,8 +535,8 @@ function renderAsistencias() {
     </div>
     <div class="tabla-card">
       <table>
-        <thead><tr><th>Nombre</th><th>Puesto</th><th>Registros</th><th>Presentes</th><th>Faltas</th><th>% Asistencia</th></tr></thead>
-        <tbody>${filas || '<tr><td colspan="6" style="text-align:center;color:var(--ink3);padding:24px;">Sin registros de asistencia en el período</td></tr>'}</tbody>
+        <thead><tr><th>Nombre</th><th>Puesto</th><th style="text-align:right;">Días lab.</th><th style="text-align:right;">Presentes</th><th style="text-align:right;">Faltas</th><th style="text-align:right;">% Asistencia</th></tr></thead>
+        <tbody>${filas || '<tr><td colspan="6" style="text-align:center;color:var(--ink3);padding:24px;">Sin trabajadores activos en el período</td></tr>'}</tbody>
       </table>
     </div>`;
 }

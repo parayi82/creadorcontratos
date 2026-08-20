@@ -2540,22 +2540,50 @@ function detectarColumna(headers, candidatos){
 // columna 1 = datetime YYYY-MM-DD HH:MM:SS
 // ── Helpers para detección y parseo de archivos ZKTeco ──────────────────────
 
-// user.dat: 72 bytes/registro, nombre en offset 11, PIN en offset 48
+// user.dat: ZK8 = 72 bytes/reg (firmware moderno), ZK6 = 28 bytes/reg (terminales standalone como M2-LR)
 function parseUserDat(arrayBuffer) {
-  const RECORD = 72, NAME_OFF = 11, PIN_OFF = 48;
   const view = new Uint8Array(arrayBuffer);
+  const size = view.length;
   const pinMap = {};
+
   const readStr = (base, off, maxLen) => {
     let s = '';
     for (let j = base + off; j < base + off + maxLen && j < view.length && view[j]; j++)
-      s += String.fromCharCode(view[j]);
+      s += String.fromCharCode(view[j]); // Latin-1/CP1252
     return s.trim();
   };
-  for (let i = 0; i + RECORD <= view.length; i += RECORD) {
-    const nombre = readStr(i, NAME_OFF, 24);
-    const pin    = readStr(i, PIN_OFF, 8);
-    if (pin && nombre) pinMap[pin] = nombre;
+  const readUint32LE = (off) =>
+    ((view[off] | (view[off+1] << 8) | (view[off+2] << 16) | (view[off+3] << 24)) >>> 0);
+
+  // ZK8: 72 bytes/reg — nombre offset 11 (24 bytes), PIN offset 48 (24 bytes)
+  if (size >= 72 && size % 72 === 0) {
+    for (let i = 0; i + 72 <= size; i += 72) {
+      const nombre = readStr(i, 11, 24);
+      const pin    = readStr(i, 48, 24);
+      if (pin && nombre) pinMap[pin] = nombre;
+    }
+    if (Object.keys(pinMap).length > 0) return pinMap;
   }
+
+  // ZK6: 28 bytes/reg — uid(2) priv(1) pwd(5) nombre(8) card(4) pad(1) grp(1) tz(2) userid_uint32(4)
+  if (size >= 28 && size % 28 === 0) {
+    for (let i = 0; i + 28 <= size; i += 28) {
+      const nombre = readStr(i, 8, 8);
+      const pin    = String(readUint32LE(i + 24));
+      if (pin && pin !== '0' && nombre) pinMap[pin] = nombre;
+    }
+    if (Object.keys(pinMap).length > 0) return pinMap;
+  }
+
+  // Fallback: intentar ZK8 sin requerir divisibilidad exacta
+  if (size >= 72) {
+    for (let i = 0; i + 72 <= size; i += 72) {
+      const nombre = readStr(i, 11, 24);
+      const pin    = readStr(i, 48, 24);
+      if (pin && nombre) pinMap[pin] = nombre;
+    }
+  }
+
   return pinMap;
 }
 

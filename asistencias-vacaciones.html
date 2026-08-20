@@ -952,9 +952,14 @@ async function init() {
   async function intentarSesion() {
     const { data } = await sb.auth.getSession();
     const session = data?.session;
+    if (!session) return false;
     const _meta = session?.user?.user_metadata || {};
     const _esDespacho = _meta.tipo === 'despacho';
-    if (!session || (!_meta.rfc && !_esDespacho)) return false;
+    // Fallback: el RFC puede estar en localStorage si user_metadata no lo tiene
+    const _rfcFallback = !_meta.rfc && !_esDespacho
+      ? (localStorage.getItem('cl_rfc_auth') || '')
+      : '';
+    if (!_meta.rfc && !_esDespacho && !_rfcFallback) return false;
     if (_esDespacho) {
       let _g = null;
       try { _g = JSON.parse(sessionStorage.getItem('cl_gestion')||'null'); } catch(_){}
@@ -975,7 +980,7 @@ async function init() {
       const _lnk = document.getElementById('link-volver-portal');
       if(_lnk){ _lnk.href='panel-despacho.html'; _lnk.textContent='← Volver a mi panel'; }
     } else {
-      clienteRFC = _meta.rfc;
+      clienteRFC = _meta.rfc || _rfcFallback;
     }
     clienteEmpresa = _meta.empresa || clienteRFC;
     if (typeof _meta.tolerancia_retraso_min === 'number') {

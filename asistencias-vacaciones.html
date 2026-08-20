@@ -100,7 +100,7 @@ header a:hover{color:#fff;}
 .celda-retraso{background:#fef3c7;color:#92400e;font-weight:600;}
 .celda-incapacidad{background:#ede9fe;color:#5b21b6;}
 .celda-falta-justificada{background:#f3f4f6;color:#4b5563;}
-.celda-sin-registro{background:#f8fafc;color:#94a3b8;font-style:italic;}
+.celda-sin-registro{background:#fee2e2;color:#dc2626;font-weight:600;font-style:normal;}
 .celda-finde{background:#fafafa;color:#ccc;}
 /* ── Apartado / programación de vacaciones (v15) ── */
 .celda-vac-solicitada{background:repeating-linear-gradient(45deg,#fff7ed,#fff7ed 3px,#fed7aa 3px,#fed7aa 6px);color:#9a3412;font-weight:800;}
@@ -169,6 +169,9 @@ body.modo-apartar .tablero-tabla tbody td:hover{outline:1px solid #f97316;outlin
 .cal-day.s-permiso{background:var(--teal-bg);}
 .cal-day.s-incapacidad{background:#fee2e2;}
 .cal-day.s-festivo{background:var(--surface2);}
+.cal-day.s-sin_registro{background:#fee2e2;border-color:#fca5a5;}
+.cal-day.s-sin_registro .num{color:#dc2626;}
+.cal-day.s-sin_registro .sin-reg-lbl{position:absolute;bottom:4px;left:3px;right:3px;font-size:8px;color:#dc2626;font-weight:700;text-align:center;line-height:1.1;}
 .cal-legend{display:flex;gap:14px;flex-wrap:wrap;margin-top:14px;font-size:11px;color:var(--ink2);}
 .cal-legend span{display:inline-flex;align-items:center;gap:5px;}
 .cal-legend .dot{width:9px;height:9px;border-radius:2px;display:inline-block;}
@@ -396,6 +399,8 @@ body.modo-apartar .tablero-tabla tbody td:hover{outline:1px solid #f97316;outlin
           <div class="stat-box"><div class="stat-num" id="st-vac-tomadas">0</div><div class="stat-lbl">Vacaciones tomadas (periodo)</div></div>
         </div>
         <div id="panel-vacaciones"></div>
+
+        <div id="alerta-art47-wrap"></div>
 
         <div id="pendientes-wrap" style="display:none;margin-bottom:16px;">
           <div class="card-title" style="font-size:12px;margin-bottom:8px;">⚠️ Actas de inasistencia pendientes de resolver</div>
@@ -927,6 +932,7 @@ let trabajadorActual = null;
 let asistenciasMes = {}; // {'YYYY-MM-DD': {status, notas}}
 let actasMes = {}; // {'YYYY-MM-DD': acta_inasistencia}
 let actasPendientes = []; // todas las provisionales del trabajador actual, cualquier fecha
+let faltasVirtualesMes = {}; // días laborables sin registro (virtual, no guardados en BD)
 let mesActual = new Date();
 let diaSeleccionado = null;
 let statusElegido = 'presente';
@@ -1919,6 +1925,29 @@ async function cargarExpediente(){
 // ════════════════════════════════════════════
 // CALENDARIO
 // ════════════════════════════════════════════
+// Detecta días laborables (L-V) del mes visible sin registro en asistenciasMes,
+// desde la fecha de ingreso del trabajador hasta ayer inclusive.
+function detectarFaltasSinRegistro(trabajador) {
+  const virtual = {};
+  if (!trabajador?.fecha_ingreso) return virtual;
+  const y = mesActual.getFullYear(), mo = mesActual.getMonth();
+  const diasEnMes = new Date(y, mo + 1, 0).getDate();
+  const ayer = new Date(); ayer.setHours(0, 0, 0, 0); ayer.setDate(ayer.getDate() - 1);
+  const ingreso = new Date(trabajador.fecha_ingreso + 'T12:00:00');
+  for (let d = 1; d <= diasEnMes; d++) {
+    const fecha = new Date(y, mo, d);
+    fecha.setHours(12, 0, 0, 0);
+    const fechaStr = `${y}-${String(mo + 1).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
+    const dow = fecha.getDay();
+    if (dow === 0 || dow === 6) continue;    // fin de semana
+    if (fecha > ayer) continue;              // hoy y futuro: no aplica
+    if (fecha < ingreso) continue;           // antes del ingreso
+    if (asistenciasMes[fechaStr]) continue;  // ya tiene registro real
+    virtual[fechaStr] = { fecha: fechaStr, status: 'sin_registro', virtual: true };
+  }
+  return virtual;
+}
+
 async function cargarMes(){
   if (!trabajadorActual) return;
   const y = mesActual.getFullYear(), m = mesActual.getMonth();
@@ -1933,6 +1962,9 @@ async function cargarMes(){
     if (error) throw error;
     (data||[]).forEach(a => asistenciasMes[a.fecha] = a);
   } catch(e) { console.error('Error cargando asistencias:', e.message||e); }
+
+  // Detectar días laborables sin registro (después de cargar los reales)
+  faltasVirtualesMes = detectarFaltasSinRegistro(trabajadorActual);
 
   try {
     const { data: actasData, error: e2 } = await sb.from('actas_inasistencia').select('*')
@@ -1963,9 +1995,15 @@ async function cargarPendientes(){
 function renderPendientes(){
   const wrap = document.getElementById('pendientes-wrap');
   const list = document.getElementById('pendientes-list');
-  if (!actasPendientes.length) { wrap.style.display = 'none'; return; }
+
+  // Días sin registro del mes visible (ordenados desc)
+  const sinRegFechas = Object.keys(faltasVirtualesMes).sort().reverse();
+
+  const totalItems = actasPendientes.length + sinRegFechas.length;
+  if (!totalItems) { wrap.style.display = 'none'; return; }
   wrap.style.display = 'block';
-  list.innerHTML = actasPendientes.map(a => `
+
+  const actasHTML = actasPendientes.map(a => `
     <div class="pendiente-item">
       <div>
         <strong>${fmtFecha(a.fecha)}</strong>
@@ -1973,6 +2011,112 @@ function renderPendientes(){
       </div>
       <button class="btn btn-outline btn-sm" onclick="abrirModalDia('${a.fecha}')">Resolver</button>
     </div>`).join('');
+
+  const sinRegHTML = sinRegFechas.map(fecha => `
+    <div class="pendiente-item" style="border-color:#fca5a5;background:#fff5f5;">
+      <div>
+        <strong>${fmtFecha(fecha)}</strong>
+        <div class="pi-meta" style="color:#b91c1c;">No se registró entrada en el checador digital — esperando justificación</div>
+      </div>
+      <button class="btn btn-outline btn-sm" style="border-color:#fca5a5;color:#dc2626;" onclick="abrirModalDia('${fecha}')">Resolver</button>
+    </div>`).join('');
+
+  list.innerHTML = actasHTML + sinRegHTML;
+}
+
+// ── Alerta Art. 47 fr. X LFT + impacto aguinaldo (Art. 87) ──────────────────────────────────
+async function renderAlertaArt47() {
+  const wrap = document.getElementById('alerta-art47-wrap');
+  if (!wrap || !trabajadorActual?.fecha_ingreso) return;
+
+  const hoy = new Date(); hoy.setHours(0,0,0,0);
+  const ayer = new Date(hoy); ayer.setDate(hoy.getDate() - 1);
+  const hace30 = new Date(hoy); hace30.setDate(hoy.getDate() - 30);
+  const hace30str = hace30.toISOString().split('T')[0];
+  const ingreso = new Date(trabajadorActual.fecha_ingreso + 'T12:00:00');
+  const anioActual = hoy.getFullYear();
+  const inicioAnio = `${anioActual}-01-01`;
+  const ayerStr = ayer.toISOString().split('T')[0];
+
+  // Una sola query: todos los registros desde inicio del año (cubre tanto los 30 días como el año completo)
+  let registrosAnio = [];
+  try {
+    const { data } = await sb.from('asistencias').select('fecha,status')
+      .eq('trabajador_id', trabajadorActual.id)
+      .gte('fecha', inicioAnio).lte('fecha', ayerStr);
+    registrosAnio = data || [];
+  } catch(_) {}
+
+  const regMapAnio = {}; // fecha → status
+  registrosAnio.forEach(r => { regMapAnio[r.fecha] = r.status; });
+
+  const CUENTAN_AGUINALDO = new Set(['presente','retraso','vacaciones','permiso','incapacidad','festivo']);
+
+  // Calcular días laborables del año hasta ayer (desde ingreso o inicio del año, lo que sea mayor)
+  const inicioComputo = new Date(Math.max(new Date(inicioAnio+'T12:00:00'), ingreso));
+  let diasLaborablesAnio = 0, diasEfectivosAnio = 0, faltasInjAnio = 0, sinRegAnio = 0, faltasUlt30 = 0, sinRegUlt30 = 0;
+
+  for (let d = new Date(inicioComputo); d <= ayer; d.setDate(d.getDate() + 1)) {
+    const dow = d.getDay();
+    if (dow === 0 || dow === 6) continue; // fin de semana
+    diasLaborablesAnio++;
+    const fstr = d.toISOString().split('T')[0];
+    const st = regMapAnio[fstr];
+    if (!st) {
+      sinRegAnio++;
+      if (d >= hace30) sinRegUlt30++;
+    } else if (st === 'falta_injustificada') {
+      faltasInjAnio++;
+      if (d >= hace30) faltasUlt30++;
+      // falta injustificada NO cuenta para aguinaldo
+    } else if (st === 'falta_justificada') {
+      // falta justificada tampoco cuenta
+    } else if (CUENTAN_AGUINALDO.has(st)) {
+      diasEfectivosAnio++;
+    }
+  }
+
+  const totalFaltas30 = faltasUlt30 + sinRegUlt30;
+
+  // Aguinaldo (Art. 87 LFT): 15 días × salario diario, proporcional a días efectivos en el año
+  const sd = Number(trabajadorActual?.salario_diario) || 0;
+  let htmlAguinaldo = '';
+  if (sd > 0 && diasLaborablesAnio > 0) {
+    const fraccion = diasEfectivosAnio / Math.max(diasLaborablesAnio, 1);
+    const aguinaldoBase = sd * 15;
+    const aguinaldoProp = Math.round(aguinaldoBase * fraccion);
+    const perdida = aguinaldoBase - aguinaldoProp;
+    if (perdida > 5) { // solo mostrar si hay diferencia significativa
+      htmlAguinaldo = `<div style="margin-bottom:12px;padding:10px 14px;background:#f8fafc;border:1px solid var(--border);border-radius:10px;font-size:12px;color:var(--ink2);">
+        <div style="font-weight:700;margin-bottom:3px;">📊 Impacto en aguinaldo ${anioActual} — Art. 87 LFT</div>
+        <div style="line-height:1.7;">
+          Días laborables transcurridos: <strong>${diasLaborablesAnio}</strong> · Días efectivos: <strong>${diasEfectivosAnio}</strong>
+          (faltas injustificadas: ${faltasInjAnio} · sin registro: ${sinRegAnio})<br>
+          Aguinaldo estimado: <strong>$${aguinaldoProp.toLocaleString('es-MX')} MXN</strong>
+          <span style="color:#dc2626;">(−$${perdida.toLocaleString('es-MX')} vs base de $${aguinaldoBase.toLocaleString('es-MX')})</span>
+        </div>
+      </div>`;
+    }
+  }
+
+  // Art. 47 fr. X: causal de rescisión
+  let htmlArt47 = '';
+  if (totalFaltas30 >= 3) {
+    htmlArt47 = `<div style="margin-bottom:12px;padding:12px 14px;background:#fee2e2;border:1px solid #fca5a5;border-radius:10px;font-size:12px;">
+      <div style="font-weight:800;color:#b91c1c;margin-bottom:4px;">🚨 Causal de rescisión — Art. 47 fr. X LFT</div>
+      <div style="color:#7f1d1d;line-height:1.6;">Se detectaron <strong>${totalFaltas30} faltas injustificadas/sin registro en los últimos 30 días</strong>.
+      La ley faculta al patrón a rescindir sin responsabilidad cuando el trabajador acumula 3 o más faltas en ese periodo.
+      Se recomienda levantar acta administrativa y, de proceder, iniciar el proceso formal. Consulta a tu asesor laboral.</div>
+    </div>`;
+  } else if (totalFaltas30 === 2) {
+    htmlArt47 = `<div style="margin-bottom:12px;padding:10px 14px;background:#fef3c7;border:1px solid #fde68a;border-radius:10px;font-size:12px;">
+      <div style="font-weight:700;color:#92400e;margin-bottom:3px;">⚠️ Aviso preventivo — Art. 47 fr. X LFT</div>
+      <div style="color:#78350f;line-height:1.6;">${totalFaltas30} faltas injustificadas/sin registro en los últimos 30 días.
+      Una falta más configura causal de rescisión sin responsabilidad patronal.</div>
+    </div>`;
+  }
+
+  wrap.innerHTML = htmlArt47 + htmlAguinaldo;
 }
 
 function cambiarMes(delta){
@@ -1993,14 +2137,18 @@ function renderCalendario(){
   const grid = document.getElementById('cal-grid');
   let html = '';
   for (let i=0;i<primerDia;i++) html += '<div class="cal-day empty"></div>';
+  const hoyStr = new Date().toISOString().split('T')[0];
   for (let d=1; d<=diasEnMes; d++){
     const fechaStr = `${y}-${String(m+1).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
     const reg = asistenciasMes[fechaStr];
+    const virt = !reg ? faltasVirtualesMes[fechaStr] : null;
     const acta = actasMes[fechaStr];
-    const claseStatus = reg ? `s-${reg.status}` : '';
+    const claseStatus = reg ? `s-${reg.status}` : (virt ? 's-sin_registro' : '');
     const badge = (acta && acta.estado==='provisional') ? '<div class="acta-badge" title="Acta pendiente de resolver"></div>' : '';
-    html += `<div class="cal-day ${claseStatus}" onclick="abrirModalDia('${fechaStr}')">
-      <div class="num">${d}</div>${badge}
+    const sinRegLbl = virt ? '<div class="sin-reg-lbl">Sin<br>registro</div>' : '';
+    const esHoy = fechaStr === hoyStr ? ' style="border-width:2px;border-color:var(--navy2);"' : '';
+    html += `<div class="cal-day ${claseStatus}" onclick="abrirModalDia('${fechaStr}')"${esHoy}>
+      <div class="num">${d}</div>${badge}${sinRegLbl}
     </div>`;
   }
   grid.innerHTML = html;
@@ -2008,8 +2156,13 @@ function renderCalendario(){
 
 async function renderStats(){
   const regs = Object.values(asistenciasMes);
-  document.getElementById('st-presentes').textContent = regs.filter(r=>r.status==='presente').length;
-  document.getElementById('st-faltas').textContent = regs.filter(r=>r.status==='falta_injustificada'||r.status==='falta_justificada').length;
+  const sinRegistroMes = Object.keys(faltasVirtualesMes).length;
+  const faltasReales = regs.filter(r=>r.status==='falta_injustificada'||r.status==='falta_justificada').length;
+  document.getElementById('st-presentes').textContent = regs.filter(r=>r.status==='presente'||r.status==='retraso').length;
+  document.getElementById('st-faltas').textContent = faltasReales + sinRegistroMes;
+
+  // ── Alerta Art. 47 fr. X LFT: 3+ faltas injustificadas/sin-registro en 30 días corridos ──
+  await renderAlertaArt47();
 
   // Vacaciones por AÑO DE SERVICIO (aniversario), no por año calendario (Arts. 76 y 81 LFT)
   let fechasVac = [];
@@ -3143,6 +3296,11 @@ async function renderTablero(){
           totApart++;
           const aut=p.estado==='autorizada';
           return `<td class="${aut?'celda-vac-autorizada':'celda-vac-solicitada'}" title="${fecha} — Vacaciones ${aut?'AUTORIZADAS':'apartadas (por autorizar)'}\nPeriodo: ${fmtFecha(p.fecha_inicio)} → ${fmtFecha(p.fecha_fin)} (${p.dias} día(s))${p.notas?'\n'+String(p.notas).replace(/"/g,'')  :''}">${aut?'A':'a'}</td>`;
+        }
+        // Día laborable pasado (no hoy) sin registro → sin_registro
+        if (!finde && fecha < hoy && t.fecha_ingreso && fecha >= t.fecha_ingreso) {
+          totFI++;
+          return `<td class="celda-sin-registro" title="${fecha} — Sin registro de asistencia">—</td>`;
         }
         return `<td class="${finde?'celda-finde':''}"></td>`;
       }

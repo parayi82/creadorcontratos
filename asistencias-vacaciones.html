@@ -231,6 +231,7 @@ body.modo-apartar .tablero-tabla tbody td:hover{outline:1px solid #f97316;outlin
     <button class="main-tab active" id="main-tab-expedientes" onclick="cambiarVistaMain('expedientes')">🗂 Expedientes individuales</button>
     <button class="main-tab" id="main-tab-tablero" onclick="cambiarVistaMain('tablero')">📅 Tablero anual de vacaciones</button>
     <button class="main-tab" id="main-tab-alertas" onclick="cambiarVistaMain('alertas')">🔔 Alertas <span id="alertas-badge" style="display:none;background:var(--red);color:#fff;border-radius:10px;padding:0 6px;font-size:10px;margin-left:4px;font-variant-numeric:tabular-nums;"></span></button>
+    <button class="main-tab" id="main-tab-adms" onclick="cambiarVistaMain('adms')">📡 Checador en Red</button>
     <button class="main-tab" id="main-tab-control" onclick="abrirControlAsistencias()" style="background:var(--navy2);color:#fff;border-radius:6px;padding:6px 16px;border:none;font-weight:700;">⏺ Control de asistencias del día</button>
     <button class="main-tab" id="main-tab-exportar" onclick="abrirModalExportar()" style="margin-left:auto;font-size:12px;">📥 Exportar</button>
   </div>
@@ -550,6 +551,76 @@ body.modo-apartar .tablero-tabla tbody td:hover{outline:1px solid #f97316;outlin
     </div>
     <div id="alertas-lista" style="display:flex;flex-direction:column;gap:10px;">
       <div style="text-align:center;padding:40px;color:var(--ink3);">Cargando alertas…</div>
+    </div>
+  </div>
+
+  <!-- ══ VISTA: CHECADOR EN RED (ADMS) ══ -->
+  <div id="vista-main-adms" style="display:none;">
+
+    <!-- Tarjeta de instrucciones de configuración -->
+    <div class="card" style="margin-bottom:14px;">
+      <div class="card-title" style="margin-bottom:8px;">📡 Checador Biométrico en Red — Protocolo ADMS ZKTeco</div>
+      <div class="card-sub" style="margin-bottom:14px;">Conecta tu dispositivo ZKTeco por Ethernet/WiFi para que envíe las asistencias automáticamente, sin necesidad de USB.</div>
+
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;">
+        <!-- Columna: configurar el dispositivo -->
+        <div style="background:var(--surface);border-radius:10px;padding:16px;">
+          <div style="font-weight:700;font-size:13px;color:var(--navy2);margin-bottom:10px;">⚙️ Configurar el dispositivo</div>
+          <ol style="font-size:12px;color:var(--ink2);line-height:2;padding-left:18px;margin:0;">
+            <li>Conecta el checador al router con cable Ethernet</li>
+            <li>En el dispositivo: <strong>Menú → COMM → Ethernet</strong><br>Configura IP, Gateway y DNS</li>
+            <li><strong>Menú → COMM → Cloud Server Setting</strong>:</li>
+          </ol>
+          <div style="margin:10px 0;background:#fff;border:1px solid var(--border2);border-radius:8px;padding:12px;font-family:monospace;font-size:12px;line-height:1.8;">
+            Server Address: <strong>clicklaboral.mx</strong><br>
+            Port: <strong>443</strong><br>
+            HTTPS: <strong>ON</strong><br>
+            Domain: <strong>ON</strong>
+          </div>
+          <div style="font-size:11px;color:var(--ink3);">El dispositivo se conectará a <code>https://clicklaboral.mx/iclock/</code></div>
+        </div>
+
+        <!-- Columna: registrar el dispositivo -->
+        <div style="background:var(--surface);border-radius:10px;padding:16px;">
+          <div style="font-weight:700;font-size:13px;color:var(--navy2);margin-bottom:10px;">🔗 Registrar dispositivo</div>
+          <p style="font-size:12px;color:var(--ink3);margin-bottom:12px;">
+            El número de serie (SN) aparece en la etiqueta trasera del checador o en <strong>Menú → Info → Device SN</strong>.
+          </p>
+          <div class="field" style="margin-bottom:10px;">
+            <label style="font-size:12px;">Número de serie (SN)</label>
+            <input type="text" id="adms-sn" placeholder="Ej: ABCD202600001" style="text-transform:uppercase;" oninput="this.value=this.value.toUpperCase()">
+          </div>
+          <div class="field" style="margin-bottom:12px;">
+            <label style="font-size:12px;">Nombre / Ubicación</label>
+            <input type="text" id="adms-nombre" placeholder="Ej: Entrada principal">
+          </div>
+          <button class="btn btn-primary" style="width:100%;" onclick="registrarChecador()">Registrar dispositivo</button>
+          <div id="adms-reg-msg" style="margin-top:8px;font-size:12px;"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Dispositivos registrados -->
+    <div class="card" style="margin-bottom:14px;">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;">
+        <div class="card-title">Dispositivos registrados</div>
+        <button class="btn btn-outline btn-sm" onclick="cargarChecadores()">⟳ Actualizar</button>
+      </div>
+      <div id="adms-devices-list">
+        <div style="text-align:center;padding:24px;color:var(--ink3);font-size:13px;">Cargando dispositivos…</div>
+      </div>
+    </div>
+
+    <!-- Mapeo de PINs -->
+    <div class="card">
+      <div class="card-title" style="margin-bottom:6px;">🔢 Mapeo de PINs del checador</div>
+      <p style="font-size:12px;color:var(--ink3);margin-bottom:12px;">
+        Los PINs son los números de usuario programados en el dispositivo (visible en USER.DAT). Cuando importas un archivo por USB con USER.DAT, el mapeo se guarda automáticamente. También puedes asignarlo manualmente.
+      </p>
+      <div id="adms-pins-list">
+        <div style="text-align:center;padding:20px;color:var(--ink3);font-size:13px;">Carga la pestaña para ver los PINs asignados</div>
+      </div>
+      <button class="btn btn-outline btn-sm" style="margin-top:12px;" onclick="cargarMapeoPins()">Ver / actualizar PINs asignados</button>
     </div>
   </div>
 
@@ -3042,6 +3113,26 @@ async function confirmarImportCSV() {
         await mutarDatos({ tabla:'asistencias', accion:'upsert', payload:registros,
           conflicto:'trabajador_id,fecha' });
       }
+
+      // Guardar pin_checador en cada trabajador emparejado (para ADMS en red)
+      const tieneUserDat = Object.keys(_userDatPinMap).length > 0;
+      if (tieneUserDat) {
+        const pinUpdates = [];
+        for (const reg of filasCSV) {
+          if (reg._trabajadorId && reg.pin) {
+            pinUpdates.push({ id: reg._trabajadorId, pin_checador: String(reg.pin) });
+          }
+        }
+        // Deduplicar por trabajador y actualizar
+        const seen = new Set();
+        for (const upd of pinUpdates) {
+          if (seen.has(upd.id)) continue;
+          seen.add(upd.id);
+          await mutarDatos({ tabla:'trabajadores', accion:'update',
+            payload:{ pin_checador: upd.pin_checador }, filtros:{ id: upd.id } });
+        }
+      }
+
       btn.disabled = false; btn.textContent = textoOriginal;
       mostrarLogImportacion();
       return;
@@ -3204,11 +3295,14 @@ function cambiarVistaMain(vista){
   document.getElementById('vista-main-expedientes').style.display = vista==='expedientes' ? '' : 'none';
   document.getElementById('vista-main-tablero').style.display   = vista==='tablero'      ? '' : 'none';
   document.getElementById('vista-main-alertas').style.display   = vista==='alertas'      ? '' : 'none';
+  document.getElementById('vista-main-adms').style.display      = vista==='adms'         ? '' : 'none';
   document.getElementById('main-tab-expedientes').classList.toggle('active', vista==='expedientes');
   document.getElementById('main-tab-tablero').classList.toggle('active', vista==='tablero');
   document.getElementById('main-tab-alertas').classList.toggle('active', vista==='alertas');
+  document.getElementById('main-tab-adms').classList.toggle('active', vista==='adms');
   if(vista==='tablero') renderTablero();
   if(vista==='alertas') cargarAlertas();
+  if(vista==='adms') cargarChecadores();
 }
 
 async function renderTablero(){
@@ -6769,6 +6863,138 @@ async function confirmarHorarioMasivo() {
   btn.textContent = 'Cerrar';
   btn.disabled = false;
   btn.onclick = cerrarModalHorarioMasivo;
+}
+
+// ════════════════════════════════════════════════════════
+// CHECADOR EN RED — ADMS ZKTeco
+// ════════════════════════════════════════════════════════
+
+async function cargarChecadores() {
+  const listEl = document.getElementById('adms-devices-list');
+  if (!listEl) return;
+  listEl.innerHTML = '<div style="color:var(--ink3);font-size:13px;padding:12px;">Cargando…</div>';
+
+  const { data, error } = await sb.from('checadores')
+    .select('sn,nombre,ubicacion,ultimo_contacto')
+    .eq('cliente_rfc', clienteRFC)
+    .order('creado_en', { ascending: false });
+
+  if (error) {
+    // La tabla puede no existir aún — instrucción clara al usuario
+    if (/does not exist|42P01/i.test(error.message || '')) {
+      listEl.innerHTML = `<div style="background:var(--amber-bg);border-radius:8px;padding:12px;font-size:12px;color:var(--ink2);">
+        ⚠️ Ejecuta <code>sql-adms.sql</code> en el SQL Editor de Supabase para habilitar el módulo de checadores en red.
+      </div>`;
+    } else {
+      listEl.innerHTML = `<div style="color:var(--red);font-size:12px;">Error: ${esc(error.message)}</div>`;
+    }
+    return;
+  }
+
+  if (!data?.length) {
+    listEl.innerHTML = '<div style="color:var(--ink3);font-size:13px;padding:12px;">Sin dispositivos registrados. Usa el formulario de arriba para agregar tu checador.</div>';
+    return;
+  }
+
+  const ahora = Date.now();
+  const filas = data.map(d => {
+    const ts = d.ultimo_contacto ? new Date(d.ultimo_contacto) : null;
+    const difMin = ts ? Math.floor((ahora - ts.getTime()) / 60000) : null;
+    const estadoColor = difMin === null ? 'var(--ink3)' : difMin < 30 ? 'var(--green)' : difMin < 1440 ? 'var(--amber)' : 'var(--red)';
+    const estadoLabel = difMin === null ? 'Sin contacto' : difMin < 30 ? '🟢 En línea' : difMin < 1440 ? `⚠️ Hace ${difMin} min` : '🔴 Desconectado';
+    return `<tr>
+      <td style="font-family:monospace;font-size:12px;">${esc(d.sn)}</td>
+      <td>${esc(d.nombre || '—')}</td>
+      <td>${esc(d.ubicacion || '—')}</td>
+      <td style="color:${estadoColor};font-weight:600;">${estadoLabel}</td>
+      <td style="font-size:11px;color:var(--ink3);">${ts ? ts.toLocaleString('es-MX') : '—'}</td>
+      <td><button class="btn btn-outline btn-sm" onclick="eliminarChecador('${esc(d.sn)}')">Eliminar</button></td>
+    </tr>`;
+  }).join('');
+
+  listEl.innerHTML = `<table style="width:100%;font-size:12px;border-collapse:collapse;">
+    <thead><tr style="background:var(--surface);font-size:11px;text-transform:uppercase;color:var(--ink3);">
+      <th style="padding:8px;text-align:left;">SN</th>
+      <th style="padding:8px;text-align:left;">Nombre</th>
+      <th style="padding:8px;text-align:left;">Ubicación</th>
+      <th style="padding:8px;text-align:left;">Estado</th>
+      <th style="padding:8px;text-align:left;">Último contacto</th>
+      <th></th>
+    </tr></thead>
+    <tbody>${filas}</tbody>
+  </table>`;
+}
+
+async function registrarChecador() {
+  const sn     = (document.getElementById('adms-sn').value || '').trim().toUpperCase();
+  const nombre = (document.getElementById('adms-nombre').value || '').trim();
+  const msg    = document.getElementById('adms-reg-msg');
+
+  if (!sn) { msg.style.color='var(--red)'; msg.textContent='Ingresa el número de serie (SN).'; return; }
+
+  msg.style.color='var(--ink3)'; msg.textContent='Guardando…';
+
+  const { error } = await mutarDatos({
+    tabla: 'checadores',
+    accion: 'upsert',
+    payload: { sn, nombre, cliente_rfc: clienteRFC },
+    conflicto: 'sn',
+  });
+
+  if (error) {
+    msg.style.color='var(--red)';
+    msg.textContent='Error: ' + (error.message || error);
+  } else {
+    msg.style.color='var(--green)';
+    msg.textContent='✓ Dispositivo registrado correctamente.';
+    document.getElementById('adms-sn').value = '';
+    document.getElementById('adms-nombre').value = '';
+    await cargarChecadores();
+  }
+}
+
+async function eliminarChecador(sn) {
+  if (!confirm(`¿Eliminar el dispositivo ${sn}? Los registros de asistencia ya importados no se afectarán.`)) return;
+  await mutarDatos({ tabla:'checadores', accion:'delete', filtros:{ sn } });
+  await cargarChecadores();
+}
+
+async function cargarMapeoPins() {
+  const listEl = document.getElementById('adms-pins-list');
+  listEl.innerHTML = '<div style="color:var(--ink3);font-size:12px;">Cargando…</div>';
+
+  const { data: trabs } = await selectProxy('trabajadores', 'id,nombre,puesto,pin_checador', { activo: true });
+  if (!trabs?.length) { listEl.innerHTML='<div style="color:var(--ink3);font-size:12px;">Sin trabajadores activos.</div>'; return; }
+
+  const filas = trabs.map(t => `<tr>
+    <td style="font-weight:600;">${esc(t.nombre)}</td>
+    <td style="color:var(--ink3);">${esc(t.puesto||'—')}</td>
+    <td>
+      <input type="text" value="${esc(t.pin_checador||'')}" placeholder="Ej: 5"
+        style="width:80px;border:1px solid var(--border2);border-radius:6px;padding:4px 8px;font-size:12px;"
+        onchange="guardarPinChecador('${t.id}',this.value)">
+    </td>
+  </tr>`).join('');
+
+  listEl.innerHTML = `<p style="font-size:11px;color:var(--ink3);margin-bottom:8px;">El PIN es el número de usuario programado en el dispositivo ZKTeco. Se asigna automáticamente al importar USER.DAT por USB.</p>
+  <table style="width:100%;font-size:12px;border-collapse:collapse;">
+    <thead><tr style="font-size:11px;text-transform:uppercase;color:var(--ink3);">
+      <th style="padding:6px;text-align:left;">Trabajador</th>
+      <th style="padding:6px;text-align:left;">Puesto</th>
+      <th style="padding:6px;text-align:left;">PIN checador</th>
+    </tr></thead>
+    <tbody>${filas}</tbody>
+  </table>`;
+}
+
+async function guardarPinChecador(trabajadorId, pinVal) {
+  const pin = pinVal.trim();
+  await mutarDatos({
+    tabla: 'trabajadores',
+    accion: 'update',
+    payload: { pin_checador: pin || null },
+    filtros: { id: trabajadorId },
+  });
 }
 </script>
 <!-- ══ MODAL: CONTROL DE ASISTENCIAS DEL DÍA ══ -->

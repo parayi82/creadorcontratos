@@ -195,6 +195,15 @@
   to = "/.netlify/functions/mi-perfil"
   status = 200
 
+# ── Protocolo ADMS (ZKTeco) ───────────────────────────────────────────────────
+# El checador biométrico llama a /iclock/* para reportar asistencias en red.
+# Se enruta a la función adms.js que implementa el protocolo y persiste en Supabase.
+[[redirects]]
+  from = "/iclock/*"
+  to = "/.netlify/functions/adms"
+  status = 200
+  force = true
+
 # Caché largo para assets estáticos con cache-busting en URL
 [[headers]]
   for = "/*.js"

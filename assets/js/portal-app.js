@@ -341,7 +341,6 @@ async function renderReportes() {
       var dk = (d.tipo||'') + ' ' + (d.nombre||'');
       DOCS_REQUERIDOS.forEach(function(req){ if(req.kw.test(dk)) docsPorTrabSet[d.trabajador_id].add(req.id); });
     });
-    window._repAsis = asisAll;
     window._repRFC  = rfcUsar;
     window._repEmpresa = clienteActual?.empresa || rfcUsar;
     console.log('[Rep] Resultado — trabajadores:', trabs.length, '| docs:', docs.length);
@@ -682,48 +681,105 @@ async function renderReportes() {
     }
 
     // ── Sección Asistencias ────────────────────────────────────────────────────
-    const asisFiltrados = asisAll.filter(function(a){ return !desdeStr || (a.fecha||'') >= desdeStr; });
-    const resumenAsis = {};
-    activos.forEach(function(t){ resumenAsis[t.id]={nombre:t.nombre,puesto:t.puesto,total:0,presentes:0,faltas:0,vacaciones:0}; });
-    asisFiltrados.forEach(function(a){
-      if(!resumenAsis[a.trabajador_id]) return;
-      resumenAsis[a.trabajador_id].total++;
-      var s=a.status||'';
-      if(s==='presente'||s==='tardanza') resumenAsis[a.trabajador_id].presentes++;
-      else if(s==='falta') resumenAsis[a.trabajador_id].faltas++;
-      else if(s==='vacaciones') resumenAsis[a.trabajador_id].vacaciones++;
+    // Calcula días laborales (lun-vie) en el período para cada trabajador.
+    // Los registros de asistencia pueden tener gaps (pre-cierre-automático);
+    // el porcentaje se calcula sobre días laborales desde el ingreso del trabajador.
+    var hoyStr = new Date().toISOString().split('T')[0];
+    var hastaStr = hoyStr; // hasta hoy
+
+    function contarDiasLaborales(desde, hasta) {
+      var count = 0;
+      var cur = new Date(desde + 'T12:00:00Z');
+      var fin = new Date(hasta + 'T12:00:00Z');
+      while (cur <= fin) {
+        var dow = cur.getUTCDay();
+        if (dow >= 1 && dow <= 5) count++;
+        cur.setUTCDate(cur.getUTCDate() + 1);
+      }
+      return count;
+    }
+
+    var asisFiltrados = asisAll.filter(function(a){ return !desdeStr || (a.fecha||'') >= desdeStr; });
+    var resumenAsis = {};
+    activos.forEach(function(t){
+      var inicioEfectivo = (t.fecha_ingreso && t.fecha_ingreso > desdeStr) ? t.fecha_ingreso : desdeStr;
+      resumenAsis[t.id] = {
+        nombre: t.nombre, puesto: t.puesto,
+        presentes: 0, retrasos: 0, faltasInj: 0, faltasJus: 0,
+        vacaciones: 0, permisos: 0, incapacidades: 0, sinRegistro: 0,
+        diasLaborales: contarDiasLaborales(inicioEfectivo, hastaStr),
+        registrados: 0,
+      };
     });
-    var filasAsis = Object.values(resumenAsis);
+    asisFiltrados.forEach(function(a){
+      if (!resumenAsis[a.trabajador_id]) return;
+      var r = resumenAsis[a.trabajador_id];
+      r.registrados++;
+      var s = a.status || '';
+      if (s === 'presente') r.presentes++;
+      else if (s === 'retraso') r.retrasos++;
+      else if (s === 'falta_injustificada') r.faltasInj++;
+      else if (s === 'falta_justificada') r.faltasJus++;
+      else if (s === 'vacaciones') r.vacaciones++;
+      else if (s === 'permiso') r.permisos++;
+      else if (s === 'incapacidad') r.incapacidades++;
+      else if (s === 'sin_registro') r.sinRegistro++;
+    });
+
+    var filasAsis = Object.values(resumenAsis).sort(function(a,b){ return a.nombre.localeCompare(b.nombre); });
+    var totalPresentes = filasAsis.reduce(function(s,r){ return s+r.presentes+r.retrasos; }, 0);
+    var totalLaborales = filasAsis.reduce(function(s,r){ return s+r.diasLaborales; }, 0);
+    var pctGlobal = totalLaborales > 0 ? Math.round(totalPresentes/totalLaborales*100) : 0;
+    var pctGlobalCol = pctGlobal>=90?'#16a34a':pctGlobal>=70?'#d97706':'#dc2626';
+
     html += '<div style="background:var(--white);border-radius:10px;padding:16px;border:1px solid var(--border);margin-top:14px;overflow-x:auto;">';
     html += '<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;flex-wrap:wrap;gap:8px;">';
+    html += '<div>';
     html += '<div style="font-size:13px;font-weight:700;color:var(--navy);">📅 Asistencias por trabajador</div>';
-    html += '<button onclick="exportarConstanciaPortal()" style="padding:6px 14px;background:var(--navy2);color:#fff;border:none;border-radius:6px;font-size:12px;font-weight:600;cursor:pointer;">📄 Constancia de asistencia (Art. 804 LFT)</button>';
+    html += '<div style="font-size:11px;color:var(--ink3);margin-top:2px;">% calculado sobre días laborales (lun-vie) desde ingreso del trabajador</div>';
     html += '</div>';
-    if(asisFiltrados.length === 0){
-      html += '<div style="text-align:center;padding:20px;color:var(--ink3);font-size:12px;">Sin registros de asistencia en el período seleccionado.</div>';
+    html += '<div style="display:flex;gap:8px;align-items:center;">';
+    html += '<div style="text-align:center;padding:6px 14px;border-radius:8px;background:var(--surface);"><div style="font-size:9px;font-weight:700;text-transform:uppercase;color:var(--ink3);">Asistencia global</div><div style="font-size:20px;font-weight:800;color:'+pctGlobalCol+';">'+pctGlobal+'%</div></div>';
+    html += '<a href="asistencias-vacaciones.html" style="padding:6px 14px;background:var(--navy2);color:#fff;border:none;border-radius:6px;font-size:12px;font-weight:600;cursor:pointer;text-decoration:none;">📋 Control de asistencias</a>';
+    html += '</div></div>';
+
+    if (filasAsis.length === 0) {
+      html += '<div style="text-align:center;padding:20px;color:var(--ink3);font-size:12px;">Sin trabajadores activos en el período.</div>';
     } else {
       html += '<table style="width:100%;border-collapse:collapse;font-size:12px;">';
-      html += '<thead><tr>';
+      html += '<thead><tr style="background:var(--surface);">';
       html += '<th style="text-align:left;padding:7px 10px;border-bottom:1.5px solid var(--border);font-size:10px;text-transform:uppercase;color:var(--ink3);">Nombre</th>';
       html += '<th style="text-align:left;padding:7px 10px;border-bottom:1.5px solid var(--border);font-size:10px;text-transform:uppercase;color:var(--ink3);">Puesto</th>';
-      html += '<th style="text-align:right;padding:7px 10px;border-bottom:1.5px solid var(--border);font-size:10px;text-transform:uppercase;color:var(--ink3);">Registros</th>';
-      html += '<th style="text-align:right;padding:7px 10px;border-bottom:1.5px solid var(--border);font-size:10px;text-transform:uppercase;color:var(--ink3);">Presentes</th>';
-      html += '<th style="text-align:right;padding:7px 10px;border-bottom:1.5px solid var(--border);font-size:10px;text-transform:uppercase;color:var(--ink3);">Faltas</th>';
-      html += '<th style="text-align:right;padding:7px 10px;border-bottom:1.5px solid var(--border);font-size:10px;text-transform:uppercase;color:var(--ink3);">% Asistencia</th>';
+      html += '<th style="text-align:right;padding:7px 10px;border-bottom:1.5px solid var(--border);font-size:10px;text-transform:uppercase;color:var(--ink3);">Días lab.</th>';
+      html += '<th style="text-align:right;padding:7px 10px;border-bottom:1.5px solid var(--border);font-size:10px;text-transform:uppercase;color:#16a34a;">Pres.</th>';
+      html += '<th style="text-align:right;padding:7px 10px;border-bottom:1.5px solid var(--border);font-size:10px;text-transform:uppercase;color:#d97706;">Ret.</th>';
+      html += '<th style="text-align:right;padding:7px 10px;border-bottom:1.5px solid var(--border);font-size:10px;text-transform:uppercase;color:#dc2626;">Faltas</th>';
+      html += '<th style="text-align:right;padding:7px 10px;border-bottom:1.5px solid var(--border);font-size:10px;text-transform:uppercase;color:#7c3aed;">Vac/Perm</th>';
+      html += '<th style="text-align:right;padding:7px 10px;border-bottom:1.5px solid var(--border);font-size:10px;text-transform:uppercase;color:var(--ink3);">% Asist.</th>';
       html += '</tr></thead><tbody>';
-      filasAsis.forEach(function(r){
-        var pct = r.total>0 ? Math.round(r.presentes/r.total*100) : 0;
-        var col = pct>=90?'#16a34a':pct>=70?'#d97706':'#dc2626';
-        html += '<tr>';
+      filasAsis.forEach(function(r) {
+        var asistio = r.presentes + r.retrasos;
+        var faltas  = r.faltasInj + r.faltasJus;
+        var vacPerm = r.vacaciones + r.permisos + r.incapacidades;
+        var pct = r.diasLaborales > 0 ? Math.round(asistio / r.diasLaborales * 100) : null;
+        var col = pct === null ? 'var(--ink3)' : pct>=90?'#16a34a':pct>=70?'#d97706':'#dc2626';
+        var bg  = pct === null ? '' : pct>=90?'#f0fdf4':pct>=70?'#fffbeb':'#fef2f2';
+        html += '<tr style="background:'+bg+';">';
         html += '<td style="padding:8px 10px;border-bottom:1px solid var(--border);font-weight:600;">'+esc(r.nombre)+'</td>';
         html += '<td style="padding:8px 10px;border-bottom:1px solid var(--border);color:var(--ink2);">'+esc(r.puesto||'—')+'</td>';
-        html += '<td style="padding:8px 10px;border-bottom:1px solid var(--border);text-align:right;">'+r.total+'</td>';
+        html += '<td style="padding:8px 10px;border-bottom:1px solid var(--border);text-align:right;color:var(--ink3);">'+r.diasLaborales+'</td>';
         html += '<td style="padding:8px 10px;border-bottom:1px solid var(--border);text-align:right;color:#16a34a;font-weight:600;">'+r.presentes+'</td>';
-        html += '<td style="padding:8px 10px;border-bottom:1px solid var(--border);text-align:right;color:#dc2626;">'+r.faltas+'</td>';
-        html += '<td style="padding:8px 10px;border-bottom:1px solid var(--border);text-align:right;font-weight:700;color:'+col+';">'+pct+'%</td>';
+        html += '<td style="padding:8px 10px;border-bottom:1px solid var(--border);text-align:right;color:#d97706;">'+r.retrasos+'</td>';
+        html += '<td style="padding:8px 10px;border-bottom:1px solid var(--border);text-align:right;color:#dc2626;">'+(faltas>0?'<strong>'+faltas+'</strong>':'0')+'</td>';
+        html += '<td style="padding:8px 10px;border-bottom:1px solid var(--border);text-align:right;color:#7c3aed;">'+vacPerm+'</td>';
+        html += '<td style="padding:8px 10px;border-bottom:1px solid var(--border);text-align:right;font-weight:700;color:'+col+';">'+(pct!==null?pct+'%':'—')+'</td>';
         html += '</tr>';
       });
       html += '</tbody></table>';
+      html += '<div style="font-size:10px;color:var(--ink3);margin-top:8px;padding:6px 0;border-top:1px solid var(--border);">';
+      html += 'Pres.=Presentes · Ret.=Retrasos · Faltas=injust.+just. · Vac/Perm=vacaciones+permisos+incapacidades · ';
+      html += '% = (Pres.+Ret.) ÷ Días laborales · Art. 804 LFT.';
+      html += '</div>';
     }
     html += '</div>';
     // ── fin Asistencias ───────────────────────────────────────────────────────
@@ -1116,121 +1172,6 @@ function exportarCompletitudExcel() {
   a.click();
 }
 
-async function exportarConstanciaPortal() {
-  const asisAll  = window._repAsis    || [];
-  const activos  = window._repActivos || [];
-  const empresa  = window._repEmpresa || clienteActual?.empresa || '—';
-  const hoy = new Date().toLocaleDateString('es-MX',{day:'2-digit',month:'long',year:'numeric'});
-
-  const fmt  = function(d){ return d ? new Date(d+'T12:00:00').toLocaleDateString('es-MX',{day:'2-digit',month:'short',year:'numeric'}) : '—'; };
-  const fmtH = function(h){ return h ? h.substring(0,5) : '—'; };
-  const dur  = function(e,s){
-    if(!e||!s) return '—';
-    var em=parseInt(e.substring(0,2))*60+parseInt(e.substring(3,5));
-    var sm=parseInt(s.substring(0,2))*60+parseInt(s.substring(3,5));
-    var d=sm-em; if(d<0) return '—';
-    return Math.floor(d/60)+'h '+(d%60)+'min';
-  };
-  const tdS = 'padding:5px 7px;border-bottom:1px solid #e5e7eb;font-size:10px;';
-  const thS = 'padding:6px 8px;text-align:left;font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:.04em;background:#0f2640;color:#fff;';
-
-  // Mapa id → trabajador
-  var trabMap = {};
-  activos.forEach(function(t){ trabMap[t.id] = t; });
-
-  // Agrupar por trabajador
-  var byTrab = {};
-  asisAll.forEach(function(a){
-    var k = a.trabajador_id || '_sin_id';
-    if(!byTrab[k]) byTrab[k] = [];
-    byTrab[k].push(a);
-  });
-
-  var sections = '';
-
-  if(asisAll.length === 0) {
-    // Sin registros: mostrar lista de trabajadores con nota
-    sections += '<p style="font-size:11px;color:#666;margin:0 0 12px;">Sin registros de asistencia en el período seleccionado. Para generar registros use el Checador Digital.</p>';
-    if(activos.length > 0) {
-      sections += '<table style="width:100%;border-collapse:collapse;margin-bottom:16px;">';
-      sections += '<thead><tr><th style="'+thS+'">Nombre</th><th style="'+thS+'">Puesto</th><th style="'+thS+'">Ingreso</th></tr></thead><tbody>';
-      activos.forEach(function(t){
-        sections += '<tr>'
-          +'<td style="'+tdS+'">'+esc(t.nombre)+'</td>'
-          +'<td style="'+tdS+'">'+esc(t.puesto||'—')+'</td>'
-          +'<td style="'+tdS+'">'+(t.fecha_ingreso ? fmt(t.fecha_ingreso) : '—')+'</td>'
-          +'</tr>';
-      });
-      sections += '</tbody></table>';
-    }
-  } else {
-    // Una sección por trabajador
-    Object.keys(byTrab).forEach(function(tid){
-      var trab   = trabMap[tid] || {nombre:'Trabajador desconocido', puesto:''};
-      var recs   = byTrab[tid].slice().sort(function(a,b){ return (a.fecha||'')<(b.fecha||'') ? -1 : 1; });
-      var pres   = recs.filter(function(r){ return r.status==='presente'||r.status==='tardanza'; }).length;
-      var faltas = recs.filter(function(r){ return r.status==='falta'; }).length;
-      var vacs   = recs.filter(function(r){ return r.status==='vacaciones'; }).length;
-      var pct    = recs.length ? Math.round(pres/recs.length*100) : 0;
-
-      sections += '<div style="margin-bottom:20px;page-break-inside:avoid;">';
-      sections += '<div style="font-size:12px;font-weight:700;color:#0f2640;border-bottom:2px solid #0f2640;padding-bottom:4px;margin-bottom:5px;">'
-        +esc(trab.nombre)+(trab.puesto?' &nbsp;·&nbsp; '+esc(trab.puesto):'')+'</div>';
-      sections += '<div style="font-size:10px;color:#555;margin-bottom:7px;">Registros: '+recs.length
-        +' &nbsp;|&nbsp; Presentes/puntual: '+pres
-        +' &nbsp;|&nbsp; Faltas: '+faltas
-        +(vacs?' &nbsp;|&nbsp; Vacaciones: '+vacs:'')
-        +' &nbsp;|&nbsp; % Asistencia: <strong>'+pct+'%</strong></div>';
-      sections += '<table style="width:100%;border-collapse:collapse;">';
-      sections += '<thead><tr>'
-        +'<th style="'+thS+'">Fecha</th>'
-        +'<th style="'+thS+'">Estatus</th>'
-        +'<th style="'+thS+'text-align:center;">Entrada</th>'
-        +'<th style="'+thS+'text-align:center;">Salida</th>'
-        +'<th style="'+thS+'text-align:center;">Duración</th>'
-        +'</tr></thead><tbody>';
-      recs.forEach(function(a){
-        var bg = a.status==='falta' ? 'background:#fee2e2;' : (a.status==='vacaciones'||a.status==='permiso') ? 'background:#fef9c3;' : '';
-        sections += '<tr style="'+bg+'">'
-          +'<td style="'+tdS+'">'+fmt(a.fecha)+'</td>'
-          +'<td style="'+tdS+';text-transform:capitalize;">'+(a.status||'—')+'</td>'
-          +'<td style="'+tdS+';text-align:center;">'+fmtH(a.hora_entrada)+'</td>'
-          +'<td style="'+tdS+';text-align:center;">'+fmtH(a.hora_salida)+'</td>'
-          +'<td style="'+tdS+';text-align:center;">'+dur(a.hora_entrada,a.hora_salida)+'</td>'
-          +'</tr>';
-      });
-      sections += '</tbody></table></div>';
-    });
-  }
-
-  // Wrapper posicionado fuera de la vista (html2pdf lo necesita en el DOM)
-  var wrapper = document.createElement('div');
-  wrapper.style.cssText = 'position:fixed;left:-9999px;top:0;width:794px;background:#fff;padding:24px;font-family:Arial,sans-serif;font-size:11px;color:#111;box-sizing:border-box;';
-  wrapper.innerHTML =
-    '<div style="margin-bottom:18px;border-bottom:3px solid #0f2640;padding-bottom:10px;">'
-    +'<div style="font-size:17px;font-weight:700;color:#0f2640;">'+empresa+'</div>'
-    +'<div style="font-size:12px;color:#444;margin-top:2px;">Constancia de Control de Asistencia del Personal</div>'
-    +'<div style="font-size:10px;color:#888;margin-top:3px;">Generado: '+hoy+' &nbsp;·&nbsp; Art. 804 LFT</div>'
-    +'</div>'
-    + sections
-    +'<div style="margin-top:16px;font-size:9px;color:#999;border-top:1px solid #ddd;padding-top:8px;line-height:1.6;">'
-    +'Documento generado electrónicamente por ClickLaboral.mx &nbsp;·&nbsp; '
-    +'Art. 804 LFT: el patrón debe conservar los registros de asistencia durante al menos 1 año &nbsp;·&nbsp; '
-    +'Art. 784 LFT: la carga de la prueba de la jornada laboral corresponde al patrón.'
-    +'</div>';
-
-  document.body.appendChild(wrapper);
-  try {
-    await html2pdf().set({
-      margin: [10,10,10,10],
-      filename: 'Constancia-Asistencia-'+empresa.replace(/\s+/g,'-')+'-'+new Date().toISOString().split('T')[0]+'.pdf',
-      html2canvas: { scale: 2, useCORS: true, logging: false },
-      jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' },
-    }).from(wrapper).save();
-  } finally {
-    document.body.removeChild(wrapper);
-  }
-}
 
 async function logout(){
   if (_modoDespacho) {

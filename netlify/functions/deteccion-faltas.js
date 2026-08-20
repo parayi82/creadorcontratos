@@ -1,9 +1,14 @@
 // netlify/functions/deteccion-faltas.js
 //
-// Detecta automáticamente faltas y retrasos del día anterior.
-// Para cada trabajador activo con horario establecido (hora_entrada_habitual):
-//   - Sin registro de asistencia → crea falta_injustificada + acta_inasistencia + alerta (alta)
-//   - Registro con status retraso → crea alerta (media) para que el cliente levante acta
+// Cierra la jornada del día anterior y detecta faltas/retrasos.
+//
+// Paso 1 — Cierre de día: para TODOS los trabajadores activos sin registro
+//   de ayer → inserta 'sin_registro'. Garantiza cobertura día a día en la tabla.
+//
+// Paso 2 — Detección de faltas: para los que tienen hora_entrada_habitual y
+//   quedaron como 'sin_registro' → actualiza a 'falta_injustificada' + acta + alerta.
+//
+// Paso 3 — Detección de retrasos: para los con status 'retraso' → alerta.
 //
 // Ejecutar una vez al día, p.ej. a las 07:00 hora CDMX.
 //   GET /api/deteccion-faltas?secret=CRON_SECRET
@@ -20,8 +25,6 @@ const headers = {
 };
 
 exports.handler = async (event) => {
-  // Las Netlify Scheduled Functions no envían httpMethod — se consideran confiables.
-  // Las llamadas HTTP manuales (pruebas, cron externo) requieren CRON_SECRET.
   const isScheduled = !event.httpMethod;
   if (!isScheduled) {
     const secret = process.env.CRON_SECRET;
@@ -43,30 +46,30 @@ exports.handler = async (event) => {
   const resumen = {
     ayer,
     hoy,
-    faltas_creadas:     0,
-    actas_creadas:      0,
-    alertas_faltas:     0,
-    alertas_retrasos:   0,
-    errores:            [],
+    dias_cerrados:    0,
+    faltas_creadas:   0,
+    actas_creadas:    0,
+    alertas_faltas:   0,
+    alertas_retrasos: 0,
+    errores:          [],
   };
 
   try {
-    // ── 1. Cargar trabajadores activos con horario establecido ──────
+    // ── 1. Cargar TODOS los trabajadores activos ────────────────────────────
     const { data: trabajadores, error: errTrab } = await sb
       .from('trabajadores')
       .select('id, nombre, cliente_rfc, hora_entrada_habitual')
-      .eq('activo', true)
-      .not('hora_entrada_habitual', 'is', null);
+      .eq('activo', true);
 
     if (errTrab) throw errTrab;
     if (!trabajadores?.length) {
       return {
         statusCode: 200, headers,
-        body: JSON.stringify({ ok: true, ...resumen, nota: 'Sin trabajadores con horario configurado.' }),
+        body: JSON.stringify({ ok: true, ...resumen, nota: 'Sin trabajadores activos.' }),
       };
     }
 
-    // ── 2. Cargar registros de asistencia de ayer ───────────────────
+    // ── 2. Cargar registros de asistencia de ayer ───────────────────────────
     const ids = trabajadores.map(t => t.id);
     const { data: asistenciasAyer, error: errAsis } = await sb
       .from('asistencias')
@@ -82,22 +85,47 @@ exports.handler = async (event) => {
     const sinRegistro = trabajadores.filter(t => !asistenciaMap[t.id]);
     const conRetraso  = trabajadores.filter(t => asistenciaMap[t.id] === 'retraso');
 
-    // ── 3. Procesar faltas injustificadas ───────────────────────────
+    // ── 3. Cierre de día — insertar 'sin_registro' para TODOS sin registro ──
+    // Garantiza cobertura día a día en la tabla de asistencias.
     for (const t of sinRegistro) {
       try {
-        // 3a. Registro de asistencia (upsert: no duplicar si ya existe)
-        const { error: insAsis } = await sb.from('asistencias').upsert({
+        const { error: insSR } = await sb.from('asistencias').upsert({
           trabajador_id: t.id,
           cliente_rfc:   t.cliente_rfc,
           fecha:         ayer,
-          status:        'falta_injustificada',
-          fuente:        'manual',
-          notas:         'Falta detectada automáticamente — sin registro en checador.',
+          status:        'sin_registro',
+          fuente:        'sistema',
+          notas:         'Cierre automático de jornada — sin movimiento registrado.',
         }, { onConflict: 'trabajador_id,fecha' });
-        if (insAsis) { resumen.errores.push(`asistencia ${t.nombre}: ${insAsis.message}`); continue; }
+        if (!insSR) resumen.dias_cerrados++;
+      } catch (e) {
+        resumen.errores.push(`cierre ${t.nombre}: ${e?.message || e}`);
+        console.error(`deteccion-faltas cierre ${t.nombre}:`, e?.message);
+      }
+    }
+
+    // ── 4. Procesar faltas: trabajadores CON horario que quedaron sin registro
+    const conHorarioSinRegistro = sinRegistro.filter(t => !!t.hora_entrada_habitual);
+
+    for (const t of conHorarioSinRegistro) {
+      try {
+        // Actualizar sin_registro → falta_injustificada (solo si no fue modificado ya)
+        const { error: updAsis } = await sb.from('asistencias')
+          .update({
+            status: 'falta_injustificada',
+            notas:  'Falta detectada automáticamente — sin registro en checador.',
+          })
+          .eq('trabajador_id', t.id)
+          .eq('fecha', ayer)
+          .eq('status', 'sin_registro');
+
+        if (updAsis) {
+          resumen.errores.push(`falta upd ${t.nombre}: ${updAsis.message}`);
+          continue;
+        }
         resumen.faltas_creadas++;
 
-        // 3b. Acta de inasistencia (provisional, editable por el cliente)
+        // Acta de inasistencia provisional
         const { error: insActa } = await sb.from('actas_inasistencia').upsert({
           trabajador_id: t.id,
           cliente_rfc:   t.cliente_rfc,
@@ -109,7 +137,7 @@ exports.handler = async (event) => {
         }, { onConflict: 'trabajador_id,fecha' });
         if (!insActa) resumen.actas_creadas++;
 
-        // 3c. Alerta para el cliente
+        // Alerta para el cliente
         const { error: insAlFalta } = await sb.from('alertas_laborales').upsert({
           cliente_rfc:       t.cliente_rfc,
           tipo:              'falta_injustificada',
@@ -127,7 +155,7 @@ exports.handler = async (event) => {
       }
     }
 
-    // ── 4. Procesar retrasos → solo alerta (el acta la levanta el patrón) ──
+    // ── 5. Procesar retrasos → solo alerta (el acta la levanta el patrón) ───
     for (const t of conRetraso) {
       try {
         const { error: insAlRet } = await sb.from('alertas_laborales').upsert({
@@ -158,7 +186,6 @@ exports.handler = async (event) => {
 
 // ── Utilidades ───────────────────────────────────────────────────────────────
 
-// Fecha en zona horaria de México (America/Mexico_City), con offset en días
 function fechaMexico(offsetDias) {
   const fmt = new Intl.DateTimeFormat('en-CA', {
     timeZone: 'America/Mexico_City',

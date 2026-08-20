@@ -118,7 +118,7 @@ const SUPABASE_URL = 'https://hpzgqaplrywwjuvrzhcp.supabase.co';
 const SUPABASE_ANON_KEY = 'sb_publishable_1g8US8iFJ8CxnSaF_4MHgA_gqyyAr3W';
 const sb = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
-const TOLERANCIA_RETRASO_MIN = 10; // minutos de gracia sobre la hora habitual
+let toleranciaRetrasoMin = 10; // se sobreescribe desde user_metadata al iniciar sesión
 
 let clienteRFC = null, clienteEmpresa = null;
 let trabajadores = [];          // roster activo
@@ -182,6 +182,10 @@ async function init(){
       clienteRFC = meta.rfc; clienteEmpresa = meta.empresa || meta.rfc;
     } else return false;
 
+    // Leer tolerancia de retraso guardada en el RIT de la empresa
+    if (typeof meta.tolerancia_retraso_min === 'number') {
+      toleranciaRetrasoMin = meta.tolerancia_retraso_min;
+    }
     document.getElementById('tb-empresa').textContent = clienteEmpresa;
     pedirGeo();
     await cargarDatos();
@@ -383,7 +387,7 @@ async function registrar(accion){
       let status = 'presente';
       if(trabajadorSel.hora_entrada_habitual){
         const [hh,mm] = trabajadorSel.hora_entrada_habitual.split(':').map(Number);
-        const limite = hh*60 + mm + TOLERANCIA_RETRASO_MIN;
+        const limite = hh*60 + mm + toleranciaRetrasoMin;
         const ahora = new Date().getHours()*60 + new Date().getMinutes();
         if(ahora > limite) status = 'retraso';
       }

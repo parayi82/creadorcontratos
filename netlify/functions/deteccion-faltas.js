@@ -20,16 +20,16 @@ const headers = {
 };
 
 exports.handler = async (event) => {
-  const secret = process.env.CRON_SECRET;
-  if (!secret) {
-    console.error('CRON_SECRET no configurado');
-    return { statusCode: 500, headers, body: JSON.stringify({ error: 'Configuración incompleta (CRON_SECRET)' }) };
-  }
-
-  const q = event.queryStringParameters || {};
-  const authH = (event.headers || {})['authorization'] || (event.headers || {})['Authorization'] || '';
-  if (q.secret !== secret && authH !== `Bearer ${secret}`) {
-    return { statusCode: 401, headers, body: JSON.stringify({ error: 'No autorizado' }) };
+  // Las Netlify Scheduled Functions no envían httpMethod — se consideran confiables.
+  // Las llamadas HTTP manuales (pruebas, cron externo) requieren CRON_SECRET.
+  const isScheduled = !event.httpMethod;
+  if (!isScheduled) {
+    const secret = process.env.CRON_SECRET;
+    const q = event.queryStringParameters || {};
+    const authH = (event.headers || {})['authorization'] || (event.headers || {})['Authorization'] || '';
+    if (!secret || (q.secret !== secret && authH !== `Bearer ${secret}`)) {
+      return { statusCode: 401, headers, body: JSON.stringify({ error: 'No autorizado' }) };
+    }
   }
 
   if (!process.env.SUPABASE_URL || !process.env.SUPABASE_SERVICE_KEY) {

@@ -840,14 +840,14 @@ body.modo-apartar .tablero-tabla tbody td:hover{outline:1px solid #f97316;outlin
 <!-- MODAL: importar CSV -->
 <div class="modal-overlay" id="modal-csv">
   <div class="modal-box" style="max-width:600px;">
-    <h3>Importar asistencias desde CSV / attlog.dat</h3>
+    <h3>Importar asistencias desde CSV / ZKTeco</h3>
     <p style="font-size:12px;color:var(--ink3);margin-bottom:12px;line-height:1.6;">
       Compatible con:<br>
       • <strong>ZKBio ZLink CSV</strong> — Reporte de asistencia → Exportar → CSV.<br>
-      • <strong>attlog.dat</strong> (ZKTeco nativo) — el archivo <code style="background:var(--surface);padding:1px 4px;border-radius:3px;">attlog.dat</code> que exporta directamente la terminal. El sistema lo detecta automáticamente y empareja cada PIN con el campo <em>NIP checador</em> del trabajador.<br>
+      • <strong>ZKTeco nativo</strong> — selecciona juntos <code style="background:var(--surface);padding:1px 4px;border-radius:3px;">attlog.dat</code> y <code style="background:var(--surface);padding:1px 4px;border-radius:3px;">user.dat</code>. El sistema identifica cada archivo automáticamente: <em>user.dat</em> contiene los nombres, <em>attlog.dat</em> las checadas.<br>
       • Cualquier CSV con columnas de nombre, fecha y entrada/salida.
     </p>
-    <input type="file" id="csv-file" accept=".csv,.dat,.txt" onchange="leerCSV(this)">
+    <input type="file" id="csv-file" accept=".csv,.dat,.txt" multiple onchange="leerCSV(this)">
     <div id="csv-preview-wrap"></div>
     <div class="modal-close-row">
       <button class="btn btn-outline" onclick="cerrarModalCSV()">Cancelar</button>
@@ -2538,6 +2538,27 @@ function detectarColumna(headers, candidatos){
 // Detecta si el contenido es un attlog.dat nativo de ZKTeco:
 // sin encabezado, tabulador como separador, columna 0 = PIN numérico,
 // columna 1 = datetime YYYY-MM-DD HH:MM:SS
+// ── Helpers para detección y parseo de archivos ZKTeco ──────────────────────
+
+// user.dat: 72 bytes/registro, nombre en offset 11, PIN en offset 48
+function parseUserDat(arrayBuffer) {
+  const RECORD = 72, NAME_OFF = 11, PIN_OFF = 48;
+  const view = new Uint8Array(arrayBuffer);
+  const pinMap = {};
+  const readStr = (base, off, maxLen) => {
+    let s = '';
+    for (let j = base + off; j < base + off + maxLen && j < view.length && view[j]; j++)
+      s += String.fromCharCode(view[j]);
+    return s.trim();
+  };
+  for (let i = 0; i + RECORD <= view.length; i += RECORD) {
+    const nombre = readStr(i, NAME_OFF, 24);
+    const pin    = readStr(i, PIN_OFF, 8);
+    if (pin && nombre) pinMap[pin] = nombre;
+  }
+  return pinMap;
+}
+
 function esAttlogDat(lines) {
   if (!lines.length) return false;
   const cols = lines[0].split('\t');
@@ -2547,10 +2568,9 @@ function esAttlogDat(lines) {
   return /^\d+$/.test(pin) && /^\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}/.test(dt);
 }
 
-// Parsea attlog.dat: agrupa checadas por PIN + día → entrada (min) y salida (max)
-// Devuelve [{pin, fecha, hora_entrada, hora_salida, status}]
+// Agrupa checadas por PIN + día → entrada (min) y salida (max)
 function procesarAttlogDat(lines) {
-  const map = {}; // "PIN|YYYY-MM-DD" → {tiempos:[]}
+  const map = {};
   for (const line of lines) {
     const cols = line.split('\t');
     if (cols.length < 2) continue;
@@ -2572,89 +2592,155 @@ function procesarAttlogDat(lines) {
   });
 }
 
+// Variables de estado para la importación multi-archivo
+let _userDatPinMap = {};   // { "1": "Juan Jose Salas", ... }
+let _attlogModo    = false;
+
 async function leerCSV(input) {
-  const file = input.files ? input.files[0] : input;
-  if (!file) return;
+  const files = input.files ? Array.from(input.files) : [input];
+  if (!files.length) return;
 
   resultadoImportLog = [];
-  const text = await file.text();
-  const lines = text.split(/\r?\n/).filter(l => l.trim().length > 3);
-
-  if (lines.length < 1) {
-    alert("El archivo está vacío.");
-    return;
-  }
-
-  // ── Formato attlog.dat (ZKTeco nativo) ──────────────────────────────
-  if (esAttlogDat(lines)) {
-    filasCSV = procesarAttlogDat(lines);
-    filasCSV._esAttlog = true; // marca para confirmarImportCSV
-    await mostrarPreviewAttlog();
-    return;
-  }
-
-  // ── Formato CSV estándar ─────────────────────────────────────────────
-  if (lines.length < 2) {
-    alert("El CSV necesita al menos una fila de encabezado y un registro.");
-    return;
-  }
-
-  // Detectar separador
-  let separator = ',';
-  if (lines[0].includes(';')) separator = ';';
-  else if (lines[0].includes('\t')) separator = '\t';
-
-  const headers = lines[0].split(separator).map(h => h.trim().toLowerCase().replace(/["']/g, ''));
-
-  mapeoColumnas = detectarColumnas(headers);
-
   filasCSV = [];
-  for (let i = 1; i < lines.length; i++) {
-    const line = lines[i].trim();
-    if (!line) continue;
+  _userDatPinMap = {};
+  _attlogModo = false;
 
-    const valores = line.split(separator).map(v => v.trim().replace(/["']/g, ''));
-    const registro = parseRegistroZKTeco(valores, mapeoColumnas, line);
-    if (registro) filasCSV.push(registro);
+  const wrap = document.getElementById('csv-preview-wrap');
+  wrap.innerHTML = '<p style="font-size:12px;color:var(--ink3)">Analizando archivos…</p>';
+  document.getElementById('csv-confirmar-btn').disabled = true;
+
+  const attlogLines = [];
+  let tieneAttlog = false, tieneBiotemplate = false, tieneCsvNormal = false;
+
+  for (const file of files) {
+    const fname = file.name.toLowerCase();
+
+    // user.dat binario (nombre incluye "user" y extensión .dat)
+    if (fname.endsWith('.dat') && (fname === 'user.dat' || fname.includes('user'))) {
+      try {
+        const buf = await file.arrayBuffer();
+        const map = parseUserDat(buf);
+        if (Object.keys(map).length > 0) {
+          Object.assign(_userDatPinMap, map);
+          continue; // procesado — no leer como texto
+        }
+      } catch(_) {}
+    }
+
+    let text;
+    try { text = await file.text(); } catch(_) { continue; }
+    const lines = text.split(/\r?\n/).filter(l => l.trim().length > 3);
+    if (!lines.length) continue;
+
+    const l0 = lines[0].trimStart();
+
+    // biotemplate.dat: huellas digitales, ignorar
+    if (l0.startsWith('Pin=') && l0.includes('\t') && l0.includes('Tmp=')) {
+      tieneBiotemplate = true;
+      continue;
+    }
+
+    // attlog.dat
+    if (esAttlogDat(lines)) {
+      attlogLines.push(...lines);
+      tieneAttlog = true;
+      continue;
+    }
+
+    // CSV estándar (primer CSV encontrado gana)
+    if (!tieneCsvNormal && lines.length >= 2) {
+      let sep = ',';
+      if (lines[0].includes(';')) sep = ';';
+      else if (lines[0].includes('\t')) sep = '\t';
+      const headers = lines[0].split(sep).map(h => h.trim().toLowerCase().replace(/["']/g, ''));
+      mapeoColumnas = detectarColumnas(headers);
+      filasCSV = [];
+      for (let i = 1; i < lines.length; i++) {
+        const line = lines[i].trim();
+        if (!line) continue;
+        const valores = line.split(sep).map(v => v.trim().replace(/["']/g, ''));
+        const registro = parseRegistroZKTeco(valores, mapeoColumnas, line);
+        if (registro) filasCSV.push(registro);
+      }
+      tieneCsvNormal = true;
+    }
   }
 
-  mostrarPreviewCSV();
+  if (tieneAttlog) {
+    _attlogModo = true;
+    filasCSV = procesarAttlogDat(attlogLines);
+    await mostrarPreviewAttlog();
+  } else if (tieneBiotemplate && !tieneAttlog) {
+    wrap.innerHTML = '<p style="color:var(--red);font-size:13px;padding:8px 0;">⚠️ <strong>biotemplate.dat</strong> contiene plantillas de huellas digitales — no son registros de asistencia. Sube el archivo <strong>attlog.dat</strong> para importar asistencias.</p>';
+  } else if (Object.keys(_userDatPinMap).length && !tieneAttlog) {
+    wrap.innerHTML = `<p style="font-size:12px;color:var(--ink2);padding:8px 0;">✅ <strong>user.dat</strong> cargado — ${Object.keys(_userDatPinMap).length} trabajadores identificados. Ahora selecciona también el archivo <strong>attlog.dat</strong> del mismo terminal para importar asistencias.</p>`;
+  } else if (tieneCsvNormal && filasCSV.length) {
+    mostrarPreviewCSV();
+  } else {
+    wrap.innerHTML = '<p style="color:var(--red);font-size:13px;padding:8px 0;">No se reconoció ningún formato válido. Formatos aceptados: attlog.dat, user.dat, o CSV con encabezados.</p>';
+  }
 }
 
-// Preview para attlog.dat: resuelve PINs contra nip de trabajadores
+// Preview para attlog.dat: empareja PINs usando user.dat > NIP checador
 async function mostrarPreviewAttlog() {
   const wrap = document.getElementById('csv-preview-wrap');
   if (!filasCSV.length) { wrap.innerHTML = '<p style="color:var(--red)">No se encontraron registros válidos.</p>'; return; }
 
   const { data: trabsData } = await selectProxy('trabajadores', 'id,nombre,nip', { activo: true });
+
+  // Mapa por NIP (fallback sin user.dat)
   const porNip = {};
   (trabsData || []).forEach(t => { if (t.nip) porNip[String(t.nip).padStart(4,'0')] = t; });
+
+  // Mapa por nombre (para user.dat)
+  const porNombre = {};
+  (trabsData || []).forEach(t => { porNombre[t.nombre.toLowerCase().trim()] = t; });
+
+  const tieneUserDat = Object.keys(_userDatPinMap).length > 0;
+
+  const emparejarPorNombre = (nombreDat) => {
+    const k = (nombreDat || '').toLowerCase().trim();
+    if (porNombre[k]) return porNombre[k];
+    for (const [key, t] of Object.entries(porNombre))
+      if (key.includes(k) || k.includes(key)) return t;
+    return null;
+  };
 
   let emparejados = 0, sinEmparejar = 0;
   let rows = '';
   filasCSV.forEach(r => {
     const pinPad = String(r.pin).padStart(4,'0');
-    const trab = porNip[pinPad];
+    let trab = null;
+
+    // 1. user.dat → match por nombre
+    if (tieneUserDat && _userDatPinMap[r.pin]) {
+      trab = emparejarPorNombre(_userDatPinMap[r.pin]);
+    }
+    // 2. NIP directo
+    if (!trab) trab = porNip[pinPad] || null;
+
+    const nombreDat = _userDatPinMap[r.pin] || null;
     if (trab) { r.nombre = trab.nombre; r._trabajadorId = trab.id; emparejados++; }
     else sinEmparejar++;
-    const nombrei = trab ? `<span style="color:var(--green)">${esc(trab.nombre)}</span>`
-      : `<span style="color:var(--red)">❌ PIN ${esc(r.pin)} sin asignar</span>`;
-    rows += `<tr>
-      <td>${esc(r.pin)}</td><td>${nombrei}</td><td>${esc(r.fecha)}</td>
-      <td>${r.hora_entrada||'—'}</td><td>${r.hora_salida||'—'}</td>
-    </tr>`;
+
+    const etiq = trab
+      ? `<span style="color:var(--green)">${esc(trab.nombre)}</span>`
+      : `<span style="color:var(--red)">❌ ${nombreDat ? esc(nombreDat) + ' (PIN '+esc(r.pin)+')' : 'PIN '+esc(r.pin)} sin asignar</span>`;
+    rows += `<tr><td>${esc(r.pin)}</td><td>${etiq}</td><td>${esc(r.fecha)}</td><td>${r.hora_entrada||'—'}</td><td>${r.hora_salida||'—'}</td></tr>`;
   });
 
+  const fuenteInfo = tieneUserDat
+    ? `<span style="color:var(--green);font-size:11px;">user.dat cargado — nombres del terminal</span>`
+    : `<span style="color:var(--ink3);font-size:11px;">Sin user.dat — emparejando por NIP checador</span>`;
+
   const aviso = sinEmparejar > 0
-    ? `<p style="font-size:11px;color:var(--red);margin:8px 0 4px;">⚠️ ${sinEmparejar} PIN(s) sin trabajador asignado. Ve a cada trabajador y escribe su PIN en el campo <em>NIP checador</em> para que coincida.</p>`
+    ? `<p style="font-size:11px;color:var(--red);margin:6px 0 4px;">⚠️ ${sinEmparejar} PIN(s) sin trabajador asignado.${tieneUserDat ? ' Verifica que los nombres en el terminal coincidan con los de ClickLaboral.' : ' Carga también user.dat del mismo terminal para que el sistema resuelva los nombres.'}</p>`
     : '';
 
   wrap.innerHTML = `
-    <p style="font-size:12px;color:var(--ink2);margin:10px 0 6px;">
-      Detectado: <strong>attlog.dat ZKTeco</strong> — ${filasCSV.length} registros diarios
-      (${emparejados} emparejados, ${sinEmparejar} sin asignar).
-    </p>
-    ${aviso}
+    <p style="font-size:12px;color:var(--ink2);margin:10px 0 4px;">
+      <strong>attlog.dat ZKTeco</strong> — ${filasCSV.length} registros diarios (${emparejados} emparejados, ${sinEmparejar} sin asignar) · ${fuenteInfo}
+    </p>${aviso}
     <div style="max-height:280px;overflow-y:auto;">
     <table class="csv-preview-table" style="font-size:12px;">
       <thead><tr><th>PIN</th><th>Trabajador</th><th>Fecha</th><th>Entrada</th><th>Salida</th></tr></thead>
@@ -2693,7 +2779,7 @@ async function confirmarImportCSV() {
 
   try {
     // ── Ruta attlog.dat: los registros ya llevan _trabajadorId resuelto ──
-    if (filasCSV._esAttlog) {
+    if (_attlogModo) {
       const registros = [];
       for (const reg of filasCSV) {
         if (!reg._trabajadorId) {

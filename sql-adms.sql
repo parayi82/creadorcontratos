@@ -31,5 +31,5 @@ DROP POLICY IF EXISTS "clientes_ven_sus_checadores" ON checadores;
 CREATE POLICY "clientes_ven_sus_checadores"
   ON checadores FOR SELECT
   USING (
-    cliente_rfc = (SELECT rfc FROM clientes WHERE auth_user_id = auth.uid() LIMIT 1)
+    cliente_rfc = (SELECT raw_user_meta_data->>'rfc' FROM auth.users WHERE id = auth.uid())
   );

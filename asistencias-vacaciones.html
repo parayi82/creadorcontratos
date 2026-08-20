@@ -256,6 +256,7 @@ body.modo-apartar .tablero-tabla tbody td:hover{outline:1px solid #f97316;outlin
         <div id="roster-btns-activos">
           <button class="btn btn-outline" style="width:100%;margin-top:8px;" onclick="abrirModalTrabajador()">+ Agregar trabajador</button>
           <button class="btn btn-outline" style="width:100%;margin-top:6px;" onclick="abrirModalImportarRoster()">📥 Importar varios (CSV)</button>
+          <button class="btn btn-outline" style="width:100%;margin-top:6px;" onclick="abrirModalHorarioMasivo()">📅 Importar horarios masivo</button>
           <a href="checador.html" class="btn btn-outline" style="width:100%;margin-top:6px;display:block;text-align:center;text-decoration:none;box-sizing:border-box;">⏱ Abrir Checador Digital</a>
         </div>
       </div>
@@ -677,7 +678,17 @@ body.modo-apartar .tablero-tabla tbody td:hover{outline:1px solid #f97316;outlin
       <div class="field"><label>Salario diario MXN</label><input type="number" id="trab-salario" placeholder="500.00" step="0.01" min="0"></div>
       <div class="field"><label>NIP checador (4 dígitos)</label><input type="text" id="trab-nip" placeholder="Opcional" maxlength="4" inputmode="numeric" pattern="[0-9]*"></div>
     </div>
-    <div style="font-size:11px;color:var(--ink3);margin-top:-4px;margin-bottom:10px;">El salario alimenta el reporte de exposición de riesgo. El NIP protege el registro de entrada/salida en el checador digital.</div>
+    <div style="font-size:11px;color:var(--ink3);margin-top:-4px;margin-bottom:12px;">El salario alimenta el reporte de exposición de riesgo. El NIP protege el registro de entrada/salida en el checador digital.</div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;">
+      <div class="field"><label>Hora entrada habitual</label><input type="time" id="trab-hora-entrada"></div>
+      <div class="field"><label>Hora salida habitual</label><input type="time" id="trab-hora-salida"></div>
+    </div>
+    <div style="font-size:11px;color:var(--ink3);margin-top:-4px;margin-bottom:10px;display:flex;align-items:center;justify-content:space-between;gap:8px;flex-wrap:wrap;">
+      <span>Se compara contra el checador para detectar retrasos y faltas automáticamente.</span>
+      <button class="btn btn-outline btn-sm" type="button" onclick="abrirImportHorarioExterno()" style="font-size:11px;padding:3px 10px;white-space:nowrap;">📂 Desde checador externo</button>
+    </div>
+    <input type="file" id="horario-externo-file" accept=".csv,.txt" style="display:none;" onchange="procesarArchivoHorarioExterno(this)">
+    <div id="horario-externo-info" style="display:none;font-size:11px;background:var(--surface);border-radius:var(--r-sm);padding:8px 10px;margin-bottom:10px;"></div>
     <div class="modal-close-row">
       <button class="btn btn-outline" onclick="cerrarModalTrabajador()">Cancelar</button>
       <button class="btn btn-primary" onclick="guardarTrabajador()">Guardar</button>
@@ -821,6 +832,26 @@ body.modo-apartar .tablero-tabla tbody td:hover{outline:1px solid #f97316;outlin
     <div class="modal-close-row">
       <button class="btn btn-outline" onclick="cerrarModalCSV()">Cancelar</button>
       <button class="btn btn-primary" id="csv-confirmar-btn" onclick="confirmarImportCSV()" disabled>Importar</button>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL: importar horarios masivo desde checador externo -->
+<div class="modal-overlay" id="modal-horario-masivo">
+  <div class="modal-box" style="max-width:640px;">
+    <h3>📅 Importar horarios desde checador externo</h3>
+    <p style="font-size:12px;color:var(--ink3);margin-bottom:10px;line-height:1.6;">
+      Carga un CSV exportado de <strong>ZKBio ZLink</strong> u otro checador biométrico.<br>
+      El sistema calcula automáticamente la hora de entrada y salida habitual de cada trabajador (mediana de todos sus registros) y actualiza la base de datos.
+    </p>
+    <div style="font-size:12px;color:var(--ink3);margin-bottom:10px;">
+      Columnas detectadas: <code style="background:var(--surface);padding:1px 4px;border-radius:3px;">nombre / fecha / entrada / salida</code> (ZKBio ZLink o genérico con encabezados en español/inglés).
+    </div>
+    <input type="file" id="horario-masivo-file" accept=".csv,.txt" onchange="procesarHorarioMasivo(this)">
+    <div id="horario-masivo-preview" style="margin-top:12px;max-height:320px;overflow-y:auto;"></div>
+    <div class="modal-close-row">
+      <button class="btn btn-outline" onclick="cerrarModalHorarioMasivo()">Cancelar</button>
+      <button class="btn btn-primary" id="horario-masivo-confirmar" onclick="confirmarHorarioMasivo()" disabled>Aplicar horarios</button>
     </div>
   </div>
 </div>
@@ -2335,7 +2366,7 @@ async function registrarMovimiento(trabajadorId, tipo, valorAnterior, valorNuevo
   } catch(e){ console.warn('[Movimientos] Error no crítico:', e.message||e); }
 }
 
-function abrirModalTrabajador(t){
+async function abrirModalTrabajador(t){
   window._trabOriginal = t ? {...t} : null; // snapshot para detectar movimientos al guardar
   document.getElementById('trab-id').value = t?.id || '';
   document.getElementById('trab-nombre').value = t?.nombre || '';
@@ -2344,6 +2375,14 @@ function abrirModalTrabajador(t){
   document.getElementById('trab-nss').value = t?.nss || '';
   document.getElementById('trab-salario').value = t?.salario_diario ?? '';
   document.getElementById('trab-nip').value = t?.nip || '';
+  // Cargar horario habitual desde cache o BD
+  let horario = null;
+  if (t?.id) horario = await cargarHorarioHabitualDB(t.id);
+  document.getElementById('trab-hora-entrada').value = horario?.entrada || '';
+  document.getElementById('trab-hora-salida').value  = horario?.salida  || '';
+  // Limpiar el panel de info de importación anterior
+  const infoEl = document.getElementById('horario-externo-info');
+  if (infoEl) { infoEl.style.display = 'none'; infoEl.textContent = ''; }
   document.getElementById('modal-trab-titulo').textContent = t ? 'Editar trabajador' : 'Agregar trabajador';
   document.getElementById('modal-trabajador').classList.add('show');
 }
@@ -2378,6 +2417,9 @@ async function guardarTrabajador(){
   const nipVal = document.getElementById('trab-nip').value.trim();
   if (nipVal && !/^\d{4}$/.test(nipVal)) { alert('El NIP debe ser exactamente 4 dígitos numéricos.'); return; }
 
+  const horaEntrada = document.getElementById('trab-hora-entrada').value || null;
+  const horaSalida  = document.getElementById('trab-hora-salida').value  || null;
+
   const payload = {
     cliente_rfc: clienteRFC, nombre,
     puesto: document.getElementById('trab-puesto').value.trim() || null,
@@ -2385,6 +2427,8 @@ async function guardarTrabajador(){
     nss: document.getElementById('trab-nss').value.trim() || null,
     salario_diario: salarioVal ? parseFloat(salarioVal) : null,
     nip: nipVal || null,
+    hora_entrada_habitual: horaEntrada,
+    hora_salida_habitual:  horaSalida,
     activo: true,
   };
   try {
@@ -2404,6 +2448,11 @@ async function guardarTrabajador(){
     } else {
       const { error } = await mutarDatos({ tabla:'trabajadores', accion:'insert', payload });
       if (error) throw error;
+    }
+    // Actualizar cache de horario habitual
+    if (id && (horaEntrada || horaSalida)) {
+      horarioCacheDB[id] = { entrada: horaEntrada || '', salida: horaSalida || '' };
+      pintarHorarioHabitual();
     }
     cerrarModalTrabajador();
     await cargarTrabajadores();
@@ -5651,6 +5700,243 @@ async function marcarTodasLeidas() {
     actualizarBadge();
     renderAlertas();
   } catch(e) { console.warn('marcarTodasLeidas:', e.message); }
+}
+
+// ════════════════════════════════════════════
+// HORARIO DESDE CHECADOR EXTERNO (per-trabajador y masivo)
+// ════════════════════════════════════════════
+
+// ── Helpers de tiempo ────────────────────────────────────────────────────────
+
+function _tiempoAMinutos(t) {
+  if (!t) return null;
+  const s = String(t).trim().slice(0, 5);
+  const [h, m] = s.split(':').map(Number);
+  if (isNaN(h) || isNaN(m)) return null;
+  return h * 60 + m;
+}
+
+function _minutosAHHMM(min) {
+  const h = Math.floor(min / 60);
+  const m = Math.round(min % 60);
+  return `${String(h).padStart(2,'0')}:${String(m).padStart(2,'0')}`;
+}
+
+function _mediana(arr) {
+  if (!arr.length) return null;
+  const s = [...arr].sort((a, b) => a - b);
+  const mid = Math.floor(s.length / 2);
+  return s.length % 2 ? s[mid] : Math.round((s[mid - 1] + s[mid]) / 2);
+}
+
+// Dado un array de {hora_entrada, hora_salida} (strings HH:MM), devuelve el
+// horario típico calculado como la mediana de todos los valores no nulos.
+function calcularHorarioTipico(registros) {
+  const entradas = registros.map(r => _tiempoAMinutos(r.hora_entrada)).filter(n => n !== null);
+  const salidas  = registros.map(r => _tiempoAMinutos(r.hora_salida)).filter(n => n !== null);
+  const medEnt = _mediana(entradas);
+  const medSal = _mediana(salidas);
+  return {
+    entrada:   medEnt !== null ? _minutosAHHMM(medEnt) : null,
+    salida:    medSal !== null ? _minutosAHHMM(medSal)  : null,
+    n_entrada: entradas.length,
+    n_salida:  salidas.length,
+  };
+}
+
+// Lee un CSV de checador y devuelve array de {nombre, fecha, hora_entrada, hora_salida}
+async function leerCSVHorario(file) {
+  const text = await file.text();
+  const lines = text.split(/\r?\n/).filter(l => l.trim().length > 2);
+  if (lines.length < 2) return [];
+  let sep = ',';
+  if (lines[0].includes(';')) sep = ';';
+  else if (lines[0].includes('\t')) sep = '\t';
+  const headers = lines[0].split(sep).map(h => h.trim().toLowerCase().replace(/["']/g,''));
+  const map = detectarColumnas(headers);
+  // Asegurar que resultadoImportLog existe (parseRegistroZKTeco lo escribe)
+  if (typeof resultadoImportLog === 'undefined') window.resultadoImportLog = [];
+  const rows = [];
+  for (let i = 1; i < lines.length; i++) {
+    const vals = lines[i].split(sep).map(v => v.trim().replace(/["']/g,''));
+    const reg = parseRegistroZKTeco(vals, map, lines[i]);
+    if (reg) rows.push(reg);
+  }
+  return rows;
+}
+
+// ── IMPORTACIÓN PER-TRABAJADOR (desde modal "Editar trabajador") ──────────────
+
+function abrirImportHorarioExterno() {
+  const fi = document.getElementById('horario-externo-file');
+  if (fi) { fi.value = ''; fi.click(); }
+}
+
+async function procesarArchivoHorarioExterno(input) {
+  const file = input.files?.[0];
+  if (!file) return;
+  const nombreTrab = document.getElementById('trab-nombre').value.trim().toLowerCase();
+  if (!nombreTrab) {
+    alert('Capture el nombre del trabajador antes de importar el horario.');
+    return;
+  }
+
+  const infoEl = document.getElementById('horario-externo-info');
+  if (infoEl) { infoEl.style.display = ''; infoEl.textContent = 'Analizando archivo…'; }
+
+  try {
+    const rows = await leerCSVHorario(file);
+    // Filtrar registros de este trabajador (coincidencia flexible)
+    const propios = rows.filter(r => {
+      const n = r.nombre.toLowerCase().trim();
+      return n === nombreTrab || n.includes(nombreTrab) || nombreTrab.includes(n);
+    });
+
+    if (!propios.length) {
+      if (infoEl) { infoEl.style.display=''; infoEl.innerHTML = `<span style="color:var(--red);">❌ No se encontró "${esc(nombreTrab)}" en el archivo (${rows.length} registros totales). Revise que el nombre coincida con el del checador.</span>`; }
+      return;
+    }
+
+    const h = calcularHorarioTipico(propios);
+    // Pre-llenar campos
+    if (h.entrada) document.getElementById('trab-hora-entrada').value = h.entrada;
+    if (h.salida)  document.getElementById('trab-hora-salida').value  = h.salida;
+
+    if (infoEl) {
+      infoEl.style.display = '';
+      infoEl.innerHTML = `<span style="color:var(--green);">✅ Calculado de <strong>${propios.length}</strong> registro(s):</span> entrada típica <strong>${h.entrada||'—'}</strong>, salida típica <strong>${h.salida||'—'}</strong>. Corrija si necesita y guarde.`;
+    }
+  } catch(e) {
+    if (infoEl) { infoEl.style.display=''; infoEl.textContent = '❌ Error al leer el archivo: ' + e.message; }
+  } finally {
+    input.value = '';
+  }
+}
+
+// ── IMPORTACIÓN MASIVA (todos los trabajadores) ───────────────────────────────
+
+let _horarioMasivoData = []; // [{ nombre, tid, entrada, salida, n }]
+
+function abrirModalHorarioMasivo() {
+  document.getElementById('horario-masivo-file').value = '';
+  document.getElementById('horario-masivo-preview').innerHTML = '';
+  document.getElementById('horario-masivo-confirmar').disabled = true;
+  _horarioMasivoData = [];
+  document.getElementById('modal-horario-masivo').classList.add('show');
+}
+function cerrarModalHorarioMasivo() {
+  document.getElementById('modal-horario-masivo').classList.remove('show');
+}
+
+async function procesarHorarioMasivo(input) {
+  const file = input.files?.[0];
+  if (!file) return;
+  const prev = document.getElementById('horario-masivo-preview');
+  prev.innerHTML = '<div style="text-align:center;padding:20px;color:var(--ink3);">Analizando…</div>';
+  document.getElementById('horario-masivo-confirmar').disabled = true;
+
+  try {
+    const rows = await leerCSVHorario(file);
+    if (!rows.length) { prev.innerHTML = '<div style="color:var(--red);padding:12px;">No se encontraron registros válidos en el archivo.</div>'; return; }
+
+    // Agrupar por nombre
+    const porNombre = {};
+    rows.forEach(r => {
+      const k = r.nombre.trim().toLowerCase();
+      if (!porNombre[k]) porNombre[k] = { nombre: r.nombre.trim(), registros: [] };
+      porNombre[k].registros.push(r);
+    });
+
+    // Cruzar con trabajadores activos
+    const { data: trabs } = await selectProxy('trabajadores','id,nombre',{activo:true},{order:{campo:'nombre',asc:true}});
+    const resultado = [];
+    for (const trab of (trabs || [])) {
+      const k = trab.nombre.trim().toLowerCase();
+      // Coincidencia exacta o parcial
+      let match = porNombre[k];
+      if (!match) {
+        for (const [key, val] of Object.entries(porNombre)) {
+          if (key.includes(k) || k.includes(key)) { match = val; break; }
+        }
+      }
+      if (!match) continue;
+      const h = calcularHorarioTipico(match.registros);
+      if (!h.entrada && !h.salida) continue;
+      resultado.push({ nombre: trab.nombre, tid: trab.id, entrada: h.entrada, salida: h.salida, n: match.registros.length, seleccionado: true });
+    }
+
+    _horarioMasivoData = resultado;
+
+    if (!resultado.length) {
+      prev.innerHTML = '<div style="color:var(--red);padding:12px;">Ningún trabajador del archivo coincide con los registrados en el sistema.</div>';
+      return;
+    }
+
+    // Renderizar tabla
+    let html = `<div style="font-size:12px;font-weight:700;color:var(--navy2);margin-bottom:8px;">${resultado.length} trabajador(es) con horario calculado:</div>
+    <table style="width:100%;border-collapse:collapse;font-size:12px;">
+      <thead><tr style="background:var(--surface);">
+        <th style="padding:6px 8px;text-align:left;">✔</th>
+        <th style="padding:6px 8px;text-align:left;">Trabajador</th>
+        <th style="padding:6px 8px;text-align:center;">Entrada</th>
+        <th style="padding:6px 8px;text-align:center;">Salida</th>
+        <th style="padding:6px 8px;text-align:center;">Registros</th>
+      </tr></thead>
+      <tbody>`;
+    resultado.forEach((r, i) => {
+      html += `<tr style="border-bottom:1px solid var(--border);">
+        <td style="padding:6px 8px;"><input type="checkbox" checked onchange="_horarioMasivoData[${i}].seleccionado=this.checked"></td>
+        <td style="padding:6px 8px;">${esc(r.nombre)}</td>
+        <td style="padding:6px 8px;text-align:center;"><input type="time" value="${r.entrada||''}" oninput="_horarioMasivoData[${i}].entrada=this.value" style="font-size:11px;padding:2px 4px;border:1px solid var(--border);border-radius:3px;"></td>
+        <td style="padding:6px 8px;text-align:center;"><input type="time" value="${r.salida||''}" oninput="_horarioMasivoData[${i}].salida=this.value" style="font-size:11px;padding:2px 4px;border:1px solid var(--border);border-radius:3px;"></td>
+        <td style="padding:6px 8px;text-align:center;color:var(--ink3);">${r.n}</td>
+      </tr>`;
+    });
+    html += '</tbody></table>';
+    prev.innerHTML = html;
+    document.getElementById('horario-masivo-confirmar').disabled = false;
+
+  } catch(e) {
+    prev.innerHTML = `<div style="color:var(--red);padding:12px;">Error: ${esc(e.message)}</div>`;
+  } finally {
+    input.value = '';
+  }
+}
+
+async function confirmarHorarioMasivo() {
+  const seleccionados = _horarioMasivoData.filter(r => r.seleccionado && (r.entrada || r.salida));
+  if (!seleccionados.length) { alert('No hay trabajadores seleccionados.'); return; }
+
+  const btn = document.getElementById('horario-masivo-confirmar');
+  btn.disabled = true;
+  btn.textContent = `Guardando ${seleccionados.length}…`;
+
+  let ok = 0, errores = 0;
+  for (const r of seleccionados) {
+    try {
+      await mutarDatos({
+        tabla: 'trabajadores', accion: 'update',
+        payload: { hora_entrada_habitual: r.entrada || null, hora_salida_habitual: r.salida || null },
+        filtros: { id: r.tid },
+      });
+      // Actualizar cache local
+      horarioCacheDB[r.tid] = { entrada: r.entrada || '', salida: r.salida || '' };
+      ok++;
+    } catch(_) { errores++; }
+  }
+
+  // Refrescar info del trabajador actual si coincide
+  pintarHorarioHabitual();
+
+  const prev = document.getElementById('horario-masivo-preview');
+  prev.innerHTML = `<div style="padding:16px;text-align:center;">
+    <div style="font-size:20px;margin-bottom:8px;">${errores===0?'✅':'⚠️'}</div>
+    <div style="font-weight:700;color:var(--navy2);">${ok} horario(s) guardado(s)${errores?`, ${errores} con error`:''}</div>
+    <div style="font-size:12px;color:var(--ink3);margin-top:4px;">Los cambios se reflejarán en el checador y en la detección automática de faltas/retrasos.</div>
+  </div>`;
+  btn.textContent = 'Cerrar';
+  btn.disabled = false;
+  btn.onclick = cerrarModalHorarioMasivo;
 }
 </script>
 <!-- ══ MODAL: CONTROL DE ASISTENCIAS DEL DÍA ══ -->

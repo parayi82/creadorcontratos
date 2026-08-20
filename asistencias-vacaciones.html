@@ -960,7 +960,20 @@ async function init() {
       ? (session.user.email.split('@')[0] || '').toUpperCase()
       : '';
     // Cadena de fallbacks: user_metadata > email > localStorage
-    const _rfcFallback = _meta.rfc || _emailRFC || (localStorage.getItem('cl_rfc_auth') || '');
+    let _rfcFallback = _meta.rfc || _emailRFC || (localStorage.getItem('cl_rfc_auth') || '');
+    // Último recurso: consultar backend con service key (garantizado aunque user_metadata esté vacío)
+    if (!_rfcFallback && !_esDespacho) {
+      try {
+        const _r = await fetch('/api/mi-perfil', { headers: { 'Authorization': 'Bearer ' + session.access_token } });
+        if (_r.ok) {
+          const _p = await _r.json();
+          if (_p.rfc) {
+            _rfcFallback = _p.rfc;
+            if (_p.empresa) clienteEmpresa = _p.empresa;
+          }
+        }
+      } catch(_) {}
+    }
     if (!_rfcFallback && !_esDespacho) return false;
     if (_esDespacho) {
       let _g = null;

@@ -5487,19 +5487,25 @@ async function iniciarApp(session) {
 let _todasLasAlertas = [];
 let _filtroAlertas   = 'todas';
 
+async function _alertasToken() {
+  const { data: sd } = await sb.auth.getSession();
+  return sd?.session?.access_token || '';
+}
+
 async function cargarAlertas() {
   const lista = document.getElementById('alertas-lista');
   if (!lista) return;
   lista.innerHTML = '<div style="text-align:center;padding:40px;color:var(--ink3);">Cargando…</div>';
   try {
-    const { data, error } = await sb.from('alertas_laborales')
-      .select('*')
-      .eq('cliente_rfc', clienteRFC)
-      .order('urgencia', { ascending: true })       // alta primero
-      .order('fecha_alerta', { ascending: false })
-      .limit(200);
-    if (error) throw error;
-    _todasLasAlertas = data || [];
+    const tok = await _alertasToken();
+    const resp = await fetch('/api/mis-alertas', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + tok },
+      body: JSON.stringify({ accion: 'listar', cliente_rfc: clienteRFC }),
+    });
+    const json = await resp.json();
+    if (!resp.ok) throw new Error(json.error || resp.statusText);
+    _todasLasAlertas = json.alertas || [];
     actualizarBadge();
     renderAlertas();
   } catch(e) {
@@ -5509,14 +5515,19 @@ async function cargarAlertas() {
 
 async function cargarContadorAlertas() {
   try {
-    const { count } = await sb.from('alertas_laborales')
-      .select('*', { count: 'exact', head: true })
-      .eq('cliente_rfc', clienteRFC)
-      .eq('leida', false);
+    const tok = await _alertasToken();
+    const resp = await fetch('/api/mis-alertas', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + tok },
+      body: JSON.stringify({ accion: 'contar', cliente_rfc: clienteRFC }),
+    });
+    if (!resp.ok) return;
+    const json = await resp.json();
     const badge = document.getElementById('alertas-badge');
     if (!badge) return;
-    if ((count || 0) > 0) {
-      badge.textContent = count > 99 ? '99+' : count;
+    const n = json.sin_leer || 0;
+    if (n > 0) {
+      badge.textContent = n > 99 ? '99+' : n;
       badge.style.display = 'inline';
     } else {
       badge.style.display = 'none';
@@ -5615,7 +5626,12 @@ function renderAlertas() {
 
 async function marcarLeida(id) {
   try {
-    await sb.from('alertas_laborales').update({ leida: true }).eq('id', id).eq('cliente_rfc', clienteRFC);
+    const tok = await _alertasToken();
+    await fetch('/api/mis-alertas', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + tok },
+      body: JSON.stringify({ accion: 'marcar_leida', cliente_rfc: clienteRFC, id }),
+    });
     const a = _todasLasAlertas.find(x => x.id === id);
     if (a) a.leida = true;
     actualizarBadge();
@@ -5625,10 +5641,12 @@ async function marcarLeida(id) {
 
 async function marcarTodasLeidas() {
   try {
-    await sb.from('alertas_laborales')
-      .update({ leida: true })
-      .eq('cliente_rfc', clienteRFC)
-      .eq('leida', false);
+    const tok = await _alertasToken();
+    await fetch('/api/mis-alertas', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + tok },
+      body: JSON.stringify({ accion: 'marcar_todas', cliente_rfc: clienteRFC }),
+    });
     _todasLasAlertas.forEach(a => { a.leida = true; });
     actualizarBadge();
     renderAlertas();

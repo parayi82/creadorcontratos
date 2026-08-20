@@ -180,6 +180,11 @@
   to = "/.netlify/functions/despacho-cartera"
   status = 200
 
+[[redirects]]
+  from = "/api/mis-alertas"
+  to = "/.netlify/functions/mis-alertas"
+  status = 200
+
 # Caché largo para assets estáticos con cache-busting en URL
 [[headers]]
   for = "/*.js"

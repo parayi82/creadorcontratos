@@ -14,7 +14,7 @@ const { handleCors, clientIp, reportError } = require('./_security');
 const { checkRateLimit, rateLimitResponse } = require('./_rate-limiter');
 const { createClient } = require('@supabase/supabase-js');
 
-const CAMPOS_PERMITIDOS = ['contacto_rrhh', 'email_contacto', 'tel'];
+const CAMPOS_PERMITIDOS = ['contacto_rrhh', 'email_contacto', 'tel', 'tolerancia_retraso_min'];
 
 exports.handler = async (event) => {
   const corsResult = handleCors(event);
@@ -39,14 +39,23 @@ exports.handler = async (event) => {
 
   // Lista blanca estricta: ignorar cualquier otro campo del body
   const cambios = {};
-  for (const campo of CAMPOS_PERMITIDOS) {
+  const CAMPOS_STRING = ['contacto_rrhh', 'email_contacto', 'tel'];
+  for (const campo of CAMPOS_STRING) {
     if (typeof body[campo] === 'string') cambios[campo] = body[campo].trim().slice(0, 200);
-  }
-  if (!Object.keys(cambios).length) {
-    return { statusCode: 400, headers, body: JSON.stringify({ error: 'Nada que actualizar.' }) };
   }
   if (cambios.email_contacto && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(cambios.email_contacto)) {
     return { statusCode: 400, headers, body: JSON.stringify({ error: 'Email con formato inválido.' }) };
+  }
+  // Campo numérico — tolerancia de retraso según el RIT (0-60 minutos)
+  if ('tolerancia_retraso_min' in body) {
+    const val = parseInt(body.tolerancia_retraso_min, 10);
+    if (isNaN(val) || val < 0 || val > 60) {
+      return { statusCode: 400, headers, body: JSON.stringify({ error: 'tolerancia_retraso_min debe ser un entero entre 0 y 60.' }) };
+    }
+    cambios.tolerancia_retraso_min = val;
+  }
+  if (!Object.keys(cambios).length) {
+    return { statusCode: 400, headers, body: JSON.stringify({ error: 'Nada que actualizar.' }) };
   }
 
   // Merge sobre la metadata existente (no reemplazar el objeto completo)

@@ -2,13 +2,15 @@
 //
 // Cierra la jornada del día anterior y detecta faltas/retrasos.
 //
-// Paso 1 — Cierre de día: para TODOS los trabajadores activos sin registro
-//   de ayer → inserta 'sin_registro'. Garantiza cobertura día a día en la tabla.
+// Modo diario (cron):
+//   Paso 1 — Cierre de día: trabajadores sin registro de ayer → inserta 'sin_registro'.
+//   Paso 2 — Detección de faltas: sin_registro en día laboral → falta_injustificada + acta + alerta.
+//   Paso 3 — Detección de retrasos: status 'retraso' → alerta.
 //
-// Paso 2 — Detección de faltas: para los que tienen hora_entrada_habitual y
-//   quedaron como 'sin_registro' → actualiza a 'falta_injustificada' + acta + alerta.
-//
-// Paso 3 — Detección de retrasos: para los con status 'retraso' → alerta.
+// Modo backfill (POST { backfill: true } o ?backfill=1):
+//   Procesa todos los días laborales históricos desde fecha_ingreso de cada trabajador.
+//   Inserta 'falta_injustificada' para cada día sin registro.
+//   Crea UNA alerta resumen por trabajador (no una por día).
 //
 // Ejecutar una vez al día, p.ej. a las 07:00 hora CDMX.
 //   GET /api/deteccion-faltas?secret=CRON_SECRET
@@ -43,6 +45,12 @@ exports.handler = async (event) => {
   const ayer = fechaMexico(-1);
   const hoy  = fechaMexico(0);
 
+  // ── Modo backfill ─────────────────────────────────────────────────────────
+  let bodyJson = {};
+  try { bodyJson = JSON.parse(event.body || '{}'); } catch {}
+  const isBackfill = bodyJson.backfill === true || (event.queryStringParameters || {}).backfill === '1';
+  if (isBackfill) return await runBackfill(sb, hoy, ayer, headers);
+
   const resumen = {
     ayer,
     hoy,
@@ -58,7 +66,7 @@ exports.handler = async (event) => {
     // ── 1. Cargar TODOS los trabajadores activos ────────────────────────────
     const { data: trabajadores, error: errTrab } = await sb
       .from('trabajadores')
-      .select('id, nombre, cliente_rfc, hora_entrada_habitual')
+      .select('id, nombre, cliente_rfc, hora_entrada_habitual, fecha_ingreso')
       .eq('activo', true);
 
     if (errTrab) throw errTrab;
@@ -104,10 +112,13 @@ exports.handler = async (event) => {
       }
     }
 
-    // ── 4. Procesar faltas: trabajadores CON horario que quedaron sin registro
-    const conHorarioSinRegistro = sinRegistro.filter(t => !!t.hora_entrada_habitual);
+    // ── 4. Procesar faltas: TODOS los trabajadores sin registro en día laboral
+    // Se excluyen fines de semana; festivos deben marcarse manualmente.
+    const ayerDow = new Date(ayer + 'T12:00:00Z').getUTCDay();
+    const esLaboralAyer = ayerDow >= 1 && ayerDow <= 5;
+    const candidatosFalta = esLaboralAyer ? sinRegistro : [];
 
-    for (const t of conHorarioSinRegistro) {
+    for (const t of candidatosFalta) {
       try {
         // Actualizar sin_registro → falta_injustificada (solo si no fue modificado ya)
         const { error: updAsis } = await sb.from('asistencias')
@@ -183,6 +194,112 @@ exports.handler = async (event) => {
     return { statusCode: 500, headers, body: JSON.stringify({ ok: false, error: e?.message || 'Error interno', ...resumen }) };
   }
 };
+
+// ── Backfill histórico ────────────────────────────────────────────────────────
+async function runBackfill(sb, hoy, ayer, headers) {
+  const resumen = {
+    modo: 'backfill',
+    hoy,
+    ayer,
+    registros_creados: 0,
+    alertas_creadas:   0,
+    trabajadores_con_faltas: 0,
+    errores: [],
+  };
+
+  try {
+    const { data: trabajadores, error: tErr } = await sb
+      .from('trabajadores')
+      .select('id, nombre, cliente_rfc, fecha_ingreso')
+      .eq('activo', true)
+      .not('fecha_ingreso', 'is', null);
+
+    if (tErr) throw tErr;
+    if (!trabajadores?.length) {
+      return { statusCode: 200, headers, body: JSON.stringify({ ok: true, ...resumen, nota: 'Sin trabajadores con fecha_ingreso.' }) };
+    }
+
+    const ids = trabajadores.map(t => t.id);
+
+    // Cargar TODOS los registros existentes (solo trabaj_id + fecha para eficiencia)
+    const { data: existentes, error: eErr } = await sb
+      .from('asistencias')
+      .select('trabajador_id,fecha')
+      .in('trabajador_id', ids);
+    if (eErr) throw eErr;
+
+    const existeSet = new Set((existentes || []).map(a => `${a.trabajador_id}|${a.fecha}`));
+
+    // Calcular días laborales faltantes por trabajador
+    const nuevosRegistros = [];
+    const alertasDatos = [];
+
+    for (const t of trabajadores) {
+      const diasFaltantes = diasLaboralesArr(t.fecha_ingreso, ayer)
+        .filter(d => !existeSet.has(`${t.id}|${d}`));
+
+      if (!diasFaltantes.length) continue;
+
+      for (const dia of diasFaltantes) {
+        nuevosRegistros.push({
+          trabajador_id: t.id,
+          cliente_rfc:   t.cliente_rfc,
+          fecha:         dia,
+          status:        'falta_injustificada',
+          fuente:        'sistema',
+          notas:         'Falta detectada en revisión histórica — sin registro en checador.',
+        });
+      }
+
+      alertasDatos.push({
+        cliente_rfc:       t.cliente_rfc,
+        tipo:              'faltas_historicas',
+        trabajador_nombre: t.nombre,
+        fecha_alerta:      hoy,
+        mensaje:           `Revisión histórica: ${t.nombre} tiene ${diasFaltantes.length} día${diasFaltantes.length > 1 ? 's' : ''} sin registro desde su ingreso (${t.fecha_ingreso}). Verifique si las ausencias son justificadas y actualice los registros en Control de Asistencias.`,
+        urgencia:          diasFaltantes.length >= 10 ? 'alta' : diasFaltantes.length >= 3 ? 'media' : 'baja',
+        leida:             false,
+      });
+    }
+
+    // Upsert en lotes de 500
+    const CHUNK = 500;
+    for (let i = 0; i < nuevosRegistros.length; i += CHUNK) {
+      const { error: upErr } = await sb.from('asistencias')
+        .upsert(nuevosRegistros.slice(i, i + CHUNK), { onConflict: 'trabajador_id,fecha' });
+      if (upErr) resumen.errores.push(`asistencias batch ${i}: ${upErr.message}`);
+      else resumen.registros_creados += Math.min(CHUNK, nuevosRegistros.length - i);
+    }
+
+    // Una alerta resumen por trabajador
+    for (const alerta of alertasDatos) {
+      const { error: aErr } = await sb.from('alertas_laborales')
+        .upsert(alerta, { onConflict: 'cliente_rfc,tipo,trabajador_nombre,fecha_alerta' });
+      if (aErr) resumen.errores.push(`alerta ${alerta.trabajador_nombre}: ${aErr.message}`);
+      else resumen.alertas_creadas++;
+    }
+
+    resumen.trabajadores_con_faltas = alertasDatos.length;
+    console.log('deteccion-faltas backfill:', JSON.stringify(resumen));
+    return { statusCode: 200, headers, body: JSON.stringify({ ok: true, ...resumen }) };
+
+  } catch (e) {
+    console.error('deteccion-faltas backfill:', e?.message || e);
+    return { statusCode: 500, headers, body: JSON.stringify({ ok: false, error: e?.message || 'Error', ...resumen }) };
+  }
+}
+
+function diasLaboralesArr(desde, hasta) {
+  const dias = [];
+  const cur = new Date(desde + 'T12:00:00Z');
+  const fin = new Date(hasta + 'T12:00:00Z');
+  while (cur <= fin) {
+    const dow = cur.getUTCDay();
+    if (dow >= 1 && dow <= 5) dias.push(cur.toISOString().split('T')[0]);
+    cur.setUTCDate(cur.getUTCDate() + 1);
+  }
+  return dias;
+}
 
 // ── Utilidades ───────────────────────────────────────────────────────────────
 

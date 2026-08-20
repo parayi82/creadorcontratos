@@ -955,11 +955,13 @@ async function init() {
     if (!session) return false;
     const _meta = session?.user?.user_metadata || {};
     const _esDespacho = _meta.tipo === 'despacho';
-    // Fallback: el RFC puede estar en localStorage si user_metadata no lo tiene
-    const _rfcFallback = !_meta.rfc && !_esDespacho
-      ? (localStorage.getItem('cl_rfc_auth') || '')
+    // Los emails tienen formato {rfc}@clicklaboral.mx — extraer RFC directamente
+    const _emailRFC = (session.user?.email || '').includes('@clicklaboral.mx')
+      ? (session.user.email.split('@')[0] || '').toUpperCase()
       : '';
-    if (!_meta.rfc && !_esDespacho && !_rfcFallback) return false;
+    // Cadena de fallbacks: user_metadata > email > localStorage
+    const _rfcFallback = _meta.rfc || _emailRFC || (localStorage.getItem('cl_rfc_auth') || '');
+    if (!_rfcFallback && !_esDespacho) return false;
     if (_esDespacho) {
       let _g = null;
       try { _g = JSON.parse(sessionStorage.getItem('cl_gestion')||'null'); } catch(_){}
@@ -980,7 +982,7 @@ async function init() {
       const _lnk = document.getElementById('link-volver-portal');
       if(_lnk){ _lnk.href='panel-despacho.html'; _lnk.textContent='← Volver a mi panel'; }
     } else {
-      clienteRFC = _meta.rfc || _rfcFallback;
+      clienteRFC = _rfcFallback;
     }
     clienteEmpresa = _meta.empresa || clienteRFC;
     if (typeof _meta.tolerancia_retraso_min === 'number') {

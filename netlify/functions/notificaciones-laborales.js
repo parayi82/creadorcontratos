@@ -8,15 +8,16 @@ const { createClient } = require('@supabase/supabase-js');
 const headers = { 'Access-Control-Allow-Origin': 'https://clicklaboral.mx', 'Content-Type': 'application/json' };
 
 exports.handler = async function(event) {
-  const secret = process.env.CRON_SECRET;
-  if (!secret) {
-    console.error('CRON_SECRET no está configurado en las variables de entorno de Netlify.');
-    return { statusCode: 500, headers, body: JSON.stringify({ error: 'El servidor no está configurado (falta CRON_SECRET).' }) };
-  }
-  const q = event.queryStringParameters || {};
-  const auth = (event.headers || {})['authorization'] || '';
-  if (q.secret !== secret && auth !== 'Bearer ' + secret) {
-    return { statusCode: 401, headers, body: JSON.stringify({ error: 'No autorizado' }) };
+  // Las Netlify Scheduled Functions no envían httpMethod — se consideran confiables.
+  // Las llamadas HTTP manuales (pruebas) requieren CRON_SECRET.
+  const isScheduled = !event.httpMethod;
+  if (!isScheduled) {
+    const secret = process.env.CRON_SECRET;
+    const q = event.queryStringParameters || {};
+    const auth = (event.headers || {})['authorization'] || '';
+    if (!secret || (q.secret !== secret && auth !== 'Bearer ' + secret)) {
+      return { statusCode: 401, headers, body: JSON.stringify({ error: 'No autorizado' }) };
+    }
   }
 
   const SUPA_URL = process.env.SUPABASE_URL;

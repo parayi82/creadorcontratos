@@ -226,6 +226,7 @@ body.modo-apartar .tablero-tabla tbody td:hover{outline:1px solid #f97316;outlin
   <div class="main-tabs">
     <button class="main-tab active" id="main-tab-expedientes" onclick="cambiarVistaMain('expedientes')">🗂 Expedientes individuales</button>
     <button class="main-tab" id="main-tab-tablero" onclick="cambiarVistaMain('tablero')">📅 Tablero anual de vacaciones</button>
+    <button class="main-tab" id="main-tab-alertas" onclick="cambiarVistaMain('alertas')">🔔 Alertas <span id="alertas-badge" style="display:none;background:var(--red);color:#fff;border-radius:10px;padding:0 6px;font-size:10px;margin-left:4px;font-variant-numeric:tabular-nums;"></span></button>
     <button class="main-tab" id="main-tab-control" onclick="abrirControlAsistencias()" style="background:var(--navy2);color:#fff;border-radius:6px;padding:6px 16px;border:none;font-weight:700;">⏺ Control de asistencias del día</button>
     <button class="main-tab" id="main-tab-exportar" onclick="abrirModalExportar()" style="margin-left:auto;font-size:12px;">📥 Exportar</button>
   </div>
@@ -523,6 +524,31 @@ body.modo-apartar .tablero-tabla tbody td:hover{outline:1px solid #f97316;outlin
           <div id="tr-mensual" style="display:grid;grid-template-columns:repeat(12,1fr);gap:4px;"></div>
         </div>
       </div>
+    </div>
+  </div>
+
+  <!-- ══ VISTA: ALERTAS LABORALES ══ -->
+  <div id="vista-main-alertas" style="display:none;">
+    <div class="card" style="margin-bottom:14px;">
+      <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px;">
+        <div>
+          <div class="card-title">Alertas laborales</div>
+          <div class="card-sub">Faltas y retrasos detectados automáticamente, más avisos de vencimientos de plazos legales</div>
+        </div>
+        <div style="display:flex;gap:8px;">
+          <button class="btn btn-outline btn-sm" onclick="marcarTodasLeidas()">✓ Marcar todas como leídas</button>
+          <button class="btn btn-outline btn-sm" onclick="cargarAlertas()">⟳ Actualizar</button>
+        </div>
+      </div>
+    </div>
+    <div id="alertas-filtros" style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:12px;">
+      <button class="btn btn-sm" id="af-todas" onclick="filtrarAlertas('todas')" style="background:var(--navy2);color:#fff;border:none;">Todas</button>
+      <button class="btn btn-outline btn-sm" id="af-alta" onclick="filtrarAlertas('alta')">🔴 Alta</button>
+      <button class="btn btn-outline btn-sm" id="af-media" onclick="filtrarAlertas('media')">🟡 Media</button>
+      <button class="btn btn-outline btn-sm" id="af-no-leidas" onclick="filtrarAlertas('no-leidas')">Sin leer</button>
+    </div>
+    <div id="alertas-lista" style="display:flex;flex-direction:column;gap:10px;">
+      <div style="text-align:center;padding:40px;color:var(--ink3);">Cargando alertas…</div>
     </div>
   </div>
 
@@ -2625,9 +2651,12 @@ let tablerocache = {}; // {anio: {trabajadorId: {fecha: status}}}
 function cambiarVistaMain(vista){
   document.getElementById('vista-main-expedientes').style.display = vista==='expedientes' ? '' : 'none';
   document.getElementById('vista-main-tablero').style.display   = vista==='tablero'      ? '' : 'none';
+  document.getElementById('vista-main-alertas').style.display   = vista==='alertas'      ? '' : 'none';
   document.getElementById('main-tab-expedientes').classList.toggle('active', vista==='expedientes');
   document.getElementById('main-tab-tablero').classList.toggle('active', vista==='tablero');
+  document.getElementById('main-tab-alertas').classList.toggle('active', vista==='alertas');
   if(vista==='tablero') renderTablero();
+  if(vista==='alertas') cargarAlertas();
 }
 
 async function renderTablero(){
@@ -5446,6 +5475,164 @@ async function iniciarApp(session) {
   if(ag) ag.style.setProperty('display','none','important');
   if(ap) ap.style.setProperty('display','block','important');
   await cargarTrabajadores();
+  cargarContadorAlertas(); // badge en pestaña sin bloquear
+}
+
+// ══════════════════════════════════════════════════════════════
+// MÓDULO DE ALERTAS LABORALES
+// Fuente: tabla alertas_laborales (escrita por notificaciones-laborales
+// y deteccion-faltas). Se muestran en la pestaña "Alertas".
+// ══════════════════════════════════════════════════════════════
+
+let _todasLasAlertas = [];
+let _filtroAlertas   = 'todas';
+
+async function cargarAlertas() {
+  const lista = document.getElementById('alertas-lista');
+  if (!lista) return;
+  lista.innerHTML = '<div style="text-align:center;padding:40px;color:var(--ink3);">Cargando…</div>';
+  try {
+    const { data, error } = await sb.from('alertas_laborales')
+      .select('*')
+      .eq('cliente_rfc', clienteRFC)
+      .order('urgencia', { ascending: true })       // alta primero
+      .order('fecha_alerta', { ascending: false })
+      .limit(200);
+    if (error) throw error;
+    _todasLasAlertas = data || [];
+    actualizarBadge();
+    renderAlertas();
+  } catch(e) {
+    lista.innerHTML = `<div style="text-align:center;padding:40px;color:var(--red);">No se pudieron cargar las alertas: ${e.message}</div>`;
+  }
+}
+
+async function cargarContadorAlertas() {
+  try {
+    const { count } = await sb.from('alertas_laborales')
+      .select('*', { count: 'exact', head: true })
+      .eq('cliente_rfc', clienteRFC)
+      .eq('leida', false);
+    const badge = document.getElementById('alertas-badge');
+    if (!badge) return;
+    if ((count || 0) > 0) {
+      badge.textContent = count > 99 ? '99+' : count;
+      badge.style.display = 'inline';
+    } else {
+      badge.style.display = 'none';
+    }
+  } catch(_) {}
+}
+
+function actualizarBadge() {
+  const noLeidas = _todasLasAlertas.filter(a => !a.leida).length;
+  const badge = document.getElementById('alertas-badge');
+  if (!badge) return;
+  if (noLeidas > 0) {
+    badge.textContent = noLeidas > 99 ? '99+' : noLeidas;
+    badge.style.display = 'inline';
+  } else {
+    badge.style.display = 'none';
+  }
+}
+
+function filtrarAlertas(modo) {
+  _filtroAlertas = modo;
+  ['todas','alta','media','no-leidas'].forEach(m => {
+    const btn = document.getElementById(`af-${m}`);
+    if (!btn) return;
+    const activo = m === modo;
+    btn.style.background  = activo ? 'var(--navy2)' : '';
+    btn.style.color       = activo ? '#fff' : '';
+    btn.style.borderColor = activo ? 'transparent' : '';
+    btn.className = `btn btn-sm${activo ? '' : ' btn-outline'}`;
+  });
+  renderAlertas();
+}
+
+function renderAlertas() {
+  const lista = document.getElementById('alertas-lista');
+  if (!lista) return;
+
+  let filtradas = _todasLasAlertas;
+  if (_filtroAlertas === 'alta')      filtradas = filtradas.filter(a => a.urgencia === 'alta');
+  if (_filtroAlertas === 'media')     filtradas = filtradas.filter(a => a.urgencia === 'media');
+  if (_filtroAlertas === 'no-leidas') filtradas = filtradas.filter(a => !a.leida);
+
+  if (!filtradas.length) {
+    lista.innerHTML = '<div style="text-align:center;padding:40px;color:var(--ink3);">Sin alertas para mostrar.</div>';
+    return;
+  }
+
+  const COLORES = { alta: '#dc2626', media: '#d97706', baja: '#059669' };
+  const ICONOS  = {
+    falta_injustificada:    '❌',
+    retraso:                '⏰',
+    periodo_prueba:         '⚠️',
+    periodo_prueba_larga:   '⚠️',
+    capacitacion_inicial:   '🎓',
+    capacitacion_inicial_larga: '🎓',
+    prima_vacacional:       '🌴',
+    vacaciones:             '📅',
+    aguinaldo:              '🎁',
+    ptu:                    '💰',
+    comision_ptu:           '⚖️',
+    sesion_sh:              '🦺',
+    sesion_cap:             '🎓',
+    revision_rit:           '📖',
+    nom035:                 '🧠',
+  };
+
+  lista.innerHTML = filtradas.map(a => {
+    const color  = COLORES[a.urgencia] || '#64748b';
+    const icono  = ICONOS[a.tipo] || '📋';
+    const tipLabel = a.tipo.replace(/_/g, ' ');
+    const nombre = a.trabajador_nombre ? ` — <strong>${esc(a.trabajador_nombre)}</strong>` : '';
+    const opacidad = a.leida ? 'opacity:.6;' : '';
+    const botonAF  = !a.leida
+      ? `<button onclick="marcarLeida('${a.id}')" class="btn btn-outline btn-sm" style="font-size:11px;padding:3px 9px;flex-shrink:0;">✓ Leída</button>`
+      : `<span style="font-size:11px;color:var(--ink3);">✓ Leída</span>`;
+
+    const btnActa = (a.tipo === 'falta_injustificada')
+      ? `<a href="asistencias-vacaciones.html" class="btn btn-outline btn-sm" style="font-size:11px;padding:3px 9px;text-decoration:none;">Ver asistencias →</a>`
+      : (a.tipo === 'retraso')
+        ? `<a href="acta-administrativa.html" class="btn btn-outline btn-sm" style="font-size:11px;padding:3px 9px;text-decoration:none;">Generar acta →</a>`
+        : '';
+
+    return `<div data-alerta-id="${a.id}" style="background:var(--white);border-radius:var(--r);padding:14px 16px;border-left:4px solid ${color};box-shadow:0 1px 4px rgba(0,0,0,.05);${opacidad}display:flex;align-items:flex-start;gap:14px;">
+      <div style="flex:1;min-width:0;">
+        <div style="font-size:12px;font-weight:700;color:${color};text-transform:capitalize;margin-bottom:3px;">${icono} ${tipLabel}${nombre}</div>
+        <div style="font-size:13px;color:var(--ink2);line-height:1.55;margin-bottom:8px;">${esc(a.mensaje)}</div>
+        <div style="font-size:11px;color:var(--ink3);">Fecha: ${a.fecha_alerta}</div>
+      </div>
+      <div style="display:flex;flex-direction:column;gap:6px;align-items:flex-end;flex-shrink:0;">
+        ${botonAF}
+        ${btnActa}
+      </div>
+    </div>`;
+  }).join('');
+}
+
+async function marcarLeida(id) {
+  try {
+    await sb.from('alertas_laborales').update({ leida: true }).eq('id', id).eq('cliente_rfc', clienteRFC);
+    const a = _todasLasAlertas.find(x => x.id === id);
+    if (a) a.leida = true;
+    actualizarBadge();
+    renderAlertas();
+  } catch(e) { console.warn('marcarLeida:', e.message); }
+}
+
+async function marcarTodasLeidas() {
+  try {
+    await sb.from('alertas_laborales')
+      .update({ leida: true })
+      .eq('cliente_rfc', clienteRFC)
+      .eq('leida', false);
+    _todasLasAlertas.forEach(a => { a.leida = true; });
+    actualizarBadge();
+    renderAlertas();
+  } catch(e) { console.warn('marcarTodasLeidas:', e.message); }
 }
 </script>
 <!-- ══ MODAL: CONTROL DE ASISTENCIAS DEL DÍA ══ -->

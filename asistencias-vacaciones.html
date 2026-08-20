@@ -840,9 +840,14 @@ body.modo-apartar .tablero-tabla tbody td:hover{outline:1px solid #f97316;outlin
 <!-- MODAL: importar CSV -->
 <div class="modal-overlay" id="modal-csv">
   <div class="modal-box" style="max-width:600px;">
-    <h3>Importar asistencias desde CSV</h3>
-    <p style="font-size:12px;color:var(--ink3);margin-bottom:12px;line-height:1.6;">Compatible con la exportación de <strong>ZKBio ZLink</strong> (Reporte de asistencia → Exportar → CSV/Excel guardado como CSV) o cualquier CSV con columnas de nombre, fecha y entrada/salida. Detectamos las columnas automáticamente.</p>
-    <input type="file" id="csv-file" accept=".csv" onchange="leerCSV(this)">
+    <h3>Importar asistencias desde CSV / attlog.dat</h3>
+    <p style="font-size:12px;color:var(--ink3);margin-bottom:12px;line-height:1.6;">
+      Compatible con:<br>
+      • <strong>ZKBio ZLink CSV</strong> — Reporte de asistencia → Exportar → CSV.<br>
+      • <strong>attlog.dat</strong> (ZKTeco nativo) — el archivo <code style="background:var(--surface);padding:1px 4px;border-radius:3px;">attlog.dat</code> que exporta directamente la terminal. El sistema lo detecta automáticamente y empareja cada PIN con el campo <em>NIP checador</em> del trabajador.<br>
+      • Cualquier CSV con columnas de nombre, fecha y entrada/salida.
+    </p>
+    <input type="file" id="csv-file" accept=".csv,.dat,.txt" onchange="leerCSV(this)">
     <div id="csv-preview-wrap"></div>
     <div class="modal-close-row">
       <button class="btn btn-outline" onclick="cerrarModalCSV()">Cancelar</button>
@@ -2530,6 +2535,43 @@ function detectarColumna(headers, candidatos){
   return -1;
 }
 
+// Detecta si el contenido es un attlog.dat nativo de ZKTeco:
+// sin encabezado, tabulador como separador, columna 0 = PIN numérico,
+// columna 1 = datetime YYYY-MM-DD HH:MM:SS
+function esAttlogDat(lines) {
+  if (!lines.length) return false;
+  const cols = lines[0].split('\t');
+  if (cols.length < 5) return false;
+  const pin = cols[0].trim();
+  const dt  = cols[1].trim();
+  return /^\d+$/.test(pin) && /^\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}/.test(dt);
+}
+
+// Parsea attlog.dat: agrupa checadas por PIN + día → entrada (min) y salida (max)
+// Devuelve [{pin, fecha, hora_entrada, hora_salida, status}]
+function procesarAttlogDat(lines) {
+  const map = {}; // "PIN|YYYY-MM-DD" → {tiempos:[]}
+  for (const line of lines) {
+    const cols = line.split('\t');
+    if (cols.length < 2) continue;
+    const pin = cols[0].trim();
+    const dtRaw = cols[1].trim();
+    if (!/^\d+$/.test(pin) || !dtRaw.includes(' ')) continue;
+    const [fechaPart, horaPart] = dtRaw.split(' ');
+    if (!fechaPart || !horaPart) continue;
+    const key = `${pin}|${fechaPart}`;
+    if (!map[key]) map[key] = { pin, fecha: fechaPart, tiempos: [] };
+    map[key].tiempos.push(horaPart.substring(0, 8));
+  }
+  return Object.values(map).map(({ pin, fecha, tiempos }) => {
+    tiempos.sort();
+    const hora_entrada = tiempos[0] || null;
+    const hora_salida  = tiempos.length > 1 ? tiempos[tiempos.length - 1] : null;
+    return { pin, fecha, hora_entrada, hora_salida, nombre: null,
+      status: determinarStatusAutomatico(hora_entrada, hora_salida) };
+  });
+}
+
 async function leerCSV(input) {
   const file = input.files ? input.files[0] : input;
   if (!file) return;
@@ -2538,8 +2580,22 @@ async function leerCSV(input) {
   const text = await file.text();
   const lines = text.split(/\r?\n/).filter(l => l.trim().length > 3);
 
-  if (lines.length < 2) {
+  if (lines.length < 1) {
     alert("El archivo está vacío.");
+    return;
+  }
+
+  // ── Formato attlog.dat (ZKTeco nativo) ──────────────────────────────
+  if (esAttlogDat(lines)) {
+    filasCSV = procesarAttlogDat(lines);
+    filasCSV._esAttlog = true; // marca para confirmarImportCSV
+    await mostrarPreviewAttlog();
+    return;
+  }
+
+  // ── Formato CSV estándar ─────────────────────────────────────────────
+  if (lines.length < 2) {
+    alert("El CSV necesita al menos una fila de encabezado y un registro.");
     return;
   }
 
@@ -2563,6 +2619,49 @@ async function leerCSV(input) {
   }
 
   mostrarPreviewCSV();
+}
+
+// Preview para attlog.dat: resuelve PINs contra nip de trabajadores
+async function mostrarPreviewAttlog() {
+  const wrap = document.getElementById('csv-preview-wrap');
+  if (!filasCSV.length) { wrap.innerHTML = '<p style="color:var(--red)">No se encontraron registros válidos.</p>'; return; }
+
+  const { data: trabsData } = await selectProxy('trabajadores', 'id,nombre,nip', { activo: true });
+  const porNip = {};
+  (trabsData || []).forEach(t => { if (t.nip) porNip[String(t.nip).padStart(4,'0')] = t; });
+
+  let emparejados = 0, sinEmparejar = 0;
+  let rows = '';
+  filasCSV.forEach(r => {
+    const pinPad = String(r.pin).padStart(4,'0');
+    const trab = porNip[pinPad];
+    if (trab) { r.nombre = trab.nombre; r._trabajadorId = trab.id; emparejados++; }
+    else sinEmparejar++;
+    const nombrei = trab ? `<span style="color:var(--green)">${esc(trab.nombre)}</span>`
+      : `<span style="color:var(--red)">❌ PIN ${esc(r.pin)} sin asignar</span>`;
+    rows += `<tr>
+      <td>${esc(r.pin)}</td><td>${nombrei}</td><td>${esc(r.fecha)}</td>
+      <td>${r.hora_entrada||'—'}</td><td>${r.hora_salida||'—'}</td>
+    </tr>`;
+  });
+
+  const aviso = sinEmparejar > 0
+    ? `<p style="font-size:11px;color:var(--red);margin:8px 0 4px;">⚠️ ${sinEmparejar} PIN(s) sin trabajador asignado. Ve a cada trabajador y escribe su PIN en el campo <em>NIP checador</em> para que coincida.</p>`
+    : '';
+
+  wrap.innerHTML = `
+    <p style="font-size:12px;color:var(--ink2);margin:10px 0 6px;">
+      Detectado: <strong>attlog.dat ZKTeco</strong> — ${filasCSV.length} registros diarios
+      (${emparejados} emparejados, ${sinEmparejar} sin asignar).
+    </p>
+    ${aviso}
+    <div style="max-height:280px;overflow-y:auto;">
+    <table class="csv-preview-table" style="font-size:12px;">
+      <thead><tr><th>PIN</th><th>Trabajador</th><th>Fecha</th><th>Entrada</th><th>Salida</th></tr></thead>
+      <tbody>${rows}</tbody>
+    </table></div>`;
+
+  document.getElementById('csv-confirmar-btn').disabled = emparejados === 0;
 }
 
 
@@ -2593,6 +2692,37 @@ async function confirmarImportCSV() {
   let exitosos = 0;
 
   try {
+    // ── Ruta attlog.dat: los registros ya llevan _trabajadorId resuelto ──
+    if (filasCSV._esAttlog) {
+      const registros = [];
+      for (const reg of filasCSV) {
+        if (!reg._trabajadorId) {
+          resultadoImportLog.push({status:'error', nombre:`PIN ${reg.pin}`, detalle:'Sin NIP asignado en ClickLaboral'});
+          continue;
+        }
+        registros.push({
+          trabajador_id: reg._trabajadorId,
+          cliente_rfc: clienteRFC,
+          fecha: reg.fecha,
+          status: reg.status,
+          hora_entrada: reg.hora_entrada,
+          hora_salida: reg.hora_salida,
+          notas: '',
+          fuente: 'csv_zkteco',
+        });
+        exitosos++;
+        resultadoImportLog.push({status:'ok', nombre:reg.nombre, detalle:'Importado correctamente'});
+      }
+      if (registros.length > 0) {
+        await mutarDatos({ tabla:'asistencias', accion:'upsert', payload:registros,
+          conflicto:'trabajador_id,fecha' });
+      }
+      btn.disabled = false; btn.textContent = textoOriginal;
+      mostrarLogImportacion();
+      return;
+    }
+
+    // ── Ruta CSV estándar: emparejar por nombre ───────────────────────
     const { data: todosTrab } = await selectProxy('trabajadores', 'id,nombre', {activo:true});
 
     const mapTrabajadores = {};

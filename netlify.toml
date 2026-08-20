@@ -203,12 +203,8 @@
   [headers.values]
     Content-Type = "application/rss+xml; charset=utf-8"
 
-# ── Funciones programadas (Netlify Pro) ─────────────────────────────────────
-# 13:00 UTC = 07:00 CDMX (invierno, UTC-6) / 08:00 CDMX (verano, UTC-5)
-[functions."deteccion-faltas"]
-  schedule = "0 13 * * *"
-
-# 5 minutos después para no saturar Supabase al mismo tiempo
-[functions."notificaciones-laborales"]
-  schedule = "5 13 * * *"
+# Las funciones con schedule en Netlify bloquean acceso HTTP externo (solo el
+# scheduler interno puede invocarlas). Se usa cron-job.org para disparar las
+# funciones vía HTTP con Authorization header, lo que mantiene acceso manual
+# para pruebas y no requiere configuración adicional de Netlify.
     Cache-Control = "public, max-age=3600"

@@ -992,23 +992,28 @@ async function init() {
 
   intentarSesion().then(ok => {
     if(ok) return;
-    // Retry a 300ms — resuelve race condition de localStorage
+    // Retry a 400ms — resuelve race condition de localStorage / hidratación Supabase
     setTimeout(() => intentarSesion().then(ok2 => {
       if(ok2) return;
-      // Retry a 800ms — red de seguridad final
+      // Retry a 1.2s — red de seguridad para tokens que requieren refresh
       setTimeout(() => intentarSesion().then(ok3 => {
-        if(!ok3) {
-          document.getElementById('auth-gate').style.setProperty('display','flex','important');
-          document.getElementById('app').style.setProperty('display','none','important');
-        }
-      }), 500);
-    }), 300);
+        if(ok3) return;
+        // Retry final a 2.5s — máximo margen para conexiones lentas
+        setTimeout(() => intentarSesion().then(ok4 => {
+          if(!ok4) {
+            document.getElementById('auth-gate').style.setProperty('display','flex','important');
+            document.getElementById('app').style.setProperty('display','none','important');
+          }
+        }), 1300);
+      }), 800);
+    }), 400);
   });
 
-  // onAuthStateChange: captura SIGNED_IN si el token llega tarde
+  // onAuthStateChange: captura la sesión existente (INITIAL_SESSION) o nuevos inicios de sesión
   sb.auth.onAuthStateChange((event, session) => {
-    if((event==='SIGNED_IN'||event==='TOKEN_REFRESHED') && session) intentarSesion();
-    else if(event==='SIGNED_OUT'){
+    if((event==='INITIAL_SESSION'||event==='SIGNED_IN'||event==='TOKEN_REFRESHED') && session) {
+      intentarSesion();
+    } else if(event==='SIGNED_OUT'){
       document.getElementById('auth-gate').style.setProperty('display','flex','important');
       document.getElementById('app').style.setProperty('display','none','important');
     }

@@ -143,9 +143,10 @@ async function cargarDatosCliente(rfc){
   const CUOTAS = { micro:899, pyme:1999, mediana:4499, empresa:9999, basico:499, estandar:799, pro:2399, trial:0, personalizado:0 };
   const cuota  = meta.cuota != null ? Number(meta.cuota) : (CUOTAS[plan] || 1999);
 
-  // Guardar para reportes
+  // Guardar para reportes y para módulos en otras pestañas (asistencias-vacaciones.html)
   _sbAuth  = sbAuth;
   _rfcReal = rfcReal;
+  try { localStorage.setItem('cl_rfc_auth', rfcReal); } catch(_) {}
 
   clienteActual = {
     rfc:             rfcReal,
@@ -1181,6 +1182,7 @@ async function logout(){
     return;
   }
   await sbAuth.auth.signOut();
+  try { localStorage.removeItem('cl_rfc_auth'); } catch(_) {}
   clienteActual = null;
   document.getElementById('portal-app').style.display = 'none';
   document.getElementById('login-screen').style.display = 'flex';

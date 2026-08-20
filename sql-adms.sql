@@ -27,7 +27,8 @@ CREATE INDEX IF NOT EXISTS idx_checadores_cliente
 -- RLS: clientes ven solo sus propios dispositivos
 ALTER TABLE checadores ENABLE ROW LEVEL SECURITY;
 
-CREATE POLICY IF NOT EXISTS "clientes_ven_sus_checadores"
+DROP POLICY IF EXISTS "clientes_ven_sus_checadores" ON checadores;
+CREATE POLICY "clientes_ven_sus_checadores"
   ON checadores FOR SELECT
   USING (
     cliente_rfc = (SELECT rfc FROM clientes WHERE auth_user_id = auth.uid() LIMIT 1)

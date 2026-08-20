@@ -2587,23 +2587,45 @@ function parseUserDat(arrayBuffer) {
   return pinMap;
 }
 
+// Detecta separador de columnas en una línea de attlog
+function _detectarSepAttlog(line) {
+  if (line.includes('\t')) return '\t';
+  // algunos terminales standalone usan espacios múltiples
+  if (/\d{4}-\d{2}-\d{2}/.test(line)) return null; // usaremos regex
+  return '\t';
+}
+
+// Extrae [pin, datetime, ...rest] de una línea de attlog, independiente del separador
+function _parsearLineaAttlog(line) {
+  line = line.trim();
+  if (!line) return null;
+  if (line.includes('\t')) {
+    const cols = line.split('\t');
+    return cols.map(c => c.trim());
+  }
+  // formato con espacios: el PIN es lo anterior a la fecha
+  const m = line.match(/^(\S+)\s+(\d{4}-\d{2}-\d{2}\s+\d{2}:\d{2}:\d{2})\s*(.*)$/);
+  if (m) return [m[1], m[2].replace(/\s+/, ' '), ...m[3].split(/\s+/).filter(Boolean)];
+  return null;
+}
+
 function esAttlogDat(lines) {
   if (!lines.length) return false;
-  const cols = lines[0].split('\t');
-  if (cols.length < 5) return false;
+  const cols = _parsearLineaAttlog(lines[0]);
+  if (!cols || cols.length < 2) return false;
   const pin = cols[0].trim();
   const dt  = cols[1].trim();
-  return /^\d+$/.test(pin) && /^\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}/.test(dt);
+  return /^\d+$/.test(pin) && /^\d{4}-\d{2}-\d{2}[\sT]\d{2}:\d{2}:\d{2}/.test(dt);
 }
 
 // Agrupa checadas por PIN + día → entrada (min) y salida (max)
 function procesarAttlogDat(lines) {
   const map = {};
   for (const line of lines) {
-    const cols = line.split('\t');
-    if (cols.length < 2) continue;
+    const cols = _parsearLineaAttlog(line);
+    if (!cols || cols.length < 2) continue;
     const pin = cols[0].trim();
-    const dtRaw = cols[1].trim();
+    const dtRaw = cols[1].trim().replace('T', ' ');
     if (!/^\d+$/.test(pin) || !dtRaw.includes(' ')) continue;
     const [fechaPart, horaPart] = dtRaw.split(' ');
     if (!fechaPart || !horaPart) continue;
@@ -2639,32 +2661,46 @@ async function leerCSV(input) {
 
   const attlogLines = [];
   let tieneAttlog = false, tieneBiotemplate = false, tieneCsvNormal = false;
+  const _diagLog = []; // diagnóstico por archivo
 
   for (const file of files) {
     const fname = file.name.toLowerCase();
 
-    // user.dat binario (nombre incluye "user" y extensión .dat)
-    if (fname.endsWith('.dat') && (fname === 'user.dat' || fname.includes('user'))) {
+    // user.dat binario — detecta por nombre que incluya 'user' pero NO 'attlog' ni 'biotemplate'
+    if (fname.endsWith('.dat') && fname.includes('user') && !fname.includes('attlog') && !fname.includes('bio')) {
       try {
         const buf = await file.arrayBuffer();
         const map = parseUserDat(buf);
         if (Object.keys(map).length > 0) {
           Object.assign(_userDatPinMap, map);
-          continue; // procesado — no leer como texto
+          _diagLog.push(`✅ <b>${file.name}</b>: user.dat — ${Object.keys(map).length} trabajadores`);
+          continue;
+        } else {
+          _diagLog.push(`⚠️ <b>${file.name}</b>: user.dat binario — no se extrajeron registros (formato desconocido, tamaño: ${buf.byteLength} bytes)`);
         }
-      } catch(_) {}
+      } catch(e) {
+        _diagLog.push(`❌ <b>${file.name}</b>: error leyendo binario — ${e.message}`);
+      }
     }
 
     let text;
-    try { text = await file.text(); } catch(_) { continue; }
-    const lines = text.split(/\r?\n/).filter(l => l.trim().length > 3);
-    if (!lines.length) continue;
+    try { text = await file.text(); } catch(e) {
+      _diagLog.push(`❌ <b>${file.name}</b>: error leyendo texto — ${e.message}`);
+      continue;
+    }
+    // soportar \r solo (old Mac/embedded) además de \r\n y \n
+    const lines = text.split(/\r\n|\r|\n/).filter(l => l.trim().length > 1);
+    if (!lines.length) {
+      _diagLog.push(`⚠️ <b>${file.name}</b>: archivo vacío`);
+      continue;
+    }
 
     const l0 = lines[0].trimStart();
 
-    // biotemplate.dat: huellas digitales, ignorar
-    if (l0.startsWith('Pin=') && l0.includes('\t') && l0.includes('Tmp=')) {
+    // biotemplate.dat: huellas digitales
+    if (l0.startsWith('Pin=') && l0.includes('Tmp=')) {
       tieneBiotemplate = true;
+      _diagLog.push(`ℹ️ <b>${file.name}</b>: biotemplate.dat (huellas) — ignorado`);
       continue;
     }
 
@@ -2672,10 +2708,28 @@ async function leerCSV(input) {
     if (esAttlogDat(lines)) {
       attlogLines.push(...lines);
       tieneAttlog = true;
+      _diagLog.push(`✅ <b>${file.name}</b>: attlog.dat — ${lines.length} registros`);
       continue;
     }
 
-    // CSV estándar (primer CSV encontrado gana)
+    // última oportunidad: forzar parse de attlog si el nombre del archivo incluye 'attlog'
+    if (fname.includes('attlog')) {
+      const primeraLinea = _parsearLineaAttlog(lines[0]);
+      _diagLog.push(`⚠️ <b>${file.name}</b>: nombre indica attlog pero formato no reconocido.<br>Primera línea: <code>${esc(lines[0].substring(0,120))}</code><br>Columnas detectadas: ${primeraLinea ? primeraLinea.length : 0}`);
+      // intentar procesar de todas formas
+      const lineasValidas = lines.filter(l => {
+        const c = _parsearLineaAttlog(l);
+        return c && c.length >= 2 && /^\d+$/.test(c[0]) && c[1].match(/\d{4}[-/]\d{2}[-/]\d{2}/);
+      });
+      if (lineasValidas.length > 0) {
+        attlogLines.push(...lineasValidas);
+        tieneAttlog = true;
+        _diagLog.push(`✅ <b>${file.name}</b>: recuperado — ${lineasValidas.length} líneas válidas de attlog`);
+      }
+      continue;
+    }
+
+    // CSV estándar
     if (!tieneCsvNormal && lines.length >= 2) {
       let sep = ',';
       if (lines[0].includes(';')) sep = ';';
@@ -2690,7 +2744,14 @@ async function leerCSV(input) {
         const registro = parseRegistroZKTeco(valores, mapeoColumnas, line);
         if (registro) filasCSV.push(registro);
       }
-      tieneCsvNormal = true;
+      if (filasCSV.length > 0) {
+        tieneCsvNormal = true;
+        _diagLog.push(`✅ <b>${file.name}</b>: CSV — ${filasCSV.length} registros`);
+      } else {
+        _diagLog.push(`⚠️ <b>${file.name}</b>: no reconocido.<br>Primera línea: <code>${esc(lines[0].substring(0,120))}</code>`);
+      }
+    } else if (!tieneCsvNormal) {
+      _diagLog.push(`⚠️ <b>${file.name}</b>: no reconocido.<br>Primera línea: <code>${esc(lines[0].substring(0,120))}</code>`);
     }
   }
 
@@ -2699,13 +2760,16 @@ async function leerCSV(input) {
     filasCSV = procesarAttlogDat(attlogLines);
     await mostrarPreviewAttlog();
   } else if (tieneBiotemplate && !tieneAttlog) {
-    wrap.innerHTML = '<p style="color:var(--red);font-size:13px;padding:8px 0;">⚠️ <strong>biotemplate.dat</strong> contiene plantillas de huellas digitales — no son registros de asistencia. Sube el archivo <strong>attlog.dat</strong> para importar asistencias.</p>';
+    wrap.innerHTML = `<p style="color:var(--red);font-size:13px;padding:8px 0;">⚠️ <strong>biotemplate.dat</strong> contiene plantillas de huellas digitales — no son registros de asistencia. Sube el archivo <strong>attlog.dat</strong> para importar asistencias.</p>
+      <details style="margin-top:8px;font-size:11px;color:var(--ink3)"><summary>Diagnóstico</summary><div style="padding:4px 0">${_diagLog.join('<br>')}</div></details>`;
   } else if (Object.keys(_userDatPinMap).length && !tieneAttlog) {
-    wrap.innerHTML = `<p style="font-size:12px;color:var(--ink2);padding:8px 0;">✅ <strong>user.dat</strong> cargado — ${Object.keys(_userDatPinMap).length} trabajadores identificados. Ahora selecciona también el archivo <strong>attlog.dat</strong> del mismo terminal para importar asistencias.</p>`;
+    wrap.innerHTML = `<p style="font-size:12px;color:var(--ink2);padding:8px 0;">✅ <strong>user.dat</strong> cargado — ${Object.keys(_userDatPinMap).length} trabajadores identificados. Ahora selecciona también el archivo <strong>attlog.dat</strong> del mismo terminal para importar asistencias.</p>
+      <details style="margin-top:8px;font-size:11px;color:var(--ink3)"><summary>Diagnóstico</summary><div style="padding:4px 0">${_diagLog.join('<br>')}</div></details>`;
   } else if (tieneCsvNormal && filasCSV.length) {
     mostrarPreviewCSV();
   } else {
-    wrap.innerHTML = '<p style="color:var(--red);font-size:13px;padding:8px 0;">No se reconoció ningún formato válido. Formatos aceptados: attlog.dat, user.dat, o CSV con encabezados.</p>';
+    wrap.innerHTML = `<p style="color:var(--red);font-size:13px;padding:8px 0;">No se reconoció ningún formato válido. Formatos aceptados: attlog.dat, user.dat, o CSV con encabezados.</p>
+      <details open style="margin-top:8px;font-size:11px;color:var(--ink3)"><summary>Diagnóstico de archivos</summary><div style="padding:4px 0">${_diagLog.join('<br>') || 'Sin archivos procesados'}</div></details>`;
   }
 }
 

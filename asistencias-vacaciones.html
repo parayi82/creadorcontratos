@@ -100,6 +100,7 @@ header a:hover{color:#fff;}
 .celda-retraso{background:#fef3c7;color:#92400e;font-weight:600;}
 .celda-incapacidad{background:#ede9fe;color:#5b21b6;}
 .celda-falta-justificada{background:#f3f4f6;color:#4b5563;}
+.celda-sin-registro{background:#f8fafc;color:#94a3b8;font-style:italic;}
 .celda-finde{background:#fafafa;color:#ccc;}
 /* ── Apartado / programación de vacaciones (v15) ── */
 .celda-vac-solicitada{background:repeating-linear-gradient(45deg,#fff7ed,#fff7ed 3px,#fed7aa 3px,#fed7aa 6px);color:#9a3412;font-weight:800;}
@@ -941,6 +942,7 @@ const STATUS_LABELS = {
   permiso:'Permiso',
   incapacidad:'Incapacidad',
   festivo:'Día festivo',
+  sin_registro:'Sin registro',
 };
 
 // ════════════════════════════════════════════
@@ -2101,9 +2103,11 @@ async function abrirModalDia(fecha){
   statusElegido = reg?.status || 'presente';
   document.getElementById('modal-dia-fecha').textContent = fmtFecha(fecha);
   document.getElementById('dia-notas').value = reg?.notas || '';
-  document.getElementById('status-pick').innerHTML = Object.entries(STATUS_LABELS).map(([key,label])=>
-    `<div class="status-opt ${key===statusElegido?'active':''}" onclick="elegirStatus('${key}')" id="opt-${key}">${label}</div>`
-  ).join('');
+  document.getElementById('status-pick').innerHTML = Object.entries(STATUS_LABELS)
+    .filter(([key]) => key !== 'sin_registro')
+    .map(([key,label])=>
+      `<div class="status-opt ${key===statusElegido?'active':''}" onclick="elegirStatus('${key}')" id="opt-${key}">${label}</div>`
+    ).join('');
   document.getElementById('acta-estado').value = acta?.estado || 'provisional';
   document.getElementById('acta-motivo').value = acta?.motivo || '';
   document.getElementById('acta-folio').value = acta?.folio_incapacidad || '';
@@ -2768,9 +2772,9 @@ async function renderTablero(){
   const COLOR_STATUS={
     vacaciones:'celda-vacaciones', permiso:'celda-permiso', retraso:'celda-retraso',
     falta_injustificada:'celda-falta-injustificada', falta_justificada:'celda-falta-justificada',
-    incapacidad:'celda-incapacidad',
+    incapacidad:'celda-incapacidad', sin_registro:'celda-sin-registro',
   };
-  const ICONO_STATUS={vacaciones:'V',permiso:'P',falta_injustificada:'FI',falta_justificada:'FJ',incapacidad:'INC',retraso:'RT'};
+  const ICONO_STATUS={vacaciones:'V',permiso:'P',falta_injustificada:'FI',falta_justificada:'FJ',incapacidad:'INC',retraso:'RT',sin_registro:'—'};
 
   const dias=[];
   for(let m=0;m<12;m++){
@@ -4903,9 +4907,11 @@ async function renderControlAsistencias() {
         <select onchange="cambiarStatusControl('${t.id}', this.value, this.closest('div[id]'))"
           style="font-size:12px;padding:5px 8px;border:1px solid var(--border);border-radius:6px;background:#fff;min-width:150px;">
           <option value="">— Sin registrar —</option>
-          ${Object.entries(STATUS_LABELS).map(([k,v]) =>
-            `<option value="${k}" ${st===k?'selected':''}>${v}</option>`
-          ).join('')}
+          ${Object.entries(STATUS_LABELS)
+            .filter(([k]) => k !== 'sin_registro')
+            .map(([k,v]) =>
+              `<option value="${k}" ${st===k?'selected':''}>${v}</option>`
+            ).join('')}
         </select>
         <input type="time" value="${horaE}" placeholder="Entrada"
           onchange="cambiarHoraControl('${t.id}','entrada',this.value)"
@@ -5094,19 +5100,52 @@ async function exportarRosterCompleto() {
 async function exportarAsistenciasTrabajador() {
   if (!trabajadorActual) return;
   const anio = new Date().getFullYear();
-  const { data } = await sb.from('asistencias')
-    .select('fecha,status,hora_entrada,hora_salida,notas')
-    .eq('trabajador_id', trabajadorActual.id)
-    .gte('fecha', `${anio}-01-01`).lte('fecha', `${anio}-12-31`)
-    .order('fecha');
-  const filas = [
-    ['Fecha','Status','Hora entrada','Hora salida','Horas trabajadas','Notas'],
-    ...(data||[]).map(r => {
-      const h = horasEntre(r.hora_entrada, r.hora_salida);
-      return [r.fecha, STATUS_LABELS[r.status]||r.status, r.hora_entrada||'', r.hora_salida||'', h>0?h.toFixed(2):'', r.notas||''];
-    })
-  ];
-  descargarCSV(`asistencias_${trabajadorActual.nombre.replace(/\s+/g,'_')}_${anio}`, filas);
+  const desde = `${anio}-01-01`;
+  const hasta = `${anio}-12-31`;
+  try {
+    const { data: sesData } = await sb.auth.getSession();
+    const tok = sesData?.session?.access_token || '';
+    const payload = { desde, hasta, trabajador_id: trabajadorActual.id };
+    if (clienteRFC) payload.cliente_rfc = clienteRFC;
+    const res  = await fetch('/api/reporte-asistencias', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + tok },
+      body: JSON.stringify(payload),
+    });
+    const json = await res.json();
+    if (!res.ok) throw new Error(json.error || 'Error del servidor');
+    const t = trabajadorActual;
+    const regs = json.registros?.[t.id] || {};
+    const nomMeta = json.meta_nom || {};
+    const hoy = new Date().toLocaleDateString('es-MX', { day: '2-digit', month: 'long', year: 'numeric' });
+    const filas = [
+      ['REPORTE INDIVIDUAL DE ASISTENCIAS — ClickLaboral.mx'],
+      ['Trabajador:', t.nombre, '', 'Puesto:', t.puesto || '—'],
+      ['Empresa:', clienteEmpresa || clienteRFC, '', 'RFC:', clienteRFC || '—'],
+      ['Período:', `${desde} al ${hasta}`, '', 'Generado:', hoy],
+      ['Art. 804 LFT:', nomMeta.articulo_804_lft || ''],
+      [],
+      ['Fecha','Día','Status','Hora entrada','Hora salida','Horas trabajadas','Fuente','Notas'],
+      ...(json.dias || []).map(fecha => {
+        const r = regs[fecha] || { status: 'sin_registro' };
+        const dow = new Date(fecha + 'T12:00:00Z').getUTCDay();
+        const nomDia = ['Dom','Lun','Mar','Mié','Jue','Vie','Sáb'][dow];
+        const h = horasEntre(r.hora_entrada, r.hora_salida);
+        return [fecha, nomDia, STATUS_LABELS[r.status]||r.status, r.hora_entrada||'', r.hora_salida||'', h>0?h.toFixed(2):'', r.fuente||'', r.notas||''];
+      }),
+      [],
+      ['RESUMEN:'],
+    ];
+    const res2 = json.resumen?.find(x => x.trabajador_id === t.id) || {};
+    filas.push(['Días laborales:', res2.dias_laborales_propios || '—', '', 'Presentes:', res2.presentes || 0]);
+    filas.push(['Retrasos:', res2.retrasos || 0, '', 'Faltas injust.:', res2.faltas_injustificadas || 0]);
+    filas.push(['Faltas just.:', res2.faltas_justificadas || 0, '', 'Vacaciones:', res2.vacaciones || 0]);
+    filas.push(['Permisos:', res2.permisos || 0, '', 'Incapacidades:', res2.incapacidades || 0]);
+    filas.push(['% Asistencia:', res2.pct_asistencia != null ? res2.pct_asistencia + '%' : '—']);
+    descargarCSV(`asistencias_${t.nombre.replace(/\s+/g,'_')}_${anio}`, filas);
+  } catch(e) {
+    alert('Error al exportar: ' + e.message);
+  }
 }
 
 async function exportarAsistenciasDia() {
@@ -5131,34 +5170,67 @@ async function exportarAsistenciasDia() {
 async function exportarAsistenciasGrupal() {
   const hoy = new Date();
   const anio = hoy.getFullYear(), mes = hoy.getMonth()+1;
-  const ini = `${anio}-${String(mes).padStart(2,'0')}-01`;
-  const fin = new Date(anio,mes,0).toISOString().split('T')[0];
-  const diasDelMes = parseInt(fin.split('-')[2]);
+  const desde = `${anio}-${String(mes).padStart(2,'0')}-01`;
+  const hasta  = new Date(anio,mes,0).toISOString().split('T')[0];
+  try {
+    const { data: sesData } = await sb.auth.getSession();
+    const tok = sesData?.session?.access_token || '';
+    const payload = { desde, hasta };
+    if (clienteRFC) payload.cliente_rfc = clienteRFC;
+    const res  = await fetch('/api/reporte-asistencias', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + tok },
+      body: JSON.stringify(payload),
+    });
+    const json = await res.json();
+    if (!res.ok) throw new Error(json.error || 'Error del servidor');
 
-  const [{ data: trabs }, { data: asist }] = await Promise.all([
-    selectProxy('trabajadores','id,nombre,puesto',{activo:true},{order:{campo:'nombre',asc:true}}),
-    selectProxy('asistencias','trabajador_id,fecha,status',{gte:{fecha:ini},lte:{fecha:fin}}),
-  ]);
-  const asistMap = {};
-  (asist||[]).forEach(a => { asistMap[`${a.trabajador_id}_${a.fecha}`] = a.status; });
+    const nomMeta  = json.meta_nom || {};
+    const mesNombre = hoy.toLocaleDateString('es-MX', { month: 'long', year: 'numeric' });
+    const dias     = json.dias || [];
+    const diasLab  = new Set(json.dias_laborales || []);
 
-  const diasHeaders = Array.from({length:diasDelMes},(_,i)=>String(i+1).padStart(2,'0'));
-  const filas = [
-    ['Trabajador','Puesto',...diasHeaders,'Presentes','Faltas','Retrasos','Vacaciones/Permiso'],
-    ...(trabs||[]).map(t => {
-      const statusDias = diasHeaders.map(d => {
-        const fecha = `${anio}-${String(mes).padStart(2,'0')}-${d}`;
-        const st = asistMap[`${t.id}_${fecha}`];
-        return st ? (STATUS_LABELS[st]?.slice(0,3)||st.slice(0,3)) : '—';
-      });
-      const presentes = statusDias.filter(s=>s==='Pre').length;
-      const faltas    = statusDias.filter(s=>s==='Fal').length;
-      const retrasos  = statusDias.filter(s=>s==='Ret').length;
-      const vacPerm   = statusDias.filter(s=>s==='Vac'||s==='Per').length;
-      return [t.nombre, t.puesto||'', ...statusDias, presentes, faltas, retrasos, vacPerm];
-    })
-  ];
-  descargarCSV(`asistencias_${String(mes).padStart(2,'0')}_${anio}`, filas);
+    // Solo días laborales (lun-vie) como columnas
+    const diasCols = dias.filter(d => diasLab.has(d));
+    const diasHeaders = diasCols.map(d => {
+      const [, , dd] = d.split('-');
+      const dow = new Date(d + 'T12:00:00Z').getUTCDay();
+      const nomDia = ['Dom','Lun','Mar','Mié','Jue','Vie','Sáb'][dow];
+      return `${dd} ${nomDia}`;
+    });
+
+    const STATUS_ABREV = {
+      presente:'P', retraso:'RT', falta_injustificada:'FI', falta_justificada:'FJ',
+      vacaciones:'V', permiso:'PRM', incapacidad:'INC', festivo:'FES', sin_registro:'—',
+    };
+
+    const filas = [
+      [`LISTA DE ASISTENCIA — ${mesNombre.toUpperCase()} — ClickLaboral.mx`],
+      ['Empresa:', clienteEmpresa || clienteRFC, '', 'RFC:', clienteRFC || '—'],
+      ['Período:', `${desde} al ${hasta}`, '', 'Días laborales:', nomMeta.dias_laborales || diasCols.length],
+      ['Generado:', new Date().toLocaleString('es-MX'), '', '', ''],
+      [`Constancia conforme Art. 804 LFT. P=Presente RT=Retraso FI=Falta injust. FJ=Falta just. V=Vacaciones PRM=Permiso INC=Incap.`],
+      [],
+      ['Trabajador', 'Puesto', ...diasHeaders, 'Presentes', 'Retrasos', 'Faltas', 'Vac/Perm', '% Asist.'],
+      ...(json.trabajadores || []).map(t => {
+        const regs = json.registros?.[t.id] || {};
+        const resT = (json.resumen || []).find(r => r.trabajador_id === t.id) || {};
+        const statusDias = diasCols.map(fecha => STATUS_ABREV[regs[fecha]?.status] || '—');
+        return [
+          t.nombre, t.puesto||'', ...statusDias,
+          resT.presentes||0, resT.retrasos||0,
+          (resT.faltas_injustificadas||0)+(resT.faltas_justificadas||0),
+          (resT.vacaciones||0)+(resT.permisos||0),
+          resT.pct_asistencia != null ? resT.pct_asistencia+'%' : '—',
+        ];
+      }),
+      [],
+      [`Documento generado digitalmente por ClickLaboral.mx — ${nomMeta.articulo_804_lft || 'Art. 804 LFT'}`],
+    ];
+    descargarCSV(`lista_asistencia_${String(mes).padStart(2,'0')}_${anio}`, filas);
+  } catch(e) {
+    alert('Error al exportar: ' + e.message);
+  }
 }
 
 async function exportarResumenVacaciones() {
@@ -5185,44 +5257,249 @@ async function exportarResumenVacaciones() {
 
 async function exportarExpedienteIndividual() {
   if (!trabajadorActual) return;
-  const anio = new Date().getFullYear();
-  const [{ data: asist }, { data: docs }] = await Promise.all([
-    sb.from('asistencias').select('fecha,status,hora_entrada,hora_salida,notas').eq('trabajador_id',trabajadorActual.id).gte('fecha',`${anio}-01-01`).order('fecha'),
-    sb.from('documentos_expediente').select('nombre,tipo,fecha,generado_en').eq('trabajador_id',trabajadorActual.id).order('fecha',{ascending:false}),
-  ]);
   const t = trabajadorActual;
   const hoy = new Date();
-  const anios = t.fecha_ingreso ? Math.floor((hoy-new Date(t.fecha_ingreso))/(365.25*86400000)) : 0;
-  const diasVac = diasVacacionesPorLey(anios);
-  const vacTomadas = (asist||[]).filter(a=>a.status==='vacaciones').length;
+  const anio = hoy.getFullYear();
+  const desde = `${anio}-01-01`;
+  const hasta  = hoy.toISOString().split('T')[0];
 
-  // Hoja 1: Datos del trabajador
-  const filasDatos = [
-    ['EXPEDIENTE INDIVIDUAL DEL TRABAJADOR',''],
-    ['Empresa',clienteEmpresa],
-    ['Nombre',t.nombre],
-    ['Puesto',t.puesto||''],
-    ['Fecha de ingreso',t.fecha_ingreso||''],
-    ['NSS',t.nss||''],
-    ['Años de antigüedad',anios],
-    ['Días de vacaciones disponibles (Ley 2023)',diasVac],
-    ['Días de vacaciones tomados (año en curso)',vacTomadas],
-    ['Días de vacaciones pendientes',Math.max(0,diasVac-vacTomadas)],
-    [''],
-    ['RESUMEN DE ASISTENCIAS '+anio,''],
-    ['Presentes',(asist||[]).filter(a=>a.status==='presente').length],
-    ['Retrasos',(asist||[]).filter(a=>a.status==='retraso').length],
-    ['Faltas injustificadas',(asist||[]).filter(a=>a.status==='falta_injustificada').length],
-    ['Faltas justificadas',(asist||[]).filter(a=>a.status==='falta_justificada').length],
-    ['Vacaciones',vacTomadas],
-    ['Permisos',(asist||[]).filter(a=>a.status==='permiso').length],
-    ['Incapacidades',(asist||[]).filter(a=>a.status==='incapacidad').length],
-    [''],
-    ['DOCUMENTOS EN EXPEDIENTE',''],
-    ['Nombre','Tipo','Fecha'],
-    ...(docs||[]).map(d=>[d.nombre,d.tipo||'',d.fecha||d.generado_en?.slice(0,10)||'']),
-  ];
-  descargarCSV(`expediente_${t.nombre.replace(/\s+/g,'_')}_${anio}`, filasDatos);
+  try {
+    const { data: sesData } = await sb.auth.getSession();
+    const tok = sesData?.session?.access_token || '';
+    const payload = { desde, hasta, trabajador_id: t.id };
+    if (clienteRFC) payload.cliente_rfc = clienteRFC;
+
+    const [repRes, { data: docs }] = await Promise.all([
+      fetch('/api/reporte-asistencias', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + tok },
+        body: JSON.stringify(payload),
+      }),
+      sb.from('documentos_expediente').select('nombre,tipo,fecha,generado_en')
+        .eq('trabajador_id', t.id).order('fecha', { ascending: false }),
+    ]);
+
+    const rep = await repRes.json();
+    if (!repRes.ok) throw new Error(rep.error || 'Error del servidor');
+
+    const res = rep.resumen?.[0] || {};
+    const regs = rep.registros?.[t.id] || {};
+    const anios = t.fecha_ingreso ? Math.floor((hoy - new Date(t.fecha_ingreso)) / (365.25 * 86400000)) : 0;
+    const diasVac = diasVacacionesPorLey(anios);
+    const vacTomadas = res.vacaciones || 0;
+
+    // ── Sección 1: Datos del trabajador ──
+    const filasDatos = [
+      ['EXPEDIENTE INDIVIDUAL DEL TRABAJADOR — ART. 804 LFT', ''],
+      ['Empresa', clienteEmpresa],
+      ['RFC', clienteRFC || ''],
+      ['Nombre del trabajador', t.nombre],
+      ['Puesto', t.puesto || ''],
+      ['NSS', t.nss || t.nss || ''],
+      ['Fecha de ingreso', t.fecha_ingreso || ''],
+      ['Años de antigüedad', anios],
+      ['Período del reporte', `${desde} al ${hasta}`],
+      ['Generado en', new Date().toLocaleString('es-MX', { timeZone: 'America/Mexico_City' })],
+      ['Fundamento legal', 'Art. 804 LFT — Obligación de conservar y exhibir en juicio las listas de asistencia (fracc. IV)'],
+      [''],
+      ['RESUMEN DE ASISTENCIAS ' + anio, ''],
+      ['Días laborales del período', res.dias_laborales_propios ?? ''],
+      ['Presentes', res.presentes || 0],
+      ['Retrasos', res.retrasos || 0],
+      ['Faltas injustificadas', res.faltas_injustificadas || 0],
+      ['Faltas justificadas', res.faltas_justificadas || 0],
+      ['Vacaciones', vacTomadas],
+      ['Permisos', res.permisos || 0],
+      ['Incapacidades', res.incapacidades || 0],
+      ['Festivos', res.festivos || 0],
+      ['Sin registro (sistema)', res.sin_registro || 0],
+      ['% Asistencia', res.pct_asistencia != null ? res.pct_asistencia + '%' : 'N/D'],
+      [''],
+      ['VACACIONES (Ley Federal del Trabajo 2023)', ''],
+      ['Días disponibles por antigüedad', diasVac],
+      ['Días tomados (año en curso)', vacTomadas],
+      ['Días pendientes', Math.max(0, diasVac - vacTomadas)],
+      [''],
+    ];
+
+    // ── Sección 2: Detalle de asistencias día a día ──
+    const filasAsist = [
+      ['DETALLE DE ASISTENCIAS DÍA A DÍA', '', '', '', '', ''],
+      ['Fecha', 'Día', 'Status', 'Hora Entrada', 'Hora Salida', 'Fuente', 'Notas'],
+    ];
+    for (const dia of (rep.dias || [])) {
+      const r = regs[dia] || { status: 'sin_registro' };
+      const dow = new Date(dia + 'T12:00:00Z').toLocaleDateString('es-MX', { weekday: 'long', timeZone: 'America/Mexico_City' });
+      filasAsist.push([
+        dia, dow,
+        STATUS_LABELS[r.status] || r.status,
+        r.hora_entrada || '',
+        r.hora_salida  || '',
+        r.fuente       || '',
+        r.notas        || '',
+      ]);
+    }
+
+    // ── Sección 3: Documentos en expediente ──
+    const filasDocs = [
+      [''],
+      ['DOCUMENTOS EN EXPEDIENTE', '', ''],
+      ['Nombre', 'Tipo', 'Fecha'],
+      ...(docs || []).map(d => [d.nombre, d.tipo || '', d.fecha || d.generado_en?.slice(0, 10) || '']),
+    ];
+
+    descargarCSV(
+      `expediente_${t.nombre.replace(/\s+/g, '_')}_${anio}`,
+      [...filasDatos, ...filasAsist, ...filasDocs],
+    );
+  } catch (e) {
+    alert('Error al exportar expediente: ' + e.message);
+  }
+}
+
+// ─── Constancia de asistencia Art. 804 LFT ────────────────────────────────
+async function exportarConstanciaArt804(trabajadorId) {
+  // Si se pasa trabajadorId usa ese trabajador; si no, el mes actual para toda la plantilla.
+  const hoy = new Date();
+  const anio = hoy.getFullYear(), mes = hoy.getMonth()+1;
+  const desde = `${anio}-${String(mes).padStart(2,'0')}-01`;
+  const hasta  = new Date(anio,mes,0).toISOString().split('T')[0];
+  try {
+    const { data: sesData } = await sb.auth.getSession();
+    const tok = sesData?.session?.access_token || '';
+    const payload = { desde, hasta };
+    if (clienteRFC) payload.cliente_rfc = clienteRFC;
+    if (trabajadorId) payload.trabajador_id = trabajadorId;
+    const res  = await fetch('/api/reporte-asistencias', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + tok },
+      body: JSON.stringify(payload),
+    });
+    const json = await res.json();
+    if (!res.ok) throw new Error(json.error || 'Error del servidor');
+    abrirConstanciaHtml(json, desde, hasta);
+  } catch(e) {
+    alert('Error al generar constancia: ' + e.message);
+  }
+}
+
+function abrirConstanciaHtml(json, desde, hasta) {
+  const empresa = clienteEmpresa || clienteRFC || '—';
+  const rfc     = clienteRFC || '—';
+  const nomMeta = json.meta_nom || {};
+  const trabajadores = json.trabajadores || [];
+  const dias = (json.dias || []);
+  const diasLab = new Set(json.dias_laborales || []);
+  const diasCols = dias.filter(d => diasLab.has(d));
+  const resumen  = json.resumen || [];
+  const generado = new Date().toLocaleString('es-MX', {
+    timeZone: 'America/Mexico_City',
+    day:'2-digit', month:'long', year:'numeric', hour:'2-digit', minute:'2-digit'
+  });
+
+  const STATUS_ABREV = {
+    presente:'P', retraso:'RT', falta_injustificada:'FI', falta_justificada:'FJ',
+    vacaciones:'V', permiso:'PRM', incapacidad:'INC', festivo:'FES', sin_registro:'—',
+  };
+  const STATUS_COLOR = {
+    presente:'#dcfce7', retraso:'#fef3c7', falta_injustificada:'#fee2e2',
+    falta_justificada:'#f3f4f6', vacaciones:'#dcfce7', permiso:'#fef3c7',
+    incapacidad:'#ede9fe', festivo:'#e0f2fe', sin_registro:'#f8fafc',
+  };
+  const STATUS_TXT = {
+    falta_injustificada:'#991b1b', falta_justificada:'#6b7280', retraso:'#92400e',
+    vacaciones:'#15803d', permiso:'#92400e', incapacidad:'#5b21b6', presente:'#166534',
+    festivo:'#0369a1', sin_registro:'#94a3b8',
+  };
+
+  // Encabezados de columnas
+  const thDias = diasCols.map(d => {
+    const [, , dd] = d.split('-');
+    const dow = new Date(d + 'T12:00:00Z').getUTCDay();
+    const nd  = ['D','L','M','X','J','V','S'][dow];
+    return `<th style="padding:3px 2px;font-size:9px;text-align:center;border:1px solid #ddd;min-width:22px;color:#555;">${dd}<br>${nd}</th>`;
+  }).join('');
+
+  const filasTrab = trabajadores.map(t => {
+    const regs = json.registros?.[t.id] || {};
+    const res2 = resumen.find(r => r.trabajador_id === t.id) || {};
+    const celdasDias = diasCols.map(fecha => {
+      const r    = regs[fecha] || { status: 'sin_registro' };
+      const bg   = STATUS_COLOR[r.status] || '#fff';
+      const fg   = STATUS_TXT[r.status]   || '#111';
+      const abr  = STATUS_ABREV[r.status] || '?';
+      return `<td style="padding:2px;text-align:center;border:1px solid #ddd;background:${bg};color:${fg};font-size:9px;font-weight:600;">${abr}</td>`;
+    }).join('');
+    const pct  = res2.pct_asistencia != null ? res2.pct_asistencia + '%' : '—';
+    const pctC = (res2.pct_asistencia||0) >= 90 ? '#15803d' : (res2.pct_asistencia||0) >= 70 ? '#92400e' : '#991b1b';
+    return `<tr>
+      <td style="padding:4px 6px;border:1px solid #ddd;font-size:10px;font-weight:600;white-space:nowrap;">${t.nombre}</td>
+      <td style="padding:4px 6px;border:1px solid #ddd;font-size:9px;color:#555;">${t.puesto||'—'}</td>
+      ${celdasDias}
+      <td style="padding:4px 6px;border:1px solid #ddd;font-size:10px;text-align:center;">${res2.presentes||0}</td>
+      <td style="padding:4px 6px;border:1px solid #ddd;font-size:10px;text-align:center;color:#991b1b;">${(res2.faltas_injustificadas||0)+(res2.faltas_justificadas||0)}</td>
+      <td style="padding:4px 6px;border:1px solid #ddd;font-size:10px;text-align:center;font-weight:700;color:${pctC};">${pct}</td>
+    </tr>`;
+  }).join('');
+
+  const html = `<!DOCTYPE html><html lang="es"><head>
+<meta charset="UTF-8">
+<title>Constancia de Asistencia Art. 804 LFT</title>
+<style>
+  body{font-family:'Segoe UI',Arial,sans-serif;margin:0;padding:20px;color:#111;font-size:11px;}
+  @media print{body{padding:10px;}}
+  h1{font-size:14px;font-weight:800;color:#0f2640;margin:0 0 4px;}
+  .meta{font-size:10px;color:#555;margin-bottom:12px;}
+  .leyenda{font-size:9px;color:#888;margin:10px 0 12px;background:#f8fafc;padding:6px 10px;border-radius:4px;}
+  table{width:100%;border-collapse:collapse;}
+  .firma-area{margin-top:40px;display:grid;grid-template-columns:1fr 1fr;gap:40px;}
+  .firma-linea{border-top:1px solid #333;padding-top:4px;text-align:center;font-size:10px;color:#555;}
+  .legal{margin-top:20px;padding:10px 14px;background:#f0f4ff;border-radius:6px;font-size:9px;color:#3730a3;line-height:1.6;}
+  .pie{margin-top:14px;font-size:9px;color:#94a3b8;text-align:center;}
+</style>
+</head><body>
+<h1>📋 Constancia de Asistencia del Personal</h1>
+<div class="meta">
+  <strong>Empresa:</strong> ${empresa} &nbsp;|&nbsp; <strong>RFC:</strong> ${rfc}<br>
+  <strong>Período:</strong> ${desde} al ${hasta} &nbsp;|&nbsp;
+  <strong>Días laborales:</strong> ${nomMeta.dias_laborales || diasCols.length} &nbsp;|&nbsp;
+  <strong>Generado:</strong> ${generado}
+</div>
+<div class="leyenda">
+  <strong>Clave de status:</strong>
+  P = Presente &nbsp;·&nbsp; RT = Retraso &nbsp;·&nbsp; FI = Falta injustificada &nbsp;·&nbsp;
+  FJ = Falta justificada &nbsp;·&nbsp; V = Vacaciones &nbsp;·&nbsp; PRM = Permiso &nbsp;·&nbsp;
+  INC = Incapacidad &nbsp;·&nbsp; FES = Festivo &nbsp;·&nbsp; — = Sin registro
+</div>
+<div style="overflow-x:auto;">
+<table>
+  <thead><tr style="background:#0f2640;color:#fff;">
+    <th style="padding:5px 6px;font-size:10px;text-align:left;border:1px solid #ddd;">Trabajador</th>
+    <th style="padding:5px 6px;font-size:10px;text-align:left;border:1px solid #ddd;">Puesto</th>
+    ${thDias}
+    <th style="padding:5px 4px;font-size:9px;text-align:center;border:1px solid #ddd;">Pres.</th>
+    <th style="padding:5px 4px;font-size:9px;text-align:center;border:1px solid #ddd;">Faltas</th>
+    <th style="padding:5px 4px;font-size:9px;text-align:center;border:1px solid #ddd;">%</th>
+  </tr></thead>
+  <tbody>${filasTrab}</tbody>
+</table>
+</div>
+<div class="firma-area">
+  <div><div class="firma-linea">Firma del Patrón o Representante Legal</div></div>
+  <div><div class="firma-linea">Sello de la Empresa</div></div>
+</div>
+<div class="legal">
+  ⚖️ <strong>Fundamento legal:</strong> ${nomMeta.articulo_804_lft || 'Art. 804 LFT — El patrón está obligado a conservar y exhibir en juicio las listas de asistencia (fracción IV).'}
+  Esta constancia documenta la asistencia del personal conforme a los registros digitales del sistema ClickLaboral.mx.
+  ${nomMeta.nota_trazabilidad || ''}
+</div>
+<div class="pie">ClickLaboral.mx · ${nomMeta.sistema || 'Sistema de Gestión Laboral'} · Generado el ${generado}</div>
+<script>window.onload=()=>window.print();</script>
+</body></html>`;
+
+  const win = window.open('', '_blank', 'width=1200,height=800');
+  if (win) { win.document.write(html); win.document.close(); }
+  else alert('Permita las ventanas emergentes para imprimir la constancia.');
 }
 
 // ═══════════════════════════════════════════════════════════════
@@ -6101,6 +6378,12 @@ async function confirmarHorarioMasivo() {
         <button class="btn btn-outline" onclick="exportarResumenVacaciones()" style="text-align:left;justify-content:flex-start;">
           🏖 Resumen de vacaciones (CSV)
           <span style="font-size:11px;color:var(--ink3);display:block;font-weight:400;">Días disponibles, tomados y pendientes por trabajador</span>
+        </button>
+
+        <div style="font-size:12px;font-weight:700;color:var(--ink3);text-transform:uppercase;letter-spacing:.06em;margin:8px 0 4px;">Documentos legales (Art. 804 LFT)</div>
+        <button class="btn btn-outline" onclick="exportarConstanciaArt804(trabajadorActual?.id)" style="text-align:left;justify-content:flex-start;border-color:#6366f1;color:#6366f1;">
+          📋 Constancia de asistencia — mes actual (Impresión)
+          <span style="font-size:11px;color:var(--ink3);display:block;font-weight:400;">Lista oficial con firmas y fundamento legal. Cumple Art. 804 LFT y NOM-035.</span>
         </button>
 
       </div>

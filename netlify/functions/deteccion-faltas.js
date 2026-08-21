@@ -102,7 +102,7 @@ exports.handler = async (event) => {
           cliente_rfc:   t.cliente_rfc,
           fecha:         ayer,
           status:        'sin_registro',
-          fuente:        'sistema',
+          fuente:        'control_diario',
           notas:         'Cierre automático de jornada — sin movimiento registrado.',
         }, { onConflict: 'trabajador_id,fecha' });
         if (!insSR) resumen.dias_cerrados++;
@@ -246,7 +246,7 @@ async function runBackfill(sb, hoy, ayer, headers) {
           cliente_rfc:   t.cliente_rfc,
           fecha:         dia,
           status:        'falta_injustificada',
-          fuente:        'sistema',
+          fuente:        'control_diario',
           notas:         'Falta detectada en revisión histórica — sin registro en checador.',
         });
       }

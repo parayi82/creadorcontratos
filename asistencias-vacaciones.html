@@ -670,6 +670,20 @@ body.modo-apartar .tablero-tabla tbody td:hover{outline:1px solid #f97316;outlin
           <input type="time" id="dia-hora-salida" onchange="calcularHorasDia()">
         </div>
       </div>
+      <!-- Segundo turno (jornada partida) -->
+      <div id="dia-turno2-fields" style="display:none;background:var(--surface);border:1px solid var(--border);border-radius:var(--r-sm);padding:8px 10px;margin-bottom:8px;">
+        <div style="font-size:11px;font-weight:700;color:var(--accent);margin-bottom:6px;">⏱ 2ª jornada (tarde/noche)</div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;">
+          <div class="field" style="margin-bottom:0;">
+            <label>Hora de entrada (2)</label>
+            <input type="time" id="dia-hora-entrada-2" onchange="calcularHorasDia()">
+          </div>
+          <div class="field" style="margin-bottom:0;">
+            <label>Hora de salida (2)</label>
+            <input type="time" id="dia-hora-salida-2" onchange="calcularHorasDia()">
+          </div>
+        </div>
+      </div>
         <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-top:6px;">
           <span id="horario-habitual-info" style="font-size:11px;color:#64748b;"></span>
           <button type="button" class="btn btn-outline btn-sm" style="padding:3px 10px;font-size:11px;" onclick="guardarHorarioHabitual(false)">🕘 Fijar como habitual</button>
@@ -768,7 +782,20 @@ body.modo-apartar .tablero-tabla tbody td:hover{outline:1px solid #f97316;outlin
       <div class="field"><label>Hora entrada habitual</label><input type="time" id="trab-hora-entrada"></div>
       <div class="field"><label>Hora salida habitual</label><input type="time" id="trab-hora-salida"></div>
     </div>
-    <div style="font-size:11px;color:var(--ink3);margin-top:-4px;margin-bottom:10px;display:flex;align-items:center;justify-content:space-between;gap:8px;flex-wrap:wrap;">
+    <div style="margin-top:4px;margin-bottom:6px;">
+      <label style="display:flex;align-items:center;gap:6px;font-size:12px;font-weight:600;cursor:pointer;">
+        <input type="checkbox" id="trab-turno-mixto" onchange="toggleTurnoMixtoForm(this.checked)">
+        Jornada partida / turno mixto (regreso por la tarde)
+      </label>
+    </div>
+    <div id="trab-turno-mixto-fields" style="display:none;background:var(--surface);border:1px solid var(--border);border-radius:var(--r-sm);padding:10px 12px;margin-bottom:6px;">
+      <div style="font-size:11px;font-weight:700;color:var(--accent);margin-bottom:8px;">⏱ Segundo turno (tarde/noche)</div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;">
+        <div class="field" style="margin-bottom:0;"><label>Hora entrada 2ª jornada</label><input type="time" id="trab-hora-entrada-2"></div>
+        <div class="field" style="margin-bottom:0;"><label>Hora salida 2ª jornada</label><input type="time" id="trab-hora-salida-2"></div>
+      </div>
+    </div>
+    <div style="font-size:11px;color:var(--ink3);margin-top:-2px;margin-bottom:10px;display:flex;align-items:center;justify-content:space-between;gap:8px;flex-wrap:wrap;">
       <span>Se compara contra el checador para detectar retrasos y faltas automáticamente.</span>
       <button class="btn btn-outline btn-sm" type="button" onclick="abrirImportHorarioExterno()" style="font-size:11px;padding:3px 10px;white-space:nowrap;">📂 Desde checador externo</button>
     </div>
@@ -2363,17 +2390,29 @@ async function abrirModalDia(fecha){
   document.getElementById('acta-fields').style.display = esFalta(statusElegido) ? 'block' : 'none';
 
   // Cargar horas existentes del día; si está vacío, precargar el horario habitual
-  const heEl = document.getElementById('dia-hora-entrada');
-  const hsEl = document.getElementById('dia-hora-salida');
-  if(heEl) heEl.value = reg?.hora_entrada ? reg.hora_entrada.slice(0,5) : '';
-  if(hsEl) hsEl.value = reg?.hora_salida  ? reg.hora_salida.slice(0,5)  : '';
-  if(heEl && hsEl && !heEl.value && !hsEl.value){
-    let hab = getHorarioHabitual(trabajadorActual?.id);
-    if(!hab) hab = await cargarHorarioHabitualDB(trabajadorActual?.id);
-    if(hab){
-      heEl.value = hab.entrada || '';
-      hsEl.value = hab.salida || '';
-    }
+  const heEl  = document.getElementById('dia-hora-entrada');
+  const hsEl  = document.getElementById('dia-hora-salida');
+  const he2El = document.getElementById('dia-hora-entrada-2');
+  const hs2El = document.getElementById('dia-hora-salida-2');
+  if(heEl)  heEl.value  = reg?.hora_entrada  ? reg.hora_entrada.slice(0,5)  : '';
+  if(hsEl)  hsEl.value  = reg?.hora_salida   ? reg.hora_salida.slice(0,5)   : '';
+  if(he2El) he2El.value = reg?.hora_entrada_2 ? reg.hora_entrada_2.slice(0,5) : '';
+  if(hs2El) hs2El.value = reg?.hora_salida_2  ? reg.hora_salida_2.slice(0,5)  : '';
+  let hab = getHorarioHabitual(trabajadorActual?.id);
+  if(!hab) hab = await cargarHorarioHabitualDB(trabajadorActual?.id);
+  if(heEl && hsEl && !heEl.value && !hsEl.value && hab){
+    heEl.value = hab.entrada || '';
+    hsEl.value = hab.salida  || '';
+  }
+  if(he2El && hs2El && !he2El.value && !hs2El.value && hab?.entrada2){
+    he2El.value = hab.entrada2 || '';
+    hs2El.value = hab.salida2  || '';
+  }
+  // Mostrar panel de 2ª jornada si el trabajador tiene turno mixto
+  const turno2Panel = document.getElementById('dia-turno2-fields');
+  if(turno2Panel){
+    const tieneTurno2 = !!(hab?.entrada2) || !!(reg?.hora_entrada_2);
+    turno2Panel.style.display = tieneTurno2 ? 'block' : 'none';
   }
   pintarHorarioHabitual();
 
@@ -2409,8 +2448,10 @@ function cerrarModalDia(){ document.getElementById('modal-dia').classList.remove
 
 async function guardarDia(){
   const notas         = document.getElementById('dia-notas').value.trim();
-  const hora_entrada  = document.getElementById('dia-hora-entrada')?.value || null;
-  const hora_salida   = document.getElementById('dia-hora-salida')?.value  || null;
+  const hora_entrada  = document.getElementById('dia-hora-entrada')?.value  || null;
+  const hora_salida   = document.getElementById('dia-hora-salida')?.value   || null;
+  const hora_entrada_2 = document.getElementById('dia-hora-entrada-2')?.value || null;
+  const hora_salida_2  = document.getElementById('dia-hora-salida-2')?.value  || null;
   const hora_acordada = document.getElementById('hora-acordada')?.value || null;
   let notaFinal = notas;
   if (statusElegido==='retraso' && hora_acordada && hora_entrada) {
@@ -2430,8 +2471,10 @@ async function guardarDia(){
       fecha:         diaSeleccionado,
       status:        statusElegido,
       notas:         notaFinal || null,
-      hora_entrada:  registroHoras ? hora_entrada : null,
-      hora_salida:   registroHoras ? hora_salida  : null,
+      hora_entrada:  registroHoras ? hora_entrada  : null,
+      hora_salida:   registroHoras ? hora_salida   : null,
+      hora_entrada_2: registroHoras ? hora_entrada_2 : null,
+      hora_salida_2:  registroHoras ? hora_salida_2  : null,
       fuente:        'manual',
       // Trazabilidad de ediciones manuales (Art. 784 LFT: el patrón debe poder
       // acreditar que los registros no fueron alterados fraudulentamente)
@@ -2449,6 +2492,11 @@ async function guardarDia(){
     if (error && /editado_por|editado_at/.test(error.message||'')) {
       const { editado_por, editado_at, ...payloadSinAudit } = payloadBase;
       ({ error } = await mutarDatos({ tabla:'asistencias', accion:'upsert', payload:payloadSinAudit, conflicto:'trabajador_id,fecha' }));
+    }
+    // Columnas de turno mixto opcionales — si no existen (sql-turno-mixto.sql aún no aplicado)
+    if (error && /hora_entrada_2|hora_salida_2/.test(error.message||'')) {
+      const { hora_entrada_2: _he2, hora_salida_2: _hs2, ...payloadSinTurno2 } = payloadBase;
+      ({ error } = await mutarDatos({ tabla:'asistencias', accion:'upsert', payload:payloadSinTurno2, conflicto:'trabajador_id,fecha' }));
     }
     if (error) throw error;
 
@@ -2651,6 +2699,16 @@ async function abrirModalTrabajador(t){
   if (t?.id) horario = await cargarHorarioHabitualDB(t.id);
   document.getElementById('trab-hora-entrada').value = horario?.entrada || '';
   document.getElementById('trab-hora-salida').value  = horario?.salida  || '';
+  const tieneTurno2Form = !!(horario?.entrada2);
+  const cbTM = document.getElementById('trab-turno-mixto');
+  if(cbTM) cbTM.checked = tieneTurno2Form;
+  toggleTurnoMixtoForm(tieneTurno2Form);
+  if(tieneTurno2Form){
+    const he2F = document.getElementById('trab-hora-entrada-2');
+    const hs2F = document.getElementById('trab-hora-salida-2');
+    if(he2F) he2F.value = horario?.entrada2 || '';
+    if(hs2F) hs2F.value = horario?.salida2  || '';
+  }
   // Limpiar el panel de info de importación anterior
   const infoEl = document.getElementById('horario-externo-info');
   if (infoEl) { infoEl.style.display = 'none'; infoEl.textContent = ''; }
@@ -2658,6 +2716,17 @@ async function abrirModalTrabajador(t){
   document.getElementById('modal-trabajador').classList.add('show');
 }
 function cerrarModalTrabajador(){ document.getElementById('modal-trabajador').classList.remove('show'); }
+
+function toggleTurnoMixtoForm(show){
+  const el = document.getElementById('trab-turno-mixto-fields');
+  if(el) el.style.display = show ? 'block' : 'none';
+  if(!show){
+    const he2 = document.getElementById('trab-hora-entrada-2');
+    const hs2 = document.getElementById('trab-hora-salida-2');
+    if(he2) he2.value = '';
+    if(hs2) hs2.value = '';
+  }
+}
 
 async function guardarTrabajador(){
   const id = document.getElementById('trab-id').value;
@@ -2688,8 +2757,11 @@ async function guardarTrabajador(){
   const nipVal = document.getElementById('trab-nip').value.trim();
   if (nipVal && !/^\d{4}$/.test(nipVal)) { alert('El NIP debe ser exactamente 4 dígitos numéricos.'); return; }
 
-  const horaEntrada = document.getElementById('trab-hora-entrada').value || null;
-  const horaSalida  = document.getElementById('trab-hora-salida').value  || null;
+  const horaEntrada  = document.getElementById('trab-hora-entrada').value   || null;
+  const horaSalida   = document.getElementById('trab-hora-salida').value    || null;
+  const turnoMixto   = document.getElementById('trab-turno-mixto')?.checked || false;
+  const horaEntrada2 = turnoMixto ? (document.getElementById('trab-hora-entrada-2')?.value || null) : null;
+  const horaSalida2  = turnoMixto ? (document.getElementById('trab-hora-salida-2')?.value  || null) : null;
 
   const payload = {
     cliente_rfc: clienteRFC, nombre,
@@ -2698,13 +2770,26 @@ async function guardarTrabajador(){
     nss: document.getElementById('trab-nss').value.trim() || null,
     salario_diario: salarioVal ? parseFloat(salarioVal) : null,
     nip: nipVal || null,
-    hora_entrada_habitual: horaEntrada,
-    hora_salida_habitual:  horaSalida,
+    hora_entrada_habitual:   horaEntrada,
+    hora_salida_habitual:    horaSalida,
+    hora_entrada_habitual_2: horaEntrada2,
+    hora_salida_habitual_2:  horaSalida2,
     activo: true,
+  };
+  const guardarTrabajadorConPayload = async (p, fId) => {
+    const accion = fId ? 'update' : 'insert';
+    const filtros = fId ? { id: fId } : {};
+    let { error } = await mutarDatos({ tabla:'trabajadores', accion, payload:p, filtros });
+    // Columnas de turno mixto opcionales — fallback si sql-turno-mixto.sql aún no se ejecutó
+    if (error && /hora_entrada_habitual_2|hora_salida_habitual_2/.test(error.message||'')) {
+      const { hora_entrada_habitual_2: _he2, hora_salida_habitual_2: _hs2, ...pSin } = p;
+      ({ error } = await mutarDatos({ tabla:'trabajadores', accion, payload:pSin, filtros }));
+    }
+    return error;
   };
   try {
     if (id) {
-      const { error } = await mutarDatos({ tabla:'trabajadores', accion:'update', payload, filtros:{ id } });
+      const error = await guardarTrabajadorConPayload(payload, id);
       if (error) throw error;
       // ── Historial: detectar cambios de puesto y salario ──
       const orig = window._trabOriginal || {};
@@ -2717,12 +2802,12 @@ async function guardarTrabajador(){
         registrarMovimiento(id, 'cambio_salario', { salario_diario: salOrig }, { salario_diario: salNvo });
       }
     } else {
-      const { error } = await mutarDatos({ tabla:'trabajadores', accion:'insert', payload });
+      const error = await guardarTrabajadorConPayload(payload, null);
       if (error) throw error;
     }
     // Actualizar cache de horario habitual
     if (id && (horaEntrada || horaSalida)) {
-      horarioCacheDB[id] = { entrada: horaEntrada || '', salida: horaSalida || '' };
+      horarioCacheDB[id] = { entrada: horaEntrada || '', salida: horaSalida || '', entrada2: horaEntrada2 || '', salida2: horaSalida2 || '' };
       pintarHorarioHabitual();
     }
     cerrarModalTrabajador();
@@ -4710,11 +4795,13 @@ async function cargarHorarioHabitualDB(trabId){
   if(trabId in horarioCacheDB) return horarioCacheDB[trabId];
   try {
     const { data, error } = await sb.from('trabajadores')
-      .select('hora_entrada_habitual,hora_salida_habitual').eq('id', trabId).single();
+      .select('hora_entrada_habitual,hora_salida_habitual,hora_entrada_habitual_2,hora_salida_habitual_2').eq('id', trabId).single();
     if(!error && data && (data.hora_entrada_habitual || data.hora_salida_habitual)){
       horarioCacheDB[trabId] = {
-        entrada: (data.hora_entrada_habitual||'').slice(0,5),
-        salida:  (data.hora_salida_habitual||'').slice(0,5),
+        entrada:  (data.hora_entrada_habitual||'').slice(0,5),
+        salida:   (data.hora_salida_habitual||'').slice(0,5),
+        entrada2: (data.hora_entrada_habitual_2||'').slice(0,5),
+        salida2:  (data.hora_salida_habitual_2||'').slice(0,5),
       };
     } else {
       horarioCacheDB[trabId] = null;
@@ -4724,17 +4811,20 @@ async function cargarHorarioHabitualDB(trabId){
 }
 
 async function guardarHorarioHabitual(todos){
-  const entrada = document.getElementById('dia-hora-entrada')?.value;
-  const salida  = document.getElementById('dia-hora-salida')?.value;
+  const entrada  = document.getElementById('dia-hora-entrada')?.value;
+  const salida   = document.getElementById('dia-hora-salida')?.value;
   if(!entrada || !salida){ alert('Capture primero la hora de entrada y de salida que quiere fijar como habituales.'); return; }
-  const horario = { entrada, salida };
+  const entrada2 = document.getElementById('dia-hora-entrada-2')?.value || '';
+  const salida2  = document.getElementById('dia-hora-salida-2')?.value  || '';
+  const horario = { entrada, salida, entrada2, salida2 };
 
   if(todos){
-    if(!confirm(`¿Fijar ${entrada} – ${salida} como horario habitual para TODOS los trabajadores de la empresa?\n(El horario individual de cada trabajador, si lo tiene, seguirá teniendo prioridad.)`)) return;
+    if(!confirm(`¿Fijar ${entrada} – ${salida}${entrada2?' + '+entrada2+' – '+salida2:''} como horario habitual para TODOS los trabajadores de la empresa?\n(El horario individual de cada trabajador, si lo tiene, seguirá teniendo prioridad.)`)) return;
     localStorage.setItem('cl_horario_rfc_'+clienteRFC, JSON.stringify(horario));
     try {
       await mutarDatos({ tabla:'trabajadores', accion:'update',
-        payload:{ hora_entrada_habitual:entrada, hora_salida_habitual:salida }, filtros:{} });
+        payload:{ hora_entrada_habitual:entrada, hora_salida_habitual:salida,
+                  hora_entrada_habitual_2:entrada2||null, hora_salida_habitual_2:salida2||null }, filtros:{} });
       Object.keys(horarioCacheDB).forEach(k=>horarioCacheDB[k]=horario);
     } catch(_){ console.warn('Columnas de horario habitual no existen aún en la BD (ejecute sql-horario-habitual.sql). Guardado localmente.'); }
   } else {
@@ -4742,7 +4832,8 @@ async function guardarHorarioHabitual(todos){
     horarioCacheDB[trabajadorActual.id] = horario;
     try {
       await mutarDatos({ tabla:'trabajadores', accion:'update',
-        payload:{ hora_entrada_habitual:entrada, hora_salida_habitual:salida }, filtros:{ id:trabajadorActual.id } });
+        payload:{ hora_entrada_habitual:entrada, hora_salida_habitual:salida,
+                  hora_entrada_habitual_2:entrada2||null, hora_salida_habitual_2:salida2||null }, filtros:{ id:trabajadorActual.id } });
     } catch(_){ console.warn('Columnas de horario habitual no existen aún en la BD (ejecute sql-horario-habitual.sql). Guardado localmente.'); }
   }
   pintarHorarioHabitual();
@@ -4754,7 +4845,10 @@ function pintarHorarioHabitual(){
   const el = document.getElementById('horario-habitual-info');
   if(!el) return;
   const h = getHorarioHabitual(trabajadorActual?.id);
-  el.textContent = h ? `Horario habitual: ${h.entrada} – ${h.salida}` : 'Sin horario habitual definido';
+  if(!h){ el.textContent='Sin horario habitual definido'; return; }
+  let txt = `Horario habitual: ${h.entrada} – ${h.salida}`;
+  if(h.entrada2 && h.salida2) txt += ` · 2ª jornada: ${h.entrada2} – ${h.salida2}`;
+  el.textContent = txt;
 }
 
 
@@ -5046,14 +5140,18 @@ function sugerirExtrasDia(hDia){
 }
 
 function calcularHorasDia(){
-  const entrada = document.getElementById('dia-hora-entrada')?.value;
-  const salida  = document.getElementById('dia-hora-salida')?.value;
-  const res     = document.getElementById('horas-dia-resultado');
-  const alerta  = document.getElementById('alerta-horas-semana');
+  const entrada  = document.getElementById('dia-hora-entrada')?.value;
+  const salida   = document.getElementById('dia-hora-salida')?.value;
+  const entrada2 = document.getElementById('dia-hora-entrada-2')?.value;
+  const salida2  = document.getElementById('dia-hora-salida-2')?.value;
+  const res      = document.getElementById('horas-dia-resultado');
+  const alerta   = document.getElementById('alerta-horas-semana');
   if(!res) return;
 
-  const hDia = horasEntre(entrada, salida);
   if(!entrada || !salida){ res.textContent=''; return; }
+  const hTurno1 = horasEntre(entrada, salida);
+  const hTurno2 = (entrada2 && salida2) ? horasEntre(entrada2, salida2) : 0;
+  const hDia = hTurno1 + hTurno2;
   sugerirExtrasDia(hDia);
 
   const tope        = getTopeJornadaHoy();
@@ -5094,13 +5192,14 @@ async function cargarHorasSemanaActual(fecha){
   const domingo = semanaDe(0).domingo;
   try {
     const {data} = await sb.from('asistencias')
-      .select('hora_entrada,hora_salida,fecha')
+      .select('hora_entrada,hora_salida,hora_entrada_2,hora_salida_2,fecha')
       .eq('trabajador_id', trabajadorActual.id)
       .gte('fecha', lunes)
       .lte('fecha', domingo)
       .neq('fecha', fecha); // excluir el día actual
     (data||[]).forEach(r=>{
       horasSemanaActual += horasEntre(r.hora_entrada, r.hora_salida);
+      if(r.hora_entrada_2 && r.hora_salida_2) horasSemanaActual += horasEntre(r.hora_entrada_2, r.hora_salida_2);
     });
   } catch(e){ console.error('Error cargando horas semana:', e.message||e); }
 }

@@ -283,6 +283,7 @@ function gestionar(i){
   const c = despacho.clientes[i];
   sessionStorage.setItem('cl_gestion', JSON.stringify({
     rfc: c.rfc, empresa: c.empresa || c.rfc, despacho: despacho.nombre, color: despacho.color,
+    numTrab: c.numTrab || null,
   }));
   // Mostrar panel de herramientas en lugar de ir directamente
   mostrarHerramientas(c);
@@ -366,6 +367,7 @@ function entrarAlDashboard(i){
   const c = despacho.clientes[i];
   sessionStorage.setItem('cl_gestion', JSON.stringify({
     rfc: c.rfc, empresa: c.empresa || c.rfc, despacho: despacho.nombre, color: despacho.color,
+    numTrab: c.numTrab || null,
   }));
   window.location.href = 'portal-cliente.html';
 }

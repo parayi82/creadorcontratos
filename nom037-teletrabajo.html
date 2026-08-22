@@ -1,0 +1,782 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Verificación NOM-037 · Teletrabajo · ClickLaboral.mx</title>
+<style>
+  :root{
+    --ink:#1a1a18;--ink2:#4a4a46;--ink3:#8a8a84;
+    --surface:#f7f6f2;--white:#ffffff;
+    --accent:#1a3a5c;--accent2:#e8f0f8;
+    --border:#ddddd6;
+    --danger:#c0392b;--warning:#c8830a;--success:#1a6b3a;
+    --radius:6px;
+    --font-ui:'Segoe UI',system-ui,sans-serif;
+    --font-doc:'Times New Roman',Georgia,serif;
+  }
+  *{box-sizing:border-box;margin:0;padding:0;}
+  body{font-family:var(--font-ui);background:var(--surface);color:var(--ink);min-height:100vh;font-size:14px;}
+
+  /* ── Auth gate ── */
+  #auth-gate-loading{position:fixed;inset:0;background:#fff;z-index:9999;display:flex;align-items:center;justify-content:center;color:#999;font-size:13px;}
+  #auth-gate-blocked{position:fixed;inset:0;background:#0f2640;z-index:9999;display:none;align-items:center;justify-content:center;padding:24px;}
+  #auth-gate-blocked .agb-box{background:#fff;border-radius:16px;padding:40px 36px;max-width:420px;text-align:center;}
+  #auth-gate-blocked .agb-box h2{font-size:18px;margin-bottom:10px;color:#0f2640;}
+  #auth-gate-blocked .agb-box p{font-size:13px;color:#666;margin-bottom:20px;line-height:1.6;}
+  #auth-gate-blocked .agb-btns{display:flex;gap:10px;justify-content:center;flex-wrap:wrap;}
+  #auth-gate-blocked .agb-btns a{padding:10px 18px;border-radius:8px;font-size:13px;font-weight:600;text-decoration:none;}
+  #auth-gate-blocked .agb-btns a.agb-primary{background:#1a3a5c;color:#fff;}
+  #auth-gate-blocked .agb-btns a.agb-secondary{background:#f0f0ec;color:#1a3a5c;}
+  body.modo-demo .doc-sheet{position:relative;user-select:none;}
+  body.modo-demo .doc-sheet::after{content:'MUESTRA — CUENTA DEMO, NO VÁLIDO PARA USO LEGAL';position:absolute;top:46%;left:-15%;right:-15%;text-align:center;font-size:26px;font-weight:900;color:rgba(220,38,38,.16);transform:rotate(-18deg);pointer-events:none;z-index:50;}
+  @media print{body.modo-demo .doc-sheet::after{display:block!important;color:rgba(220,38,38,.35)!important;}}
+
+  /* ── Header ── */
+  header{background:var(--accent);color:#fff;padding:14px 28px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:100;box-shadow:0 1px 4px rgba(0,0,0,.18);}
+  header h1{font-size:15px;font-weight:600;}
+  header span{font-size:12px;opacity:.7;}
+  .header-actions{display:flex;gap:10px;}
+  .btn{padding:7px 18px;border-radius:var(--radius);font-size:13px;font-weight:500;cursor:pointer;border:1px solid transparent;transition:background .15s;}
+  .btn-outline{background:transparent;border-color:rgba(255,255,255,.45);color:#fff;}
+  .btn-outline:hover{background:rgba(255,255,255,.12);}
+  .btn-primary{background:#fff;color:var(--accent);}
+  .btn-primary:hover{opacity:.88;}
+  .cl-nav-logo{display:flex;align-items:center;font-size:15px;font-weight:800;color:#fff;letter-spacing:-.01em;line-height:1;text-decoration:none;}
+  .cl-nav-logo .cl-laboral{color:#5eead4;font-weight:400;}
+
+  /* ── Two-panel workspace ── */
+  .workspace{display:grid;grid-template-columns:460px 1fr;height:calc(100vh - 52px);}
+  .form-panel{background:var(--white);border-right:1px solid var(--border);overflow-y:auto;padding:24px 24px 80px;}
+  .preview-panel{background:#e8e7e0;overflow-y:auto;padding:32px 40px;display:flex;flex-direction:column;align-items:center;}
+
+  /* ── Form elements ── */
+  .section-label{font-size:10px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:var(--accent);padding:20px 0 10px;border-bottom:1px solid var(--border);margin-bottom:14px;}
+  .section-label:first-child{padding-top:4px;}
+  .field{margin-bottom:13px;}
+  .field label{display:block;font-size:12px;font-weight:500;color:var(--ink2);margin-bottom:4px;}
+  .field label .req{color:var(--danger);margin-left:2px;}
+  .field input,.field select,.field textarea{width:100%;padding:8px 10px;border:1px solid var(--border);border-radius:var(--radius);font-size:13px;font-family:var(--font-ui);color:var(--ink);background:var(--white);}
+  .field input:focus,.field select:focus,.field textarea:focus{outline:none;border-color:var(--accent);box-shadow:0 0 0 3px var(--accent2);}
+  .field-row{display:grid;grid-template-columns:1fr 1fr;gap:10px;}
+  .hint{font-size:11px;color:var(--ink3);margin-top:3px;line-height:1.4;}
+  .alert-box{background:var(--accent2);border:1px solid #b8d4ec;border-radius:var(--radius);padding:10px 14px;font-size:12px;color:#1a2f4a;margin-bottom:14px;line-height:1.5;}
+  .alert-warn{background:#fff8e1;border:1px solid #f0c040;border-radius:var(--radius);padding:10px 14px;font-size:12px;color:#7a5c00;margin-bottom:14px;line-height:1.5;}
+
+  /* ── Checklist items ── */
+  .check-group{border:1px solid var(--border);border-radius:var(--radius);overflow:hidden;margin-bottom:12px;}
+  .check-group-head{background:#f0efe9;padding:8px 12px;font-size:11px;font-weight:700;color:var(--accent);text-transform:uppercase;letter-spacing:.05em;}
+  .check-item{padding:10px 12px;border-top:1px solid var(--border);display:flex;align-items:flex-start;gap:10px;}
+  .check-item:first-child{border-top:none;}
+  .check-item-text{flex:1;font-size:12.5px;color:var(--ink);line-height:1.45;}
+  .check-item-text .ci-num{display:inline-block;min-width:20px;font-weight:700;color:var(--ink3);}
+  .tri-opts{display:flex;gap:4px;flex-shrink:0;}
+  .tri-opt{position:relative;}
+  .tri-opt input{position:absolute;opacity:0;width:0;height:0;}
+  .tri-opt label{display:block;text-align:center;font-size:9.5px;padding:5px 8px;border:1px solid var(--border);border-radius:5px;cursor:pointer;color:var(--ink2);line-height:1.25;transition:all .12s;background:var(--white);white-space:nowrap;}
+  .tri-opt input:checked + label{font-weight:600;color:#fff;}
+  .tri-opt.ok input:checked + label{background:var(--success);border-color:var(--success);}
+  .tri-opt.obs input:checked + label{background:var(--warning);border-color:var(--warning);}
+  .tri-opt.na input:checked + label{background:#6b7280;border-color:#6b7280;}
+  .obs-input{width:100%;margin-top:6px;padding:5px 8px;font-size:11px;border:1px dashed var(--border);border-radius:4px;font-family:var(--font-ui);display:none;}
+  .obs-input.visible{display:block;}
+
+  /* ── Equipo rows ── */
+  .equipo-row{display:grid;grid-template-columns:1fr 1fr auto;gap:8px;margin-bottom:6px;align-items:center;}
+  .equipo-row input{padding:6px 8px;font-size:12px;border:1px solid var(--border);border-radius:var(--radius);}
+  .equipo-row button{padding:5px 10px;border:none;background:#fee2e2;color:#dc2626;border-radius:var(--radius);cursor:pointer;font-size:13px;}
+  .btn-add-equipo{background:none;border:1px dashed var(--border);border-radius:var(--radius);padding:6px 12px;font-size:12px;color:var(--ink3);cursor:pointer;width:100%;margin-top:4px;}
+  .btn-add-equipo:hover{border-color:var(--accent);color:var(--accent);}
+
+  /* ── Results bar ── */
+  .result-bar{position:sticky;top:0;background:var(--white);z-index:5;padding:10px 0;border-bottom:1px solid var(--border);margin-bottom:14px;display:flex;align-items:center;gap:10px;flex-wrap:wrap;}
+  .result-pill{display:inline-flex;align-items:center;gap:5px;padding:4px 12px;border-radius:20px;font-size:12px;font-weight:700;}
+  .rp-ok{background:#dcfce7;color:#166534;}
+  .rp-obs{background:#fef3c7;color:#92400e;}
+  .rp-fail{background:#fee2e2;color:#991b1b;}
+  .rp-na{background:#f3f4f6;color:#6b7280;}
+
+  /* ── Document preview ── */
+  .doc-sheet{background:var(--white);width:100%;max-width:800px;min-height:1060px;padding:56px 64px;box-shadow:0 2px 16px rgba(0,0,0,.12);font-family:var(--font-doc);font-size:11pt;line-height:1.7;color:#111;}
+  .doc-title{text-align:center;font-size:14pt;font-weight:bold;text-transform:uppercase;letter-spacing:.03em;color:var(--accent);margin-bottom:2px;}
+  .doc-sub{text-align:center;font-size:9pt;font-family:var(--font-ui);color:var(--ink3);margin-bottom:22px;line-height:1.4;}
+  .doc-section{margin-top:20px;margin-bottom:10px;}
+  .doc-section-title{font-weight:bold;text-transform:uppercase;font-size:10pt;font-family:var(--font-ui);color:var(--accent);border-bottom:1px solid var(--border);padding-bottom:3px;margin-bottom:10px;}
+  .doc-table{width:100%;border-collapse:collapse;font-family:var(--font-ui);font-size:9pt;margin-bottom:8px;}
+  .doc-table th,.doc-table td{border:1px solid #ccc;padding:5px 8px;text-align:left;vertical-align:top;}
+  .doc-table th{background:#f0efe9;font-size:8.5pt;text-transform:uppercase;letter-spacing:.03em;color:var(--ink2);}
+  .doc-table .st-c{text-align:center;}
+  .doc-table .status-ok{background:#e6f4ea;color:#1a6b3a;font-weight:700;text-align:center;}
+  .doc-table .status-obs{background:#fff8e1;color:#8a6400;font-weight:700;text-align:center;}
+  .doc-table .status-na{background:#f3f4f6;color:#6b7280;text-align:center;}
+  .verdict-box{display:flex;align-items:center;gap:16px;border:1px solid var(--border);border-left:5px solid #888;border-radius:var(--radius);padding:14px 18px;margin:14px 0;font-family:var(--font-ui);}
+  .verdict-box .v-score{font-size:22pt;font-weight:800;line-height:1;}
+  .verdict-box .v-label{font-size:8pt;text-transform:uppercase;letter-spacing:.05em;color:var(--ink3);margin-top:1px;}
+  .verdict-aprobado{border-left-color:var(--success);}
+  .verdict-observaciones{border-left-color:var(--warning);}
+  .verdict-rechazado{border-left-color:var(--danger);}
+  .doc-p{margin-bottom:10px;font-size:10.5pt;}
+  .firma-grid{display:grid;grid-template-columns:1fr 1fr;gap:56px;margin-top:48px;}
+  .firma-box{border-top:1px solid #888;padding-top:8px;font-size:9pt;text-align:center;line-height:1.5;font-family:var(--font-ui);}
+  .firma-box strong{display:block;font-size:8.5pt;color:var(--ink3);}
+  .watermark-empty{text-align:center;color:var(--ink3);font-family:var(--font-ui);font-size:13px;padding:80px 20px;line-height:1.7;}
+
+  @media print{
+    header,.form-panel{display:none!important;}
+    .workspace{display:block;height:auto;}
+    .preview-panel{padding:0;background:white;}
+    .doc-sheet{box-shadow:none;max-width:100%;padding:36px;}
+    body{background:white;}
+  }
+</style>
+<script src="membrete.js?v=3.7"></script>
+</head>
+<body>
+<div id="auth-gate-loading">Verificando acceso…</div>
+<div id="auth-gate-blocked">
+  <div class="agb-box">
+    <h2>🔒 Esta herramienta requiere una suscripción activa</h2>
+    <p>Inicie sesión desde su portal de cliente para usar este módulo, o conozca nuestros planes.</p>
+    <div class="agb-btns">
+      <a class="agb-primary" href="portal-cliente.html">Iniciar sesión →</a>
+      <a class="agb-secondary" href="index.html#precios">Ver planes</a>
+    </div>
+  </div>
+</div>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
+<script src="expediente-helper.js?v=3.7"></script>
+<script>
+(async()=>{
+  const _sb = supabase.createClient('https://hpzgqaplrywwjuvrzhcp.supabase.co','sb_publishable_1g8US8iFJ8CxnSaF_4MHgA_gqyyAr3W');
+  try {
+    const { data } = await _sb.auth.getSession();
+    document.getElementById('auth-gate-loading').style.display = 'none';
+    if (!data?.session?.user) { document.getElementById('auth-gate-blocked').style.display = 'flex'; return; }
+    const meta = data.session.user.user_metadata || {};
+    if (meta.plan === 'demo' || meta.suscripcion === 'demo') document.body.classList.add('modo-demo');
+  } catch(e) {
+    document.getElementById('auth-gate-loading').style.display = 'none';
+    document.getElementById('auth-gate-blocked').style.display = 'flex';
+  }
+})();
+</script>
+
+<header>
+  <div class="cl-nav-logo" style="flex-shrink:0;">
+    <svg width="26" height="26" viewBox="0 0 100 100" style="vertical-align:-7px;margin-right:6px;flex-shrink:0;">
+      <defs><linearGradient id="clGrad" x1="10" y1="10" x2="90" y2="95" gradientUnits="userSpaceOnUse">
+        <stop offset="0%" stop-color="#1a3a5c"/><stop offset="55%" stop-color="#1e6f6c"/><stop offset="100%" stop-color="#2dd4bf"/>
+      </linearGradient></defs>
+      <path d="M50 7 L83 20 V51 C83 73 68 87 50 95 C32 87 17 73 17 51 V20 Z" fill="none" stroke="url(#clGrad)" stroke-width="6" stroke-linejoin="round"/>
+      <circle cx="40" cy="38" r="8.5" fill="#5eead4"/><path d="M25 63 C25 51 31 45 40 45 C49 45 55 51 55 63 Z" fill="#5eead4"/>
+      <circle cx="55" cy="33" r="9.5" fill="#14b8a6"/><path d="M38 61 C38 48 45.5 41 55 41 C64.5 41 72 48 72 61 Z" fill="#14b8a6"/>
+      <path d="M29 61 L45 77 L78 40" fill="none" stroke="#e8f2fc" stroke-width="9" stroke-linecap="round" stroke-linejoin="round"/>
+    </svg>Click<span class="cl-laboral">Laboral.mx</span>
+  </div>
+  <div>
+    <h1>Verificación NOM-037-STPS-2023 · Teletrabajo</h1>
+    <span>Lista de verificación del espacio · Acuerdo de condiciones · Constancia de cumplimiento</span>
+  </div>
+  <div class="header-actions">
+    <button class="btn btn-outline" onclick="limpiar()">Limpiar</button>
+    <button class="btn btn-primary" onclick="window.print()">🖨 Imprimir / PDF</button>
+  </div>
+</header>
+
+<div class="workspace">
+<!-- ════════════════════ PANEL IZQUIERDO ════════════════════ -->
+<div class="form-panel">
+
+  <!-- Membrete -->
+  <div style="border-bottom:1px solid var(--border);margin-bottom:0;">
+    <div class="section-label" style="display:flex;align-items:center;justify-content:space-between;cursor:pointer;user-select:none;"
+         onclick="this.nextElementSibling.style.display=this.nextElementSibling.style.display==='none'?'block':'none'">
+      <span>🏢 Logo y datos de la empresa</span>
+      <span style="font-size:10px;font-weight:400;color:var(--ink3);">▲ clic para colapsar</span>
+    </div>
+    <div id="mem-logo-container" style="padding-bottom:8px;"></div>
+  </div>
+
+  <!-- Datos generales -->
+  <div class="section-label">👤 Datos del trabajador</div>
+  <div class="alert-box">
+    La NOM-037-STPS-2023 aplica cuando el trabajador realiza <strong>40% o más</strong> de su jornada desde casa.
+    Esta constancia debe firmarse antes de iniciar la modalidad y actualizarse si cambia el domicilio.
+  </div>
+
+  <div id="worker-selector-wrap" style="display:none;margin-bottom:12px;">
+    <label style="display:block;font-size:11px;font-weight:600;color:var(--accent);margin-bottom:5px;letter-spacing:.04em;text-transform:uppercase;">Autocompletar desde expediente</label>
+    <select id="worker-selector" style="width:100%;padding:8px 10px;border:1px solid var(--border);border-radius:var(--radius);font-size:13px;color:var(--ink);background:var(--white);">
+      <option value="">— Cargando trabajadores... —</option>
+    </select>
+    <div style="font-size:11px;color:var(--ink3);margin-top:3px;">Seleccione un trabajador para llenar los campos automáticamente</div>
+  </div>
+
+  <div class="field">
+    <label>Nombre del trabajador <span class="req">*</span></label>
+    <input type="text" id="trab_nombre" placeholder="Nombre completo" oninput="render()">
+  </div>
+  <div class="field-row">
+    <div class="field">
+      <label>Puesto</label>
+      <input type="text" id="trab_puesto" placeholder="Ej. Analista de datos" oninput="render()">
+    </div>
+    <div class="field">
+      <label>Fecha de verificación <span class="req">*</span></label>
+      <input type="date" id="cfg_fecha" oninput="render()">
+    </div>
+  </div>
+  <div class="field">
+    <label>Domicilio del espacio de teletrabajo <span class="req">*</span></label>
+    <input type="text" id="trab_domicilio" placeholder="Calle, número, colonia, municipio, estado" oninput="render()">
+  </div>
+  <div class="field-row">
+    <div class="field">
+      <label>% jornada en teletrabajo</label>
+      <input type="number" id="trab_pct" placeholder="Ej. 60" min="40" max="100" oninput="render()">
+    </div>
+    <div class="field">
+      <label>Verificado por (nombre del patrón/representante)</label>
+      <input type="text" id="cfg_verificador" placeholder="Nombre y cargo" oninput="render()">
+    </div>
+  </div>
+
+  <!-- ── Horario y desconexión ── -->
+  <div class="section-label">🕐 Condiciones de la modalidad</div>
+  <div class="field">
+    <label>Horario habitual de teletrabajo</label>
+    <input type="text" id="cond_horario" placeholder="Ej. Lunes a viernes, 09:00 a 18:00 hrs." oninput="render()">
+  </div>
+  <div class="field-row">
+    <div class="field">
+      <label>Hora inicio de desconexión</label>
+      <input type="time" id="cond_desc_ini" value="18:00" oninput="render()">
+    </div>
+    <div class="field">
+      <label>Hora fin de desconexión</label>
+      <input type="time" id="cond_desc_fin" value="09:00" oninput="render()">
+    </div>
+  </div>
+  <div class="hint" style="margin-top:-8px;margin-bottom:12px;">Durante ese período el patrón <strong>no puede exigir respuesta</strong> al trabajador (Art. 330-E LFT, derecho de desconexión).</div>
+  <div class="field">
+    <label>Mecanismo de control de jornada</label>
+    <select id="cond_control" oninput="render()">
+      <option value="checador_digital">Checador digital ClickLaboral</option>
+      <option value="reporte_diario">Reporte diario de actividades por correo/Slack</option>
+      <option value="sistemas_nube">Acceso a sistemas en la nube (bitácora de sesión)</option>
+      <option value="videollamadas">Videollamadas programadas de inicio/fin de jornada</option>
+      <option value="otro">Otro (especificar en observaciones)</option>
+    </select>
+  </div>
+
+  <!-- ── Inventario de equipos ── -->
+  <div class="section-label">💻 Equipos y herramientas proporcionados</div>
+  <div class="alert-box">El patrón está obligado a proporcionar equipos, herramientas y conectividad <strong>o compensar</strong> los gastos si el trabajador usa los propios (Art. 330-D LFT).</div>
+  <div id="equipos-list"></div>
+  <button class="btn-add-equipo" onclick="addEquipo()">+ Agregar equipo o herramienta</button>
+  <div class="field" style="margin-top:12px;">
+    <label>Compensación mensual por uso de equipo propio / electricidad / internet ($ MXN, 0 si no aplica)</label>
+    <input type="number" id="cond_compensacion" placeholder="0.00" min="0" step="0.01" oninput="render()">
+  </div>
+
+  <!-- ── Lista de verificación ── -->
+  <div class="section-label">✅ Lista de verificación del espacio (NOM-037 Apéndice A)</div>
+  <div class="alert-warn">Marque cada reactivo: <strong style="color:#1a6b3a;">Cumple</strong> / <strong style="color:#c8830a;">Con observación</strong> (requiere acción) / <strong style="color:#6b7280;">N/A</strong>. Al seleccionar "Con observación" aparece un campo para describir la acción correctiva.</div>
+
+  <div class="result-bar">
+    <span id="res-ok" class="result-pill rp-ok">— Cumplen</span>
+    <span id="res-obs" class="result-pill rp-obs">— Con obs.</span>
+    <span id="res-na" class="result-pill rp-na">— N/A</span>
+    <span id="res-total" style="font-size:11px;color:var(--ink3);margin-left:auto;"></span>
+  </div>
+
+  <!-- Iluminación -->
+  <div class="check-group">
+    <div class="check-group-head">💡 1. Iluminación</div>
+    <div class="check-item" data-id="il1">
+      <div class="check-item-text"><span class="ci-num">1.1</span> El área de trabajo cuenta con iluminación suficiente (natural o artificial, ≥ 300 lux).</div>
+      <div class="tri-opts">
+        <div class="tri-opt ok"><input type="radio" name="il1" value="C" id="il1-c" onchange="onCheck('il1','C')"><label for="il1-c">Cumple</label></div>
+        <div class="tri-opt obs"><input type="radio" name="il1" value="O" id="il1-o" onchange="onCheck('il1','O')"><label for="il1-o">Obs.</label></div>
+        <div class="tri-opt na"><input type="radio" name="il1" value="N" id="il1-n" onchange="onCheck('il1','N')"><label for="il1-n">N/A</label></div>
+      </div>
+    </div>
+    <textarea class="obs-input" id="obs-il1" placeholder="Describa la acción correctiva…" oninput="render()"></textarea>
+    <div class="check-item" data-id="il2">
+      <div class="check-item-text"><span class="ci-num">1.2</span> La fuente de luz no genera deslumbramiento ni reflejos sobre la pantalla o área de trabajo.</div>
+      <div class="tri-opts">
+        <div class="tri-opt ok"><input type="radio" name="il2" value="C" id="il2-c" onchange="onCheck('il2','C')"><label for="il2-c">Cumple</label></div>
+        <div class="tri-opt obs"><input type="radio" name="il2" value="O" id="il2-o" onchange="onCheck('il2','O')"><label for="il2-o">Obs.</label></div>
+        <div class="tri-opt na"><input type="radio" name="il2" value="N" id="il2-n" onchange="onCheck('il2','N')"><label for="il2-n">N/A</label></div>
+      </div>
+    </div>
+    <textarea class="obs-input" id="obs-il2" placeholder="Describa la acción correctiva…" oninput="render()"></textarea>
+    <div class="check-item" data-id="il3">
+      <div class="check-item-text"><span class="ci-num">1.3</span> La iluminación no proyecta sombras sobre el área de trabajo que dificulten las tareas.</div>
+      <div class="tri-opts">
+        <div class="tri-opt ok"><input type="radio" name="il3" value="C" id="il3-c" onchange="onCheck('il3','C')"><label for="il3-c">Cumple</label></div>
+        <div class="tri-opt obs"><input type="radio" name="il3" value="O" id="il3-o" onchange="onCheck('il3','O')"><label for="il3-o">Obs.</label></div>
+        <div class="tri-opt na"><input type="radio" name="il3" value="N" id="il3-n" onchange="onCheck('il3','N')"><label for="il3-n">N/A</label></div>
+      </div>
+    </div>
+    <textarea class="obs-input" id="obs-il3" placeholder="Describa la acción correctiva…" oninput="render()"></textarea>
+  </div>
+
+  <!-- Temperatura y ventilación -->
+  <div class="check-group">
+    <div class="check-group-head">🌡 2. Temperatura y ventilación</div>
+    <div class="check-item" data-id="tv1">
+      <div class="check-item-text"><span class="ci-num">2.1</span> La temperatura en el área de trabajo es confortable (rango 18–26 °C para trabajo sedentario).</div>
+      <div class="tri-opts">
+        <div class="tri-opt ok"><input type="radio" name="tv1" value="C" id="tv1-c" onchange="onCheck('tv1','C')"><label for="tv1-c">Cumple</label></div>
+        <div class="tri-opt obs"><input type="radio" name="tv1" value="O" id="tv1-o" onchange="onCheck('tv1','O')"><label for="tv1-o">Obs.</label></div>
+        <div class="tri-opt na"><input type="radio" name="tv1" value="N" id="tv1-n" onchange="onCheck('tv1','N')"><label for="tv1-n">N/A</label></div>
+      </div>
+    </div>
+    <textarea class="obs-input" id="obs-tv1" placeholder="Describa la acción correctiva…" oninput="render()"></textarea>
+    <div class="check-item" data-id="tv2">
+      <div class="check-item-text"><span class="ci-num">2.2</span> Existe ventilación natural o mecánica adecuada que renueva el aire del espacio de trabajo.</div>
+      <div class="tri-opts">
+        <div class="tri-opt ok"><input type="radio" name="tv2" value="C" id="tv2-c" onchange="onCheck('tv2','C')"><label for="tv2-c">Cumple</label></div>
+        <div class="tri-opt obs"><input type="radio" name="tv2" value="O" id="tv2-o" onchange="onCheck('tv2','O')"><label for="tv2-o">Obs.</label></div>
+        <div class="tri-opt na"><input type="radio" name="tv2" value="N" id="tv2-n" onchange="onCheck('tv2','N')"><label for="tv2-n">N/A</label></div>
+      </div>
+    </div>
+    <textarea class="obs-input" id="obs-tv2" placeholder="Describa la acción correctiva…" oninput="render()"></textarea>
+  </div>
+
+  <!-- Ruido -->
+  <div class="check-group">
+    <div class="check-group-head">🔇 3. Ruido</div>
+    <div class="check-item" data-id="ru1">
+      <div class="check-item-text"><span class="ci-num">3.1</span> El nivel de ruido en el espacio permite concentración y comunicación sin esfuerzo excesivo (< 65 dB para trabajo intelectual).</div>
+      <div class="tri-opts">
+        <div class="tri-opt ok"><input type="radio" name="ru1" value="C" id="ru1-c" onchange="onCheck('ru1','C')"><label for="ru1-c">Cumple</label></div>
+        <div class="tri-opt obs"><input type="radio" name="ru1" value="O" id="ru1-o" onchange="onCheck('ru1','O')"><label for="ru1-o">Obs.</label></div>
+        <div class="tri-opt na"><input type="radio" name="ru1" value="N" id="ru1-n" onchange="onCheck('ru1','N')"><label for="ru1-n">N/A</label></div>
+      </div>
+    </div>
+    <textarea class="obs-input" id="obs-ru1" placeholder="Describa la acción correctiva…" oninput="render()"></textarea>
+  </div>
+
+  <!-- Espacio y mobiliario -->
+  <div class="check-group">
+    <div class="check-group-head">🪑 4. Espacio, mobiliario y ergonomía</div>
+    <div class="check-item" data-id="es1">
+      <div class="check-item-text"><span class="ci-num">4.1</span> El área de trabajo cuenta con espacio suficiente para las actividades (mínimo 2 m² libres alrededor del puesto).</div>
+      <div class="tri-opts">
+        <div class="tri-opt ok"><input type="radio" name="es1" value="C" id="es1-c" onchange="onCheck('es1','C')"><label for="es1-c">Cumple</label></div>
+        <div class="tri-opt obs"><input type="radio" name="es1" value="O" id="es1-o" onchange="onCheck('es1','O')"><label for="es1-o">Obs.</label></div>
+        <div class="tri-opt na"><input type="radio" name="es1" value="N" id="es1-n" onchange="onCheck('es1','N')"><label for="es1-n">N/A</label></div>
+      </div>
+    </div>
+    <textarea class="obs-input" id="obs-es1" placeholder="Describa la acción correctiva…" oninput="render()"></textarea>
+    <div class="check-item" data-id="es2">
+      <div class="check-item-text"><span class="ci-num">4.2</span> El área está libre de objetos o cables que puedan causar caídas, tropiezos o accidentes.</div>
+      <div class="tri-opts">
+        <div class="tri-opt ok"><input type="radio" name="es2" value="C" id="es2-c" onchange="onCheck('es2','C')"><label for="es2-c">Cumple</label></div>
+        <div class="tri-opt obs"><input type="radio" name="es2" value="O" id="es2-o" onchange="onCheck('es2','O')"><label for="es2-o">Obs.</label></div>
+        <div class="tri-opt na"><input type="radio" name="es2" value="N" id="es2-n" onchange="onCheck('es2','N')"><label for="es2-n">N/A</label></div>
+      </div>
+    </div>
+    <textarea class="obs-input" id="obs-es2" placeholder="Describa la acción correctiva…" oninput="render()"></textarea>
+    <div class="check-item" data-id="es3">
+      <div class="check-item-text"><span class="ci-num">4.3</span> La silla cuenta con respaldo y permite mantener la espalda recta, con los pies planos sobre el suelo.</div>
+      <div class="tri-opts">
+        <div class="tri-opt ok"><input type="radio" name="es3" value="C" id="es3-c" onchange="onCheck('es3','C')"><label for="es3-c">Cumple</label></div>
+        <div class="tri-opt obs"><input type="radio" name="es3" value="O" id="es3-o" onchange="onCheck('es3','O')"><label for="es3-o">Obs.</label></div>
+        <div class="tri-opt na"><input type="radio" name="es3" value="N" id="es3-n" onchange="onCheck('es3','N')"><label for="es3-n">N/A</label></div>
+      </div>
+    </div>
+    <textarea class="obs-input" id="obs-es3" placeholder="Describa la acción correctiva…" oninput="render()"></textarea>
+    <div class="check-item" data-id="es4">
+      <div class="check-item-text"><span class="ci-num">4.4</span> La superficie de trabajo (escritorio/mesa) está a la altura adecuada, con los codos a ~90°.</div>
+      <div class="tri-opts">
+        <div class="tri-opt ok"><input type="radio" name="es4" value="C" id="es4-c" onchange="onCheck('es4','C')"><label for="es4-c">Cumple</label></div>
+        <div class="tri-opt obs"><input type="radio" name="es4" value="O" id="es4-o" onchange="onCheck('es4','O')"><label for="es4-o">Obs.</label></div>
+        <div class="tri-opt na"><input type="radio" name="es4" value="N" id="es4-n" onchange="onCheck('es4','N')"><label for="es4-n">N/A</label></div>
+      </div>
+    </div>
+    <textarea class="obs-input" id="obs-es4" placeholder="Describa la acción correctiva…" oninput="render()"></textarea>
+    <div class="check-item" data-id="es5">
+      <div class="check-item-text"><span class="ci-num">4.5</span> La pantalla/monitor está a distancia ≥ 50 cm de los ojos y al nivel de la línea de visión horizontal (sin flexión cervical).</div>
+      <div class="tri-opts">
+        <div class="tri-opt ok"><input type="radio" name="es5" value="C" id="es5-c" onchange="onCheck('es5','C')"><label for="es5-c">Cumple</label></div>
+        <div class="tri-opt obs"><input type="radio" name="es5" value="O" id="es5-o" onchange="onCheck('es5','O')"><label for="es5-o">Obs.</label></div>
+        <div class="tri-opt na"><input type="radio" name="es5" value="N" id="es5-n" onchange="onCheck('es5','N')"><label for="es5-n">N/A</label></div>
+      </div>
+    </div>
+    <textarea class="obs-input" id="obs-es5" placeholder="Describa la acción correctiva…" oninput="render()"></textarea>
+  </div>
+
+  <!-- Instalaciones eléctricas -->
+  <div class="check-group">
+    <div class="check-group-head">⚡ 5. Instalaciones eléctricas</div>
+    <div class="check-item" data-id="el1">
+      <div class="check-item-text"><span class="ci-num">5.1</span> Los contactos eléctricos están en buen estado, sin cables pelados ni sobrecargas visibles.</div>
+      <div class="tri-opts">
+        <div class="tri-opt ok"><input type="radio" name="el1" value="C" id="el1-c" onchange="onCheck('el1','C')"><label for="el1-c">Cumple</label></div>
+        <div class="tri-opt obs"><input type="radio" name="el1" value="O" id="el1-o" onchange="onCheck('el1','O')"><label for="el1-o">Obs.</label></div>
+        <div class="tri-opt na"><input type="radio" name="el1" value="N" id="el1-n" onchange="onCheck('el1','N')"><label for="el1-n">N/A</label></div>
+      </div>
+    </div>
+    <textarea class="obs-input" id="obs-el1" placeholder="Describa la acción correctiva…" oninput="render()"></textarea>
+    <div class="check-item" data-id="el2">
+      <div class="check-item-text"><span class="ci-num">5.2</span> Los cables están ordenados (canaletas, bridas) y no representan riesgo de tropiezo ni cortocircuito.</div>
+      <div class="tri-opts">
+        <div class="tri-opt ok"><input type="radio" name="el2" value="C" id="el2-c" onchange="onCheck('el2','C')"><label for="el2-c">Cumple</label></div>
+        <div class="tri-opt obs"><input type="radio" name="el2" value="O" id="el2-o" onchange="onCheck('el2','O')"><label for="el2-o">Obs.</label></div>
+        <div class="tri-opt na"><input type="radio" name="el2" value="N" id="el2-n" onchange="onCheck('el2','N')"><label for="el2-n">N/A</label></div>
+      </div>
+    </div>
+    <textarea class="obs-input" id="obs-el2" placeholder="Describa la acción correctiva…" oninput="render()"></textarea>
+  </div>
+
+  <!-- Seguridad general -->
+  <div class="check-group">
+    <div class="check-group-head">🚨 6. Seguridad general y primeros auxilios</div>
+    <div class="check-item" data-id="sg1">
+      <div class="check-item-text"><span class="ci-num">6.1</span> Las vías de acceso y salida del espacio de trabajo están libres de obstáculos.</div>
+      <div class="tri-opts">
+        <div class="tri-opt ok"><input type="radio" name="sg1" value="C" id="sg1-c" onchange="onCheck('sg1','C')"><label for="sg1-c">Cumple</label></div>
+        <div class="tri-opt obs"><input type="radio" name="sg1" value="O" id="sg1-o" onchange="onCheck('sg1','O')"><label for="sg1-o">Obs.</label></div>
+        <div class="tri-opt na"><input type="radio" name="sg1" value="N" id="sg1-n" onchange="onCheck('sg1','N')"><label for="sg1-n">N/A</label></div>
+      </div>
+    </div>
+    <textarea class="obs-input" id="obs-sg1" placeholder="Describa la acción correctiva…" oninput="render()"></textarea>
+    <div class="check-item" data-id="sg2">
+      <div class="check-item-text"><span class="ci-num">6.2</span> El trabajador cuenta con un botiquín de primeros auxilios básico en el domicilio.</div>
+      <div class="tri-opts">
+        <div class="tri-opt ok"><input type="radio" name="sg2" value="C" id="sg2-c" onchange="onCheck('sg2','C')"><label for="sg2-c">Cumple</label></div>
+        <div class="tri-opt obs"><input type="radio" name="sg2" value="O" id="sg2-o" onchange="onCheck('sg2','O')"><label for="sg2-o">Obs.</label></div>
+        <div class="tri-opt na"><input type="radio" name="sg2" value="N" id="sg2-n" onchange="onCheck('sg2','N')"><label for="sg2-n">N/A</label></div>
+      </div>
+    </div>
+    <textarea class="obs-input" id="obs-sg2" placeholder="Describa la acción correctiva…" oninput="render()"></textarea>
+  </div>
+
+  <!-- Condiciones psicosociales y privacidad -->
+  <div class="check-group">
+    <div class="check-group-head">🧠 7. Condiciones psicosociales y privacidad</div>
+    <div class="check-item" data-id="ps1">
+      <div class="check-item-text"><span class="ci-num">7.1</span> El trabajador manifestó contar con condiciones mínimas de privacidad para desarrollar su trabajo sin interrupciones constantes.</div>
+      <div class="tri-opts">
+        <div class="tri-opt ok"><input type="radio" name="ps1" value="C" id="ps1-c" onchange="onCheck('ps1','C')"><label for="ps1-c">Cumple</label></div>
+        <div class="tri-opt obs"><input type="radio" name="ps1" value="O" id="ps1-o" onchange="onCheck('ps1','O')"><label for="ps1-o">Obs.</label></div>
+        <div class="tri-opt na"><input type="radio" name="ps1" value="N" id="ps1-n" onchange="onCheck('ps1','N')"><label for="ps1-n">N/A</label></div>
+      </div>
+    </div>
+    <textarea class="obs-input" id="obs-ps1" placeholder="Describa la acción correctiva…" oninput="render()"></textarea>
+    <div class="check-item" data-id="ps2">
+      <div class="check-item-text"><span class="ci-num">7.2</span> El trabajador conoce y acepta el derecho de desconexión fuera del horario acordado.</div>
+      <div class="tri-opts">
+        <div class="tri-opt ok"><input type="radio" name="ps2" value="C" id="ps2-c" onchange="onCheck('ps2','C')"><label for="ps2-c">Cumple</label></div>
+        <div class="tri-opt obs"><input type="radio" name="ps2" value="O" id="ps2-o" onchange="onCheck('ps2','O')"><label for="ps2-o">Obs.</label></div>
+        <div class="tri-opt na"><input type="radio" name="ps2" value="N" id="ps2-n" onchange="onCheck('ps2','N')"><label for="ps2-n">N/A</label></div>
+      </div>
+    </div>
+    <textarea class="obs-input" id="obs-ps2" placeholder="Describa la acción correctiva…" oninput="render()"></textarea>
+    <div class="check-item" data-id="ps3">
+      <div class="check-item-text"><span class="ci-num">7.3</span> Se garantiza que el teletrabajo no refuerza roles de género ni recae desproporcionadamente en mujeres con responsabilidades de cuidado (perspectiva de género — Cláusula 3.9 NOM-037).</div>
+      <div class="tri-opts">
+        <div class="tri-opt ok"><input type="radio" name="ps3" value="C" id="ps3-c" onchange="onCheck('ps3','C')"><label for="ps3-c">Cumple</label></div>
+        <div class="tri-opt obs"><input type="radio" name="ps3" value="O" id="ps3-o" onchange="onCheck('ps3','O')"><label for="ps3-o">Obs.</label></div>
+        <div class="tri-opt na"><input type="radio" name="ps3" value="N" id="ps3-n" onchange="onCheck('ps3','N')"><label for="ps3-n">N/A</label></div>
+      </div>
+    </div>
+    <textarea class="obs-input" id="obs-ps3" placeholder="Describa la acción correctiva…" oninput="render()"></textarea>
+  </div>
+
+  <!-- Reversibilidad y capacitación -->
+  <div class="check-group">
+    <div class="check-group-head">🔄 8. Reversibilidad y capacitación</div>
+    <div class="check-item" data-id="rv1">
+      <div class="check-item-text"><span class="ci-num">8.1</span> El trabajador conoce su derecho a revertir la modalidad y regresar al trabajo presencial (Art. 330-F LFT).</div>
+      <div class="tri-opts">
+        <div class="tri-opt ok"><input type="radio" name="rv1" value="C" id="rv1-c" onchange="onCheck('rv1','C')"><label for="rv1-c">Cumple</label></div>
+        <div class="tri-opt obs"><input type="radio" name="rv1" value="O" id="rv1-o" onchange="onCheck('rv1','O')"><label for="rv1-o">Obs.</label></div>
+        <div class="tri-opt na"><input type="radio" name="rv1" value="N" id="rv1-n" onchange="onCheck('rv1','N')"><label for="rv1-n">N/A</label></div>
+      </div>
+    </div>
+    <textarea class="obs-input" id="obs-rv1" placeholder="Describa la acción correctiva…" oninput="render()"></textarea>
+    <div class="check-item" data-id="rv2">
+      <div class="check-item-text"><span class="ci-num">8.2</span> El trabajador ha recibido capacitación sobre riesgos psicosociales en teletrabajo (NOM-037 + NOM-035 aplicables).</div>
+      <div class="tri-opts">
+        <div class="tri-opt ok"><input type="radio" name="rv2" value="C" id="rv2-c" onchange="onCheck('rv2','C')"><label for="rv2-c">Cumple</label></div>
+        <div class="tri-opt obs"><input type="radio" name="rv2" value="O" id="rv2-o" onchange="onCheck('rv2','O')"><label for="rv2-o">Obs.</label></div>
+        <div class="tri-opt na"><input type="radio" name="rv2" value="N" id="rv2-n" onchange="onCheck('rv2','N')"><label for="rv2-n">N/A</label></div>
+      </div>
+    </div>
+    <textarea class="obs-input" id="obs-rv2" placeholder="Describa la acción correctiva…" oninput="render()"></textarea>
+    <div class="check-item" data-id="rv3">
+      <div class="check-item-text"><span class="ci-num">8.3</span> Se ha acordado expresamente la protección de datos personales del trabajador que puedan observarse en el domicilio durante videollamadas.</div>
+      <div class="tri-opts">
+        <div class="tri-opt ok"><input type="radio" name="rv3" value="C" id="rv3-c" onchange="onCheck('rv3','C')"><label for="rv3-c">Cumple</label></div>
+        <div class="tri-opt obs"><input type="radio" name="rv3" value="O" id="rv3-o" onchange="onCheck('rv3','O')"><label for="rv3-o">Obs.</label></div>
+        <div class="tri-opt na"><input type="radio" name="rv3" value="N" id="rv3-n" onchange="onCheck('rv3','N')"><label for="rv3-n">N/A</label></div>
+      </div>
+    </div>
+    <textarea class="obs-input" id="obs-rv3" placeholder="Describa la acción correctiva…" oninput="render()"></textarea>
+  </div>
+
+  <!-- Observaciones generales -->
+  <div class="section-label">📝 Observaciones generales y plan de acción</div>
+  <div class="field">
+    <label>Acciones correctivas acordadas (con fecha compromiso)</label>
+    <textarea id="cfg_obs_generales" rows="4" placeholder="Ej. El trabajador instalará repisa para elevar el monitor a la altura correcta antes del 30 de septiembre de 2026." oninput="render()" style="width:100%;padding:8px 10px;border:1px solid var(--border);border-radius:var(--radius);font-size:13px;font-family:var(--font-ui);resize:vertical;"></textarea>
+  </div>
+
+</div><!-- /form-panel -->
+
+<!-- ════════════════════ PANEL DERECHO — VISTA PREVIA ════════════════════ -->
+<div class="preview-panel">
+  <div id="doc-preview">
+    <div class="watermark-empty">
+      Complete los datos del trabajador<br>para generar la constancia.<br><br>
+      <span style="font-size:11px;">NOM-037-STPS-2023 · Teletrabajo</span>
+    </div>
+  </div>
+</div>
+</div><!-- /workspace -->
+
+<script src="membrete.js?v=3.7"></script>
+<script>
+// ── Equipos ──────────────────────────────────────────────────────────────────
+let equipos = [];
+function addEquipo(desc='', serie='') {
+  const id = Date.now();
+  equipos.push({ id, desc, serie });
+  renderEquipos();
+}
+function removeEquipo(id) {
+  equipos = equipos.filter(e => e.id !== id);
+  renderEquipos();
+}
+function renderEquipos() {
+  const el = document.getElementById('equipos-list');
+  if (!equipos.length) { el.innerHTML = '<p style="font-size:11px;color:var(--ink3);padding:4px 0;">Sin equipos registrados. (Si el trabajador usa equipo propio, capture la compensación económica.)</p>'; render(); return; }
+  el.innerHTML = equipos.map(e => `
+    <div class="equipo-row">
+      <input type="text" placeholder="Descripción (ej. Laptop Dell XPS 15)" value="${e.desc||''}"
+        oninput="equipos.find(x=>x.id===${e.id}).desc=this.value;render()">
+      <input type="text" placeholder="Núm. de serie / inventario" value="${e.serie||''}"
+        oninput="equipos.find(x=>x.id===${e.id}).serie=this.value;render()">
+      <button onclick="removeEquipo(${e.id})">✕</button>
+    </div>`).join('');
+  render();
+}
+
+// ── Checklist ─────────────────────────────────────────────────────────────────
+const ITEMS = ['il1','il2','il3','tv1','tv2','ru1','es1','es2','es3','es4','es5','el1','el2','sg1','sg2','ps1','ps2','ps3','rv1','rv2','rv3'];
+const ITEM_LABELS = {
+  il1:'1.1 Iluminación suficiente (≥300 lux)', il2:'1.2 Sin deslumbramiento ni reflejos', il3:'1.3 Sin sombras sobre el trabajo',
+  tv1:'2.1 Temperatura confortable 18–26 °C', tv2:'2.2 Ventilación adecuada',
+  ru1:'3.1 Nivel de ruido < 65 dB',
+  es1:'4.1 Espacio suficiente (≥ 2 m² libres)', es2:'4.2 Libre de objetos peligrosos', es3:'4.3 Silla con respaldo adecuado', es4:'4.4 Mesa/escritorio a altura correcta', es5:'4.5 Monitor a distancia y altura correcta',
+  el1:'5.1 Contactos eléctricos en buen estado', el2:'5.2 Cables ordenados y seguros',
+  sg1:'6.1 Vías de acceso y salida libres', sg2:'6.2 Botiquín de primeros auxilios',
+  ps1:'7.1 Privacidad en el espacio de trabajo', ps2:'7.2 Derecho de desconexión conocido y aceptado', ps3:'7.3 Perspectiva de género verificada',
+  rv1:'8.1 Derecho de reversibilidad conocido', rv2:'8.2 Capacitación en riesgos psicosociales', rv3:'8.3 Protección de datos personales acordada'
+};
+
+function getVal(id) {
+  const el = document.querySelector(`input[name="${id}"]:checked`);
+  return el ? el.value : '';
+}
+
+function onCheck(id, val) {
+  const obsEl = document.getElementById('obs-' + id);
+  if (obsEl) obsEl.classList.toggle('visible', val === 'O');
+  updateResultBar();
+  render();
+}
+
+function updateResultBar() {
+  let ok=0, obs=0, na=0, blank=0;
+  ITEMS.forEach(id => {
+    const v = getVal(id);
+    if (v==='C') ok++; else if (v==='O') obs++; else if (v==='N') na++; else blank++;
+  });
+  document.getElementById('res-ok').textContent  = ok  + ' Cumplen';
+  document.getElementById('res-obs').textContent = obs + ' Con obs.';
+  document.getElementById('res-na').textContent  = na  + ' N/A';
+  document.getElementById('res-total').textContent = `${ok+obs+na} / ${ITEMS.length} respondidos`;
+}
+
+// ── Helpers ───────────────────────────────────────────────────────────────────
+const v    = id => (document.getElementById(id)||{}).value || '';
+const fmtD = iso => { if(!iso) return '_______________'; const [yr,mo,da]=iso.split('-'); return `${da}/${mo}/${yr}`; };
+const CTRL_LABELS = { checador_digital:'Checador digital ClickLaboral', reporte_diario:'Reporte diario de actividades', sistemas_nube:'Acceso a sistemas en la nube (bitácora)', videollamadas:'Videollamadas de inicio/fin de jornada', otro:'Otro (ver observaciones)' };
+
+function getVerdictData() {
+  let ok=0, obs=0, na=0;
+  ITEMS.forEach(id => { const v=getVal(id); if(v==='C') ok++; else if(v==='O') obs++; else if(v==='N') na++; });
+  const respondidos = ok+obs+na;
+  if (respondidos < 5) return { clase:'', texto:'—', desc:'Complete la lista de verificación.', ok, obs, na };
+  if (obs === 0) return { clase:'verdict-aprobado', texto:'✓ APROBADO', desc:'El espacio de teletrabajo cumple con los requisitos de la NOM-037-STPS-2023.', ok, obs, na };
+  if (obs <= 3)  return { clase:'verdict-observaciones', texto:'⚠ CON OBSERVACIONES', desc:'El espacio requiere acciones correctivas antes de considerarse plenamente conforme.', ok, obs, na };
+  return { clase:'verdict-rechazado', texto:'✗ NO CONFORME', desc:'El espacio presenta múltiples deficiencias. El inicio o continuación del teletrabajo queda condicionado a las correcciones señaladas.', ok, obs, na };
+}
+
+// ── Render documento ──────────────────────────────────────────────────────────
+function render() {
+  const nombre    = v('trab_nombre');
+  const puesto    = v('trab_puesto');
+  const fecha     = v('cfg_fecha');
+  const domicilio = v('trab_domicilio');
+  const pct       = v('trab_pct');
+  const verif     = v('cfg_verificador');
+  const horario   = v('cond_horario');
+  const descIni   = v('cond_desc_ini');
+  const descFin   = v('cond_desc_fin');
+  const ctrl      = v('cond_control');
+  const comp      = parseFloat(v('cond_compensacion')) || 0;
+  const obsGen    = v('cfg_obs_generales');
+
+  const preview = document.getElementById('doc-preview');
+
+  if (!nombre || !fecha) {
+    preview.innerHTML = `<div class="watermark-empty">Complete el nombre del trabajador y la fecha.<br><br><span style="font-size:11px;">NOM-037-STPS-2023 · Teletrabajo</span></div>`;
+    return;
+  }
+
+  const memHTML  = typeof membrete === 'function' ? membrete() : '';
+  const vd       = getVerdictData();
+  const fxDate   = fmtD(fecha);
+
+  // Checklist rows
+  const checkRows = ITEMS.map(id => {
+    const val   = getVal(id);
+    const obs   = (document.getElementById('obs-'+id)||{}).value || '';
+    const label = ITEM_LABELS[id] || id;
+    const stTd  = val === 'C' ? 'status-ok' : val === 'O' ? 'status-obs' : val === 'N' ? 'status-na' : '';
+    const stTx  = val === 'C' ? '✓ Cumple' : val === 'O' ? '⚠ Obs.' : val === 'N' ? '—' : '';
+    return `<tr>
+      <td style="font-size:8.5pt;">${label}</td>
+      <td class="${stTd}" style="min-width:60px;">${stTx}</td>
+      <td style="font-size:8pt;color:#555;">${obs}</td>
+    </tr>`;
+  }).join('');
+
+  // Equipos rows
+  const equipoRows = equipos.length
+    ? equipos.map((e,i) => `<tr><td class="st-c" style="font-size:8pt;">${i+1}</td><td>${e.desc||'—'}</td><td style="font-size:8.5pt;">${e.serie||'—'}</td></tr>`).join('')
+    : `<tr><td colspan="3" style="text-align:center;font-size:8.5pt;color:#888;">Sin equipos registrados — el trabajador usa equipo propio${comp>0?' (compensación: $'+comp.toLocaleString('es-MX')+' M.N./mes)':''}</td></tr>`;
+
+  preview.innerHTML = `<div class="doc-sheet">
+    ${memHTML}
+    <div class="doc-title">Constancia de Verificación del Espacio de Teletrabajo</div>
+    <div class="doc-sub">NOM-037-STPS-2023 · Teletrabajo — Condiciones de seguridad y salud<br>Arts. 330-A al 330-K de la Ley Federal del Trabajo</div>
+
+    <!-- Datos generales -->
+    <div class="doc-section">
+      <div class="doc-section-title">I. Datos generales</div>
+      <table class="doc-table">
+        <tr><th style="width:35%;">Campo</th><th>Información</th></tr>
+        <tr><td>Trabajador</td><td><strong>${nombre}</strong></td></tr>
+        <tr><td>Puesto</td><td>${puesto||'—'}</td></tr>
+        <tr><td>Domicilio verificado</td><td>${domicilio||'—'}</td></tr>
+        <tr><td>% de jornada en teletrabajo</td><td>${pct ? pct+'%' : '—'}</td></tr>
+        <tr><td>Horario acordado</td><td>${horario||'—'}</td></tr>
+        <tr><td>Derecho de desconexión</td><td>${descIni && descFin ? descIni+' hrs. a '+descFin+' hrs. (siguiente día)' : '—'}</td></tr>
+        <tr><td>Control de jornada</td><td>${CTRL_LABELS[ctrl]||ctrl||'—'}</td></tr>
+        <tr><td>Verificado por</td><td>${verif||'—'}</td></tr>
+        <tr><td>Fecha de verificación</td><td>${fxDate}</td></tr>
+      </table>
+    </div>
+
+    <!-- Equipos -->
+    <div class="doc-section">
+      <div class="doc-section-title">II. Inventario de equipos y herramientas proporcionados (Art. 330-D LFT)</div>
+      <table class="doc-table">
+        <tr><th class="st-c">#</th><th>Descripción del equipo</th><th>Núm. de serie / inventario</th></tr>
+        ${equipoRows}
+      </table>
+      ${comp > 0 ? `<p style="font-size:9pt;margin-top:4px;">Compensación mensual por uso de equipo propio / electricidad / internet: <strong>$${comp.toLocaleString('es-MX')} M.N.</strong></p>` : ''}
+    </div>
+
+    <!-- Checklist -->
+    <div class="doc-section">
+      <div class="doc-section-title">III. Lista de verificación del espacio de trabajo (Apéndice A, NOM-037)</div>
+      <table class="doc-table">
+        <tr><th style="width:55%;">Reactivo</th><th style="width:70px;">Resultado</th><th>Observación / acción correctiva</th></tr>
+        ${checkRows}
+      </table>
+    </div>
+
+    <!-- Resultado -->
+    <div class="doc-section">
+      <div class="doc-section-title">IV. Resultado de la verificación</div>
+      <div class="verdict-box ${vd.clase}">
+        <div>
+          <div class="v-score">${vd.texto}</div>
+          <div class="v-label">${vd.ok} cumplen · ${vd.obs} con obs. · ${vd.na} N/A</div>
+        </div>
+        <div style="font-size:9.5pt;line-height:1.5;">${vd.desc}</div>
+      </div>
+      ${obsGen ? `<p class="doc-p" style="font-size:9.5pt;"><strong>Acciones correctivas acordadas:</strong> ${obsGen}</p>` : ''}
+    </div>
+
+    <!-- Acuerdo y firmas -->
+    <div class="doc-section">
+      <div class="doc-section-title">V. Declaración y firmas</div>
+      <p class="doc-p">Ambas partes declaran que la verificación se realizó de común acuerdo, que el trabajador se compromete a mantener las condiciones descritas en el espacio señalado, y que el patrón se obliga a proporcionar los equipos, herramientas y apoyo indicados. El trabajador conoce su derecho a revertir la modalidad de teletrabajo conforme al artículo 330-F de la LFT.</p>
+      <p class="doc-p">Esta constancia forma parte del expediente laboral del trabajador y deberá conservarse durante al menos cinco años (Art. 804 LFT).</p>
+      <p class="doc-p">Se firma en ___________________________, a ${fxDate}.</p>
+      <div class="firma-grid">
+        <div class="firma-box">${nombre}<br><strong>Trabajador — Recibí copia</strong></div>
+        <div class="firma-box">${verif||'___________________________'}<br><strong>Por el patrón / Representante</strong></div>
+      </div>
+    </div>
+
+    <p style="font-size:8pt;color:#aaa;margin-top:32px;text-align:center;font-family:'Segoe UI',sans-serif;">Generado por ClickLaboral.mx el ${new Date().toLocaleDateString('es-MX',{day:'2-digit',month:'long',year:'numeric'})} · NOM-037-STPS-2023</p>
+  </div>`;
+
+  updateResultBar();
+}
+
+// ── Limpiar ───────────────────────────────────────────────────────────────────
+function limpiar() {
+  if (!confirm('¿Limpiar todos los datos del formulario?')) return;
+  ['trab_nombre','trab_puesto','cfg_fecha','trab_domicilio','trab_pct','cfg_verificador',
+   'cond_horario','cond_desc_ini','cond_desc_fin','cond_compensacion','cfg_obs_generales'].forEach(id => {
+    const el = document.getElementById(id); if (el) el.value = '';
+  });
+  document.getElementById('cond_desc_ini').value = '18:00';
+  document.getElementById('cond_desc_fin').value  = '09:00';
+  ITEMS.forEach(id => {
+    document.querySelectorAll(`input[name="${id}"]`).forEach(r => r.checked = false);
+    const obs = document.getElementById('obs-'+id);
+    if (obs) { obs.value = ''; obs.classList.remove('visible'); }
+  });
+  equipos = [];
+  renderEquipos();
+  render();
+  updateResultBar();
+}
+
+// ── Init ──────────────────────────────────────────────────────────────────────
+document.addEventListener('DOMContentLoaded', () => {
+  // Pre-llenar fecha con hoy
+  const hoy = new Date().toISOString().split('T')[0];
+  document.getElementById('cfg_fecha').value = hoy;
+
+  renderEquipos();
+  updateResultBar();
+  render();
+
+  // Intentar cargar trabajadores del expediente-helper
+  if (typeof cargarTrabajadoresParaSelector === 'function') {
+    cargarTrabajadoresParaSelector('worker-selector', (t) => {
+      if (t) {
+        document.getElementById('trab_nombre').value  = t.nombre  || '';
+        document.getElementById('trab_puesto').value  = t.puesto  || '';
+        render();
+      }
+    });
+    document.getElementById('worker-selector-wrap').style.display = 'block';
+  }
+});
+</script>
+</body>
+</html>

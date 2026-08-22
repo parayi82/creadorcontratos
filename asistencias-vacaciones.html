@@ -1014,7 +1014,7 @@ const SUPABASE_URL = 'https://hpzgqaplrywwjuvrzhcp.supabase.co';
 const SUPABASE_ANON_KEY = 'sb_publishable_1g8US8iFJ8CxnSaF_4MHgA_gqyyAr3W';
 const sb = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
-let clienteRFC = null, clienteEmpresa = null;
+let clienteRFC = null, clienteEmpresa = null, clienteNumTrab = null;
 let toleranciaRetrasoMin = 10; // minutos de gracia según el RIT; se carga desde user_metadata
 // ── Paginación del roster ──
 const ROSTER_PAGE_SIZE = 100;
@@ -1081,12 +1081,16 @@ async function init() {
     if (_esDespacho) {
       let _g = null;
       try { _g = JSON.parse(sessionStorage.getItem('cl_gestion')||'null'); } catch(_){}
-      const { data: _dcRows } = await sb.from('despacho_clientes').select('cliente_rfc').eq('activo', true);
+      const { data: _dcRows } = await sb.from('despacho_clientes').select('cliente_rfc,num_trabajadores').eq('activo', true);
       const _aut = (_dcRows||[]).map(c=>String(c.cliente_rfc||'').toUpperCase());
       if (!_g || !_aut.includes(String(_g.rfc||'').toUpperCase())) {
         location.href = 'panel-despacho.html'; return true;
       }
       clienteRFC = _g.rfc;
+      // Prioridad: dato de BD (más actualizado) > dato de sessionStorage
+      const _dcRow = (_dcRows||[]).find(r=>String(r.cliente_rfc||'').toUpperCase()===String(_g.rfc||'').toUpperCase());
+      clienteNumTrab = (_dcRow?.num_trabajadores) ? parseInt(_dcRow.num_trabajadores, 10) || null
+                     : (_g.numTrab ? parseInt(_g.numTrab, 10) || null : null);
       if (!document.getElementById('barra-ctx')) {
         const _b = document.createElement('div');
         _b.id = 'barra-ctx';
@@ -1205,11 +1209,12 @@ async function cargarTrabajadores(){
       totalBajas       = resBajas.count  || 0;
     }
 
-    // Mostrar badge de límite según plan
+    // Mostrar badge: usa planta estimada del cliente si está disponible, si no usa límite del plan
     const plan = resSesion?.data?.session?.user?.user_metadata?.plan || 'basico';
     const LIMITES = {basico:8, estandar:50, pro:500};
     const planKey = plan.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'').replace(/^plan\s+/,'').trim();
-    const limite  = LIMITES[planKey] || 8;
+    const limitePlan = LIMITES[planKey] || 8;
+    const limite  = (clienteNumTrab && clienteNumTrab > 0) ? Math.max(clienteNumTrab, totalActivos) : limitePlan;
     const badge   = document.getElementById('roster-limite-badge');
     if(badge){
       const pct = totalActivos/limite;
@@ -2734,20 +2739,21 @@ async function guardarTrabajador(){
   const ingreso = document.getElementById('trab-ingreso').value;
   if (!nombre || !ingreso) { alert('Nombre y fecha de ingreso son obligatorios'); return; }
 
-  // Verificar límite de trabajadores según plan (solo al AGREGAR, no al editar)
+  // Verificar límite: usa planta estimada del cliente si está disponible, si no usa límite del plan
   if (!id) {
     const { data: sesion } = await sb.auth.getSession();
     const plan = sesion?.session?.user?.user_metadata?.plan || 'basico';
     const LIMITES = { basico: 8, estandar: 50, pro: 500 };
     const NOMBRES = { basico: 'Básico (máx. 8)', estandar: 'Estándar (máx. 50)', pro: 'Pro (máx. 500)' };
     const planKey = plan.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'').replace(/^plan\s+/,'').trim();
-    const limite = LIMITES[planKey] || LIMITES['basico'];
+    const limitePlan = LIMITES[planKey] || LIMITES['basico'];
+    const limite = (clienteNumTrab && clienteNumTrab > 0) ? Math.max(clienteNumTrab, limitePlan) : limitePlan;
     if (totalActivos >= limite) {
       alert(
         `⚠️ Límite de trabajadores alcanzado\n\n` +
-        `Su plan ${NOMBRES[planKey]||plan} permite hasta ${limite} trabajadores activos.\n` +
+        `La planta estimada es de ${limite} trabajadores activos.\n` +
         `Actualmente tiene ${totalActivos} trabajadores activos.\n\n` +
-        `Para dar de alta más trabajadores, actualice su suscripción desde el portal.`
+        `Para dar de alta más trabajadores, actualice la planta estimada del cliente o su suscripción desde el portal.`
       );
       return;
     }

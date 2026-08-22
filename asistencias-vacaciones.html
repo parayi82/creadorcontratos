@@ -2472,6 +2472,31 @@ async function guardarDia(){
     if (mins>0 && !notaFinal) notaFinal = `Retraso ${mins} min — hora acordada ${hora_acordada}`;
   }
 
+  // Obtener identidad del usuario RH que realiza la edición
+  const { data: _sdAudit } = await sb.auth.getSession();
+  const _userAudit = _sdAudit?.session?.user;
+  const _editadoPorUID   = _userAudit?.id   || null;
+  const _editadoPorEmail = _userAudit?.email || null;
+
+  // Verificar si el registro existente es inmutable (fuente checador/adms)
+  const _regExistente = asistenciasMes?.[diaSeleccionado];
+  if (_regExistente?.fuente === 'checador' || _regExistente?.fuente === 'adms') {
+    const _fuenteLabel = _regExistente.fuente === 'adms' ? 'ZKTeco ADMS' : 'Checador digital';
+    const _confirmar = confirm(
+      `⚠️ Registro inmutable\n\nEste registro fue generado por ${_fuenteLabel} y está protegido contra modificaciones.\n\n` +
+      `Para corregirlo, se eliminará el registro original y se creará uno nuevo con fuente "corrección".\n\n` +
+      `¿Desea continuar?`
+    );
+    if (!_confirmar) return;
+    // Eliminar el registro inmutable para poder insertar la corrección
+    const { error: _delErr } = await mutarDatos({
+      tabla: 'asistencias', accion: 'delete',
+      filtros: { id: _regExistente.id }
+    });
+    if (_delErr) { alert('Error al eliminar registro inmutable: ' + _delErr.message); return; }
+    delete asistenciasMes[diaSeleccionado]; // limpiar caché local
+  }
+
   try {
     const registroHoras = statusElegido==='presente' || statusElegido==='retraso';
     const hDobles  = parseFloat(document.getElementById('horas-extra-dobles')?.value)  || 0;
@@ -2489,8 +2514,10 @@ async function guardarDia(){
       fuente:        'manual',
       // Trazabilidad de ediciones manuales (Art. 784 LFT: el patrón debe poder
       // acreditar que los registros no fueron alterados fraudulentamente)
-      editado_por:   clienteRFC || null,
-      editado_at:    new Date().toISOString(),
+      editado_por:      clienteRFC || null,
+      editado_at:       new Date().toISOString(),
+      editado_por_uid:  _editadoPorUID,
+      editado_por_email: _editadoPorEmail,
     };
     // Intentar guardar con horas extras (requiere sql-horas-extras.sql en Supabase)
     let { error } = await mutarDatos({ tabla:'asistencias', accion:'upsert',
@@ -2498,6 +2525,11 @@ async function guardarDia(){
       conflicto:'trabajador_id,fecha' });
     if (error && /horas_extra/.test(error.message||'')) {
       ({ error } = await mutarDatos({ tabla:'asistencias', accion:'upsert', payload:payloadBase, conflicto:'trabajador_id,fecha' }));
+    }
+    // Columnas de auditoría opcionales — si no existen (sql-auditoria-asistencias.sql pendiente)
+    if (error && /editado_por_uid|editado_por_email/.test(error.message||'')) {
+      const { editado_por_uid, editado_por_email, ...payloadSinUid } = payloadBase;
+      ({ error } = await mutarDatos({ tabla:'asistencias', accion:'upsert', payload:payloadSinUid, conflicto:'trabajador_id,fecha' }));
     }
     // Columnas editado_por/editado_at opcionales — si no existen, reintentamos sin ellas
     if (error && /editado_por|editado_at/.test(error.message||'')) {

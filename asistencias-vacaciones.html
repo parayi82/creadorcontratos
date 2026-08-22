@@ -1209,17 +1209,24 @@ async function cargarTrabajadores(){
       totalBajas       = resBajas.count  || 0;
     }
 
-    // Mostrar badge: usa planta estimada del cliente si está disponible, si no usa límite del plan
-    const plan = resSesion?.data?.session?.user?.user_metadata?.plan || 'basico';
+    // Límite según origen: despacho/manual → planta estimada o sin límite (500); Stripe → límite del plan
+    const _meta = resSesion?.data?.session?.user?.user_metadata || {};
+    const esDespacho = _meta.tipo === 'despacho';
+    const plan = _meta.plan || 'basico';
     const LIMITES = {basico:8, estandar:50, pro:500};
     const planKey = plan.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'').replace(/^plan\s+/,'').trim();
     const limitePlan = LIMITES[planKey] || 8;
-    const limite  = (clienteNumTrab && clienteNumTrab > 0) ? Math.max(clienteNumTrab, totalActivos) : limitePlan;
+    // Despacho: usa num_trabajadores capturado manualmente; si no hay, sin límite (500)
+    // Cliente Stripe: límite del plan contratado
+    const limite  = esDespacho
+      ? (clienteNumTrab && clienteNumTrab > 0 ? Math.max(clienteNumTrab, totalActivos) : 500)
+      : limitePlan;
     const badge   = document.getElementById('roster-limite-badge');
     if(badge){
       const pct = totalActivos/limite;
       const color = pct>=1?'#dc2626':pct>=0.8?'#d97706':'#16a34a';
-      badge.innerHTML = `<span style="color:${color};font-weight:600;">${totalActivos}/${limite}</span> trabajadores`;
+      const labelLimite = (esDespacho && !(clienteNumTrab > 0)) ? '' : `/${limite}`;
+      badge.innerHTML = `<span style="color:${color};font-weight:600;">${totalActivos}${labelLimite}</span> trabajadores`;
     }
   } catch(e) {
     console.error('No se pudo cargar el roster:', e.message||e);
@@ -2739,24 +2746,29 @@ async function guardarTrabajador(){
   const ingreso = document.getElementById('trab-ingreso').value;
   if (!nombre || !ingreso) { alert('Nombre y fecha de ingreso son obligatorios'); return; }
 
-  // Verificar límite: usa planta estimada del cliente si está disponible, si no usa límite del plan
+  // Límite al agregar: despacho/manual → sin límite práctico (o planta estimada); Stripe → límite del plan
   if (!id) {
     const { data: sesion } = await sb.auth.getSession();
-    const plan = sesion?.session?.user?.user_metadata?.plan || 'basico';
-    const LIMITES = { basico: 8, estandar: 50, pro: 500 };
-    const NOMBRES = { basico: 'Básico (máx. 8)', estandar: 'Estándar (máx. 50)', pro: 'Pro (máx. 500)' };
-    const planKey = plan.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'').replace(/^plan\s+/,'').trim();
-    const limitePlan = LIMITES[planKey] || LIMITES['basico'];
-    const limite = (clienteNumTrab && clienteNumTrab > 0) ? Math.max(clienteNumTrab, limitePlan) : limitePlan;
-    if (totalActivos >= limite) {
-      alert(
-        `⚠️ Límite de trabajadores alcanzado\n\n` +
-        `La planta estimada es de ${limite} trabajadores activos.\n` +
-        `Actualmente tiene ${totalActivos} trabajadores activos.\n\n` +
-        `Para dar de alta más trabajadores, actualice la planta estimada del cliente o su suscripción desde el portal.`
-      );
-      return;
+    const _smeta = sesion?.session?.user?.user_metadata || {};
+    const esDespachoAdd = _smeta.tipo === 'despacho';
+    if (!esDespachoAdd) {
+      // Solo se bloquea para clientes Stripe según su plan
+      const plan = _smeta.plan || 'basico';
+      const LIMITES = { basico: 8, estandar: 50, pro: 500 };
+      const NOMBRES = { basico: 'Básico (máx. 8)', estandar: 'Estándar (máx. 50)', pro: 'Pro (máx. 500)' };
+      const planKey = plan.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'').replace(/^plan\s+/,'').trim();
+      const limite = LIMITES[planKey] || LIMITES['basico'];
+      if (totalActivos >= limite) {
+        alert(
+          `⚠️ Límite de trabajadores alcanzado\n\n` +
+          `Su plan ${NOMBRES[planKey]||plan} permite hasta ${limite} trabajadores activos.\n` +
+          `Actualmente tiene ${totalActivos} trabajadores activos.\n\n` +
+          `Para dar de alta más trabajadores, actualice su suscripción desde el portal.`
+        );
+        return;
+      }
     }
+    // Clientes manuales de despacho: sin restricción de plan (usan planta estimada como referencia visual, no como bloqueo)
   }
 
   const salarioVal = document.getElementById('trab-salario').value;

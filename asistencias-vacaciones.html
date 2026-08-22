@@ -1210,9 +1210,8 @@ async function cargarTrabajadores(){
     }
 
     // Límite según origen: despacho/manual → planta estimada o sin límite (500); Stripe → límite del plan
-    const _meta = resSesion?.data?.session?.user?.user_metadata || {};
-    const esDespacho = _meta.tipo === 'despacho';
-    const plan = _meta.plan || 'basico';
+    // esDespacho ya está declarado arriba en esta función (línea ~1158)
+    const plan = (resSesion?.data?.session?.user?.user_metadata?.plan) || 'basico';
     const LIMITES = {basico:8, estandar:50, pro:500};
     const planKey = plan.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'').replace(/^plan\s+/,'').trim();
     const limitePlan = LIMITES[planKey] || 8;

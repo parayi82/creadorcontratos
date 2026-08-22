@@ -6979,16 +6979,13 @@ async function cargarChecadores() {
   if (!listEl) return;
   listEl.innerHTML = '<div style="color:var(--ink3);font-size:13px;padding:12px;">Cargando…</div>';
 
-  const { data, error } = await sb.from('checadores')
-    .select('sn,nombre,ubicacion,ultimo_contacto')
-    .eq('cliente_rfc', clienteRFC)
-    .order('creado_en', { ascending: false });
+  const { data, error } = await selectProxy('checadores', 'sn,nombre,ubicacion,ultimo_contacto', {}, { order: { campo: 'creado_en', asc: false } });
 
   if (error) {
-    // La tabla puede no existir aún — instrucción clara al usuario
-    if (/does not exist|42P01/i.test(error.message || '')) {
+    if (/does not exist|42P01|schema cache/i.test(error.message || '')) {
       listEl.innerHTML = `<div style="background:var(--amber-bg);border-radius:8px;padding:12px;font-size:12px;color:var(--ink2);">
-        ⚠️ Ejecuta <code>sql-adms.sql</code> en el SQL Editor de Supabase para habilitar el módulo de checadores en red.
+        ⚠️ La tabla de checadores no existe en la base de datos.<br>
+        Ejecuta el archivo <strong>sql-adms.sql</strong> en el SQL Editor de Supabase para habilitarla.
       </div>`;
     } else {
       listEl.innerHTML = `<div style="color:var(--red);font-size:12px;">Error: ${esc(error.message)}</div>`;

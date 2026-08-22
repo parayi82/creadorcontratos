@@ -5,9 +5,17 @@
     <link>https://clicklaboral.mx/blog/</link>
     <description>Artículos, noticias y tips de compliance laboral para PyMEs mexicanas</description>
     <language>es-MX</language>
-    <lastBuildDate>Fri, 21 Aug 2026 14:26:10 GMT</lastBuildDate>
+    <lastBuildDate>Sat, 22 Aug 2026 14:13:04 GMT</lastBuildDate>
     <managingEditor>blog@clicklaboral.mx (ClickLaboral.mx)</managingEditor>
     <atom:link href="https://clicklaboral.mx/blog/rss.xml" rel="self" type="application/rss+xml"/>
+    <item>
+      <title>STPS actualiza plataforma digital para que PyMEs generen su reglamento interior en línea</title>
+      <link>https://clicklaboral.mx/blog/noticia-stps-actualiza-plataforma-digital-para-que-pymes-g-2026-08-22.html</link>
+      <guid isPermaLink="true">https://clicklaboral.mx/blog/noticia-stps-actualiza-plataforma-digital-para-que-pymes-g-2026-08-22.html</guid>
+      <pubDate>Sat, 22 Aug 2026 12:00:00 GMT</pubDate>
+      <category>Noticias</category>
+      <description>La Secretaría del Trabajo y Previsión Social (STPS) habilitó una versión actualizada de su plataforma digital para que los patrones generen su Reglamento Interior de Trabajo (RIT) en línea, sin necesi…</description>
+    </item>
     <item>
       <title>Alerta: en 2026 la jornada máxima baja a 46 horas semanales — ¿ya ajustó su nómina?</title>
       <link>https://clicklaboral.mx/blog/noticia-alerta-en-2026-la-jornada-maxima-baja-a-46-horas-s-2026-08-21.html</link>
@@ -199,14 +207,6 @@
       <pubDate>Fri, 01 Aug 2025 12:00:00 GMT</pubDate>
       <category>Cumplimiento</category>
       <description>Conozca el monto exacto de las multas laborales vigentes en 2025, qué infracciones las disparan y cómo preparar su empresa para una inspección de la STPS.</description>
-    </item>
-    <item>
-      <title>Tabla de Vacaciones LFT 2025: Días que le Corresponden a Cada Trabajador</title>
-      <link>https://clicklaboral.mx/blog/tabla-vacaciones-lft-2025.html</link>
-      <guid isPermaLink="true">https://clicklaboral.mx/blog/tabla-vacaciones-lft-2025.html</guid>
-      <pubDate>Fri, 25 Jul 2025 12:00:00 GMT</pubDate>
-      <category>Prestaciones</category>
-      <description>La reforma de 2023 aumentó los días de vacaciones mínimos. Vea la tabla actualizada, cómo calcular la prima vacacional y los errores más comunes que generan multas.</description>
     </item>
   </channel>
 </rss>

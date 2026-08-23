@@ -5,9 +5,17 @@
     <link>https://clicklaboral.mx/blog/</link>
     <description>Artículos, noticias y tips de compliance laboral para PyMEs mexicanas</description>
     <language>es-MX</language>
-    <lastBuildDate>Sat, 22 Aug 2026 14:13:04 GMT</lastBuildDate>
+    <lastBuildDate>Sun, 23 Aug 2026 14:15:45 GMT</lastBuildDate>
     <managingEditor>blog@clicklaboral.mx (ClickLaboral.mx)</managingEditor>
     <atom:link href="https://clicklaboral.mx/blog/rss.xml" rel="self" type="application/rss+xml"/>
+    <item>
+      <title>Tip: qué preguntar y qué no en una entrevista de trabajo para no violar la LFPED</title>
+      <link>https://clicklaboral.mx/blog/noticia-tip-que-preguntar-y-que-no-en-una-entrevista-de-tr-2026-08-23.html</link>
+      <guid isPermaLink="true">https://clicklaboral.mx/blog/noticia-tip-que-preguntar-y-que-no-en-una-entrevista-de-tr-2026-08-23.html</guid>
+      <pubDate>Sun, 23 Aug 2026 12:00:00 GMT</pubDate>
+      <category>Tip RH</category>
+      <description>Antes de iniciar una entrevista de trabajo, defina con claridad qué información es legítima para evaluar al candidato y cuál está prohibida por la Ley Federal de Protección de Datos Personales en Pose…</description>
+    </item>
     <item>
       <title>STPS actualiza plataforma digital para que PyMEs generen su reglamento interior en línea</title>
       <link>https://clicklaboral.mx/blog/noticia-stps-actualiza-plataforma-digital-para-que-pymes-g-2026-08-22.html</link>
@@ -199,14 +207,6 @@
       <pubDate>Thu, 06 Aug 2026 12:00:00 GMT</pubDate>
       <category>Tip RH</category>
       <description>Un acta administrativa mal redactada puede convertirse en el principal argumento del trabajador ante la Junta de Conciliación o el Tribunal Laboral. Para que tenga valor probatorio, debe cumplir con r…</description>
-    </item>
-    <item>
-      <title>Multas de la STPS 2025: Cuánto Pueden Cobrarle a Su Empresa</title>
-      <link>https://clicklaboral.mx/blog/multas-stps-2025.html</link>
-      <guid isPermaLink="true">https://clicklaboral.mx/blog/multas-stps-2025.html</guid>
-      <pubDate>Fri, 01 Aug 2025 12:00:00 GMT</pubDate>
-      <category>Cumplimiento</category>
-      <description>Conozca el monto exacto de las multas laborales vigentes en 2025, qué infracciones las disparan y cómo preparar su empresa para una inspección de la STPS.</description>
     </item>
   </channel>
 </rss>

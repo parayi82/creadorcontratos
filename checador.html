@@ -396,20 +396,34 @@ async function registrar(accion){
         fecha: hoyISO(), status, hora_entrada: hora,
         fuente: 'checador', notas: 'Registrado vía checador digital',
         geo_lat: geoActual?.lat ?? null, geo_lng: geoActual?.lng ?? null,
+        // Trazabilidad: null porque el registro lo hace el trabajador con NIP, no un usuario RH
+        registrado_por_uid: null,
       };
       let error;
       if(existente?.id){
         // Ya hay registro del día (p.ej. marcado desde el calendario sin hora):
-        // actualizar en vez de insertar para no chocar con UNIQUE(trabajador_id, fecha)
-        ({ error } = await sb.from('asistencias').update({
-          status, hora_entrada: hora,
-          geo_lat: geoActual?.lat ?? null, geo_lng: geoActual?.lng ?? null,
-        }).eq('id', existente.id));
-        if(error && /geo_lat|retraso|check/i.test(error.message||'')){
-          ({ error } = await sb.from('asistencias').update({ status:'presente', hora_entrada: hora }).eq('id', existente.id));
+        // Si el registro existente es 'checador' o 'adms', NO se puede actualizar (inmutable).
+        // Solo se permite actualizar si el registro existente es de fuente manual/programacion.
+        if(existente.fuente === 'checador' || existente.fuente === 'adms'){
+          // Ya registró entrada hoy por este medio — solo permitir actualizar hora_salida
+          // (que sí es un UPDATE separado más abajo). No volver a insertar entrada.
+          error = null;
+        } else {
+          ({ error } = await sb.from('asistencias').update({
+            status, hora_entrada: hora,
+            geo_lat: geoActual?.lat ?? null, geo_lng: geoActual?.lng ?? null,
+          }).eq('id', existente.id));
+          if(error && /geo_lat|retraso|check/i.test(error.message||'')){
+            ({ error } = await sb.from('asistencias').update({ status:'presente', hora_entrada: hora }).eq('id', existente.id));
+          }
         }
       } else {
         ({ error } = await sb.from('asistencias').insert(payload));
+        if(error && /registrado_por_uid/.test(error.message||'')){
+          // Columna de auditoría aún no migrada — insertar sin ella
+          const { registrado_por_uid, ...payloadSinUid } = payload;
+          ({ error } = await sb.from('asistencias').insert(payloadSinUid));
+        }
         if(error && /fuente|geo_lat|retraso|check/i.test(error.message||'')){
           // Migración del checador pendiente: registrar con valores compatibles
           ({ error } = await sb.from('asistencias').insert({

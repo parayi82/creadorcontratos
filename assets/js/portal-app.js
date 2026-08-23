@@ -1807,6 +1807,10 @@ function renderGeneradores(){
     {icon:'⏰', name:'Horario y Anexos',               art:'Cambio de horario · Modificatorio',     url:'horario-anexos.html'},
     {icon:'💰', name:'Préstamos y Bonos',              art:'Préstamo sobre nómina · Bono',           url:'convenios-economicos.html'},
     {icon:'🔒', name:'Confidencialidad / Servicios',  art:'NDA · Prestación de servicios',          url:'confidencialidad-civiles.html'},
+    // ── REPSE ──
+    {icon:'🏭', name:'Contrato REPSE',                 art:'Art. 13 LFT · Servicios especializados · Reforma 2021',      url:'contrato-repse.html'},
+    {icon:'📋', name:'Gestor de Proveedores REPSE',    art:'Documentación mensual · Vigencias · Alertas',                url:'gestor-repse.html'},
+    {icon:'🔍', name:'¿Necesito REPSE?',               art:'Diagnóstico 5 preguntas · Obligación de registro',           url:'diagnostico-repse.html'},
     // ── Cobranza ──
     {icon:'🧾', name:'Cobranza y Pagarés',             art:'Pagaré LGTOC · Requerimiento · Convenio de adeudo · Recibo', url:'cobranza-pagares.html'},
     {icon:'💰', name:'Contrato de Mutuo / Poderes',    art:'Mutuo con interés · Carta poder · Beneficiarios 501 · Carta patronal', url:'cartas-poder-varios.html'},

@@ -55,7 +55,25 @@ h1{font-size:26px;font-weight:900;letter-spacing:-.02em;margin-bottom:6px;}
 </head>
 <body>
 
-<body>
+<!-- Verificación de sesión: redirige a login si no hay sesión activa -->
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
+<script>
+(async function() {
+  try {
+    const sb = supabase.createClient(
+      'https://hpzgqaplrywwjuvrzhcp.supabase.co',
+      'sb_publishable_1g8US8iFJ8CxnSaF_4MHgA_gqyyAr3W'
+    );
+    const { data } = await sb.auth.getSession();
+    if (!data?.session) {
+      window.location.replace('portal-cliente.html');
+    }
+  } catch(e) {
+    // Si falla (sin red, etc.) deja cargar la página
+  }
+})();
+</script>
+
 <div class="wrap">
   <h1>🗂️ Centro de acceso — Clicklaboral</h1>
 

@@ -1,0 +1,777 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<script>
+(function(){
+  var params=new URLSearchParams(window.location.search);
+  var modo=params.get('editar')==='1'?'editar':params.get('recuperar')==='1'?'ver':null;
+  if(!modo) return;
+  var gen=window.location.pathname.split('/').pop();
+  var key=(modo==='editar'?'doc_editar_':'doc_recuperado_')+gen.replace('.html','');
+  var g=null; try{g=JSON.parse(localStorage.getItem(key)||'null');}catch(e){}
+  if(!g||!g.html) return;
+  var _bloqueado=false,_orig=null;
+  function bloquear(){
+    if(typeof window.render==='function'&&!_bloqueado){
+      _orig=window.render; window.render=function(){}; _bloqueado=true;
+    }
+  }
+  bloquear(); var _iv=setInterval(bloquear,50);
+  function inyectar(){
+    var pr=document.getElementById('doc-preview');
+    if(!pr){setTimeout(inyectar,80);return;}
+    clearInterval(_iv); bloquear();
+    pr.innerHTML=g.html;
+    if(modo==='editar'){
+      pr.contentEditable='true';
+      pr.style.outline='2px dashed #0f766e';
+      pr.style.cursor='text';
+    }
+    var b=document.createElement('div');
+    b.id='banner-doc';
+    b.style.cssText='position:sticky;top:0;z-index:200;background:'+(modo==='editar'?'#f0fdf4':'#eff6ff')+';border-bottom:2px solid '+(modo==='editar'?'#86efac':'#93c5fd')+';padding:10px 16px;font-size:12px;color:'+(modo==='editar'?'#166534':'#1e40af')+';display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap;';
+    var etiq=modo==='editar'?'✏️ Modo edición — edita el documento directamente':'📄 Documento guardado';
+    var sp=document.createElement('span');
+    sp.innerHTML='<strong>'+etiq+'</strong> — '+(g.nombre||'')+' · '+(g.fecha||'');
+    var bt=document.createElement('button');
+    bt.textContent=modo==='editar'?'🔄 Restaurar campos':'✏️ Editar';
+    bt.style.cssText='border:1px solid currentColor;background:transparent;color:inherit;padding:4px 12px;border-radius:6px;font-size:11px;cursor:pointer;white-space:nowrap;';
+    bt.onclick=function(){
+      _bloqueado=false;
+      pr.contentEditable='false';
+      pr.style.outline=''; pr.style.cursor='';
+      if(_orig) window.render=_orig;
+      var bel=document.getElementById('banner-doc');
+      if(bel) bel.remove();
+      localStorage.removeItem(key);
+      if(typeof window.render==='function') window.render();
+    };
+    b.appendChild(sp); b.appendChild(bt);
+    pr.insertBefore(b,pr.firstChild);
+    localStorage.removeItem(key);
+  }
+  document.readyState==='loading'?document.addEventListener('DOMContentLoaded',inyectar):inyectar();
+})();
+</script>
+
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Generador · Contrato REPSE — Servicios Especializados</title>
+<style>
+  :root {
+    --ink: #1a1a18;
+    --ink2: #4a4a46;
+    --ink3: #8a8a84;
+    --surface: #f7f6f2;
+    --white: #ffffff;
+    --accent: #1a3a5c;
+    --accent2: #e8f0f8;
+    --border: #ddddd6;
+    --danger: #c0392b;
+    --success: #1a6b3a;
+    --radius: 6px;
+    --font-ui: 'Segoe UI', system-ui, sans-serif;
+    --font-doc: 'Times New Roman', Georgia, serif;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: var(--font-ui); background: var(--surface); color: var(--ink); min-height: 100vh; font-size: 14px; }
+
+  header { background: var(--accent); color: #fff; padding: 14px 28px; display: flex; align-items: center; justify-content: space-between; gap: 16px; position: sticky; top: 0; z-index: 100; box-shadow: 0 1px 4px rgba(0,0,0,.18); }
+  header h1 { font-size: 15px; font-weight: 600; letter-spacing: .01em; }
+  header span { font-size: 12px; opacity: .7; }
+  .header-actions { display: flex; gap: 10px; }
+  .btn { padding: 7px 18px; border-radius: var(--radius); font-size: 13px; font-weight: 500; cursor: pointer; border: 1px solid transparent; transition: background .15s, opacity .15s; }
+  .btn-outline { background: transparent; border-color: rgba(255,255,255,.45); color: #fff; }
+  .btn-outline:hover { background: rgba(255,255,255,.12); }
+  .btn-primary { background: #fff; color: var(--accent); }
+  .btn-primary:hover { opacity: .88; }
+
+  .workspace { display: grid; grid-template-columns: 380px 1fr; height: calc(100vh - 52px); }
+
+  .form-panel { background: var(--white); border-right: 1px solid var(--border); overflow-y: auto; padding: 24px 24px 40px; }
+  .section-label { font-size: 10px; font-weight: 700; letter-spacing: .12em; text-transform: uppercase; color: var(--accent); padding: 20px 0 10px; border-bottom: 1px solid var(--border); margin-bottom: 14px; }
+  .section-label:first-child { padding-top: 4px; }
+  .field { margin-bottom: 13px; }
+  .field label { display: block; font-size: 12px; font-weight: 500; color: var(--ink2); margin-bottom: 4px; }
+  .field label .req { color: var(--danger); margin-left: 2px; }
+  .field input, .field select, .field textarea { width: 100%; padding: 8px 10px; border: 1px solid var(--border); border-radius: var(--radius); font-size: 13px; font-family: var(--font-ui); color: var(--ink); background: var(--white); transition: border-color .15s; }
+  .field input:focus, .field select:focus, .field textarea:focus { outline: none; border-color: var(--accent); box-shadow: 0 0 0 3px var(--accent2); }
+  .field textarea { resize: vertical; min-height: 68px; }
+  .field-row { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+  .field-row3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 8px; }
+  .hint { font-size: 11px; color: var(--ink3); margin-top: 3px; }
+  .toggle-group { display: flex; gap: 8px; flex-wrap: wrap; }
+  .toggle-opt { padding: 5px 12px; border: 1px solid var(--border); border-radius: 20px; font-size: 12px; cursor: pointer; transition: all .15s; user-select: none; color: var(--ink2); }
+  .toggle-opt.active { background: var(--accent); border-color: var(--accent); color: #fff; font-weight: 500; }
+  .clause-check { display: flex; align-items: flex-start; gap: 8px; margin-bottom: 8px; }
+  .clause-check input[type=checkbox] { margin-top: 2px; accent-color: var(--accent); }
+  .clause-check label { font-size: 12px; color: var(--ink2); cursor: pointer; line-height: 1.4; }
+  .alert-box { border: 1px solid rgba(26,58,92,.2); border-radius: var(--radius); padding: 10px 14px; font-size: 12px; color: var(--ink2); background: var(--accent2); margin-bottom: 14px; line-height: 1.5; }
+
+  .preview-panel { background: #e8e7e0; overflow-y: auto; padding: 32px 40px; display: flex; flex-direction: column; align-items: center; }
+  .doc-sheet { background: var(--white); width: 100%; max-width: 760px; min-height: 1060px; padding: 72px 80px; box-shadow: 0 2px 16px rgba(0,0,0,.12); font-family: var(--font-doc); font-size: 12pt; line-height: 1.75; color: #111; }
+  .doc-logo-bar { display: flex; justify-content: space-between; align-items: flex-start; border-bottom: 2px solid var(--accent); padding-bottom: 12px; margin-bottom: 24px; }
+  .doc-logo-empresa { font-size: 14pt; font-weight: bold; color: var(--accent); font-family: var(--font-ui); max-width: 340px; }
+  .doc-folio { font-size: 9pt; color: var(--ink3); font-family: var(--font-ui); text-align: right; line-height: 1.4; }
+  .doc-title { text-align: center; font-size: 13pt; font-weight: bold; text-transform: uppercase; letter-spacing: .04em; margin-bottom: 6px; color: var(--ink); }
+  .doc-subtitle { text-align: center; font-size: 10pt; color: var(--ink3); font-family: var(--font-ui); margin-bottom: 28px; }
+  .doc-p { margin-bottom: 14px; text-align: justify; }
+  .doc-p .blank { font-weight: bold; color: var(--accent); border-bottom: 1px solid var(--accent); padding: 0 2px; }
+  .doc-p .blank.empty { color: #c0392b; border-bottom-color: #c0392b; font-style: italic; font-weight: normal; }
+  .doc-clause-title { font-weight: bold; text-transform: uppercase; font-size: 10.5pt; margin: 22px 0 8px; color: var(--ink); }
+  .doc-decl-title { font-weight: bold; font-size: 11pt; margin: 18px 0 8px; color: var(--accent); text-align: center; }
+  .doc-ul { margin: 6px 0 14px 22px; }
+  .doc-ul li { margin-bottom: 6px; text-align: justify; }
+  .doc-firma-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 40px; margin-top: 60px; }
+  .firma-box { border-top: 1px solid #888; padding-top: 8px; font-size: 10pt; text-align: center; line-height: 1.5; }
+  .firma-box strong { display: block; font-size: 9pt; color: var(--ink3); font-family: var(--font-ui); }
+  .watermark-empty { text-align: center; color: var(--ink3); font-family: var(--font-ui); font-size: 13px; padding: 80px 0; }
+  .repse-badge { display:inline-block; background:#1a3a5c; color:#fff; font-size:8pt; font-family:'Segoe UI',sans-serif; font-weight:700; padding:2px 10px; border-radius:4px; letter-spacing:.08em; margin-left:6px; vertical-align:middle; }
+
+  @media print {
+    header, .form-panel { display: none !important; }
+    .workspace { display: block; height: auto; }
+    .preview-panel { padding: 0; background: white; }
+    .doc-sheet { box-shadow: none; max-width: 100%; padding: 40px; }
+    body { background: white; }
+  }
+
+  #auth-gate-loading{position:fixed;inset:0;background:#fff;z-index:9999;display:flex;align-items:center;justify-content:center;font-family:'Segoe UI',system-ui,sans-serif;color:#999;font-size:13px;}
+  #auth-gate-blocked{position:fixed;inset:0;background:#0f2640;z-index:9999;display:none;align-items:center;justify-content:center;padding:24px;}
+  #auth-gate-blocked .agb-box{background:#fff;border-radius:16px;padding:40px 36px;max-width:420px;text-align:center;font-family:'Segoe UI',system-ui,sans-serif;}
+  #auth-gate-blocked .agb-box h2{font-size:18px;margin-bottom:10px;color:#0f2640;}
+  #auth-gate-blocked .agb-box p{font-size:13px;color:#666;margin-bottom:20px;line-height:1.6;}
+  #auth-gate-blocked .agb-btns{display:flex;gap:10px;justify-content:center;flex-wrap:wrap;}
+  #auth-gate-blocked .agb-btns a{padding:10px 18px;border-radius:8px;font-size:13px;font-weight:600;text-decoration:none;}
+  #auth-gate-blocked .agb-btns a.agb-primary{background:#1a3a5c;color:#fff;}
+  #auth-gate-blocked .agb-btns a.agb-secondary{background:#f0f0ec;color:#1a3a5c;}
+  body.modo-demo .doc-sheet{position:relative;user-select:none;-webkit-user-select:none;}
+  body.modo-demo .doc-sheet::after{content:'MUESTRA — CUENTA DEMO, NO VÁLIDO PARA USO LEGAL';position:absolute;top:46%;left:-15%;right:-15%;text-align:center;font-size:26px;font-weight:900;color:rgba(220,38,38,.16);transform:rotate(-18deg);pointer-events:none;font-family:'Segoe UI',system-ui,sans-serif;z-index:50;}
+  @media print{ body.modo-demo .doc-sheet::after{display:block!important;color:rgba(220,38,38,.35)!important;} }
+  .cl-nav-logo{display:flex;align-items:center;font-size:15px;font-weight:800;color:#fff;letter-spacing:-.01em;line-height:1;text-decoration:none;}
+  .cl-nav-logo .cl-laboral{color:#5eead4;font-weight:400;}
+</style>
+<script src="membrete.js?v=3.7"></script>
+</head>
+<body>
+<div id="auth-gate-loading">Verificando acceso…</div>
+<div id="auth-gate-blocked">
+  <div class="agb-box">
+    <h2>🔒 Esta herramienta requiere una suscripción activa</h2>
+    <p>Inicie sesión desde su portal de cliente para usar este generador, o conozca nuestros planes si todavía no es cliente de ClickLaboral.mx.</p>
+    <div class="agb-btns">
+      <a class="agb-primary" href="portal-cliente.html">Iniciar sesión →</a>
+      <a class="agb-secondary" href="index.html#precios">Ver planes</a>
+    </div>
+  </div>
+</div>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
+<script src="expediente-helper.js?v=3.7"></script>
+<script>
+(async()=>{
+  const _sb = supabase.createClient('https://hpzgqaplrywwjuvrzhcp.supabase.co','sb_publishable_1g8US8iFJ8CxnSaF_4MHgA_gqyyAr3W');
+  try {
+    const { data } = await _sb.auth.getSession();
+    document.getElementById('auth-gate-loading').style.display = 'none';
+    if (!data?.session?.user) {
+      document.getElementById('auth-gate-blocked').style.display = 'flex';
+    }
+  } catch(e) {
+    document.getElementById('auth-gate-loading').style.display = 'none';
+    document.getElementById('auth-gate-blocked').style.display = 'flex';
+  }
+})();
+</script>
+
+<header>
+  <div class="cl-nav-logo" style="flex-shrink:0;"><svg width="26" height="26" viewBox="0 0 100 100" style="vertical-align:-7px;margin-right:6px;flex-shrink:0;">
+    <defs><linearGradient id="clGrad" x1="10" y1="10" x2="90" y2="95" gradientUnits="userSpaceOnUse">
+      <stop offset="0%" stop-color="#1a3a5c"/><stop offset="55%" stop-color="#1e6f6c"/><stop offset="100%" stop-color="#2dd4bf"/>
+    </linearGradient></defs>
+    <path d="M50 7 L83 20 V51 C83 73 68 87 50 95 C32 87 17 73 17 51 V20 Z" fill="none" stroke="url(#clGrad)" stroke-width="6" stroke-linejoin="round"/>
+    <circle cx="40" cy="38" r="8.5" fill="#5eead4"/>
+    <path d="M25 63 C25 51 31 45 40 45 C49 45 55 51 55 63 Z" fill="#5eead4"/>
+    <circle cx="55" cy="33" r="9.5" fill="#14b8a6"/>
+    <path d="M38 61 C38 48 45.5 41 55 41 C64.5 41 72 48 72 61 Z" fill="#14b8a6"/>
+    <path d="M29 61 L45 77 L78 40" fill="none" stroke="#e8f2fc" stroke-width="9" stroke-linecap="round" stroke-linejoin="round"/>
+  </svg>Click<span class="cl-laboral">Laboral.mx</span></div>
+  <div>
+    <h1>Generador de Contratos · ClickLaboral.mx</h1>
+    <span>Contrato de Prestación de Servicios Especializados (REPSE) — Art. 13 LFT</span>
+  </div>
+  <div class="header-actions">
+    <button class="btn btn-outline" onclick="limpiarFormulario()">Limpiar</button>
+    <button class="btn btn-primary" onclick="window.print()">Imprimir / PDF</button>
+  </div>
+</header>
+
+<div class="workspace">
+
+  <!-- ══ FORMULARIO ══ -->
+  <div class="form-panel">
+
+    <!-- MEMBRETE -->
+    <div style="border-bottom:1px solid var(--border);margin-bottom:0;">
+      <div class="section-label" style="display:flex;align-items:center;justify-content:space-between;cursor:pointer;user-select:none;"
+           onclick="this.nextElementSibling.style.display=this.nextElementSibling.style.display==='none'?'block':'none'">
+        <span>🏢 Logo y pie de página</span>
+        <span style="font-size:10px;font-weight:400;color:var(--ink3);">▲ clic para colapsar</span>
+      </div>
+      <div id="mem-panel-wrap" style="display:block;padding:12px 0 14px;">
+        <div id="mem-logo-container"></div>
+      </div>
+    </div>
+
+    <!-- CONTRATANTE -->
+    <div class="section-label">Empresa contratante (quien recibe el servicio)</div>
+    <div class="alert-box">
+      ℹ️ Es la empresa que <strong>contrata</strong> los servicios especializados al proveedor. Asegúrese de que el objeto del servicio <strong>no sea la actividad principal</strong> de su empresa (art. 13 LFT).
+    </div>
+
+    <div class="field">
+      <label>Razón social <span class="req">*</span></label>
+      <input type="text" id="contratante" placeholder="Ej. Distribuidora Centro, S.A. de C.V." oninput="render()">
+    </div>
+    <div class="field-row">
+      <div class="field">
+        <label>RFC <span class="req">*</span></label>
+        <input type="text" id="rfc_contratante" placeholder="DCC800101AAA" oninput="render()" maxlength="13">
+      </div>
+      <div class="field">
+        <label>Registro IMSS</label>
+        <input type="text" id="imss_contratante" placeholder="11 dígitos" oninput="render()">
+      </div>
+    </div>
+    <div class="field">
+      <label>Domicilio fiscal <span class="req">*</span></label>
+      <input type="text" id="domicilio_contratante" placeholder="Calle, No., Colonia, Ciudad, Estado, C.P." oninput="render()">
+    </div>
+    <div class="field">
+      <label>Representante legal / apoderado</label>
+      <input type="text" id="rep_contratante" placeholder="Nombre completo" oninput="render()">
+    </div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;">
+      <div class="field"><label>Teléfono</label><input type="text" id="mem-tel" oninput="render()" placeholder="33 1234 5678"></div>
+      <div class="field"><label>Email</label><input type="text" id="mem-email" oninput="render()" placeholder="contacto@empresa.mx"></div>
+    </div>
+    <div class="field"><label>Sitio web</label><input type="text" id="mem-web" oninput="render()" placeholder="www.empresa.mx"></div>
+
+    <!-- PRESTADOR -->
+    <div class="section-label">Prestador de servicios especializados (proveedor)</div>
+    <div class="alert-box" style="background:#fef9ec;border-color:rgba(217,119,6,.3);color:#78350f;">
+      ⚠️ Verifique que el prestador tenga registro REPSE vigente en <strong>repse.stps.gob.mx</strong> antes de firmar. El número de registro debe anotarse en el contrato.
+    </div>
+
+    <div class="field">
+      <label>Razón social del prestador <span class="req">*</span></label>
+      <input type="text" id="prestador" placeholder="Ej. Servicios Especializados del Norte, S.A. de C.V." oninput="render()">
+    </div>
+    <div class="field-row">
+      <div class="field">
+        <label>RFC del prestador <span class="req">*</span></label>
+        <input type="text" id="rfc_prestador" placeholder="SEN800101AAA" oninput="render()" maxlength="13">
+      </div>
+      <div class="field">
+        <label>Registro IMSS del prestador</label>
+        <input type="text" id="imss_prestador" placeholder="11 dígitos" oninput="render()">
+      </div>
+    </div>
+    <div class="field">
+      <label>Número de registro REPSE <span class="req">*</span></label>
+      <input type="text" id="num_repse" placeholder="Ej. REPSE-STPS-2021-12345" oninput="render()">
+      <div class="hint">Otorgado por la STPS. Verifique vigencia en repse.stps.gob.mx</div>
+    </div>
+    <div class="field-row">
+      <div class="field">
+        <label>Vigencia del registro REPSE</label>
+        <input type="date" id="vigencia_repse" oninput="render()">
+        <div class="hint">El registro se renueva cada 3 años</div>
+      </div>
+      <div class="field">
+        <label>Actividad especializada registrada</label>
+        <input type="text" id="actividad_repse" placeholder="Ej. Servicios de limpieza industrial" oninput="render()">
+      </div>
+    </div>
+    <div class="field">
+      <label>Domicilio del prestador <span class="req">*</span></label>
+      <input type="text" id="domicilio_prestador" placeholder="Calle, No., Colonia, Ciudad, Estado, C.P." oninput="render()">
+    </div>
+    <div class="field">
+      <label>Representante legal del prestador</label>
+      <input type="text" id="rep_prestador" placeholder="Nombre completo" oninput="render()">
+    </div>
+
+    <!-- OBJETO -->
+    <div class="section-label">Objeto del contrato</div>
+    <div class="field">
+      <label>Descripción del servicio especializado <span class="req">*</span></label>
+      <textarea id="objeto_servicio" placeholder="Describa con precisión el servicio que prestará el proveedor. Debe ser un servicio especializado distinto a la actividad principal o corporativa de la empresa contratante..." oninput="render()" style="min-height:90px;"></textarea>
+      <div class="hint">Consejo: sea específico. Una descripción genérica puede invalidar la figura REPSE ante el IMSS o INFONAVIT.</div>
+    </div>
+    <div class="field">
+      <label>Lugar de prestación del servicio <span class="req">*</span></label>
+      <input type="text" id="lugar_servicio" placeholder="Ej. Planta ubicada en Av. Industrial 450, Monterrey, N.L." oninput="render()">
+    </div>
+    <div class="field">
+      <label>Número aproximado de trabajadores asignados</label>
+      <input type="number" id="num_trabajadores" placeholder="Ej. 15" oninput="render()" min="1">
+      <div class="hint">Referencial — puede variar durante la vigencia del contrato</div>
+    </div>
+
+    <!-- VIGENCIA Y MONTO -->
+    <div class="section-label">Vigencia y contraprestación</div>
+    <div class="field-row">
+      <div class="field">
+        <label>Fecha de inicio <span class="req">*</span></label>
+        <input type="date" id="fecha_inicio" oninput="render()">
+      </div>
+      <div class="field">
+        <label>Fecha de término</label>
+        <input type="date" id="fecha_fin" oninput="render()">
+        <div class="hint">Deje vacío si es por tiempo indefinido</div>
+      </div>
+    </div>
+    <div class="field">
+      <label>Tipo de vigencia</label>
+      <div class="toggle-group" id="tipo_vigencia">
+        <div class="toggle-opt" onclick="selToggle(this,'tipo_vigencia');render()">Por obra o tiempo determinado</div>
+        <div class="toggle-opt active" onclick="selToggle(this,'tipo_vigencia');render()">Tiempo indefinido</div>
+      </div>
+    </div>
+    <div class="field-row">
+      <div class="field">
+        <label>Monto de la contraprestación <span class="req">*</span></label>
+        <input type="number" id="monto" placeholder="0.00" oninput="render()" min="0" step="0.01">
+      </div>
+      <div class="field">
+        <label>Periodicidad de pago</label>
+        <select id="periodicidad_pago" onchange="render()">
+          <option value="mensual">Mensual</option>
+          <option value="quincenal">Quincenal</option>
+          <option value="semanal">Semanal</option>
+          <option value="por servicio">Por servicio realizado</option>
+          <option value="por proyecto">Por proyecto/entregable</option>
+        </select>
+      </div>
+    </div>
+    <div class="field">
+      <label>Forma de pago</label>
+      <div class="toggle-group" id="forma_pago">
+        <div class="toggle-opt active" onclick="selToggle(this,'forma_pago')">Transferencia bancaria</div>
+        <div class="toggle-opt" onclick="selToggle(this,'forma_pago')">Cheque nominativo</div>
+        <div class="toggle-opt" onclick="selToggle(this,'forma_pago')">Otro</div>
+      </div>
+    </div>
+    <div class="field">
+      <label>Condición de pago (días después de recibir CFDI + comprobantes)</label>
+      <input type="number" id="dias_pago" placeholder="Ej. 10" oninput="render()" min="1" value="10">
+      <div class="hint">El pago queda condicionado a la entrega de documentación mensual obligatoria</div>
+    </div>
+
+    <!-- DOCUMENTACION MENSUAL -->
+    <div class="section-label">Documentación mensual obligatoria (art. 13 LFT)</div>
+    <p style="font-size:12px;color:var(--ink2);margin-bottom:12px;line-height:1.5;">
+      Seleccione los documentos que el prestador deberá entregar cada mes. Los marcados son obligatorios por ley.
+    </p>
+    <div class="clause-check">
+      <input type="checkbox" id="doc_cfdi" checked onchange="render()">
+      <label for="doc_cfdi"><strong>CFDI de nómina</strong> de los trabajadores asignados al servicio (obligatorio)</label>
+    </div>
+    <div class="clause-check">
+      <input type="checkbox" id="doc_sua" checked onchange="render()">
+      <label for="doc_sua"><strong>Comprobante SUA / IMSS</strong> — pago de cuotas obrero-patronales de los trabajadores asignados (obligatorio)</label>
+    </div>
+    <div class="clause-check">
+      <input type="checkbox" id="doc_infonavit" checked onchange="render()">
+      <label for="doc_infonavit"><strong>Comprobante INFONAVIT</strong> — aportaciones y amortizaciones al Fondo de la Vivienda (obligatorio)</label>
+    </div>
+    <div class="clause-check">
+      <input type="checkbox" id="doc_repse_vig" onchange="render()">
+      <label for="doc_repse_vig">Constancia de vigencia del registro REPSE actualizada</label>
+    </div>
+    <div class="clause-check">
+      <input type="checkbox" id="doc_relacion" onchange="render()">
+      <label for="doc_relacion">Relación de trabajadores activos asignados al contrato (nombre, NSS, puesto)</label>
+    </div>
+    <div class="clause-check">
+      <input type="checkbox" id="doc_sat" onchange="render()">
+      <label for="doc_sat">Constancia de situación fiscal (SAT) actualizada — trimestral o cuando exista cambio</label>
+    </div>
+
+    <!-- CLÁUSULAS OPCIONALES -->
+    <div class="section-label">Cláusulas opcionales</div>
+    <div class="clause-check">
+      <input type="checkbox" id="cl_supervision" checked onchange="render()">
+      <label for="cl_supervision">Supervisión y acceso a instalaciones para verificar el cumplimiento</label>
+    </div>
+    <div class="clause-check">
+      <input type="checkbox" id="cl_confidencial" onchange="render()">
+      <label for="cl_confidencial">Confidencialidad de información comercial y operativa</label>
+    </div>
+    <div class="clause-check">
+      <input type="checkbox" id="cl_exclusividad" onchange="render()">
+      <label for="cl_exclusividad">Exclusividad del prestador para prestar estos servicios a la contratante</label>
+    </div>
+    <div class="clause-check">
+      <input type="checkbox" id="cl_equipo" onchange="render()">
+      <label for="cl_equipo">El prestador aporta su propio equipo, herramientas e insumos</label>
+    </div>
+    <div class="clause-check">
+      <input type="checkbox" id="cl_penalizacion" onchange="render()">
+      <label for="cl_penalizacion">Penalización por incumplimiento en entrega de documentación mensual</label>
+    </div>
+    <div id="campo_penalizacion" style="display:none;padding-left:18px;margin-bottom:12px;">
+      <div class="field">
+        <label>Monto de penalización por mes de retraso</label>
+        <input type="number" id="monto_penalizacion" oninput="render()" placeholder="0.00">
+        <div class="hint">Se descontará del pago del período correspondiente</div>
+      </div>
+    </div>
+    <div class="clause-check">
+      <input type="checkbox" id="cl_seguro" onchange="render()">
+      <label for="cl_seguro">El prestador cuenta con seguro de responsabilidad civil</label>
+    </div>
+    <div id="campo_seguro" style="display:none;padding-left:18px;margin-bottom:12px;">
+      <div class="field">
+        <label>Aseguradora y número de póliza</label>
+        <input type="text" id="datos_seguro" oninput="render()" placeholder="Ej. GNP Seguros, Póliza No. 12345">
+      </div>
+    </div>
+
+    <!-- LUGAR Y FECHA -->
+    <div class="section-label">Lugar y fecha del contrato</div>
+    <div class="field-row">
+      <div class="field">
+        <label>Ciudad de firma <span class="req">*</span></label>
+        <input type="text" id="ciudad_firma" placeholder="Ej. Guadalajara, Jalisco" oninput="render()">
+      </div>
+      <div class="field">
+        <label>Fecha de firma <span class="req">*</span></label>
+        <input type="date" id="fecha_firma" oninput="render()">
+      </div>
+    </div>
+    <div class="field-row">
+      <div class="field">
+        <label>Testigo por la contratante</label>
+        <input type="text" id="testigo1" placeholder="Nombre completo" oninput="render()">
+      </div>
+      <div class="field">
+        <label>Testigo por el prestador</label>
+        <input type="text" id="testigo2" placeholder="Nombre completo" oninput="render()">
+      </div>
+    </div>
+
+  </div><!-- /form-panel -->
+
+  <!-- ══ PREVIEW ══ -->
+  <div class="preview-panel">
+    <div class="doc-sheet" id="doc-preview">
+      <div class="watermark-empty">
+        <div style="font-size:32px;margin-bottom:12px;">📋</div>
+        Complete los campos para generar el contrato
+      </div>
+    </div>
+  </div>
+
+</div><!-- /workspace -->
+
+<script>
+// ── Helpers ──────────────────────────────────────────────
+function v(id){ return (document.getElementById(id)||{}).value||''; }
+function vc(id){ return (document.getElementById(id)||{}).checked; }
+function tog(groupId){ const a=document.querySelector(`#${groupId} .toggle-opt.active`); return a?a.textContent.trim():''; }
+function blank(txt,fallback){ return txt.trim()?`<span class="blank">${txt.trim()}</span>`:`<span class="blank empty">[${fallback}]</span>`; }
+function opt(txt){ return txt.trim()?`<span class="blank">${txt.trim()}</span>`:''; }
+
+function fmtFecha(s){
+  if(!s) return null;
+  try{ const d=new Date(s+'T12:00:00'); return d.toLocaleDateString('es-MX',{day:'numeric',month:'long',year:'numeric'}); }
+  catch(e){ return s; }
+}
+function fmtMXN(n){
+  const num=parseFloat(n);
+  if(isNaN(num)||num===0) return null;
+  return '$'+num.toLocaleString('es-MX',{minimumFractionDigits:2,maximumFractionDigits:2})+' M.N.';
+}
+
+function selToggle(el,groupId){
+  document.querySelectorAll('#'+groupId+' .toggle-opt').forEach(o=>o.classList.remove('active'));
+  el.classList.add('active');
+}
+
+function toggleCampo(fieldId,checkId){
+  const el=document.getElementById(fieldId);
+  if(el) el.style.display=document.getElementById(checkId).checked?'block':'none';
+  render();
+}
+
+// Wiring condicionales
+document.getElementById('cl_penalizacion').addEventListener('change',()=>toggleCampo('campo_penalizacion','cl_penalizacion'));
+document.getElementById('cl_seguro').addEventListener('change',()=>toggleCampo('campo_seguro','cl_seguro'));
+
+// ── Limpiar ───────────────────────────────────────────────
+function limpiarFormulario(){
+  document.querySelectorAll('.form-panel input[type=text], .form-panel input[type=number], .form-panel input[type=date], .form-panel textarea').forEach(el=>el.value='');
+  document.querySelectorAll('.form-panel input[type=checkbox]').forEach(el=>{
+    el.checked = ['doc_cfdi','doc_sua','doc_infonavit','cl_supervision'].includes(el.id);
+  });
+  document.querySelectorAll('.toggle-group').forEach(g=>{
+    const opts=g.querySelectorAll('.toggle-opt');
+    opts.forEach((o,i)=>o.classList.toggle('active',i===0));
+  });
+  // Tiempo indefinido es default
+  const tvg=document.querySelector('#tipo_vigencia .toggle-opt:last-child');
+  if(tvg){ document.querySelectorAll('#tipo_vigencia .toggle-opt').forEach(o=>o.classList.remove('active')); tvg.classList.add('active'); }
+  document.getElementById('dias_pago').value='10';
+  ['campo_penalizacion','campo_seguro'].forEach(id=>{ const el=document.getElementById(id); if(el) el.style.display='none'; });
+  render();
+}
+
+// ── Render ────────────────────────────────────────────────
+function render(){
+  const contratante     = v('contratante');
+  const rfcContr        = v('rfc_contratante');
+  const imssContr       = v('imss_contratante');
+  const domContr        = v('domicilio_contratante');
+  const repContr        = v('rep_contratante');
+  const prestador       = v('prestador');
+  const rfcPrest        = v('rfc_prestador');
+  const imssPrest       = v('imss_prestador');
+  const domPrest        = v('domicilio_prestador');
+  const repPrest        = v('rep_prestador');
+  const numRepse        = v('num_repse');
+  const vigRepse        = v('vigencia_repse');
+  const actRepse        = v('actividad_repse');
+  const objeto          = v('objeto_servicio');
+  const lugar           = v('lugar_servicio');
+  const numTrab         = v('num_trabajadores');
+  const fechaInicio     = v('fecha_inicio');
+  const fechaFin        = v('fecha_fin');
+  const tipoVig         = tog('tipo_vigencia');
+  const monto           = v('monto');
+  const periodo         = v('periodicidad_pago');
+  const formaPago       = tog('forma_pago');
+  const diasPago        = v('dias_pago') || '10';
+  const ciudadFirma     = v('ciudad_firma');
+  const fechaFirma      = v('fecha_firma');
+  const testigo1        = v('testigo1');
+  const testigo2        = v('testigo2');
+
+  // Documentación mensual
+  const docCFDI         = vc('doc_cfdi');
+  const docSUA          = vc('doc_sua');
+  const docINFO         = vc('doc_infonavit');
+  const docRepseVig     = vc('doc_repse_vig');
+  const docRelacion     = vc('doc_relacion');
+  const docSAT          = vc('doc_sat');
+
+  // Cláusulas
+  const clSupervision   = vc('cl_supervision');
+  const clConfidencial  = vc('cl_confidencial');
+  const clExclusividad  = vc('cl_exclusividad');
+  const clEquipo        = vc('cl_equipo');
+  const clPenalizacion  = vc('cl_penalizacion');
+  const montoPen        = v('monto_penalizacion');
+  const clSeguro        = vc('cl_seguro');
+  const datosSeguro     = v('datos_seguro');
+
+  // Membrete
+  const memHtml = typeof generarMembrete==='function' ? generarMembrete({
+    empresa: contratante, rfc: rfcContr, domicilio: domContr,
+    tel: v('mem-tel'), emailEmp: v('mem-email'), web: v('mem-web'),
+    logoDataUrl: window._logoDataUrl || null
+  }) : '';
+
+  const fInicio  = fmtFecha(fechaInicio);
+  const fFin     = fmtFecha(fechaFin);
+  const fFirma   = fmtFecha(fechaFirma);
+  const fVigRepse= fmtFecha(vigRepse);
+  const montoFmt = fmtMXN(monto);
+
+  // Docs list
+  const docsArr = [];
+  if(docCFDI)     docsArr.push('Comprobante Fiscal Digital por Internet (CFDI) de nómina correspondiente al período, de los trabajadores asignados al servicio contratado.');
+  if(docSUA)      docsArr.push('Comprobante de pago de cuotas obrero-patronales al Instituto Mexicano del Seguro Social (IMSS), mediante el Sistema Único de Autodeterminación (SUA) o el sistema que lo sustituya, correspondiente al período, de los trabajadores asignados.');
+  if(docINFO)     docsArr.push('Comprobante de entero de aportaciones y amortizaciones al Instituto del Fondo Nacional de la Vivienda para los Trabajadores (INFONAVIT), correspondiente al período, de los trabajadores asignados.');
+  if(docRepseVig) docsArr.push('Constancia de vigencia del Registro en el Padrón de Prestadoras de Servicios Especializados u Obras Especializadas (REPSE), expedida por la Secretaría del Trabajo y Previsión Social.');
+  if(docRelacion) docsArr.push('Relación actualizada de trabajadores activos asignados al presente contrato, que incluya nombre completo, Número de Seguridad Social (NSS) y puesto desempeñado.');
+  if(docSAT)      docsArr.push('Constancia de Situación Fiscal actualizada ante el Servicio de Administración Tributaria (SAT), en caso de que hayan existido cambios respecto del período anterior.');
+
+  const docsHtml = docsArr.length
+    ? `<ul class="doc-ul">${docsArr.map(d=>`<li>${d}</li>`).join('')}</ul>`
+    : '<p class="doc-p"><em>No se han seleccionado documentos.</em></p>';
+
+  // Clausulas opcionales HTML
+  let clausulasOpcionales = '';
+  let clNum = 12; // continuación tras cláusulas obligatorias
+
+  if(clSupervision){
+    clausulasOpcionales += `
+      <p class="doc-clause-title">CLÁUSULA ${clNum}.- SUPERVISIÓN Y ACCESO</p>
+      <p class="doc-p">"LA CONTRATANTE" tendrá derecho a supervisar en todo momento la correcta ejecución del servicio objeto del presente contrato. Para tal efecto, podrá acceder a las áreas e instalaciones donde se presten los servicios, con previo aviso de veinticuatro (24) horas, salvo situación de emergencia. "EL PRESTADOR" deberá designar un responsable operativo de enlace con quien coordinar dichas supervisiones.</p>
+    `;
+    clNum++;
+  }
+  if(clConfidencial){
+    clausulasOpcionales += `
+      <p class="doc-clause-title">CLÁUSULA ${clNum}.- CONFIDENCIALIDAD</p>
+      <p class="doc-p">Las partes se obligan a mantener la más estricta confidencialidad respecto de la información comercial, técnica, operativa o de cualquier otra naturaleza que conozcan con motivo de la ejecución del presente contrato. Esta obligación subsistirá por un período de dos (2) años posteriores a la terminación del contrato, sea cual fuere la causa. El incumplimiento dará lugar a la rescisión del contrato sin responsabilidad para "LA CONTRATANTE" y a la acción de daños y perjuicios correspondiente.</p>
+    `;
+    clNum++;
+  }
+  if(clExclusividad){
+    clausulasOpcionales += `
+      <p class="doc-clause-title">CLÁUSULA ${clNum}.- EXCLUSIVIDAD</p>
+      <p class="doc-p">Durante la vigencia del presente contrato, "EL PRESTADOR" se obliga a no prestar servicios iguales o similares a los aquí pactados a empresas que sean competidoras directas de "LA CONTRATANTE", sin previa autorización escrita de esta última.</p>
+    `;
+    clNum++;
+  }
+  if(clEquipo){
+    clausulasOpcionales += `
+      <p class="doc-clause-title">CLÁUSULA ${clNum}.- EQUIPOS E INSUMOS</p>
+      <p class="doc-p">"EL PRESTADOR" declara que cuenta con los equipos, herramientas, maquinaria e insumos propios necesarios para la correcta ejecución del servicio, sin que "LA CONTRATANTE" tenga obligación alguna de proporcionarlos, salvo pacto expreso en contrario. El uso de instalaciones de "LA CONTRATANTE" no implica subordinación laboral entre las partes.</p>
+    `;
+    clNum++;
+  }
+  if(clPenalizacion && montoPen){
+    clausulasOpcionales += `
+      <p class="doc-clause-title">CLÁUSULA ${clNum}.- PENALIZACIÓN POR INCUMPLIMIENTO DOCUMENTAL</p>
+      <p class="doc-p">En caso de que "EL PRESTADOR" no entregue la documentación mensual obligatoria establecida en la Cláusula Once dentro del plazo pactado, "LA CONTRATANTE" podrá deducir del pago del período correspondiente la cantidad de ${blank(fmtMXN(montoPen)||montoPen,'monto de penalización')} por cada mes de retraso, sin perjuicio de los demás derechos que le confiere este contrato.</p>
+    `;
+    clNum++;
+  }
+  if(clSeguro){
+    clausulasOpcionales += `
+      <p class="doc-clause-title">CLÁUSULA ${clNum}.- SEGURO DE RESPONSABILIDAD CIVIL</p>
+      <p class="doc-p">"EL PRESTADOR" declara contar con un seguro de responsabilidad civil vigente${datosSeguro ? ` con ${datosSeguro}` : ''}, que cubre los riesgos derivados de la ejecución de los servicios objeto de este contrato. "EL PRESTADOR" se obliga a mantener dicha póliza durante toda la vigencia del contrato y a proporcionar copia a "LA CONTRATANTE" cuando esta lo requiera.</p>
+    `;
+    clNum++;
+  }
+
+  const html = `
+    ${memHtml}
+
+    <p class="doc-title">CONTRATO DE PRESTACIÓN DE SERVICIOS ESPECIALIZADOS</p>
+    <p class="doc-subtitle">Artículos 13, 14 y 15-A de la Ley Federal del Trabajo — Reforma de Subcontratación 2021 <span class="repse-badge">REPSE</span></p>
+
+    <p class="doc-p">Que celebran, por una parte, ${blank(contratante,'nombre de la empresa contratante')}, en lo sucesivo denominada <strong>"LA CONTRATANTE"</strong>, representada en este acto por ${blank(repContr,'nombre del representante legal')}, en su carácter de representante legal, con domicilio en ${blank(domContr,'domicilio fiscal de la contratante')}, con RFC ${blank(rfcContr,'RFC de la contratante')}${imssContr?' y Registro Patronal IMSS No. '+imssContr:''}; y por la otra parte, ${blank(prestador,'nombre del prestador')}, en lo sucesivo denominada <strong>"EL PRESTADOR"</strong>, representada por ${blank(repPrest,'nombre del representante del prestador')}, con domicilio en ${blank(domPrest,'domicilio del prestador')}, con RFC ${blank(rfcPrest,'RFC del prestador')}${imssPrest?' y Registro Patronal IMSS No. '+imssPrest:''}, contrato que se celebra al tenor de las siguientes:</p>
+
+    <p class="doc-decl-title">D E C L A R A C I O N E S</p>
+
+    <p class="doc-clause-title">I. DECLARA "LA CONTRATANTE":</p>
+    <ul class="doc-ul">
+      <li>Ser una empresa constituida y vigente conforme a las leyes mexicanas, con RFC ${blank(rfcContr,'RFC')} y domicilio en ${blank(domContr,'domicilio')}, con la capacidad legal suficiente para celebrar el presente contrato.</li>
+      <li>Que requiere de los servicios especializados aquí descritos, los cuales son distintos y ajenos a su actividad económica principal o corporativa, con arreglo a lo dispuesto por el artículo 13 de la Ley Federal del Trabajo.</li>
+    </ul>
+
+    <p class="doc-clause-title">II. DECLARA "EL PRESTADOR":</p>
+    <ul class="doc-ul">
+      <li>Ser una empresa constituida y vigente conforme a las leyes mexicanas, con RFC ${blank(rfcPrest,'RFC del prestador')} y domicilio en ${blank(domPrest,'domicilio del prestador')}.</li>
+      <li>Encontrarse inscrita en el Registro de Prestadoras de Servicios Especializados u Obras Especializadas (REPSE) de la Secretaría del Trabajo y Previsión Social, bajo el número ${blank(numRepse,'número de registro REPSE')}${fVigRepse ? ', con vigencia al <strong>'+fVigRepse+'</strong>' : ''}, para la prestación de ${blank(actRepse||objeto,'actividad especializada')}.</li>
+      <li>Contar con la infraestructura, personal, equipo, experiencia y capacidad técnica para prestar los servicios objeto del presente contrato.</li>
+      <li>Que los trabajadores que asigne a la ejecución de los servicios son empleados propios, con los que mantiene una relación laboral directa, siendo "EL PRESTADOR" el único patrón responsable de sus obligaciones de carácter laboral, de seguridad social y fiscal.</li>
+    </ul>
+
+    <p class="doc-decl-title">C L Á U S U L A S</p>
+
+    <p class="doc-clause-title">CLÁUSULA PRIMERA.- OBJETO</p>
+    <p class="doc-p">"EL PRESTADOR" se obliga a prestar a "LA CONTRATANTE" los siguientes servicios especializados: ${blank(objeto,'descripción del servicio especializado')}. Los servicios se prestarán en ${blank(lugar,'lugar de prestación del servicio')}${numTrab ? ', con un equipo aproximado de <strong>'+numTrab+'</strong> trabajadores asignados' : ''}.</p>
+
+    <p class="doc-clause-title">CLÁUSULA SEGUNDA.- INDEPENDENCIA LABORAL</p>
+    <p class="doc-p">Las partes declaran expresamente que el presente contrato no implica ninguna relación de trabajo, subordinación, ni vínculo laboral alguno entre "LA CONTRATANTE" y los trabajadores de "EL PRESTADOR". "EL PRESTADOR" es el único y exclusivo patrón de sus trabajadores, quienes permanecerán bajo su dirección, supervisión técnica y dependencia económica exclusiva. "LA CONTRATANTE" no tendrá poder de mando ni dirección sobre dichos trabajadores.</p>
+
+    <p class="doc-clause-title">CLÁUSULA TERCERA.- REGISTRO REPSE Y VERIFICACIÓN</p>
+    <p class="doc-p">"EL PRESTADOR" garantiza la vigencia de su registro en el REPSE durante toda la duración del presente contrato (número ${blank(numRepse,'número REPSE')}). En caso de que dicho registro sea cancelado, suspendido o no renovado oportunamente, "EL PRESTADOR" deberá notificarlo a "LA CONTRATANTE" de forma inmediata y por escrito. El incumplimiento de esta obligación facultará a "LA CONTRATANTE" a rescindir el contrato sin responsabilidad de su parte. "LA CONTRATANTE" se reserva el derecho de verificar en todo momento la vigencia del registro REPSE en el portal oficial de la STPS.</p>
+
+    <p class="doc-clause-title">CLÁUSULA CUARTA.- RESPONSABILIDAD SOLIDARIA Y CUMPLIMIENTO</p>
+    <p class="doc-p">De conformidad con lo dispuesto por los artículos 13 y 14 de la Ley Federal del Trabajo, las partes reconocen que "LA CONTRATANTE" puede ser declarada responsable solidaria de las obligaciones laborales y de seguridad social generadas por "EL PRESTADOR" respecto de los trabajadores asignados al presente contrato, en caso de incumplimiento de este último. En consecuencia, ambas partes acuerdan expresamente que la entrega mensual de la documentación establecida en la Cláusula Once es condición esencial del presente contrato.</p>
+
+    <p class="doc-clause-title">CLÁUSULA QUINTA.- OBLIGACIONES DE "EL PRESTADOR"</p>
+    <p class="doc-p">"EL PRESTADOR" se obliga a:</p>
+    <ul class="doc-ul">
+      <li>Mantener vigente en todo momento su registro en el REPSE y renovarlo oportunamente cada tres años o cuando así lo requiera la autoridad competente.</li>
+      <li>Cumplir en tiempo y forma con todas las obligaciones patronales de carácter laboral, de seguridad social (IMSS) y habitacional (INFONAVIT) respecto de los trabajadores que asigne al presente contrato.</li>
+      <li>Entregar a "LA CONTRATANTE" la documentación mensual establecida en la Cláusula Once, dentro de los primeros cinco (5) días hábiles del mes siguiente al período que corresponda.</li>
+      <li>Notificar por escrito a "LA CONTRATANTE" cualquier cambio en su situación jurídica, fiscal o de registro que pudiera afectar la ejecución del presente contrato.</li>
+      <li>Cumplir con las disposiciones en materia de seguridad e higiene que resulten aplicables en el lugar de prestación del servicio.</li>
+    </ul>
+
+    <p class="doc-clause-title">CLÁUSULA SEXTA.- OBLIGACIONES DE "LA CONTRATANTE"</p>
+    <p class="doc-p">"LA CONTRATANTE" se obliga a:</p>
+    <ul class="doc-ul">
+      <li>Pagar la contraprestación pactada en los términos y plazos establecidos en la Cláusula Octava, condicionado a la recepción de la documentación mensual requerida.</li>
+      <li>Verificar periódicamente la vigencia del registro REPSE de "EL PRESTADOR" a través del portal oficial de la STPS.</li>
+      <li>Facilitar las condiciones necesarias de acceso e información para la correcta ejecución del servicio, en los términos pactados.</li>
+      <li>Retener y enterar, cuando así lo ordene la ley, las cantidades que correspondan en su carácter de responsable solidario, con derecho a repetir en contra de "EL PRESTADOR".</li>
+    </ul>
+
+    <p class="doc-clause-title">CLÁUSULA SÉPTIMA.- VIGENCIA</p>
+    <p class="doc-p">El presente contrato tendrá vigencia ${tipoVig.toLowerCase().includes('indefinido') ? 'por tiempo indefinido' : 'por obra o tiempo determinado'}, con inicio el día ${fInicio ? '<strong>'+fInicio+'</strong>' : blank('','fecha de inicio')}${fFin && !tipoVig.toLowerCase().includes('indefinido') ? ' y hasta el día <strong>'+fFin+'</strong>' : ''}. ${tipoVig.toLowerCase().includes('indefinido') ? 'Cualquiera de las partes podrá darlo por terminado mediante aviso escrito con treinta (30) días naturales de anticipación.' : 'Al vencimiento del plazo pactado, el contrato terminará sin necesidad de aviso previo, salvo prórroga expresa por escrito.'}</p>
+
+    <p class="doc-clause-title">CLÁUSULA OCTAVA.- CONTRAPRESTACIÓN Y FORMA DE PAGO</p>
+    <p class="doc-p">"LA CONTRATANTE" pagará a "EL PRESTADOR" la cantidad de ${blank(montoFmt||monto,'monto de la contraprestación')}, con periodicidad ${blank(periodo,'periodicidad')}, mediante ${blank(formaPago,'forma de pago')}. El pago se realizará dentro de los ${blank(diasPago,'número')} días hábiles siguientes a la recepción del CFDI correspondiente <strong>y</strong> de la documentación mensual completa establecida en la Cláusula Once. El incumplimiento en la entrega de documentación faculta a "LA CONTRATANTE" a diferir el pago sin que ello constituya mora de su parte.</p>
+
+    <p class="doc-clause-title">CLÁUSULA NOVENA.- AUSENCIA DE RELACIÓN LABORAL CON "LA CONTRATANTE"</p>
+    <p class="doc-p">Queda expresamente convenido que los trabajadores utilizados por "EL PRESTADOR" para la ejecución de los servicios objeto del presente contrato no adquieren relación laboral alguna con "LA CONTRATANTE", toda vez que son trabajadores de "EL PRESTADOR", quien tiene respecto de ellos el carácter de patrón en los términos del artículo 10 de la Ley Federal del Trabajo.</p>
+
+    <p class="doc-clause-title">CLÁUSULA DÉCIMA.- TERMINACIÓN ANTICIPADA</p>
+    <p class="doc-p">Cualquiera de las partes podrá dar por terminado el presente contrato de manera anticipada en los siguientes supuestos: (a) incumplimiento grave o reiterado de cualquiera de las obligaciones pactadas; (b) cancelación, suspensión o no renovación del registro REPSE de "EL PRESTADOR"; (c) declaración de concurso mercantil o estado de insolvencia de cualquiera de las partes; (d) caso fortuito o fuerza mayor que imposibilite la ejecución del servicio por más de treinta (30) días. En los supuestos (a) y (b), la parte afectada deberá notificar por escrito a la otra con al menos quince (15) días de anticipación, salvo que el incumplimiento sea de tal gravedad que haga imposible o inconveniente continuar con el contrato.</p>
+
+    <p class="doc-clause-title">CLÁUSULA DÉCIMA PRIMERA.- DOCUMENTACIÓN MENSUAL OBLIGATORIA</p>
+    <p class="doc-p">Como condición esencial del presente contrato y en términos del artículo 13 de la Ley Federal del Trabajo, "EL PRESTADOR" deberá entregar mensualmente a "LA CONTRATANTE" la siguiente documentación, a más tardar dentro de los cinco (5) días hábiles del mes siguiente al período que corresponda:</p>
+    ${docsHtml}
+    <p class="doc-p">"LA CONTRATANTE" queda facultada para retener el pago de la contraprestación correspondiente hasta en tanto no reciba la documentación completa del período. "EL PRESTADOR" autoriza expresamente a "LA CONTRATANTE" a verificar directamente ante el IMSS, INFONAVIT y SAT el cumplimiento de las obligaciones aquí referidas.</p>
+
+    ${clausulasOpcionales}
+
+    <p class="doc-clause-title">CLÁUSULA ${clNum}.- JURISDICCIÓN Y LEGISLACIÓN APLICABLE</p>
+    <p class="doc-p">Para la interpretación y cumplimiento del presente contrato, las partes se someten a las disposiciones de la Ley Federal del Trabajo, Ley del Seguro Social, Ley del INFONAVIT y demás ordenamientos aplicables. Para la resolución de controversias que no puedan dirimirse de común acuerdo, las partes se someten expresamente a la jurisdicción de los Tribunales competentes de ${blank(ciudadFirma,'ciudad donde se firma')}, renunciando al fuero que pudiera corresponderles por razón de su domicilio presente o futuro.</p>
+
+    <p class="doc-p" style="margin-top:32px;">Leído el presente instrumento por las partes y enteradas de su contenido, alcance y valor legal, lo firman de conformidad en la ciudad de ${blank(ciudadFirma,'ciudad de firma')}, el día ${fFirma ? '<strong>'+fFirma+'</strong>' : blank('','fecha de firma')}.</p>
+
+    <div class="doc-firma-grid">
+      <div class="firma-box">
+        <br><br><br>
+        ${blank(repContr||contratante,'nombre del representante de la contratante')}
+        <strong>POR "LA CONTRATANTE"</strong>
+        <strong>${contratante || '[Empresa contratante]'}</strong>
+        <strong>${rfcContr || ''}</strong>
+      </div>
+      <div class="firma-box">
+        <br><br><br>
+        ${blank(repPrest||prestador,'nombre del representante del prestador')}
+        <strong>POR "EL PRESTADOR"</strong>
+        <strong>${prestador || '[Empresa prestadora]'}</strong>
+        <strong>REPSE: ${numRepse || '[número de registro]'}</strong>
+      </div>
+    </div>
+
+    ${(testigo1||testigo2)?`
+    <div class="doc-firma-grid" style="margin-top:36px;">
+      <div class="firma-box">
+        <br><br><br>
+        ${testigo1 ? testigo1 : '<em style="color:#aaa">—</em>'}
+        <strong>TESTIGO POR LA CONTRATANTE</strong>
+      </div>
+      <div class="firma-box">
+        <br><br><br>
+        ${testigo2 ? testigo2 : '<em style="color:#aaa">—</em>'}
+        <strong>TESTIGO POR EL PRESTADOR</strong>
+      </div>
+    </div>` : ''}
+  `;
+
+  const preview = document.getElementById('doc-preview');
+  if(preview) preview.innerHTML = html;
+}
+
+// Init
+document.addEventListener('DOMContentLoaded', () => {
+  // Fecha de hoy como default para fecha_firma
+  const hoy = new Date().toISOString().split('T')[0];
+  document.getElementById('fecha_firma').value = hoy;
+  render();
+});
+</script>
+</body>
+</html>

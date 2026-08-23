@@ -21,8 +21,8 @@ const { checkRateLimit, rateLimitResponse } = require('./_rate-limiter');
 const { createClient } = require('@supabase/supabase-js');
 const { puedeAccederRFC } = require('./_admin-auth');
 
-const TABLAS_PERMITIDAS = ['trabajadores', 'asistencias', 'evaluaciones_psicometricas', 'movimientos_trabajador', 'vacaciones_programadas', 'checadores'];
-const TABLAS_LECTURA   = ['trabajadores', 'asistencias', 'documentos_identidad', 'documentos_expediente', 'evaluaciones_psicometricas', 'movimientos_trabajador', 'vacaciones_programadas', 'checadores'];
+const TABLAS_PERMITIDAS = ['trabajadores', 'asistencias', 'evaluaciones_psicometricas', 'movimientos_trabajador', 'vacaciones_programadas', 'checadores', 'repse_proveedores', 'repse_docs_mensuales'];
+const TABLAS_LECTURA   = ['trabajadores', 'asistencias', 'documentos_identidad', 'documentos_expediente', 'evaluaciones_psicometricas', 'movimientos_trabajador', 'vacaciones_programadas', 'checadores', 'repse_proveedores', 'repse_docs_mensuales'];
 
 exports.handler = async (event) => {
   const corsResult = handleCors(event);

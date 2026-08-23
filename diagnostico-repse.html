@@ -1,0 +1,489 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>¿Necesito REPSE? — Diagnóstico</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap">
+<style>
+:root {
+  --bg: #f8fafc;
+  --surface: #ffffff;
+  --surface-2: #f1f5f9;
+  --border: #e2e8f0;
+  --text: #0f172a;
+  --text-2: #475569;
+  --text-3: #94a3b8;
+  --accent: #0ea5e9;
+  --accent-d: #0284c7;
+  --green: #16a34a;
+  --green-bg: #f0fdf4;
+  --green-b: #bbf7d0;
+  --red: #dc2626;
+  --red-bg: #fef2f2;
+  --red-b: #fecaca;
+  --amber: #d97706;
+  --amber-bg: #fffbeb;
+  --amber-b: #fde68a;
+  --radius: 14px;
+  --shadow: 0 4px 24px rgba(0,0,0,.08);
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #0f172a;
+    --surface: #1e293b;
+    --surface-2: #273449;
+    --border: #334155;
+    --text: #f1f5f9;
+    --text-2: #94a3b8;
+    --text-3: #475569;
+    --green-bg: #052e16;
+    --green-b: #166534;
+    --red-bg: #450a0a;
+    --red-b: #7f1d1d;
+    --amber-bg: #451a03;
+    --amber-b: #78350f;
+  }
+}
+:root[data-theme="dark"] {
+  --bg: #0f172a;
+  --surface: #1e293b;
+  --surface-2: #273449;
+  --border: #334155;
+  --text: #f1f5f9;
+  --text-2: #94a3b8;
+  --text-3: #475569;
+  --green-bg: #052e16;
+  --green-b: #166534;
+  --red-bg: #450a0a;
+  --red-b: #7f1d1d;
+  --amber-bg: #451a03;
+  --amber-b: #78350f;
+}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);min-height:100vh;display:flex;flex-direction:column;align-items:center;}
+
+/* Header */
+.top-bar{width:100%;background:var(--surface);border-bottom:1px solid var(--border);padding:14px 24px;display:flex;align-items:center;gap:12px;}
+.top-bar h1{font-size:1rem;font-weight:700;color:var(--text);}
+.top-bar span{font-size:.82rem;color:var(--text-3);}
+.back-link{font-size:.82rem;color:var(--accent);text-decoration:none;margin-right:auto;}
+.back-link:hover{text-decoration:underline;}
+
+/* Main wrapper */
+.wrapper{width:100%;max-width:700px;padding:32px 16px 64px;display:flex;flex-direction:column;gap:24px;}
+
+/* Hero */
+.hero{text-align:center;padding:36px 24px 28px;}
+.hero-badge{display:inline-flex;align-items:center;gap:6px;background:var(--surface-2);border:1px solid var(--border);border-radius:999px;padding:5px 14px;font-size:.78rem;font-weight:600;color:var(--accent);letter-spacing:.04em;text-transform:uppercase;margin-bottom:18px;}
+.hero h2{font-size:2rem;font-weight:800;line-height:1.2;margin-bottom:10px;}
+.hero p{font-size:1rem;color:var(--text-2);max-width:520px;margin:0 auto;}
+
+/* Progress */
+.progress-bar{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:16px 22px;display:flex;align-items:center;gap:14px;}
+.prog-label{font-size:.82rem;color:var(--text-2);white-space:nowrap;}
+.prog-track{flex:1;height:8px;background:var(--surface-2);border-radius:999px;overflow:hidden;}
+.prog-fill{height:100%;background:linear-gradient(90deg,var(--accent),#38bdf8);border-radius:999px;transition:width .4s ease;}
+.prog-pct{font-size:.82rem;font-weight:600;color:var(--accent);min-width:32px;text-align:right;}
+
+/* Question card */
+.q-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:28px 28px 24px;box-shadow:var(--shadow);}
+.q-num{font-size:.75rem;font-weight:700;color:var(--accent);text-transform:uppercase;letter-spacing:.08em;margin-bottom:10px;}
+.q-text{font-size:1.1rem;font-weight:700;line-height:1.4;margin-bottom:6px;}
+.q-hint{font-size:.84rem;color:var(--text-2);margin-bottom:22px;line-height:1.5;}
+.options{display:flex;flex-direction:column;gap:10px;}
+.opt{display:flex;align-items:flex-start;gap:14px;padding:14px 16px;border:2px solid var(--border);border-radius:10px;cursor:pointer;transition:border-color .18s,background .18s;user-select:none;}
+.opt:hover{border-color:var(--accent);background:color-mix(in srgb,var(--accent) 5%,var(--surface));}
+.opt.selected{border-color:var(--accent);background:color-mix(in srgb,var(--accent) 10%,var(--surface));}
+.opt-radio{width:20px;height:20px;border-radius:50%;border:2px solid var(--border);flex-shrink:0;margin-top:1px;transition:border-color .18s;display:flex;align-items:center;justify-content:center;}
+.opt.selected .opt-radio{border-color:var(--accent);}
+.opt-radio-inner{width:10px;height:10px;border-radius:50%;background:var(--accent);display:none;}
+.opt.selected .opt-radio-inner{display:block;}
+.opt-body{flex:1;}
+.opt-label{font-size:.94rem;font-weight:600;color:var(--text);}
+.opt-desc{font-size:.8rem;color:var(--text-2);margin-top:2px;line-height:1.4;}
+
+/* Navigation */
+.nav-row{display:flex;gap:10px;justify-content:flex-end;}
+.btn{padding:10px 22px;border-radius:8px;font-size:.9rem;font-weight:600;border:none;cursor:pointer;transition:opacity .15s,background .15s;}
+.btn-primary{background:var(--accent);color:#fff;}
+.btn-primary:hover{background:var(--accent-d);}
+.btn-secondary{background:var(--surface-2);color:var(--text-2);border:1px solid var(--border);}
+.btn-secondary:hover{color:var(--text);}
+.btn:disabled{opacity:.45;cursor:not-allowed;}
+
+/* Result card */
+.result-card{background:var(--surface);border:2px solid var(--border);border-radius:var(--radius);padding:32px;box-shadow:var(--shadow);display:none;flex-direction:column;gap:20px;}
+.result-card.visible{display:flex;}
+.result-icon{font-size:3rem;text-align:center;}
+.result-badge{display:inline-flex;align-items:center;gap:8px;padding:8px 18px;border-radius:999px;font-size:.88rem;font-weight:700;width:fit-content;margin:0 auto;}
+.badge-yes{background:var(--red-bg);border:1px solid var(--red-b);color:var(--red);}
+.badge-no{background:var(--green-bg);border:1px solid var(--green-b);color:var(--green);}
+.badge-maybe{background:var(--amber-bg);border:1px solid var(--amber-b);color:var(--amber);}
+.result-title{font-size:1.5rem;font-weight:800;text-align:center;line-height:1.3;}
+.result-body{font-size:.93rem;color:var(--text-2);line-height:1.65;text-align:center;}
+.result-body strong{color:var(--text);}
+.divider{border:none;border-top:1px solid var(--border);}
+
+/* Steps */
+.steps-title{font-size:.9rem;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:var(--text-3);}
+.step-list{display:flex;flex-direction:column;gap:10px;}
+.step-item{display:flex;gap:14px;align-items:flex-start;}
+.step-num{width:28px;height:28px;border-radius:50%;background:var(--accent);color:#fff;font-size:.78rem;font-weight:700;display:flex;align-items:center;justify-content:center;flex-shrink:0;margin-top:1px;}
+.step-text{font-size:.88rem;line-height:1.5;color:var(--text);}
+.step-text strong{display:block;font-size:.9rem;color:var(--text);}
+
+/* CTA block */
+.cta-block{background:linear-gradient(135deg,#0ea5e9 0%,#0284c7 100%);border-radius:var(--radius);padding:24px;color:#fff;text-align:center;}
+.cta-block h3{font-size:1.05rem;font-weight:700;margin-bottom:6px;}
+.cta-block p{font-size:.85rem;opacity:.9;margin-bottom:16px;line-height:1.5;}
+.cta-btns{display:flex;flex-wrap:wrap;gap:10px;justify-content:center;}
+.cta-btn{padding:9px 20px;border-radius:7px;font-size:.87rem;font-weight:700;text-decoration:none;border:2px solid rgba(255,255,255,.5);color:#fff;background:rgba(255,255,255,.15);backdrop-filter:blur(4px);transition:background .15s;}
+.cta-btn:hover{background:rgba(255,255,255,.28);}
+.cta-btn.solid{background:#fff;color:var(--accent-d);}
+.cta-btn.solid:hover{background:#f0f9ff;}
+
+/* Disclaimer */
+.disclaimer{font-size:.78rem;color:var(--text-3);text-align:center;line-height:1.6;padding:0 8px;}
+
+/* Transition */
+.q-card,.progress-bar{animation:fadeUp .3s ease both;}
+@keyframes fadeUp{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:translateY(0)}}
+</style>
+</head>
+<body>
+
+<div class="top-bar">
+  <a class="back-link" href="launcher.html">← Inicio</a>
+  <h1>Diagnóstico REPSE</h1>
+  <span>Reforma 2021 · Art. 13 LFT</span>
+</div>
+
+<div class="wrapper">
+
+  <!-- Hero -->
+  <div class="hero">
+    <div class="hero-badge">⚡ Diagnóstico gratuito</div>
+    <h2>¿Necesito registrarme en el REPSE?</h2>
+    <p>Responde 5 preguntas y descubre si tu empresa está obligada a registrarse — y qué consecuencias tiene no hacerlo.</p>
+  </div>
+
+  <!-- Progress bar -->
+  <div class="progress-bar" id="progress-section">
+    <span class="prog-label" id="prog-label">Pregunta 1 de 5</span>
+    <div class="prog-track"><div class="prog-fill" id="prog-fill" style="width:20%"></div></div>
+    <span class="prog-pct" id="prog-pct">20%</span>
+  </div>
+
+  <!-- Questions -->
+  <div id="questions-section">
+
+    <!-- Q1 -->
+    <div class="q-card" id="q1" data-q="1">
+      <div class="q-num">Pregunta 1 de 5</div>
+      <div class="q-text">¿Tu empresa presta servicios o ejecuta obras <em>para otras empresas o personas</em>?</div>
+      <div class="q-hint">El REPSE aplica cuando hay un cliente o contratante distinto a tu empresa que se beneficia de los servicios que tú prestas con tus propios trabajadores.</div>
+      <div class="options">
+        <div class="opt" data-q="1" data-v="yes" onclick="selectOpt(this)">
+          <div class="opt-radio"><div class="opt-radio-inner"></div></div>
+          <div class="opt-body">
+            <div class="opt-label">Sí — prestamos servicios o realizamos obras para terceros</div>
+            <div class="opt-desc">Tenemos clientes que nos contratan para que hagamos algo con nuestros empleados</div>
+          </div>
+        </div>
+        <div class="opt" data-q="1" data-v="no" onclick="selectOpt(this)">
+          <div class="opt-radio"><div class="opt-radio-inner"></div></div>
+          <div class="opt-body">
+            <div class="opt-label">No — operamos solo para nosotros mismos</div>
+            <div class="opt-desc">Mis trabajadores solo producen para la propia empresa, no para clientes externos</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Q2 -->
+    <div class="q-card" id="q2" data-q="2" style="display:none">
+      <div class="q-num">Pregunta 2 de 5</div>
+      <div class="q-text">¿La actividad que prestas está catalogada como <em>especializada</em> respecto al objeto social de tu cliente?</div>
+      <div class="q-hint">El REPSE aplica cuando la actividad que tú prestas NO forma parte del objeto social o actividad preponderante de quien te contrata. Ejemplo: empresa de limpieza que da servicio a una manufacturera.</div>
+      <div class="options">
+        <div class="opt" data-q="2" data-v="yes" onclick="selectOpt(this)">
+          <div class="opt-radio"><div class="opt-radio-inner"></div></div>
+          <div class="opt-body">
+            <div class="opt-label">Sí — lo que hacemos no es el giro principal de nuestros clientes</div>
+            <div class="opt-desc">Limpieza, vigilancia, TI, mantenimiento, nómina, etc., para empresas de otro ramo</div>
+          </div>
+        </div>
+        <div class="opt" data-q="2" data-v="partial" onclick="selectOpt(this)">
+          <div class="opt-radio"><div class="opt-radio-inner"></div></div>
+          <div class="opt-body">
+            <div class="opt-label">En algunos casos sí y en otros no — depende del cliente</div>
+            <div class="opt-desc">A veces nuestro servicio es parte del giro del cliente, otras veces no</div>
+          </div>
+        </div>
+        <div class="opt" data-q="2" data-v="no" onclick="selectOpt(this)">
+          <div class="opt-radio"><div class="opt-radio-inner"></div></div>
+          <div class="opt-body">
+            <div class="opt-label">No — hacemos lo mismo que hacen internamente nuestros clientes</div>
+            <div class="opt-desc">La actividad que prestamos es parte de la actividad principal de nuestros clientes</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Q3 -->
+    <div class="q-card" id="q3" data-q="3" style="display:none">
+      <div class="q-num">Pregunta 3 de 5</div>
+      <div class="q-text">¿Tienes trabajadores propios (en nómina o régimen de honorarios asimilados) que ejecutan esos servicios?</div>
+      <div class="q-hint">El REPSE aplica solo cuando hay una relación laboral o asimilada. Si solo intermedias o subasignas a otro proveedor sin tener trabajadores propios en el servicio, la situación cambia.</div>
+      <div class="options">
+        <div class="opt" data-q="3" data-v="yes" onclick="selectOpt(this)">
+          <div class="opt-radio"><div class="opt-radio-inner"></div></div>
+          <div class="opt-body">
+            <div class="opt-label">Sí — tengo empleados en nómina que realizan los servicios</div>
+            <div class="opt-desc">Les pago sueldos, los registro en IMSS y INFONAVIT</div>
+          </div>
+        </div>
+        <div class="opt" data-q="3" data-v="no" onclick="selectOpt(this)">
+          <div class="opt-radio"><div class="opt-radio-inner"></div></div>
+          <div class="opt-body">
+            <div class="opt-label">No — solo intermediamos o contratamos a otro proveedor</div>
+            <div class="opt-desc">Subcontratamos a terceros para ejecutar los servicios, sin tener trabajadores propios en sitio</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Q4 -->
+    <div class="q-card" id="q4" data-q="4" style="display:none">
+      <div class="q-num">Pregunta 4 de 5</div>
+      <div class="q-text">¿Tus clientes te retienen parte del pago o solicitan documentos laborales mensuales (IMSS, SUA, INFONAVIT)?</div>
+      <div class="q-hint">Esta es una señal práctica de que ya estás operando bajo el esquema REPSE: tu cliente te pide constancias porque la ley los hace responsables solidarios si no lo hacen.</div>
+      <div class="options">
+        <div class="opt" data-q="4" data-v="yes" onclick="selectOpt(this)">
+          <div class="opt-radio"><div class="opt-radio-inner"></div></div>
+          <div class="opt-body">
+            <div class="opt-label">Sí — ya me piden documentación mensual o retienen un porcentaje</div>
+            <div class="opt-desc">Mis clientes me solicitan comprobantes de IMSS, SUA o INFONAVIT regularmente</div>
+          </div>
+        </div>
+        <div class="opt" data-q="4" data-v="no" onclick="selectOpt(this)">
+          <div class="opt-radio"><div class="opt-radio-inner"></div></div>
+          <div class="opt-body">
+            <div class="opt-label">No — nunca me han pedido ese tipo de documentos</div>
+            <div class="opt-desc">Los clientes no solicitan ninguna documentación laboral relacionada con mis trabajadores</div>
+          </div>
+        </div>
+        <div class="opt" data-q="4" data-v="unsure" onclick="selectOpt(this)">
+          <div class="opt-radio"><div class="opt-radio-inner"></div></div>
+          <div class="opt-body">
+            <div class="opt-label">No lo sé — aún no hemos recibido ese tipo de solicitudes</div>
+            <div class="opt-desc">Es una empresa nueva o no tenemos experiencia con este tipo de requisitos</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Q5 -->
+    <div class="q-card" id="q5" data-q="5" style="display:none">
+      <div class="q-num">Pregunta 5 de 5</div>
+      <div class="q-text">¿El monto total anual de los servicios que prestas a terceros supera los $500,000 pesos?</div>
+      <div class="q-hint">Aunque la ley no establece un umbral monetario, en la práctica empresas con ingresos por servicios a terceros de este nivel ya enfrentan revisiones del SAT e IMSS relacionadas con el régimen REPSE.</div>
+      <div class="options">
+        <div class="opt" data-q="5" data-v="yes" onclick="selectOpt(this)">
+          <div class="opt-radio"><div class="opt-radio-inner"></div></div>
+          <div class="opt-body">
+            <div class="opt-label">Sí — superamos ese monto en servicios a terceros</div>
+            <div class="opt-desc">Nuestros ingresos por servicios prestados a otras empresas superan los $500K anuales</div>
+          </div>
+        </div>
+        <div class="opt" data-q="5" data-v="no" onclick="selectOpt(this)">
+          <div class="opt-radio"><div class="opt-radio-inner"></div></div>
+          <div class="opt-body">
+            <div class="opt-label">No — somos una operación pequeña o en inicio</div>
+            <div class="opt-desc">El volumen de ingresos por servicios a terceros es menor a ese monto</div>
+          </div>
+        </div>
+        <div class="opt" data-q="5" data-v="unsure" onclick="selectOpt(this)">
+          <div class="opt-radio"><div class="opt-radio-inner"></div></div>
+          <div class="opt-body">
+            <div class="opt-label">No lo tengo claro / estamos en proceso</div>
+            <div class="opt-desc">No tengo certeza del monto exacto por este tipo de servicios</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Nav -->
+    <div class="nav-row" id="nav-row">
+      <button class="btn btn-secondary" id="btn-prev" onclick="prevQ()" style="display:none">← Anterior</button>
+      <button class="btn btn-primary" id="btn-next" onclick="nextQ()" disabled>Siguiente →</button>
+    </div>
+
+  </div><!-- /questions-section -->
+
+  <!-- Result -->
+  <div class="result-card" id="result-card">
+    <div class="result-icon" id="res-icon"></div>
+    <div id="res-badge" style="text-align:center;"></div>
+    <div class="result-title" id="res-title"></div>
+    <div class="result-body" id="res-body"></div>
+    <hr class="divider">
+    <div id="res-steps-block"></div>
+    <div class="cta-block" id="res-cta"></div>
+    <p class="disclaimer">Este diagnóstico es orientativo, no constituye asesoría jurídica. Para determinar con certeza la obligación de registro REPSE, consulta a un especialista en derecho laboral. Reforma publicada DOF 23-abr-2021.</p>
+  </div>
+
+</div><!-- /wrapper -->
+
+<script>
+const answers = {};
+let current = 1;
+const total = 5;
+
+function selectOpt(el) {
+  const q = el.dataset.q;
+  const v = el.dataset.v;
+  document.querySelectorAll(`.opt[data-q="${q}"]`).forEach(o => o.classList.remove('selected'));
+  el.classList.add('selected');
+  answers[q] = v;
+  document.getElementById('btn-next').disabled = false;
+}
+
+function updateProgress(q) {
+  const pct = Math.round((q / total) * 100);
+  document.getElementById('prog-fill').style.width = pct + '%';
+  document.getElementById('prog-pct').textContent = pct + '%';
+  document.getElementById('prog-label').textContent = `Pregunta ${q} de ${total}`;
+}
+
+function showQ(n) {
+  for (let i = 1; i <= total; i++) {
+    const el = document.getElementById('q' + i);
+    if (el) el.style.display = (i === n) ? '' : 'none';
+  }
+  document.getElementById('btn-prev').style.display = n > 1 ? '' : 'none';
+  document.getElementById('btn-next').textContent = n < total ? 'Siguiente →' : 'Ver resultado';
+  document.getElementById('btn-next').disabled = !answers[String(n)];
+  updateProgress(n);
+  current = n;
+}
+
+function nextQ() {
+  if (!answers[String(current)]) return;
+  if (current < total) {
+    showQ(current + 1);
+  } else {
+    showResult();
+  }
+}
+
+function prevQ() {
+  if (current > 1) showQ(current - 1);
+}
+
+function showResult() {
+  document.getElementById('questions-section').style.display = 'none';
+  document.getElementById('progress-section').style.display = 'none';
+
+  const a = answers;
+  const rc = document.getElementById('result-card');
+  rc.classList.add('visible');
+
+  // Scoring logic
+  let score = 0;
+  if (a['1'] === 'yes') score += 3;
+  if (a['2'] === 'yes') score += 3;
+  if (a['2'] === 'partial') score += 2;
+  if (a['3'] === 'yes') score += 3;
+  if (a['4'] === 'yes') score += 2;
+  if (a['5'] === 'yes') score += 1;
+  if (a['5'] === 'unsure') score += 0;
+
+  const clear_no = a['1'] === 'no' || a['3'] === 'no';
+  const likely_yes = score >= 7;
+  const maybe = !clear_no && !likely_yes;
+
+  let icon, badge, title, body, steps, cta;
+
+  if (clear_no) {
+    // Definitively no
+    icon = '✅';
+    badge = `<span class="result-badge badge-no">✅ Probablemente NO requieres REPSE</span>`;
+    title = 'Tu actividad no encuadra en el régimen de subcontratación';
+    body = `Según tus respuestas, <strong>no prestas servicios especializados a terceros con trabajadores propios</strong>, que es el supuesto que obliga al registro REPSE según el artículo 13 de la Ley Federal del Trabajo (reforma 2021).
+    <br><br>Sin embargo, si tu situación cambia — inicias a prestar servicios a otras empresas con tus propios empleados — deberás analizar la obligación de registro en ese momento.`;
+    steps = `
+      <div class="steps-title" style="margin-bottom:12px;">Recomendaciones</div>
+      <div class="step-list">
+        <div class="step-item"><div class="step-num">1</div><div class="step-text"><strong>Monitorea tu modelo de negocio</strong> Si en algún momento empiezas a prestar servicios a terceros con tus trabajadores, reevalúa esta situación.</div></div>
+        <div class="step-item"><div class="step-num">2</div><div class="step-text"><strong>Revisa contratos con clientes</strong> Asegúrate de que los contratos vigentes no impliquen una relación de servicios especializados inadvertida.</div></div>
+        <div class="step-item"><div class="step-num">3</div><div class="step-text"><strong>Si eres contratante</strong> Aunque tú no requieras REPSE, exige el número de registro a tus proveedores para evitar responsabilidad solidaria (art. 13 LFT).</div></div>
+      </div>`;
+    cta = `<h3>¿Tienes proveedores de servicios especializados?</h3>
+      <p>Verifica que tus proveedores tengan REPSE vigente y gestiona su documentación mensual para protegerte de la responsabilidad solidaria.</p>
+      <div class="cta-btns">
+        <a href="gestor-repse.html" class="cta-btn solid">Gestor de Proveedores REPSE</a>
+        <a href="contrato-repse.html" class="cta-btn">Generar Contrato REPSE</a>
+      </div>`;
+  } else if (likely_yes) {
+    // Definitively yes
+    icon = '⚠️';
+    badge = `<span class="result-badge badge-yes">⚠️ Sí requieres registrarte en el REPSE</span>`;
+    title = 'Tu empresa está obligada a obtener el registro REPSE';
+    body = `Según tus respuestas, <strong>prestas servicios especializados a terceros con trabajadores propios</strong>, lo que encuadra exactamente en el supuesto del artículo 13 LFT reformado en 2021.
+    <br><br>Operar sin registro REPSE te expone a multas de la STPS, negativas de pago por parte de clientes y que éstos sean considerados responsables solidarios por las obligaciones laborales, fiscales y de seguridad social de tus trabajadores.`;
+    steps = `
+      <div class="steps-title" style="margin-bottom:12px;">Pasos para obtener tu REPSE</div>
+      <div class="step-list">
+        <div class="step-item"><div class="step-num">1</div><div class="step-text"><strong>Tramita tu e.firma vigente</strong> Necesitas la firma electrónica avanzada del representante legal de la empresa ante el SAT.</div></div>
+        <div class="step-item"><div class="step-num">2</div><div class="step-text"><strong>Ingresa al portal STPS</strong> Accede a repse.stps.gob.mx con tu e.firma y completa el formulario de registro como "Persona Moral Prestadora".</div></div>
+        <div class="step-item"><div class="step-num">3</div><div class="step-text"><strong>Describe tu actividad especializada</strong> Define con precisión el tipo de servicio u obra especializada que prestas — este campo es crítico para la aprobación.</div></div>
+        <div class="step-item"><div class="step-num">4</div><div class="step-text"><strong>Obtén tu número REPSE</strong> Una vez aprobado, recibirás un número de registro válido por 3 años. Inclúyelo en todos tus contratos con clientes.</div></div>
+        <div class="step-item"><div class="step-num">5</div><div class="step-text"><strong>Entrega documentación mensual</strong> Cada mes debes proporcionar a tus clientes: CFDI nómina, SUA/IMSS, INFONAVIT, constancia REPSE vigente y relación de trabajadores.</div></div>
+        <div class="step-item"><div class="step-num">6</div><div class="step-text"><strong>Renueva antes de que expire</strong> El registro vence a los 3 años. Renueva con 30 días de anticipación para evitar interrupciones de contrato.</div></div>
+      </div>`;
+    cta = `<h3>Ponemos en orden tu operación REPSE</h3>
+      <p>Genera contratos profesionales con cláusula REPSE, gestiona la documentación mensual de tus clientes y mantén todo actualizado.</p>
+      <div class="cta-btns">
+        <a href="contrato-repse.html" class="cta-btn solid">Generar Contrato REPSE</a>
+        <a href="gestor-repse.html" class="cta-btn">Gestor de Proveedores</a>
+        <a href="https://repse.stps.gob.mx" target="_blank" rel="noopener" class="cta-btn">Ir al portal STPS →</a>
+      </div>`;
+  } else {
+    // Maybe
+    icon = '🔍';
+    badge = `<span class="result-badge badge-maybe">🔍 Zona gris — requieres análisis</span>`;
+    title = 'Tu situación requiere una revisión más detallada';
+    body = `Tus respuestas sugieren que <strong>podrías tener obligación de registro REPSE dependiendo de la naturaleza exacta de tus servicios</strong> y de cómo está estructurado tu contrato con cada cliente.
+    <br><br>La reforma de 2021 tiene varias zonas grises: cuando un mismo servicio puede considerarse "especializado" para un cliente pero no para otro, o cuando el volumen es reducido pero la actividad encuadra en el supuesto legal.`;
+    steps = `
+      <div class="steps-title" style="margin-bottom:12px;">Próximos pasos recomendados</div>
+      <div class="step-list">
+        <div class="step-item"><div class="step-num">1</div><div class="step-text"><strong>Revisa tus contratos de servicio</strong> Analiza si en los contratos con tus clientes tus trabajadores están bajo la dirección del cliente — eso es un indicador de subcontratación.</div></div>
+        <div class="step-item"><div class="step-num">2</div><div class="step-text"><strong>Consulta al SAT e IMSS</strong> Solicita una consulta de criterio no vinculante para clarificar tu situación antes de operar en gris.</div></div>
+        <div class="step-item"><div class="step-num">3</div><div class="step-text"><strong>Considera registrarte de manera preventiva</strong> El costo de registro es cero — tramitarlo elimina el riesgo y genera confianza en tus clientes.</div></div>
+        <div class="step-item"><div class="step-num">4</div><div class="step-text"><strong>Prepara contratos con cláusula REPSE</strong> Independientemente del resultado, ten contratos formales que delimiten responsabilidades con tus clientes.</div></div>
+      </div>`;
+    cta = `<h3>Da el siguiente paso con herramientas profesionales</h3>
+      <p>Gestiona tus relaciones con proveedores y clientes REPSE con contratos y seguimiento mensual integrado.</p>
+      <div class="cta-btns">
+        <a href="contrato-repse.html" class="cta-btn solid">Generar Contrato REPSE</a>
+        <a href="gestor-repse.html" class="cta-btn">Gestor de Proveedores</a>
+      </div>`;
+  }
+
+  document.getElementById('res-icon').textContent = icon;
+  document.getElementById('res-badge').innerHTML = badge;
+  document.getElementById('res-title').textContent = title;
+  document.getElementById('res-body').innerHTML = body;
+  document.getElementById('res-steps-block').innerHTML = steps;
+  document.getElementById('res-cta').innerHTML = cta;
+}
+
+// Init
+showQ(1);
+</script>
+</body>
+</html>

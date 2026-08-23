@@ -590,13 +590,28 @@ select.form-input { cursor: pointer; }
   </div>
 
   <div class="sidebar-section">
-    <div class="sidebar-section-label">Documentos</div>
+    <div class="sidebar-section-label">Ingresos</div>
+    <div class="nav-item" onclick="goPanel('mrr')">
+      <span class="nav-icon">💰</span> MRR y métricas
+    </div>
+    <div class="nav-item" onclick="goPanel('suscripcion')">
+      <span class="nav-icon">💳</span> Suscripciones
+    </div>
+    <div class="nav-item" onclick="goPanel('retencion')">
+      <span class="nav-icon">📊</span> Retención / churn
+    </div>
+    <div class="nav-item" onclick="goPanel('planes')">
+      <span class="nav-icon">⭐</span> Planes y pricing
+    </div>
   </div>
 
   <div class="sidebar-section">
-    <div class="sidebar-section-label">Mi cuenta</div>
-    <div class="nav-item" onclick="goPanel('suscripcion')">
-      <span class="nav-icon">💳</span> Suscripciones y cobros
+    <div class="sidebar-section-label">Operación</div>
+    <div class="nav-item" onclick="goPanel('onboarding')">
+      <span class="nav-icon">🚀</span> Onboarding
+    </div>
+    <div class="nav-item" onclick="goPanel('seguridad')">
+      <span class="nav-icon">🔒</span> Seguridad / accesos
     </div>
     <div class="nav-item" onclick="window.open('launcher.html')">
       <span class="nav-icon">🧭</span> Centro de acceso
@@ -1104,6 +1119,152 @@ select.form-input { cursor: pointer; }
       </div>
     </div>
 
+    <!-- ══ MRR Y MÉTRICAS ══ -->
+    <div class="panel" id="panel-mrr">
+      <div class="stats-row" style="grid-template-columns:repeat(5,1fr);">
+        <div class="stat-card">
+          <div class="stat-label">MRR</div>
+          <div class="stat-value" id="mrr-kpi-mrr" style="color:var(--green);font-size:22px;">$0</div>
+          <div class="stat-sub">MXN/mes recurrente</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-label">ARR</div>
+          <div class="stat-value" id="mrr-kpi-arr" style="font-size:22px;">$0</div>
+          <div class="stat-sub">Anualizado ×12</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-label">Clientes activos</div>
+          <div class="stat-value" id="mrr-kpi-clientes" style="font-size:22px;">0</div>
+          <div class="stat-sub">con suscripción</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-label">ARPU</div>
+          <div class="stat-value" id="mrr-kpi-arpu" style="font-size:22px;">—</div>
+          <div class="stat-sub">ticket promedio</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-label">Churn histórico</div>
+          <div class="stat-value" id="mrr-kpi-churn" style="font-size:22px;">—</div>
+          <div class="stat-sub">cancelados / total</div>
+        </div>
+      </div>
+      <div class="two-col">
+        <div class="card">
+          <div class="section-title" style="margin-bottom:14px;">Mix de planes</div>
+          <div id="mrr-mix-planes" style="display:flex;flex-direction:column;gap:12px;font-size:13px;"></div>
+        </div>
+        <div class="card">
+          <div class="section-title" style="margin-bottom:14px;">Accesos rápidos</div>
+          <div style="display:flex;flex-direction:column;gap:10px;font-size:13px;">
+            <div style="padding:12px;background:var(--surface);border-radius:8px;">
+              <div style="font-weight:600;margin-bottom:4px;">💳 Facturación e historial</div>
+              <div style="color:var(--ink2);">El historial detallado de cobros y reintentos está en <a href="https://dashboard.stripe.com/payments" target="_blank" style="color:var(--navy2);font-weight:600;">Stripe → Pagos</a>.</div>
+            </div>
+            <div style="padding:12px;background:var(--surface);border-radius:8px;">
+              <div style="font-weight:600;margin-bottom:6px;">📅 Próximos cobros (mensuales)</div>
+              <div id="mrr-proximos" style="font-size:12px;color:var(--ink2);"></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ══ RETENCIÓN ══ -->
+    <div class="panel" id="panel-retencion">
+      <div class="two-col">
+        <div class="card">
+          <div class="section-title" style="margin-bottom:14px;">Métricas de retención</div>
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;">
+            <div style="background:var(--surface);border-radius:8px;padding:16px;text-align:center;">
+              <div style="font-size:28px;font-weight:800;color:var(--green);" id="ret2-activos">0</div>
+              <div style="font-size:11px;color:var(--ink3);margin-top:4px;">Clientes activos</div>
+            </div>
+            <div style="background:var(--surface);border-radius:8px;padding:16px;text-align:center;">
+              <div style="font-size:28px;font-weight:800;color:var(--red);" id="ret2-churn">—</div>
+              <div style="font-size:11px;color:var(--ink3);margin-top:4px;">Churn histórico</div>
+            </div>
+            <div style="background:var(--surface);border-radius:8px;padding:16px;text-align:center;">
+              <div style="font-size:28px;font-weight:800;color:var(--navy);" id="ret2-anuales">0</div>
+              <div style="font-size:11px;color:var(--ink3);margin-top:4px;">En plan anual</div>
+            </div>
+            <div style="background:var(--surface);border-radius:8px;padding:16px;text-align:center;">
+              <div style="font-size:28px;font-weight:800;color:var(--navy);" id="ret2-nuevos">0</div>
+              <div style="font-size:11px;color:var(--ink3);margin-top:4px;">Nuevos (30 días)</div>
+            </div>
+          </div>
+        </div>
+        <div class="card">
+          <div class="section-title" style="margin-bottom:14px;">Clientes más recientes</div>
+          <div id="ret2-recientes" style="display:flex;flex-direction:column;gap:8px;"></div>
+        </div>
+      </div>
+      <div class="card" style="margin-top:16px;">
+        <div class="section-title" style="margin-bottom:6px;">Nota sobre métricas</div>
+        <p style="font-size:12px;color:var(--ink3);">Para medir conversión (visitas → cliente) necesitas conectar Google Analytics o Plausible a la landing page. Esta sección muestra únicamente datos reales de clientes ya registrados en Supabase.</p>
+      </div>
+    </div>
+
+    <!-- ══ PLANES ══ -->
+    <div class="panel" id="panel-planes">
+      <div id="planes-resumen2" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:14px;margin-bottom:16px;"></div>
+      <div class="card">
+        <div class="section-title" style="margin-bottom:12px;">Accesos rápidos</div>
+        <div style="display:flex;flex-direction:column;gap:8px;">
+          <div style="padding:12px 14px;background:var(--surface);border-radius:8px;border:1px solid var(--border);display:flex;align-items:center;gap:12px;">
+            <div style="flex:1;"><div style="font-size:13px;font-weight:600;">Ver y editar precios en la landing</div><div style="font-size:11px;color:var(--ink3);">Cambia montos, promociones o bonos de los planes</div></div>
+            <button class="btn btn-primary btn-sm" onclick="window.open('index.html#precios')">Ver landing</button>
+          </div>
+          <div style="padding:12px 14px;background:var(--surface);border-radius:8px;border:1px solid var(--border);display:flex;align-items:center;gap:12px;">
+            <div style="flex:1;"><div style="font-size:13px;font-weight:600;">Programa de referidos</div><div style="font-size:11px;color:var(--ink3);">25% de comisión recurrente por cada cliente referido</div></div>
+            <button class="btn btn-primary btn-sm" onclick="window.open('portal-referidos.html')">Ver programa</button>
+          </div>
+          <div style="padding:12px 14px;background:var(--surface);border-radius:8px;border:1px solid var(--border);display:flex;align-items:center;gap:12px;">
+            <div style="flex:1;"><div style="font-size:13px;font-weight:600;">Tabla de precios para venta</div><div style="font-size:11px;color:var(--ink3);">Comparte esta tabla con prospectos</div></div>
+            <button class="btn btn-primary btn-sm" onclick="goPanel('precios-venta')">Ver tabla</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ══ ONBOARDING ══ -->
+    <div class="panel" id="panel-onboarding">
+      <div class="card" style="margin-bottom:16px;">
+        <div class="section-title" style="margin-bottom:14px;">Clientes recién registrados (últimos 14 días)</div>
+        <div id="onb-clientes"></div>
+      </div>
+      <div class="card">
+        <div class="section-title" style="margin-bottom:12px;">Acciones rápidas</div>
+        <div style="display:flex;flex-direction:column;gap:8px;">
+          <button class="btn btn-primary" style="justify-content:flex-start;" onclick="window.open('paquete-bienvenida.html')">📦 Crear paquete para nuevo cliente</button>
+          <button class="btn btn-outline btn-sm" style="justify-content:flex-start;" onclick="window.open('asistente-legal-ia.html')">⚖️ Abrir asistente IA para diagnóstico</button>
+          <button class="btn btn-outline btn-sm" style="justify-content:flex-start;" onclick="window.open('generador-avanzado-ia.html')">📋 Generar dictamen de compliance</button>
+          <button class="btn btn-outline btn-sm" style="justify-content:flex-start;" onclick="window.open('onboarding-admin.html')">📋 Abrir Playbook de Implementación</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- ══ SEGURIDAD ══ -->
+    <div class="panel" id="panel-seguridad">
+      <div class="two-col">
+        <div class="card">
+          <div class="section-title" style="margin-bottom:14px;">Últimos accesos por cliente</div>
+          <div id="seg-accesos" style="display:flex;flex-direction:column;gap:8px;"></div>
+        </div>
+        <div class="card">
+          <div class="section-title" style="margin-bottom:14px;">Clientes sin acceso (30+ días)</div>
+          <div id="seg-inactivos" style="display:flex;flex-direction:column;gap:8px;"></div>
+        </div>
+      </div>
+      <div class="card" style="margin-top:16px;">
+        <div class="section-title" style="margin-bottom:12px;">Administración de cuentas</div>
+        <div style="display:flex;gap:10px;flex-wrap:wrap;">
+          <button class="btn btn-outline btn-sm" onclick="window.open('https://supabase.com/dashboard/project/hpzgqaplrywwjuvrzhcp/auth/users','_blank')">🔑 Usuarios en Supabase</button>
+          <button class="btn btn-outline btn-sm" onclick="recargarClientes()">🔄 Recargar datos</button>
+          <button class="btn btn-danger btn-sm" onclick="eliminarCuentasDemo()">🗑 Limpiar cuentas demo</button>
+        </div>
+      </div>
+    </div>
+
   </div><!-- /content -->
 </div><!-- /main -->
 </div><!-- /shell -->
@@ -1346,7 +1507,10 @@ const panelTitles = {
   portal:'Portal del cliente', alertas:'Centro de alertas',
   solicitudes:'Solicitudes de asesoría',
   suscripcion:'Suscripciones y cobros', 'precios-venta':'Tabla de precios para venta',
-  configuracion:'Configuración'
+  configuracion:'Configuración',
+  mrr:'MRR y métricas financieras', retencion:'Retención y churn',
+  planes:'Planes y pricing', onboarding:'Onboarding de nuevos clientes',
+  seguridad:'Seguridad y accesos'
 };
 
 // Header de autorización para las funciones admin (token de la sesión)
@@ -1461,7 +1625,8 @@ async function goPanel(id) {
   if (id === 'despachos') cargarDespachos();
 
   // Cargar clientes si están vacíos
-  if ((id==='clientes' || id==='suscripcion') && CLIENTES.length === 0) {
+  const panelsQueNecesitanClientes = ['clientes','suscripcion','mrr','retencion','planes','onboarding','seguridad'];
+  if (panelsQueNecesitanClientes.includes(id) && CLIENTES.length === 0) {
     try {
       CLIENTES = await cargarClientesDesdeSupabase();
       calcularMecricas(CLIENTES);
@@ -1474,6 +1639,11 @@ async function goPanel(id) {
   if (id==='alertas')     renderAlertas();
   if (id==='solicitudes') cargarSolicitudesAdmin();
   if (id==='suscripcion') renderSuscripcion();
+  if (id==='mrr')         renderMRR_admin();
+  if (id==='retencion')   renderRetencion_admin();
+  if (id==='planes')      renderPlanes_admin();
+  if (id==='onboarding')  renderOnboarding_admin();
+  if (id==='seguridad')   renderSeguridad_admin();
 }
 
 // ════════════════════════════════════════════════════════
@@ -1572,8 +1742,13 @@ function renderTablaClientes() {
 // ════════════════════════════════════════════════════════
 function renderSuscripcion() {
   const planKey = p => (p||'').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'');
-  const PLAN_COLOR = { basico:'badge-gray', estandar:'badge-blue', pro:'badge-green' };
-  const fmtMXN = n => '$'+n.toLocaleString('es-MX');
+  const PLAN_COLOR = {
+    basico:'badge-gray', estandar:'badge-blue', pro:'badge-green',
+    micro:'badge-gray', pyme:'badge-blue', mediana:'badge-purple',
+    empresa:'badge-amber', trial:'badge-gray', personalizado:'badge-amber'
+  };
+  const fmtMXN  = n => '$'+n.toLocaleString('es-MX');
+  const fmtDate = s => s ? new Date(s).toLocaleDateString('es-MX',{day:'2-digit',month:'short',year:'2-digit'}) : '\u2014';
 
   const activos = CLIENTES.filter(c => c.cuota > 0);
   const mrr     = activos.reduce((a,c) => a + (c.cuota||0), 0);
@@ -1581,9 +1756,17 @@ function renderSuscripcion() {
 
   document.getElementById('susc-mrr').textContent            = fmtMXN(mrr);
   document.getElementById('susc-total-clientes').textContent = CLIENTES.length;
-  document.getElementById('susc-arpu').textContent           = activos.length ? fmtMXN(arpu) : '—';
+  document.getElementById('susc-arpu').textContent           = activos.length ? fmtMXN(arpu) : '\u2014';
 
-  if (!CLIENTES.length) {
+  // Ordenar: m\u00e1s recientes primero
+  const clientesOrdenados = [...CLIENTES].sort((a, b) => {
+    if (!a.creado && !b.creado) return 0;
+    if (!a.creado) return 1;
+    if (!b.creado) return -1;
+    return new Date(b.creado) - new Date(a.creado);
+  });
+
+  if (!clientesOrdenados.length) {
     document.getElementById('susc-tabla-clientes').innerHTML =
       '<div style="text-align:center;padding:32px;color:var(--ink3);font-size:13px;">Sin clientes. Use \'Dar de alta cliente\' para crear el primero.</div>';
     return;
@@ -1595,38 +1778,40 @@ function renderSuscripcion() {
         <th style="text-align:left;padding:8px 6px;font-size:11px;color:var(--ink3);">Empresa / RFC</th>
         <th style="text-align:left;padding:8px 6px;font-size:11px;color:var(--ink3);">Plan</th>
         <th style="text-align:right;padding:8px 6px;font-size:11px;color:var(--ink3);">Cuota</th>
+        <th style="text-align:left;padding:8px 6px;font-size:11px;color:var(--ink3);">Alta</th>
         <th style="text-align:center;padding:8px 6px;font-size:11px;color:var(--ink3);">Stripe</th>
         <th style="text-align:center;padding:8px 6px;font-size:11px;color:var(--ink3);">Acciones</th>
       </tr></thead>
       <tbody>
-        ${CLIENTES.map(cl => `
+        ${clientesOrdenados.map(cl => `
           <tr style="border-bottom:1px solid var(--border);">
             <td style="padding:10px 6px;">
               <div style="font-weight:600;font-size:13px;">${cl.empresa}</div>
               <div style="font-size:10px;color:var(--ink3);">${cl.rfc} · ${cl.email||'sin email'}</div>
             </td>
             <td style="padding:10px 6px;">
-              <span class="badge ${PLAN_COLOR[planKey(cl.plan)]||'badge-gray'}" style="text-transform:capitalize;">${cl.plan||'—'}</span>
+              <span class="badge ${PLAN_COLOR[planKey(cl.plan)]||'badge-gray'}" style="text-transform:capitalize;">${cl.plan||'\u2014'}</span>
             </td>
             <td style="padding:10px 6px;text-align:right;font-weight:600;">
-              ${cl.cuota ? fmtMXN(cl.cuota)+'/mes' : '<span style="color:var(--ink3)">—</span>'}
+              ${cl.cuota ? fmtMXN(cl.cuota)+'/mes' : '<span style="color:var(--ink3)">\u2014</span>'}
             </td>
+            <td style="padding:10px 6px;font-size:11px;color:var(--ink3);">${fmtDate(cl.creado)}</td>
             <td style="padding:10px 6px;text-align:center;">
               ${cl.stripeSubId
-                ? `<a href="https://dashboard.stripe.com/subscriptions/${cl.stripeSubId}" target="_blank" class="badge badge-green" style="text-decoration:none;">✓ Ver</a>`
+                ? `<a href="https://dashboard.stripe.com/subscriptions/${cl.stripeSubId}" target="_blank" class="badge badge-green" style="text-decoration:none;">\u2713 Ver</a>`
                 : '<span class="badge badge-gray">Manual</span>'}
             </td>
             <td style="padding:10px 6px;text-align:center;">
               <div style="display:flex;gap:4px;justify-content:center;">
-                <button class="btn btn-ghost btn-sm" onclick="abrirPortal('${cl.rfc}','${cl.empresa.replace(/'/g,"\'")}','${cl.plan}')" title="Ver portal">👁</button>
+                <button class="btn btn-ghost btn-sm" onclick="abrirPortal('${cl.rfc}','${cl.empresa.replace(/'/g,"\\'")}','${cl.plan}')" title="Ver portal">👁</button>
                 <button class="btn btn-ghost btn-sm" onclick="goPanel('clientes');cambiarTabClientes('pass');document.getElementById('gp-rfc').value='${cl.rfc}';buscarClienteAcceso()" title="Gestionar acceso">🔑</button>
-                <button class="btn btn-danger btn-sm" onclick="eliminarCliente('${cl.id}','${cl.empresa.replace(/'/g,"\'")}')">✕</button>
+                <button class="btn btn-danger btn-sm" onclick="eliminarCliente('${cl.id}','${cl.empresa.replace(/'/g,"\\'")}')">\u2715</button>
               </div>
             </td>
           </tr>`).join('')}
       </tbody>
       <tfoot><tr style="border-top:2px solid var(--border);background:var(--surface);">
-        <td colspan="2" style="padding:10px 6px;font-weight:700;">TOTAL MRR</td>
+        <td colspan="3" style="padding:10px 6px;font-weight:700;">TOTAL MRR</td>
         <td style="padding:10px 6px;text-align:right;font-weight:800;color:var(--green);font-size:15px;">${fmtMXN(mrr)}</td>
         <td colspan="2"></td>
       </tr></tfoot>
@@ -2566,7 +2751,10 @@ async function cargarClientesDesdeSupabase() {
 
     // Si tenemos datos de auth.users, usarlos como base (más completo)
     if (Object.keys(usersMeta).length > 0) {
-      const CUOTAS = { basico:499, estandar:799, pro:2399 }; // basico legacy
+      const CUOTAS = {
+        micro:899, pyme:1999, mediana:4499, empresa:9999,  // planes actuales
+        basico:499, estandar:799, pro:2399                  // legacy
+      };
       return Object.values(usersMeta)
         .filter(u => {
           const meta = u.user_metadata || {};
@@ -2588,7 +2776,7 @@ async function cargarClientesDesdeSupabase() {
             rfc,
             empresa:     meta.empresa || rfc,
             plan:        meta.plan || 'Básico',
-            cuota:       CUOTAS[plan] || 799,
+            cuota:       meta.cuota != null ? Number(meta.cuota) : (CUOTAS[plan] || 1999),
             email:       meta.email_contacto || u.email || '',
             tel:         meta.tel || '',
             trabajadores: conteosTrab[rfc] || 0,
@@ -2686,6 +2874,199 @@ async function initDashboard() {
   document.getElementById('topbar-title').textContent = 'Dashboard general';
   renderDashboard();
   cargarSolicitudesAdmin();
+}
+
+// ════════════════════════════════════════════════════════
+// NUEVOS PANELES: MRR, RETENCIÓN, PLANES, ONBOARDING, SEGURIDAD
+// ════════════════════════════════════════════════════════
+
+function _fmtMXN(n) { return '$' + n.toLocaleString('es-MX'); }
+function _planKey(p) { return (p||'').toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g,''); }
+
+function renderMRR_admin() {
+  const activos = CLIENTES.filter(c => c.cuota > 0);
+  const mrr  = activos.filter(c => c.periodo !== 'anual').reduce((a,c) => a+(c.cuota||0), 0);
+  const arr  = mrr * 12 + activos.filter(c => c.periodo === 'anual').reduce((a,c) => a+(c.cuota||0), 0);
+  const arpu = activos.length ? Math.round(activos.reduce((a,c) => a+(c.cuota||0), 0) / activos.length) : 0;
+  const set  = (id, v) => { const el = document.getElementById(id); if (el) el.textContent = v; };
+
+  set('mrr-kpi-mrr',      _fmtMXN(mrr));
+  set('mrr-kpi-arr',      _fmtMXN(arr));
+  set('mrr-kpi-clientes', activos.length);
+  set('mrr-kpi-arpu',     activos.length ? _fmtMXN(arpu) : '—');
+  set('mrr-kpi-churn',    '0%'); // No hay datos de cancelados en este array
+
+  // Mix de planes
+  const planCounts = {};
+  activos.forEach(c => {
+    const k = _planKey(c.plan) || 'otro';
+    if (!planCounts[k]) planCounts[k] = { label: c.plan || k, count: 0, monto: 0 };
+    planCounts[k].count++;
+    planCounts[k].monto += c.cuota || 0;
+  });
+  const mixEl = document.getElementById('mrr-mix-planes');
+  if (mixEl) {
+    if (!Object.keys(planCounts).length) {
+      mixEl.innerHTML = '<div style="color:var(--ink3);">Sin clientes con cuota registrada.</div>';
+    } else {
+      const total = mrr || 1;
+      mixEl.innerHTML = Object.entries(planCounts).map(([,p]) => {
+        const pct = ((p.monto / total) * 100).toFixed(1);
+        return `<div>
+          <div style="display:flex;justify-content:space-between;margin-bottom:5px;">
+            <span>Plan ${p.label} (${p.count} cliente${p.count===1?'':'s'})</span>
+            <span style="font-weight:700;">${_fmtMXN(p.monto)} · ${pct}%</span>
+          </div>
+          <div style="height:8px;background:var(--surface2);border-radius:4px;overflow:hidden;">
+            <div style="height:100%;width:${pct}%;background:var(--navy2);border-radius:4px;"></div>
+          </div>
+        </div>`;
+      }).join('');
+    }
+  }
+
+  // Próximos cobros
+  const proxEl = document.getElementById('mrr-proximos');
+  if (proxEl) {
+    const mensuales = activos.filter(c => c.periodo !== 'anual');
+    proxEl.innerHTML = mensuales.length
+      ? mensuales.map(c => `<div style="display:flex;justify-content:space-between;padding:4px 0;border-bottom:1px solid var(--border);">
+          <span>${c.empresa}</span><span style="font-weight:600;">${_fmtMXN(c.cuota)}/mes</span>
+        </div>`).join('')
+      : '<span style="color:var(--ink3);">Sin planes mensuales activos.</span>';
+  }
+}
+
+function renderRetencion_admin() {
+  const ahora = new Date();
+  const activos = CLIENTES;
+  const nuevos30 = activos.filter(c => c.creado && ((ahora - new Date(c.creado)) / 86400000) <= 30);
+  const anuales  = activos.filter(c => c.periodo === 'anual');
+
+  const set = (id, v) => { const el = document.getElementById(id); if (el) el.textContent = v; };
+  set('ret2-activos', activos.length);
+  set('ret2-churn',   '0%'); // Sin datos de cancelados en CLIENTES (solo activos)
+  set('ret2-anuales', anuales.length);
+  set('ret2-nuevos',  nuevos30.length);
+
+  // Clientes más recientes (ordenados por fecha de alta)
+  const recientes = [...activos]
+    .filter(c => c.creado)
+    .sort((a,b) => new Date(b.creado) - new Date(a.creado))
+    .slice(0, 8);
+
+  const recEl = document.getElementById('ret2-recientes');
+  if (recEl) {
+    if (!recientes.length) {
+      recEl.innerHTML = '<div style="color:var(--ink3);font-size:12px;">Sin datos de fecha de alta.</div>';
+    } else {
+      recEl.innerHTML = recientes.map(c => {
+        const dias = Math.floor((ahora - new Date(c.creado)) / 86400000);
+        return `<div style="padding:8px 10px;background:var(--surface);border-radius:6px;display:flex;align-items:center;justify-content:space-between;">
+          <div>
+            <div style="font-size:13px;font-weight:600;">${c.empresa}</div>
+            <div style="font-size:11px;color:var(--ink3);">Plan ${c.plan||'—'}</div>
+          </div>
+          <span style="font-size:11px;color:var(--ink3);">hace ${dias} días</span>
+        </div>`;
+      }).join('');
+    }
+  }
+}
+
+function renderPlanes_admin() {
+  const PLANES_DEF = [
+    { key: 'micro',    label: 'Micro',    precio: 899,  desc: '1-15 trabajadores' },
+    { key: 'pyme',     label: 'PyME',     precio: 1999, desc: '16-50 trabajadores' },
+    { key: 'mediana',  label: 'Mediana',  precio: 4499, desc: '51-150 trabajadores' },
+    { key: 'empresa',  label: 'Empresa',  precio: 9999, desc: '151-500 trabajadores' },
+  ];
+  const activos = CLIENTES.filter(c => c.cuota > 0);
+  const mrr = activos.reduce((a,c) => a+(c.cuota||0), 0) || 1;
+
+  const el = document.getElementById('planes-resumen2');
+  if (!el) return;
+  el.innerHTML = PLANES_DEF.map(p => {
+    const clientesPlan = activos.filter(c => _planKey(c.plan).includes(p.key));
+    const montoPlan = clientesPlan.reduce((a,c) => a+(c.cuota||0), 0);
+    const pct = activos.length ? ((montoPlan / mrr) * 100).toFixed(1) : 0;
+    return `<div class="card" style="text-align:center;">
+      <div style="font-size:13px;font-weight:700;margin-bottom:8px;">Plan ${p.label}</div>
+      <div style="font-size:26px;font-weight:900;color:var(--navy2);margin-bottom:4px;">${_fmtMXN(p.precio)}<span style="font-size:12px;font-weight:400;color:var(--ink3);">/mes</span></div>
+      <div style="font-size:11px;color:var(--ink3);margin-bottom:10px;">${clientesPlan.length} cliente${clientesPlan.length===1?'':'s'} · ${p.desc}</div>
+      <span class="badge badge-blue">${pct}% del MRR</span>
+    </div>`;
+  }).join('');
+}
+
+function renderOnboarding_admin() {
+  const ahora = new Date();
+  const recientes = CLIENTES.filter(c => {
+    if (!c.creado || c.creado === '—') return false;
+    return ((ahora - new Date(c.creado)) / 86400000) <= 14;
+  });
+  const el = document.getElementById('onb-clientes');
+  if (!el) return;
+  if (!recientes.length) {
+    el.innerHTML = '<div style="text-align:center;padding:20px;color:var(--ink3);font-size:12px;">Sin clientes nuevos en los últimos 14 días.</div>';
+    return;
+  }
+  el.innerHTML = recientes.map(c => `
+    <div style="padding:12px 14px;border:1px solid var(--border);border-radius:8px;margin-bottom:8px;display:flex;align-items:center;justify-content:space-between;">
+      <div>
+        <div style="font-size:13px;font-weight:600;">${c.empresa}</div>
+        <div style="font-size:11px;color:var(--ink3);">RFC ${c.rfc} · Plan ${c.plan||'—'} · Alta ${c.creado ? new Date(c.creado).toLocaleDateString('es-MX') : '—'}</div>
+      </div>
+      <button class="btn btn-primary btn-sm" onclick="window.open('paquete-bienvenida.html')">📦 Bienvenida</button>
+    </div>`).join('');
+}
+
+function renderSeguridad_admin() {
+  const ahora = new Date();
+  const clientesConAcceso = [...CLIENTES]
+    .filter(c => c.ultimo_acceso)
+    .sort((a,b) => new Date(b.ultimo_acceso) - new Date(a.ultimo_acceso));
+
+  const sinAcceso30 = CLIENTES.filter(c => {
+    if (!c.ultimo_acceso) return true;
+    return (ahora - new Date(c.ultimo_acceso)) / 86400000 > 30;
+  });
+
+  const fmtDate = s => s ? new Date(s).toLocaleDateString('es-MX', {day:'2-digit',month:'short',year:'2-digit',hour:'2-digit',minute:'2-digit'}) : 'Nunca';
+
+  const accEl = document.getElementById('seg-accesos');
+  if (accEl) {
+    if (!clientesConAcceso.length) {
+      accEl.innerHTML = '<div style="color:var(--ink3);font-size:12px;padding:12px;">Sin datos de último acceso disponibles.</div>';
+    } else {
+      accEl.innerHTML = clientesConAcceso.slice(0, 10).map(c => `
+        <div style="padding:8px 10px;background:var(--surface);border-radius:6px;display:flex;align-items:center;justify-content:space-between;">
+          <div>
+            <div style="font-size:13px;font-weight:600;">${c.empresa}</div>
+            <div style="font-size:10px;color:var(--ink3);">${c.rfc}</div>
+          </div>
+          <div style="font-size:11px;color:var(--ink3);text-align:right;">${fmtDate(c.ultimo_acceso)}</div>
+        </div>`).join('');
+    }
+  }
+
+  const inacEl = document.getElementById('seg-inactivos');
+  if (inacEl) {
+    if (!sinAcceso30.length) {
+      inacEl.innerHTML = '<div style="color:var(--green);font-size:12px;padding:12px;">✓ Todos los clientes accedieron en los últimos 30 días.</div>';
+    } else {
+      inacEl.innerHTML = sinAcceso30.map(c => {
+        const dias = c.ultimo_acceso ? Math.floor((ahora - new Date(c.ultimo_acceso)) / 86400000) : null;
+        return `<div style="padding:8px 10px;background:var(--red-bg,#fee2e2);border-radius:6px;border:1px solid rgba(220,38,38,.15);display:flex;align-items:center;justify-content:space-between;">
+          <div>
+            <div style="font-size:13px;font-weight:600;">${c.empresa}</div>
+            <div style="font-size:10px;color:var(--ink3);">${c.rfc}</div>
+          </div>
+          <span style="font-size:11px;color:var(--red,#dc2626);font-weight:600;">${dias !== null ? dias + ' días' : 'Nunca'}</span>
+        </div>`;
+      }).join('');
+    }
+  }
 }
 
 checkAdminSession();

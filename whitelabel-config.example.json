@@ -1,0 +1,9 @@
+{
+  "marca":          "Despacho García & Asociados",
+  "marca_corta":    "GarciaAsociados",
+  "dominio":        "garcialaboral.mx",
+  "supabase_url":   "https://XXXXXXXXXXXXXXXX.supabase.co",
+  "supabase_anon":  "sb_publishable_XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX",
+  "color_primario": "#1a3a5c",
+  "color_acento":   "#0ea5e9"
+}

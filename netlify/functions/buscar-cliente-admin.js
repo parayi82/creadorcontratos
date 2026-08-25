@@ -41,11 +41,24 @@ exports.handler = async (event) => {
         const { data } = await supabase.auth.admin.listUsers({ perPage: 1000 });
         return responder(200, { users: data?.users || [] });
       }
+      // 1. Buscar primero en clientes_billing (registro completo con auth_user_id)
       const { data: billingRow } = await supabase
         .from('clientes_billing').select('auth_user_id').eq('rfc', rfc.toUpperCase()).maybeSingle();
-      if (!billingRow) return responder(404, { error: 'No se encontró ningún usuario con ese RFC.', user: null });
-      const { data: uData } = await supabase.auth.admin.getUserById(billingRow.auth_user_id);
-      const user = uData?.user || null;
+
+      let user = null;
+      if (billingRow?.auth_user_id) {
+        const { data: uData } = await supabase.auth.admin.getUserById(billingRow.auth_user_id);
+        user = uData?.user || null;
+      }
+
+      // 2. Fallback: buscar en auth.users por user_metadata.rfc (clientes antiguos sin fila en billing)
+      if (!user) {
+        const { data: allUsers } = await supabase.auth.admin.listUsers({ perPage: 1000 });
+        user = (allUsers?.users || []).find(u =>
+          (u.user_metadata?.rfc || '').toUpperCase() === rfc.toUpperCase()
+        ) || null;
+      }
+
       if (!user) return responder(404, { error: 'No se encontró ningún usuario con ese RFC.', user: null });
       return responder(200, { user });
     }

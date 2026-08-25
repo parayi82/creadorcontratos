@@ -5,9 +5,17 @@
     <link>https://clicklaboral.mx/blog/</link>
     <description>Artículos, noticias y tips de compliance laboral para PyMEs mexicanas</description>
     <language>es-MX</language>
-    <lastBuildDate>Mon, 24 Aug 2026 14:33:56 GMT</lastBuildDate>
+    <lastBuildDate>Tue, 25 Aug 2026 14:36:27 GMT</lastBuildDate>
     <managingEditor>blog@clicklaboral.mx (ClickLaboral.mx)</managingEditor>
     <atom:link href="https://clicklaboral.mx/blog/rss.xml" rel="self" type="application/rss+xml"/>
+    <item>
+      <title>Alerta: las multas por no tener Comisión de Seguridad e Higiene actualizada son hasta 435 UMAs</title>
+      <link>https://clicklaboral.mx/blog/noticia-alerta-las-multas-por-no-tener-comision-de-segurid-2026-08-25.html</link>
+      <guid isPermaLink="true">https://clicklaboral.mx/blog/noticia-alerta-las-multas-por-no-tener-comision-de-segurid-2026-08-25.html</guid>
+      <pubDate>Tue, 25 Aug 2026 12:00:00 GMT</pubDate>
+      <category>Alerta Legal</category>
+      <description>El patrón que no cuente con una Comisión de Seguridad e Higiene debidamente constituida y actualizada puede recibir multas de hasta 435 veces la Unidad de Medida y Actualización (UMA), equivalentes a…</description>
+    </item>
     <item>
       <title>Criterio: el patrón puede presumir abandono si el trabajador falta más de 3 días sin justificación</title>
       <link>https://clicklaboral.mx/blog/noticia-criterio-el-patron-puede-presumir-abandono-si-el-t-2026-08-24.html</link>
@@ -199,14 +207,6 @@
       <pubDate>Sat, 08 Aug 2026 12:00:00 GMT</pubDate>
       <category>Alerta Legal</category>
       <description>El plazo para repartir la Participación de los Trabajadores en las Utilidades (PTU) vence el 30 de mayo de 2025 para las personas morales —empresas constituidas como sociedades—, y el 29 de junio para…</description>
-    </item>
-    <item>
-      <title>Tip: los 5 documentos que todo expediente laboral debe tener antes del mes 3</title>
-      <link>https://clicklaboral.mx/blog/noticia-tip-los-5-documentos-que-todo-expediente-laboral-d-2026-08-07.html</link>
-      <guid isPermaLink="true">https://clicklaboral.mx/blog/noticia-tip-los-5-documentos-que-todo-expediente-laboral-d-2026-08-07.html</guid>
-      <pubDate>Fri, 07 Aug 2026 12:00:00 GMT</pubDate>
-      <category>Tip RH</category>
-      <description>Antes de que un trabajador cumpla tres meses en su empresa, el patrón debe tener cinco documentos específicos en el expediente laboral; su ausencia puede convertir cualquier revisión del IMSS o de la…</description>
     </item>
   </channel>
 </rss>

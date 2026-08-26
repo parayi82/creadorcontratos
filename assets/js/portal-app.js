@@ -3576,9 +3576,8 @@ function abrirModalAllSign(tipo) {
 
   allsignMostrarForm();
   _allsign.firmantes = [];
-  if (window._sb_user?.user_metadata) {
-    var meta = window._sb_user.user_metadata;
-    _allsign.firmantes.push({ nombre: meta.empresa || meta.rfc || '', email: meta.email_contacto || '' });
+  if (clienteActual) {
+    _allsign.firmantes.push({ nombre: clienteActual.empresa || clienteActual.rfc || '', email: clienteActual.email || '' });
   } else {
     _allsign.firmantes.push({ nombre: '', email: '' });
   }
@@ -3683,13 +3682,12 @@ async function allsignEnviar() {
 
     var token = '';
     try {
-      var { data: { session } } = await sbAuth.auth.getSession();
-      token = session?.access_token || '';
-    } catch(e) {}
+      var sesResult = await sbAuth.auth.getSession();
+      token = sesResult?.data?.session?.access_token || '';
+    } catch(e) { console.error('allsign getSession:', e); }
     if (!token) throw new Error('Sesión expirada. Recarga la página.');
 
-    var meta = window._sb_user?.user_metadata || {};
-    var clienteRfc = meta.rfc || '';
+    var clienteRfc = (clienteActual?.rfc || _rfcReal || '').toUpperCase();
 
     var res = await fetch('/api/allsign-enviar', {
       method: 'POST',
@@ -3742,7 +3740,7 @@ async function cargarMisFirmas(force) {
   try {
     var rfc = clienteActual && clienteActual.rfc;
     if (!rfc) throw new Error('No se pudo identificar el RFC del cliente.');
-    var { data, error } = await window._sb
+    var { data, error } = await sbAuth
       .from('firmas_electronicas')
       .select('*')
       .eq('cliente_rfc', rfc)
@@ -3800,7 +3798,7 @@ function renderFirmas(rows) {
 
 async function descargarFirma(path, ext) {
   try {
-    var { data, error } = await window._sb.storage.from('expedientes').createSignedUrl(path, 300);
+    var { data, error } = await sbAuth.storage.from('expedientes').createSignedUrl(path, 300);
     if (error) throw error;
     var a = document.createElement('a');
     a.href = data.signedUrl;

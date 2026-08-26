@@ -119,8 +119,6 @@ exports.handler = async (event) => {
 
         let pdfPath = null;
         if (pdfRes.ok) {
-          const pdfBuffer = Buffer.from(await pdfRes.arrayBuffer());
-
           const { data: firma } = await sb
             .from('firmas_electronicas')
             .select('cliente_rfc, documento_tipo, documento_folio')
@@ -128,11 +126,30 @@ exports.handler = async (event) => {
             .single();
 
           if (firma?.cliente_rfc) {
-            pdfPath = `${firma.cliente_rfc}/firmas/${allsignId}.pdf`;
-            await sb.storage.from('expedientes').upload(pdfPath, pdfBuffer, {
-              contentType: 'application/pdf',
-              upsert: true,
-            });
+            try {
+              const contentType = pdfRes.headers.get('content-type') || '';
+              let pdfBuffer;
+              if (contentType.includes('application/json') || contentType.includes('text/')) {
+                const evJson = await pdfRes.json();
+                const pdfUrl = evJson.url || evJson.downloadUrl || evJson.evidence_url ||
+                  evJson.pdf_url || evJson.fileUrl || evJson.link || evJson.signedUrl;
+                if (pdfUrl) {
+                  const pdfRes2 = await fetch(pdfUrl);
+                  pdfBuffer = pdfRes2.ok ? Buffer.from(await pdfRes2.arrayBuffer()) : null;
+                }
+              } else {
+                pdfBuffer = Buffer.from(await pdfRes.arrayBuffer());
+              }
+              if (pdfBuffer) {
+                pdfPath = `${firma.cliente_rfc}/firmas/${allsignId}.pdf`;
+                await sb.storage.from('expedientes').upload(pdfPath, pdfBuffer, {
+                  contentType: 'application/pdf',
+                  upsert: true,
+                });
+              }
+            } catch (e) {
+              console.warn('[webhook] No se pudo guardar PDF evidence:', e.message);
+            }
           }
         }
 

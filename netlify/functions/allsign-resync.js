@@ -118,23 +118,42 @@ exports.handler = async (event) => {
     }
 
     // ── 4. Completado: guardar PDF de evidencia ───────────────────────────────
-    // evidenceRes ya tiene el body; si isCompleted fue true por status (no por evidenceRes.ok),
-    // hacemos una segunda llamada. Si fue por evidenceRes.ok, el body ya está disponible.
+    // AllSign puede devolver el PDF binario directo O un JSON con una URL de descarga.
     let pdfPath = null;
     try {
-      const pdfBuffer = Buffer.from(await (evidenceRes.ok
-        ? evidenceRes.arrayBuffer()
-        : fetch(`${ALLSIGN_BASE}/documents/${allsign_id}/evidence`, {
-            headers: { Authorization: `Bearer ${process.env.ALLSIGN_API_KEY}` },
-          }).then(r => r.ok ? r.arrayBuffer() : Promise.reject(new Error('evidence not ready')))
-      ));
-      pdfPath = `${rfcTarget}/firmas/${allsign_id}.pdf`;
-      await sb.storage.from('expedientes').upload(pdfPath, pdfBuffer, {
-        contentType: 'application/pdf',
-        upsert: true,
+      // Si evidenceRes ya fue consumido (no se puede releer), hacer nueva llamada
+      const evRes = await fetch(`${ALLSIGN_BASE}/documents/${allsign_id}/evidence`, {
+        headers: { Authorization: `Bearer ${process.env.ALLSIGN_API_KEY}` },
       });
+
+      if (evRes.ok) {
+        const contentType = evRes.headers.get('content-type') || '';
+        let pdfBuffer;
+
+        if (contentType.includes('application/json') || contentType.includes('text/')) {
+          // AllSign devuelve JSON con URL de descarga
+          const evJson = await evRes.json();
+          console.log('[allsign-resync] evidence JSON:', JSON.stringify(evJson).slice(0, 300));
+          const pdfUrl = evJson.url || evJson.downloadUrl || evJson.evidence_url ||
+            evJson.pdf_url || evJson.fileUrl || evJson.link || evJson.signedUrl;
+          if (!pdfUrl) throw new Error('No se encontró URL de PDF en respuesta de evidence');
+          const pdfRes2 = await fetch(pdfUrl);
+          if (!pdfRes2.ok) throw new Error('Error descargando PDF desde URL de evidence');
+          pdfBuffer = Buffer.from(await pdfRes2.arrayBuffer());
+        } else {
+          // Respuesta binaria directa
+          pdfBuffer = Buffer.from(await evRes.arrayBuffer());
+        }
+
+        pdfPath = `${rfcTarget}/firmas/${allsign_id}.pdf`;
+        await sb.storage.from('expedientes').upload(pdfPath, pdfBuffer, {
+          contentType: 'application/pdf',
+          upsert: true,
+        });
+        console.log(`[allsign-resync] PDF guardado: ${pdfPath} (${pdfBuffer.length} bytes)`);
+      }
     } catch (e) {
-      console.warn('[allsign-resync] No se pudo descargar evidencia PDF:', e.message);
+      console.warn('[allsign-resync] No se pudo guardar evidencia PDF:', e.message);
     }
 
     // ── 4. Actualizar Supabase ────────────────────────────────────────────────

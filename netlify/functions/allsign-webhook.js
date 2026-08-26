@@ -127,8 +127,9 @@ exports.handler = async (event) => {
         const { data: firmaFinal } = await sb
           .from('firmas_electronicas')
           .update({
-            estado: 'firmado',
-            signed_at: data.completed_at || data.updated_at || new Date().toISOString(),
+            estado:          'firmado',
+            allsign_estado:  'firmado',
+            signed_at:       data.completed_at || data.updated_at || new Date().toISOString(),
             signed_pdf_path: pdfPath,
           })
           .eq('allsign_id', allsignId)
@@ -183,7 +184,7 @@ exports.handler = async (event) => {
       case 'document.expired': {
         const allsignId = data.id;
         if (!allsignId) break;
-        await sb.from('firmas_electronicas').update({ estado: 'expirado' }).eq('allsign_id', allsignId);
+        await sb.from('firmas_electronicas').update({ estado: 'expirado', allsign_estado: 'expirado' }).eq('allsign_id', allsignId);
         console.warn(`⏰ AllSign documento ${allsignId} expiró.`);
         break;
       }

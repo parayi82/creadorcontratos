@@ -55,13 +55,32 @@ exports.handler = async (event) => {
   if (!firma) return { statusCode: 404, body: JSON.stringify({ error: 'Documento no encontrado.' }) };
 
   try {
-    // Probar /evidence primero, luego /download como fallback
-    const endpoints = [
+    const debug = {};
+
+    // Paso 1: obtener metadatos del documento para encontrar URL de descarga
+    const metaRes = await fetch(`${ALLSIGN_BASE}/documents/${allsign_id}`, {
+      headers: { Authorization: `Bearer ${process.env.ALLSIGN_API_KEY}` },
+    });
+    const metaJson = metaRes.ok ? await metaRes.json() : {};
+    debug.meta = { status: metaRes.status, keys: Object.keys(metaJson) };
+
+    // Buscar URL de descarga en los metadatos
+    const metaPdfUrl = metaJson.downloadUrl || metaJson.pdf_url || metaJson.pdfUrl ||
+      metaJson.evidence_url || metaJson.evidenceUrl || metaJson.fileUrl ||
+      metaJson.signedUrl || metaJson.documents?.[0]?.url ||
+      metaJson.documents?.[0]?.downloadUrl;
+    if (metaPdfUrl) debug.meta.pdfUrl = metaPdfUrl;
+
+    // Paso 2: probar endpoints en orden
+    const candidates = [
+      metaPdfUrl,
       `${ALLSIGN_BASE}/documents/${allsign_id}/evidence`,
       `${ALLSIGN_BASE}/documents/${allsign_id}/download`,
-    ];
+      `${ALLSIGN_BASE}/documents/${allsign_id}/pdf`,
+    ].filter(Boolean);
 
-    for (const endpoint of endpoints) {
+    for (const endpoint of candidates) {
+      const label = endpoint.includes('allsign.io') ? endpoint.split('/').pop() : 'meta_url';
       const res = await fetch(endpoint, {
         headers: {
           Authorization: `Bearer ${process.env.ALLSIGN_API_KEY}`,
@@ -69,48 +88,37 @@ exports.handler = async (event) => {
         },
       });
 
+      const ct = res.headers.get('content-type') || '';
+      const status = res.status;
+      debug[label] = { status, ct };
+
       if (!res.ok) continue;
 
-      const ct = res.headers.get('content-type') || '';
-
-      // Si devuelve JSON con URL de descarga, seguirla
+      let pdfBuffer;
       if (ct.includes('application/json') || ct.includes('text/')) {
         const json = await res.json();
-        console.log('[allsign-download] JSON evidence:', JSON.stringify(json).slice(0, 500));
-        const pdfUrl = json.url || json.downloadUrl || json.evidence_url ||
-          json.pdf_url || json.fileUrl || json.link || json.signedUrl || json.pdfUrl;
-        if (!pdfUrl) continue;
-
-        const pdfRes = await fetch(pdfUrl, {
-          headers: { Accept: 'application/pdf, */*' },
-        });
-        if (!pdfRes.ok) continue;
-
-        const pdfBuffer = Buffer.from(await pdfRes.arrayBuffer());
-        if (pdfBuffer.slice(0, 4).toString() !== '%PDF') {
-          console.warn('[allsign-download] URL no devolvió PDF válido:', pdfBuffer.slice(0, 20).toString('hex'));
-          continue;
-        }
-
-        return {
-          statusCode: 200,
-          headers: {
-            'Content-Type': 'application/pdf',
-            'Content-Disposition': `attachment; filename="firma-${allsign_id}.pdf"`,
-            'Content-Length': String(pdfBuffer.length),
-          },
-          body: pdfBuffer.toString('base64'),
-          isBase64Encoded: true,
-        };
+        debug[label].json = JSON.stringify(json).slice(0, 600);
+        const nextUrl = json.url || json.downloadUrl || json.evidence_url ||
+          json.pdf_url || json.fileUrl || json.link || json.signedUrl || json.pdfUrl ||
+          json.documents?.[0]?.url;
+        if (!nextUrl) continue;
+        const r2 = await fetch(nextUrl, { headers: { Accept: 'application/pdf, */*' } });
+        debug[label].redirect = { status: r2.status, ct: r2.headers.get('content-type') || '' };
+        if (!r2.ok) continue;
+        pdfBuffer = Buffer.from(await r2.arrayBuffer());
+      } else {
+        pdfBuffer = Buffer.from(await res.arrayBuffer());
       }
 
-      // Respuesta binaria directa
-      const pdfBuffer = Buffer.from(await res.arrayBuffer());
-      if (pdfBuffer.slice(0, 4).toString() !== '%PDF') {
-        console.warn('[allsign-download] Respuesta no es PDF:', pdfBuffer.slice(0, 20).toString('hex'));
+      debug[label].bytes = pdfBuffer.length;
+      debug[label].magic = pdfBuffer.slice(0, 8).toString('hex');
+
+      if (pdfBuffer.length < 100 || pdfBuffer.slice(0, 4).toString() !== '%PDF') {
+        debug[label].invalid = true;
         continue;
       }
 
+      console.log(`[allsign-download] PDF válido desde ${label}: ${pdfBuffer.length} bytes`);
       return {
         statusCode: 200,
         headers: {
@@ -123,10 +131,15 @@ exports.handler = async (event) => {
       };
     }
 
-    return { statusCode: 502, body: JSON.stringify({ error: 'No se pudo obtener el PDF firmado desde AllSign.' }) };
+    console.error('[allsign-download] todos los endpoints fallaron:', JSON.stringify(debug));
+    return {
+      statusCode: 502,
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ error: 'No se pudo obtener el PDF firmado desde AllSign.', debug }),
+    };
 
   } catch (err) {
     console.error('[allsign-download] error:', err.message);
-    return { statusCode: 500, body: JSON.stringify({ error: err.message }) };
+    return { statusCode: 500, headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ error: err.message }) };
   }
 };

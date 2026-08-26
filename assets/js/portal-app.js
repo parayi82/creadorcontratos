@@ -3837,6 +3837,7 @@ async function descargarFirmaAllSign(allsignId, clienteRfc, btn) {
     var res = await fetch(url, { headers: { Authorization: 'Bearer ' + token } });
     if (!res.ok) {
       var err = await res.json().catch(() => ({}));
+      console.error('[allsign-download] error debug:', JSON.stringify(err.debug || err));
       throw new Error(err.error || 'Error al descargar.');
     }
     var blob = await res.blob();

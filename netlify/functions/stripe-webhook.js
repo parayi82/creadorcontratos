@@ -139,6 +139,23 @@ exports.handler = async (event) => {
         break;
       }
 
+      case 'checkout.session.completed': {
+        const session  = stripeEvent.data.object;
+        const meta     = session.metadata || {};
+        if (meta.tipo === 'firmas_creditos' && meta.cliente_rfc && meta.cantidad) {
+          const cantidad = parseInt(meta.cantidad, 10);
+          const { error: rpcErr } = await supabase.rpc('agregar_firma_creditos', {
+            p_rfc:      meta.cliente_rfc,
+            p_cantidad: cantidad,
+            p_tipo:     meta.paquete === 'paquete6' ? 'compra_paquete6' : 'compra_unitaria',
+            p_ref:      session.payment_intent || session.id,
+          });
+          if (rpcErr) console.error('[stripe-webhook] agregar_firma_creditos error:', rpcErr.message);
+          else console.log(`[stripe-webhook] +${cantidad} crédito(s) → ${meta.cliente_rfc}`);
+        }
+        break;
+      }
+
       default:
         console.log(`Evento no manejado: ${stripeEvent.type}`);
     }

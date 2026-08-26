@@ -186,6 +186,16 @@
   status = 200
 
 [[redirects]]
+  from = "/api/firmas-creditos"
+  to = "/.netlify/functions/firmas-creditos"
+  status = 200
+
+[[redirects]]
+  from = "/api/firmas-creditos-compra"
+  to = "/.netlify/functions/firmas-creditos-compra"
+  status = 200
+
+[[redirects]]
   from = "/api/whatsapp-bot"
   to = "/.netlify/functions/whatsapp-bot"
   status = 200

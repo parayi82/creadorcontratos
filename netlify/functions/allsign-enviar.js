@@ -88,23 +88,23 @@ exports.handler = async (event) => {
       return { x, y };
     }
 
-    const participantsList = firmantes.map((f, i) => ({
-      email:     f.email,
-      name:      f.nombre,
-      signerKey: `firmante_${i}`,
+    const participantsList = firmantes.map(f => ({
+      email: f.email,
+      name:  f.nombre,
     }));
 
+    // AllSign v2 requiere participantEmail (no signerKey) en cada campo.
     const fieldsList = firmantes.map((f, i) => {
       const { x, y } = fieldPos(i);
       return {
-        signerKey:     `firmante_${i}`,
-        type:          'signature',
-        documentIndex: 0,
-        page:          1,
+        participantEmail: f.email,
+        type:             'signature',
+        documentIndex:    0,
+        page:             1,
         x,
         y,
-        width:         FIELD_W,
-        height:        FIELD_H,
+        width:            FIELD_W,
+        height:           FIELD_H,
       };
     });
 

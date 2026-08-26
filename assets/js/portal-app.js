@@ -3549,103 +3549,138 @@ function bajaWizardPrev() {
   if (_baja.paso > 1) { _baja.paso--; bajaRender(); }
 }
 
-// ── Integración Mifiel ──────────────────────────────────────────────────────
-var _mifiel = { tipo: null, firmantes: [] };
+// ── Integración AllSign ──────────────────────────────────────────────────────
+var _allsign = { tipo: null, firmantes: [], archivoBase64: null, archivoNombre: null };
 
-function abrirModalMifiel(tipo) {
-  _mifiel.tipo = tipo || 'documento';
-  _mifiel.firmantes = [];
-  mifilelMostrarForm();
-  mifilelRenderFirmantes();
-  // Pre-cargar con el RFC del cliente si está disponible
+function abrirModalAllSign(tipo) {
+  _allsign.tipo = tipo || 'documento';
+  _allsign.firmantes = [];
+  _allsign.archivoBase64 = null;
+  _allsign.archivoNombre = null;
+
+  var uploadSec = document.getElementById('allsign-upload-section');
+  var subtitle  = document.getElementById('allsign-subtitle');
+  if (tipo === 'upload') {
+    uploadSec.style.display = '';
+    if (subtitle) subtitle.textContent = 'Subir PDF existente · Powered by AllSign';
+  } else {
+    uploadSec.style.display = 'none';
+    if (subtitle) subtitle.textContent = 'Reporte gerencial · Powered by AllSign';
+  }
+
+  // Limpiar input de archivo
+  var fi = document.getElementById('allsign-file-input');
+  if (fi) fi.value = '';
+  var fl = document.getElementById('allsign-file-label');
+  if (fl) fl.textContent = '📂 Haz clic para seleccionar un PDF';
+
+  allsignMostrarForm();
+  _allsign.firmantes = [];
   if (window._sb_user?.user_metadata) {
     var meta = window._sb_user.user_metadata;
-    if (_mifiel.firmantes.length === 0) {
-      _mifiel.firmantes.push({ nombre: meta.empresa || meta.rfc || '', email: meta.email_contacto || '', rfc: meta.rfc || '' });
-      mifilelRenderFirmantes();
-    }
+    _allsign.firmantes.push({ nombre: meta.empresa || meta.rfc || '', email: meta.email_contacto || '' });
   } else {
-    mifilelAgregarFirmante();
+    _allsign.firmantes.push({ nombre: '', email: '' });
   }
-  var overlay = document.getElementById('mifiel-overlay');
-  overlay.style.display = 'flex';
+  allsignRenderFirmantes();
+  document.getElementById('allsign-overlay').style.display = 'flex';
 }
 
-function cerrarModalMifiel() {
-  document.getElementById('mifiel-overlay').style.display = 'none';
+function cerrarModalAllSign() {
+  document.getElementById('allsign-overlay').style.display = 'none';
 }
 
-function mifilelMostrarForm() {
-  document.getElementById('mifiel-form').style.display = '';
-  document.getElementById('mifiel-sending').style.display = 'none';
-  document.getElementById('mifiel-success').style.display = 'none';
-  document.getElementById('mifiel-error').style.display = 'none';
-  document.getElementById('mifiel-footer').style.display = 'flex';
+function allsignMostrarForm() {
+  document.getElementById('allsign-form').style.display = '';
+  document.getElementById('allsign-sending').style.display = 'none';
+  document.getElementById('allsign-success').style.display = 'none';
+  document.getElementById('allsign-error').style.display = 'none';
+  document.getElementById('allsign-footer').style.display = 'flex';
 }
 
-function mifilelAgregarFirmante() {
-  _mifiel.firmantes.push({ nombre: '', email: '', rfc: '' });
-  mifilelRenderFirmantes();
+function allsignAgregarFirmante() {
+  _allsign.firmantes.push({ nombre: '', email: '' });
+  allsignRenderFirmantes();
 }
 
-function mifilelRenderFirmantes() {
-  var cont = document.getElementById('mifiel-firmantes-list');
+function allsignRenderFirmantes() {
+  var cont = document.getElementById('allsign-firmantes-list');
   if (!cont) return;
   cont.innerHTML = '';
-  _mifiel.firmantes.forEach(function(f, i) {
+  _allsign.firmantes.forEach(function(f, i) {
     var div = document.createElement('div');
     div.style.cssText = 'background:var(--surface);border-radius:8px;padding:12px;margin-bottom:8px;position:relative;';
     div.innerHTML = '<div style="font-size:11px;font-weight:700;color:var(--ink3);margin-bottom:8px;">Firmante ' + (i+1) + '</div>'
       + '<div style="display:grid;gap:6px;">'
-      + '<input placeholder="Nombre completo *" value="' + esc(f.nombre) + '" oninput="_mifiel.firmantes['+i+'].nombre=this.value" style="padding:7px 10px;border:1.5px solid var(--border);border-radius:6px;font-size:12px;background:var(--white);width:100%;box-sizing:border-box;">'
-      + '<input placeholder="Correo electrónico *" type="email" value="' + esc(f.email) + '" oninput="_mifiel.firmantes['+i+'].email=this.value" style="padding:7px 10px;border:1.5px solid var(--border);border-radius:6px;font-size:12px;background:var(--white);width:100%;box-sizing:border-box;">'
-      + '<input placeholder="RFC (opcional — para validar FIEL)" value="' + esc(f.rfc) + '" oninput="_mifiel.firmantes['+i+'].rfc=this.value" style="padding:7px 10px;border:1.5px solid var(--border);border-radius:6px;font-size:12px;background:var(--white);width:100%;box-sizing:border-box;">'
+      + '<input placeholder="Nombre completo *" value="' + esc(f.nombre) + '" oninput="_allsign.firmantes['+i+'].nombre=this.value" style="padding:7px 10px;border:1.5px solid var(--border);border-radius:6px;font-size:12px;background:var(--white);width:100%;box-sizing:border-box;">'
+      + '<input placeholder="Correo electrónico *" type="email" value="' + esc(f.email) + '" oninput="_allsign.firmantes['+i+'].email=this.value" style="padding:7px 10px;border:1.5px solid var(--border);border-radius:6px;font-size:12px;background:var(--white);width:100%;box-sizing:border-box;">'
       + '</div>';
-    if (_mifiel.firmantes.length > 1) {
+    if (_allsign.firmantes.length > 1) {
       var btn = document.createElement('button');
       btn.textContent = '✕';
       btn.style.cssText = 'position:absolute;top:8px;right:10px;background:none;border:none;cursor:pointer;font-size:14px;color:var(--ink3);';
-      btn.onclick = (function(idx){ return function(){ _mifiel.firmantes.splice(idx,1); mifilelRenderFirmantes(); }; })(i);
+      btn.onclick = (function(idx){ return function(){ _allsign.firmantes.splice(idx,1); allsignRenderFirmantes(); }; })(i);
       div.appendChild(btn);
     }
     cont.appendChild(div);
   });
 }
 
-async function mifilelEnviar() {
-  // Validar firmantes
-  var validos = _mifiel.firmantes.filter(function(f){ return f.nombre.trim() && f.email.trim(); });
+function allsignArchivoSeleccionado(input) {
+  var file = input.files && input.files[0];
+  var label = document.getElementById('allsign-file-label');
+  if (!file) { label.textContent = '📂 Haz clic para seleccionar un PDF'; return; }
+  label.textContent = '📄 ' + file.name;
+  _allsign.archivoNombre = file.name;
+  var reader = new FileReader();
+  reader.onload = function(e) { _allsign.archivoBase64 = e.target.result.split(',')[1]; };
+  reader.readAsDataURL(file);
+}
+
+async function allsignEnviar() {
+  var validos = _allsign.firmantes.filter(function(f){ return f.nombre.trim() && f.email.trim(); });
   if (validos.length === 0) { alert('Agrega al menos un firmante con nombre y correo.'); return; }
 
-  // Mostrar estado "enviando"
-  document.getElementById('mifiel-form').style.display = 'none';
-  document.getElementById('mifiel-sending').style.display = '';
-  document.getElementById('mifiel-footer').style.display = 'none';
+  document.getElementById('allsign-form').style.display = 'none';
+  document.getElementById('allsign-footer').style.display = 'none';
+  document.getElementById('allsign-sending').style.display = '';
 
   try {
-    // Generar PDF del contenido de reportes usando html2pdf
-    var contenido = document.getElementById('rep-contenido');
-    if (!contenido) throw new Error('No hay contenido para generar el PDF.');
-
-    var empresa = window._repEmpresa || window._repRFC || 'Empresa';
+    var pdfBase64, filename, tipo, folio;
     var hoy = new Date().toISOString().split('T')[0];
-    var filename = 'Reporte-' + empresa.replace(/\s+/g,'-') + '-' + hoy + '.pdf';
 
-    var pdfBlob = await html2pdf().set({
-      filename: filename,
-      html2canvas: { scale: 2, useCORS: true, logging: false },
-      jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' },
-    }).from(contenido).outputPdf('blob');
+    if (_allsign.tipo === 'upload') {
+      // Modo subida de archivo
+      if (!_allsign.archivoBase64) throw new Error('Selecciona un archivo PDF primero.');
+      pdfBase64 = _allsign.archivoBase64;
+      filename  = _allsign.archivoNombre || ('Documento-' + hoy + '.pdf');
+      tipo  = (document.getElementById('allsign-doc-tipo')?.value || '').trim() || 'documento';
+      folio = (document.getElementById('allsign-doc-folio')?.value || '').trim() || ('DOC-' + hoy);
+      document.getElementById('allsign-sending-msg').textContent = 'Enviando PDF a AllSign…';
+    } else {
+      // Modo reporte: generar PDF de #rep-contenido
+      document.getElementById('allsign-sending-msg').textContent = 'Generando PDF y enviando a AllSign…';
+      var contenido = document.getElementById('rep-contenido');
+      if (!contenido) throw new Error('No hay contenido de reporte para generar el PDF.');
+      var empresa = window._repEmpresa || window._repRFC || 'Empresa';
+      filename = 'Reporte-' + empresa.replace(/\s+/g,'-') + '-' + hoy + '.pdf';
+      tipo  = 'reporte_gerencial';
+      folio = 'REP-' + hoy;
 
-    // Convertir a base64
-    var pdfBase64 = await new Promise(function(resolve, reject) {
-      var reader = new FileReader();
-      reader.onload = function(){ resolve(reader.result.split(',')[1]); };
-      reader.onerror = reject;
-      reader.readAsDataURL(pdfBlob);
-    });
+      var pdfBlob = await html2pdf().set({
+        filename: filename,
+        html2canvas: { scale: 2, useCORS: true, logging: false },
+        jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' },
+      }).from(contenido).outputPdf('blob');
 
-    // Obtener token de sesión
+      pdfBase64 = await new Promise(function(resolve, reject) {
+        var reader = new FileReader();
+        reader.onload = function(){ resolve(reader.result.split(',')[1]); };
+        reader.onerror = reject;
+        reader.readAsDataURL(pdfBlob);
+      });
+    }
+
     var token = '';
     try {
       var { data: { session } } = await window._sbClient.auth.getSession();
@@ -3656,46 +3691,43 @@ async function mifilelEnviar() {
     var meta = window._sb_user?.user_metadata || {};
     var clienteRfc = meta.rfc || '';
 
-    var res = await fetch('/api/mifiel-enviar', {
+    var res = await fetch('/api/allsign-enviar', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + token },
       body: JSON.stringify({
-        pdf_base64: pdfBase64,
-        filename: filename,
-        tipo: _mifiel.tipo || 'reporte_gerencial',
-        folio: 'REP-' + hoy,
-        firmantes: validos,
+        pdf_base64:  pdfBase64,
+        filename:    filename,
+        tipo:        tipo,
+        folio:       folio,
+        firmantes:   validos.map(function(f){ return { nombre: f.nombre, email: f.email }; }),
         cliente_rfc: clienteRfc,
       }),
     });
 
     var data = await res.json();
-    if (!res.ok || !data.ok) throw new Error(data.error || data.detalle?.errors?.[0]?.message || 'Error al enviar a Mifiel.');
+    if (!res.ok || !data.ok) throw new Error(data.error || 'Error al enviar a AllSign.');
 
-    // Mostrar éxito
-    document.getElementById('mifiel-sending').style.display = 'none';
-    document.getElementById('mifiel-success').style.display = '';
+    document.getElementById('allsign-sending').style.display = 'none';
+    document.getElementById('allsign-success').style.display = '';
 
-    var resContainer = document.getElementById('mifiel-firmantes-result');
-    var mifilelBase = 'https://app.mifiel.com/sign/';
-    resContainer.innerHTML = (data.firmantes_con_widget || []).map(function(f) {
-      var linkHtml = f.widget_id
-        ? '<a href="' + mifilelBase + esc(f.widget_id) + '" target="_blank" rel="noopener" '
-          + 'style="display:inline-flex;align-items:center;gap:5px;margin-top:6px;padding:5px 10px;'
-          + 'background:#6366f1;color:#fff;border-radius:6px;font-size:11px;font-weight:600;text-decoration:none;">'
-          + '✍️ Firmar ahora</a>'
-        : '<div style="margin-top:6px;color:#166534;font-size:11px;">📧 Invitación enviada por Mifiel</div>';
+    var resContainer = document.getElementById('allsign-firmantes-result');
+    resContainer.innerHTML = (data.firmantes_con_id || []).map(function(f) {
       return '<div style="padding:10px 14px;background:var(--surface);border-radius:8px;font-size:12px;">'
         + '<div style="font-weight:700;color:var(--navy);">' + esc(f.nombre || f.email) + '</div>'
         + '<div style="color:var(--ink3);margin-top:2px;">' + esc(f.email) + '</div>'
-        + linkHtml
+        + '<div style="margin-top:6px;color:#166534;font-size:11px;">📧 Invitación enviada por AllSign</div>'
         + '</div>';
     }).join('');
 
+    // Refrescar panel de firmas si está visible
+    if (document.getElementById('panel-firmas')?.style.display !== 'none') {
+      cargarMisFirmas(true);
+    }
+
   } catch(err) {
-    document.getElementById('mifiel-sending').style.display = 'none';
-    document.getElementById('mifiel-error').style.display = '';
-    document.getElementById('mifiel-error-msg').textContent = err.message || 'Error inesperado.';
+    document.getElementById('allsign-sending').style.display = 'none';
+    document.getElementById('allsign-error').style.display = '';
+    document.getElementById('allsign-error-msg').textContent = err.message || 'Error inesperado.';
   }
 }
 // ── Mis Firmas ──────────────────────────────────────────────────────────────
@@ -3727,35 +3759,27 @@ function renderFirmas(rows) {
   if (!rows.length) {
     contenedor.innerHTML = '<div class="card" style="text-align:center;padding:48px;color:var(--ink3);">'
       + '<div style="font-size:32px;margin-bottom:12px;">✍️</div>'
-      + '<div style="font-size:14px;font-weight:600;color:var(--navy2);">Sin documentos firmados todavía</div>'
-      + '<div style="font-size:12px;margin-top:4px;">Usa el botón "Firmar con e.firma" en Reportes gerenciales para iniciar una firma.</div>'
+      + '<div style="font-size:14px;font-weight:600;color:var(--navy2);">Sin documentos enviados todavía</div>'
+      + '<div style="font-size:12px;margin-top:4px;">Usa "Subir PDF para firma" o el botón "Firmar con AllSign" en Reportes gerenciales.</div>'
       + '</div>';
     return;
   }
-  var estadoColor = { pendiente: '#d97706', firmado: '#166534', rechazado: '#dc2626', eliminado: '#6b7280' };
-  var estadoBg    = { pendiente: '#fef3c7', firmado: '#dcfce7', rechazado: '#fee2e2', eliminado: '#f3f4f6' };
-  var mifilelBase = 'https://app.mifiel.com/sign/';
+  var estadoColor = { pendiente: '#d97706', firmado: '#166534', rechazado: '#dc2626', expirado: '#6b7280', eliminado: '#6b7280' };
+  var estadoBg    = { pendiente: '#fef3c7', firmado: '#dcfce7', rechazado: '#fee2e2', expirado: '#f3f4f6', eliminado: '#f3f4f6' };
 
   contenedor.innerHTML = rows.map(function(r) {
     var firmantes = Array.isArray(r.firmantes) ? r.firmantes : [];
-    var estado = r.estado || 'pendiente';
+    var estado = r.allsign_estado || r.estado || 'pendiente';
     var fecha = r.timestamp_servidor ? new Date(r.timestamp_servidor).toLocaleDateString('es-MX', { day:'2-digit', month:'short', year:'numeric' }) : '—';
     var firmanteHtml = firmantes.map(function(f) {
-      var link = (estado === 'pendiente' && f.widget_id)
-        ? ' <a href="' + mifilelBase + esc(f.widget_id) + '" target="_blank" rel="noopener" '
-          + 'style="font-size:10px;padding:2px 7px;background:#6366f1;color:#fff;border-radius:4px;text-decoration:none;font-weight:600;">Firmar</a>'
-        : '';
+      var icono = f.firmado ? '✅' : '⏳';
       return '<div style="font-size:11px;color:var(--ink2);padding:2px 0;">'
-        + '• ' + esc(f.nombre || f.email) + ' <span style="color:var(--ink3);">(' + esc(f.email) + ')</span>' + link + '</div>';
+        + icono + ' ' + esc(f.nombre || f.email) + ' <span style="color:var(--ink3);">(' + esc(f.email) + ')</span></div>';
     }).join('');
     var descargas = '';
     if (r.signed_pdf_path) {
       descargas += '<button onclick="descargarFirma(\'' + r.signed_pdf_path.replace(/'/g,"\'") + '\',\'pdf\')" '
         + 'class="btn btn-outline" style="font-size:11px;padding:4px 10px;">📄 Descargar PDF</button> ';
-    }
-    if (r.signed_xml_path) {
-      descargas += '<button onclick="descargarFirma(\'' + r.signed_xml_path.replace(/'/g,"\'") + '\',\'xml\')" '
-        + 'class="btn btn-outline" style="font-size:11px;padding:4px 10px;">🗂 Descargar XML</button>';
     }
     return '<div class="card" style="margin-bottom:10px;">'
       + '<div style="display:flex;align-items:flex-start;justify-content:space-between;gap:8px;flex-wrap:wrap;">'
@@ -3790,4 +3814,4 @@ async function descargarFirma(path, ext) {
     alert('Error al descargar: ' + err.message);
   }
 }
-// ── Fin Mifiel ──────────────────────────────────────────────────────────────
+// ── Fin AllSign ──────────────────────────────────────────────────────────────

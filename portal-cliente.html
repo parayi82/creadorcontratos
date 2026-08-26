@@ -772,7 +772,7 @@ body{font-family:var(--font);background:var(--surface);color:var(--ink);min-heig
               <option value="todo" selected>Todo el tiempo</option>
             </select>
             <button onclick="exportarPDFReporte()" class="btn btn-outline" style="font-size:12px;">📥 Exportar PDF</button>
-            <button onclick="abrirModalMifiel('reporte')" class="btn btn-outline" style="font-size:12px;border-color:#6366f1;color:#6366f1;">✍️ Firmar con e.firma</button>
+            <button onclick="abrirModalAllSign('reporte')" class="btn btn-outline" style="font-size:12px;border-color:#6366f1;color:#6366f1;">✍️ Firmar con AllSign</button>
           </div>
         </div>
         <div id="rep-contenido"><div style="text-align:center;padding:40px;color:var(--ink3);">Cargando reportes…</div></div>
@@ -786,9 +786,12 @@ body{font-family:var(--font);background:var(--surface);color:var(--ink);min-heig
           <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px;">
             <div>
               <div class="card-title">Mis firmas electrónicas</div>
-              <div style="font-size:12px;color:var(--ink3);margin-top:2px;">Documentos enviados a firmar con e.firma (NOM-151)</div>
+              <div style="font-size:12px;color:var(--ink3);margin-top:2px;">Documentos enviados a firma electrónica vía AllSign</div>
             </div>
-            <button onclick="cargarMisFirmas(true)" class="btn btn-outline" style="font-size:12px;">↻ Actualizar</button>
+            <div style="display:flex;gap:8px;flex-wrap:wrap;">
+              <button onclick="abrirModalAllSign('upload')" class="btn btn-outline" style="font-size:12px;border-color:#6366f1;color:#6366f1;">📂 Subir PDF para firma</button>
+              <button onclick="cargarMisFirmas(true)" class="btn btn-outline" style="font-size:12px;">↻ Actualizar</button>
+            </div>
           </div>
         </div>
         <div id="firmas-lista"><div style="text-align:center;padding:48px;color:var(--ink3);">Cargando…</div></div>
@@ -1166,61 +1169,73 @@ body{font-family:var(--font);background:var(--surface);color:var(--ink);min-heig
 </div>
 
 
-<!-- ── Modal: Firma electrónica con Mifiel ── -->
-<div id="mifiel-overlay" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.55);z-index:10001;align-items:center;justify-content:center;padding:20px;box-sizing:border-box;">
-  <div style="background:var(--white);border-radius:14px;width:100%;max-width:500px;max-height:90vh;display:flex;flex-direction:column;box-shadow:0 20px 60px rgba(0,0,0,.3);">
+<!-- ── Modal: Firma electrónica con AllSign ── -->
+<div id="allsign-overlay" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.55);z-index:10001;align-items:center;justify-content:center;padding:20px;box-sizing:border-box;">
+  <div style="background:var(--white);border-radius:14px;width:100%;max-width:520px;max-height:90vh;display:flex;flex-direction:column;box-shadow:0 20px 60px rgba(0,0,0,.3);">
     <div style="padding:18px 20px 14px;border-bottom:1px solid var(--border);flex-shrink:0;">
       <div style="display:flex;justify-content:space-between;align-items:center;">
         <div>
-          <div style="font-size:15px;font-weight:800;color:var(--navy);">✍️ Firma electrónica avanzada</div>
-          <div style="font-size:11px;color:var(--ink3);margin-top:2px;">Powered by Mifiel · e.firma (FIEL) + NOM-151</div>
+          <div style="font-size:15px;font-weight:800;color:var(--navy);">✍️ Firma electrónica</div>
+          <div style="font-size:11px;color:var(--ink3);margin-top:2px;" id="allsign-subtitle">Powered by AllSign · invitación por correo</div>
         </div>
-        <button onclick="cerrarModalMifiel()" style="background:none;border:none;font-size:22px;cursor:pointer;color:var(--ink3);padding:0 4px;line-height:1;">×</button>
+        <button onclick="cerrarModalAllSign()" style="background:none;border:none;font-size:22px;cursor:pointer;color:var(--ink3);padding:0 4px;line-height:1;">×</button>
       </div>
     </div>
-    <div id="mifiel-body" style="padding:20px;overflow-y:auto;flex:1;">
+    <div id="allsign-body" style="padding:20px;overflow-y:auto;flex:1;">
       <!-- Estado: formulario -->
-      <div id="mifiel-form">
+      <div id="allsign-form">
+        <!-- Sección solo en modo upload -->
+        <div id="allsign-upload-section" style="display:none;margin-bottom:16px;">
+          <div style="font-size:12px;font-weight:700;color:var(--navy);margin-bottom:8px;">Documento a firmar</div>
+          <label style="display:block;padding:14px;border:2px dashed var(--border);border-radius:8px;cursor:pointer;text-align:center;">
+            <input type="file" id="allsign-file-input" accept="application/pdf" style="display:none;" onchange="allsignArchivoSeleccionado(this)">
+            <div id="allsign-file-label" style="font-size:12px;color:var(--ink3);">📂 Haz clic para seleccionar un PDF</div>
+          </label>
+          <div style="margin-top:8px;">
+            <input type="text" id="allsign-doc-tipo" class="form-input" placeholder="Tipo de documento (ej: Contrato de trabajo)" style="font-size:12px;margin-bottom:6px;">
+            <input type="text" id="allsign-doc-folio" class="form-input" placeholder="Folio (opcional)" style="font-size:12px;">
+          </div>
+        </div>
         <div style="font-size:12px;font-weight:700;color:var(--navy);margin-bottom:12px;">Firmantes</div>
-        <div id="mifiel-firmantes-list"></div>
-        <button onclick="mifilelAgregarFirmante()" style="margin-top:8px;padding:7px 14px;background:none;border:1.5px dashed var(--border);border-radius:8px;font-size:12px;color:var(--ink2);cursor:pointer;width:100%;">+ Agregar firmante</button>
+        <div id="allsign-firmantes-list"></div>
+        <button onclick="allsignAgregarFirmante()" style="margin-top:8px;padding:7px 14px;background:none;border:1.5px dashed var(--border);border-radius:8px;font-size:12px;color:var(--ink2);cursor:pointer;width:100%;">+ Agregar firmante</button>
         <div style="margin-top:16px;padding:12px;background:#f0f4ff;border-radius:8px;font-size:11px;color:#4338ca;">
-          ℹ️ Cada firmante recibirá un correo de Mifiel para firmar con su e.firma del SAT. El documento firmado quedará con constancia NOM-151.
+          ℹ️ Cada firmante recibirá un correo de AllSign con el enlace para firmar. El PDF firmado quedará guardado en tu expediente.
         </div>
       </div>
       <!-- Estado: enviando -->
-      <div id="mifiel-sending" style="display:none;text-align:center;padding:30px 0;">
+      <div id="allsign-sending" style="display:none;text-align:center;padding:30px 0;">
         <div style="font-size:28px;margin-bottom:12px;">⏳</div>
-        <div style="font-size:13px;font-weight:700;color:var(--navy);">Generando PDF y enviando a Mifiel…</div>
+        <div style="font-size:13px;font-weight:700;color:var(--navy);" id="allsign-sending-msg">Preparando PDF y enviando a AllSign…</div>
         <div style="font-size:11px;color:var(--ink3);margin-top:6px;">Esto puede tardar unos segundos</div>
       </div>
       <!-- Estado: éxito -->
-      <div id="mifiel-success" style="display:none;">
+      <div id="allsign-success" style="display:none;">
         <div style="text-align:center;padding:16px 0 20px;">
           <div style="font-size:32px;margin-bottom:8px;">✅</div>
           <div style="font-size:14px;font-weight:800;color:var(--navy);">Documento enviado a firma</div>
           <div style="font-size:11px;color:var(--ink3);margin-top:4px;">Se enviaron correos de invitación a cada firmante</div>
         </div>
-        <div id="mifiel-firmantes-result" style="display:flex;flex-direction:column;gap:8px;"></div>
+        <div id="allsign-firmantes-result" style="display:flex;flex-direction:column;gap:8px;"></div>
         <div style="margin-top:16px;padding:10px 14px;background:#f0fdf4;border-radius:8px;font-size:11px;color:#166534;">
-          ✅ Recibirás una notificación cuando todos hayan firmado. El PDF y XML firmados quedarán guardados automáticamente en tu expediente.
+          ✅ Recibirás una notificación cuando todos hayan firmado. El PDF firmado quedará guardado automáticamente en tu expediente.
         </div>
       </div>
       <!-- Estado: error -->
-      <div id="mifiel-error" style="display:none;text-align:center;padding:20px 0;">
+      <div id="allsign-error" style="display:none;text-align:center;padding:20px 0;">
         <div style="font-size:28px;margin-bottom:10px;">❌</div>
-        <div id="mifiel-error-msg" style="font-size:13px;color:#991b1b;font-weight:600;"></div>
-        <button onclick="mifilelMostrarForm()" style="margin-top:14px;padding:8px 18px;background:var(--navy);color:#fff;border:none;border-radius:8px;font-size:12px;cursor:pointer;">Reintentar</button>
+        <div id="allsign-error-msg" style="font-size:13px;color:#991b1b;font-weight:600;"></div>
+        <button onclick="allsignMostrarForm()" style="margin-top:14px;padding:8px 18px;background:var(--navy);color:#fff;border:none;border-radius:8px;font-size:12px;cursor:pointer;">Reintentar</button>
       </div>
     </div>
-    <div id="mifiel-footer" style="padding:14px 20px;border-top:1px solid var(--border);display:flex;gap:8px;justify-content:flex-end;flex-shrink:0;">
-      <button onclick="cerrarModalMifiel()" style="padding:9px 16px;background:var(--white);color:var(--ink3);border:1.5px solid var(--border);border-radius:8px;font-size:13px;cursor:pointer;">Cancelar</button>
-      <button id="mifiel-btn-enviar" onclick="mifilelEnviar()" style="padding:9px 20px;background:#4f46e5;color:#fff;border:none;border-radius:8px;font-size:13px;font-weight:700;cursor:pointer;">✍️ Enviar a firma</button>
+    <div id="allsign-footer" style="padding:14px 20px;border-top:1px solid var(--border);display:flex;gap:8px;justify-content:flex-end;flex-shrink:0;">
+      <button onclick="cerrarModalAllSign()" style="padding:9px 16px;background:var(--white);color:var(--ink3);border:1.5px solid var(--border);border-radius:8px;font-size:13px;cursor:pointer;">Cancelar</button>
+      <button id="allsign-btn-enviar" onclick="allsignEnviar()" style="padding:9px 20px;background:#4f46e5;color:#fff;border:none;border-radius:8px;font-size:13px;font-weight:700;cursor:pointer;">✍️ Enviar a firma</button>
     </div>
   </div>
 </div>
 
-<script src="assets/js/portal-app.js?v=20260823"></script>
+<script src="assets/js/portal-app.js?v=20260826"></script>
 <script>
 // ── IA Proactiva: recomendaciones personalizadas ──────────────────────────────
 let proacCargado = false;

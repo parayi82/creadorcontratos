@@ -3836,9 +3836,14 @@ async function descargarFirmaAllSign(allsignId, clienteRfc, btn) {
       + '&cliente_rfc=' + encodeURIComponent(clienteRfc);
     var res = await fetch(url, { headers: { Authorization: 'Bearer ' + token } });
     if (!res.ok) {
-      var err = await res.json().catch(() => ({}));
-      console.error('[allsign-download] error debug:', JSON.stringify(err.debug || err));
-      throw new Error(err.error || 'Error al descargar.');
+      var errData = await res.json().catch(() => ({}));
+      console.error('[allsign-download] debug completo:', JSON.stringify(errData, null, 2));
+      var debugStr = JSON.stringify(errData.debug || errData, null, 2);
+      var msg = 'Error al descargar PDF firmado.\n\n'
+        + 'Diagnóstico AllSign:\n' + debugStr.slice(0, 1200)
+        + (debugStr.length > 1200 ? '\n...(ver consola para detalle completo)' : '');
+      alert(msg);
+      return;
     }
     var blob = await res.blob();
     var a = document.createElement('a');

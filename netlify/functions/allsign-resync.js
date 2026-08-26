@@ -52,28 +52,31 @@ exports.handler = async (event) => {
   }
 
   try {
-    // ── 1. Obtener estado del documento en AllSign ────────────────────────────
+    // ── 1. Intentar descargar evidencia PDF directamente ─────────────────────
+    // Si la evidencia existe → el documento está firmado, sin importar el campo status.
+    // Esto evita depender del nombre exacto del campo de estado en AllSign.
+    const evidenceRes = await fetch(`${ALLSIGN_BASE}/documents/${allsign_id}/evidence`, {
+      headers: { Authorization: `Bearer ${process.env.ALLSIGN_API_KEY}` },
+    });
+
+    // ── 2. Obtener estado del documento para firmantes individuales y expirado ─
     const docRes = await fetch(`${ALLSIGN_BASE}/documents/${allsign_id}`, {
       headers: { Authorization: `Bearer ${process.env.ALLSIGN_API_KEY}` },
     });
-    if (!docRes.ok) {
-      const err = await docRes.json().catch(() => ({}));
-      return { statusCode: 502, headers, body: JSON.stringify({ error: 'Error consultando AllSign.', detalle: err }) };
-    }
-    const doc = await docRes.json();
+    const doc = docRes.ok ? await docRes.json() : {};
+    console.log(`[allsign-resync] doc fields: status=${doc.status} state=${doc.state} completed=${doc.completed} evidenceOk=${evidenceRes.ok}`);
 
-    // AllSign puede usar status, state, o completed como indicador
-    const isCompleted =
-      doc.status === 'completed' ||
-      doc.state  === 'completed' ||
+    const STATUSES_EXPIRED  = ['expired', 'expirado', 'cancelled', 'cancelado'];
+    const STATUSES_COMPLETE = ['completed', 'complete', 'signed', 'done', 'finished'];
+    const rawStatus = (doc.status || doc.state || '').toLowerCase();
+
+    const isExpired   = STATUSES_EXPIRED.includes(rawStatus);
+    const isCompleted = evidenceRes.ok || STATUSES_COMPLETE.includes(rawStatus) ||
       doc.completed === true ||
       (Array.isArray(doc.participants) && doc.participants.length > 0 &&
-        doc.participants.every(p => p.signed || p.status === 'signed' || p.completedAt));
+        doc.participants.every(p => p.signed || STATUSES_COMPLETE.includes((p.status||'').toLowerCase()) || p.completedAt || p.signedAt));
 
-    const isExpired =
-      doc.status === 'expired' || doc.state === 'expired';
-
-    // ── 2. Actualizar firmantes individuales ─────────────────────────────────
+    // ── 3. Actualizar firmantes individuales ─────────────────────────────────
     const { data: firmaRow } = await sb
       .from('firmas_electronicas')
       .select('firmantes')
@@ -87,7 +90,8 @@ exports.handler = async (event) => {
         const match = doc.participants.find(p =>
           p.email === f.email || p.signerEmail === f.email
         );
-        if (match && (match.signed || match.status === 'signed' || match.completedAt)) {
+        if (match && (match.signed || match.signedAt || match.completedAt ||
+            STATUSES_COMPLETE.includes((match.status||'').toLowerCase()))) {
           return { ...f, firmado: true };
         }
         return f;
@@ -102,25 +106,35 @@ exports.handler = async (event) => {
     }
 
     if (!isCompleted) {
-      // Solo actualizar firmantes individuales que ya firmaron
       await sb.from('firmas_electronicas')
         .update({ firmantes: firmantesActualizados })
         .eq('allsign_id', allsign_id).eq('cliente_rfc', rfcTarget);
-      return { statusCode: 200, headers, body: JSON.stringify({ ok: true, estado: 'pendiente', doc_status: doc.status || doc.state }) };
+      return { statusCode: 200, headers, body: JSON.stringify({
+        ok: true, estado: 'pendiente',
+        doc_status: rawStatus || 'desconocido',
+        evidence_ok: evidenceRes.ok,
+        debug: { status: doc.status, state: doc.state, completed: doc.completed },
+      })};
     }
 
-    // ── 3. Completado: descargar PDF de evidencia ────────────────────────────
+    // ── 4. Completado: guardar PDF de evidencia ───────────────────────────────
+    // evidenceRes ya tiene el body; si isCompleted fue true por status (no por evidenceRes.ok),
+    // hacemos una segunda llamada. Si fue por evidenceRes.ok, el body ya está disponible.
     let pdfPath = null;
-    const evidenceRes = await fetch(`${ALLSIGN_BASE}/documents/${allsign_id}/evidence`, {
-      headers: { Authorization: `Bearer ${process.env.ALLSIGN_API_KEY}` },
-    });
-    if (evidenceRes.ok) {
-      const pdfBuffer = Buffer.from(await evidenceRes.arrayBuffer());
+    try {
+      const pdfBuffer = Buffer.from(await (evidenceRes.ok
+        ? evidenceRes.arrayBuffer()
+        : fetch(`${ALLSIGN_BASE}/documents/${allsign_id}/evidence`, {
+            headers: { Authorization: `Bearer ${process.env.ALLSIGN_API_KEY}` },
+          }).then(r => r.ok ? r.arrayBuffer() : Promise.reject(new Error('evidence not ready')))
+      ));
       pdfPath = `${rfcTarget}/firmas/${allsign_id}.pdf`;
       await sb.storage.from('expedientes').upload(pdfPath, pdfBuffer, {
         contentType: 'application/pdf',
         upsert: true,
       });
+    } catch (e) {
+      console.warn('[allsign-resync] No se pudo descargar evidencia PDF:', e.message);
     }
 
     // ── 4. Actualizar Supabase ────────────────────────────────────────────────

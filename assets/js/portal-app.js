@@ -3818,4 +3818,58 @@ async function descargarFirma(path, ext) {
     alert('Error al descargar: ' + err.message);
   }
 }
+async function descargarFirmaAllSign(allsignId, clienteRfc, btn) {
+  if (btn) { btn.disabled = true; btn.textContent = 'Descargando…'; }
+  try {
+    var sesResult = await sbAuth.auth.getSession();
+    var token = sesResult?.data?.session?.access_token || '';
+    if (!token) throw new Error('Sesión expirada.');
+    var url = '/api/allsign-download?allsign_id=' + encodeURIComponent(allsignId)
+      + '&cliente_rfc=' + encodeURIComponent(clienteRfc);
+    var res = await fetch(url, { headers: { Authorization: 'Bearer ' + token } });
+    if (!res.ok) {
+      var errData = await res.json().catch(() => ({}));
+      console.error('[allsign-download] debug completo:', JSON.stringify(errData, null, 2));
+      var debugStr = JSON.stringify(errData.debug || errData, null, 2);
+      var msg = 'Error al descargar PDF firmado.\n\n'
+        + 'Diagnóstico AllSign:\n' + debugStr.slice(0, 1200)
+        + (debugStr.length > 1200 ? '\n...(ver consola para detalle completo)' : '');
+      alert(msg);
+      return;
+    }
+    var blob = await res.blob();
+    var a = document.createElement('a');
+    a.href = URL.createObjectURL(blob);
+    a.download = 'firma-' + allsignId + '.pdf';
+    document.body.appendChild(a);
+    a.click();
+    URL.revokeObjectURL(a.href);
+    document.body.removeChild(a);
+  } catch (err) {
+    alert('Error al descargar: ' + err.message);
+  } finally {
+    if (btn) { btn.disabled = false; btn.textContent = '📄 Descargar PDF'; }
+  }
+}
+
+async function resyncFirma(allsignId, clienteRfc, btn) {
+  if (btn) { btn.disabled = true; btn.textContent = 'Sincronizando…'; }
+  try {
+    var sesResult = await sbAuth.auth.getSession();
+    var token = sesResult?.data?.session?.access_token || '';
+    if (!token) throw new Error('Sesión expirada.');
+    var res = await fetch('/api/allsign-resync', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', Authorization: 'Bearer ' + token },
+      body: JSON.stringify({ allsign_id: allsignId, cliente_rfc: clienteRfc }),
+    });
+    var data = await res.json();
+    console.log('[allsign-resync] respuesta:', JSON.stringify(data));
+    if (!res.ok) throw new Error(data.error || 'Error al sincronizar.');
+    await cargarMisFirmas(true);
+  } catch (err) {
+    alert('Error al sincronizar: ' + err.message);
+    if (btn) { btn.disabled = false; btn.textContent = '↻ Sincronizar estado'; }
+  }
+}
 // ── Fin AllSign ──────────────────────────────────────────────────────────────

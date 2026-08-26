@@ -93,18 +93,13 @@ exports.handler = async (event) => {
       name:  f.nombre,
     }));
 
-    // AllSign v2 requiere participantEmail (no signerKey) en cada campo.
+    // AllSign v2: position anidado + pageNumbers (ver ejemplo oficial en error E1200).
     const fieldsList = firmantes.map((f, i) => {
       const { x, y } = fieldPos(i);
       return {
         participantEmail: f.email,
-        type:             'signature',
-        documentIndex:    0,
-        page:             1,
-        x,
-        y,
-        width:            FIELD_W,
-        height:           FIELD_H,
+        pageNumbers:      [1],
+        position:         { x, y },
       };
     });
 

@@ -3703,7 +3703,13 @@ async function allsignEnviar() {
     });
 
     var data = await res.json();
-    if (!res.ok || !data.ok) throw new Error(data.error || 'Error al enviar a AllSign.');
+    if (!res.ok || !data.ok) {
+      var detMsg = '';
+      if (data.detalle) {
+        try { detMsg = ' — ' + (typeof data.detalle === 'string' ? data.detalle : JSON.stringify(data.detalle)); } catch(_) {}
+      }
+      throw new Error((data.error || 'Error al enviar a AllSign.') + detMsg);
+    }
 
     document.getElementById('allsign-sending').style.display = 'none';
     document.getElementById('allsign-success').style.display = '';

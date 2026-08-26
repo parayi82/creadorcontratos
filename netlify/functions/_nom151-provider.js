@@ -26,8 +26,9 @@ function getNom151Provider() {
   switch (PROVIDER_ID) {
     case 'mock':
       return require('./_nom151-mock');
-    case 'finkok':
-      return require('./_nom151-finkok');
+    // Para agregar un PSC real: crea _nom151-{nombre}.js con la función conservar(hash, meta)
+    // y agrega el case aquí. Consulta el listado oficial de PSCs acreditados por la SE en:
+    // https://www.gob.mx/se/acciones-y-programas/comercio-interior-prestadores-de-servicios-de-certificacion
     default:
       throw new Error(`NOM_151_PROVIDER desconocido: "${PROVIDER_ID}". Valores válidos: mock, finkok.`);
   }

@@ -27,10 +27,9 @@ const { createClient } = require('@supabase/supabase-js');
 const { clientIp, reportError, logSecurityEvent } = require('./_security');
 const { waTexto } = require('./_whatsapp');
 
-const ALLSIGN_BASE = () =>
-  process.env.ALLSIGN_ENV === 'production'
-    ? 'https://api.allsign.io/v1'
-    : 'https://api-sandbox.allsign.io/v1';
+// AllSign tiene un único endpoint de API independiente del entorno;
+// el ambiente (live/sandbox) lo determina el prefijo de la API key.
+const ALLSIGN_BASE = () => 'https://api.allsign.io/v2';
 
 function allsignAuth() {
   return `Bearer ${process.env.ALLSIGN_API_KEY}`;
@@ -101,7 +100,7 @@ exports.handler = async (event) => {
         if (!allsignId) break;
 
         // Descargar evidencia PDF firmada desde AllSign
-        // Endpoint exacto a confirmar con la documentación de AllSign
+        // document.completed se dispara cuando "la evidencia PDF está lista"
         const pdfRes = await fetch(`${ALLSIGN_BASE()}/documents/${allsignId}/evidence`, {
           headers: { 'Authorization': allsignAuth() },
         });

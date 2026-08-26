@@ -125,16 +125,15 @@ console.log('\nNOM-151 — Adaptador de conservación\n');
     }
   });
 
-  // ── 8. Provider selector — "finkok" sin implementación lanza error ───────────
-  await test('getNom151Provider lanza error para finkok cuando no implementado', () => {
+  // ── 8. Provider selector — "finkok" devuelve módulo con función conservar ────
+  await test('getNom151Provider con finkok devuelve módulo con función conservar', () => {
     const originalEnv = process.env.NOM_151_PROVIDER;
     process.env.NOM_151_PROVIDER = 'finkok';
     delete require.cache[providerPath];
     try {
-      assert.throws(
-        () => { const { getNom151Provider } = require(providerPath); getNom151Provider(); },
-        /finkok/i,
-      );
+      const { getNom151Provider } = require(providerPath);
+      const provider = getNom151Provider();
+      assert.equal(typeof provider.conservar, 'function', 'finkok provider debe exportar conservar()');
     } finally {
       if (originalEnv === undefined) delete process.env.NOM_151_PROVIDER;
       else process.env.NOM_151_PROVIDER = originalEnv;

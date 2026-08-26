@@ -27,8 +27,7 @@ function getNom151Provider() {
     case 'mock':
       return require('./_nom151-mock');
     case 'finkok':
-      // Placeholder — se activa cuando el usuario proporcione credenciales
-      throw new Error('Provider "finkok" aún no está configurado. Configure NOM_151_PROVIDER=mock o implemente _nom151-finkok.js.');
+      return require('./_nom151-finkok');
     default:
       throw new Error(`NOM_151_PROVIDER desconocido: "${PROVIDER_ID}". Valores válidos: mock, finkok.`);
   }

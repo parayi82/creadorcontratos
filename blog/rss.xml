@@ -5,9 +5,17 @@
     <link>https://clicklaboral.mx/blog/</link>
     <description>Artículos, noticias y tips de compliance laboral para PyMEs mexicanas</description>
     <language>es-MX</language>
-    <lastBuildDate>Tue, 25 Aug 2026 14:36:27 GMT</lastBuildDate>
+    <lastBuildDate>Wed, 26 Aug 2026 09:50:34 GMT</lastBuildDate>
     <managingEditor>blog@clicklaboral.mx (ClickLaboral.mx)</managingEditor>
     <atom:link href="https://clicklaboral.mx/blog/rss.xml" rel="self" type="application/rss+xml"/>
+    <item>
+      <title>PTU 2025: qué es la participación de utilidades y cómo distribuirla</title>
+      <link>https://clicklaboral.mx/blog/ptu-2025-que-es-la-participacion-de-utilidades-y-como-distribuirla-2026-08-26.html</link>
+      <guid isPermaLink="true">https://clicklaboral.mx/blog/ptu-2025-que-es-la-participacion-de-utilidades-y-como-distribuirla-2026-08-26.html</guid>
+      <pubDate>Wed, 26 Aug 2026 12:00:00 GMT</pubDate>
+      <category>Prestaciones</category>
+      <description>Cada año, entre mayo y junio, miles de empresas en México enfrentan la misma pregunta: ¿estamos calculando correctamente la PTU? La Participación de los Trabajadores en las Utilidades es una obligació…</description>
+    </item>
     <item>
       <title>Alerta: las multas por no tener Comisión de Seguridad e Higiene actualizada son hasta 435 UMAs</title>
       <link>https://clicklaboral.mx/blog/noticia-alerta-las-multas-por-no-tener-comision-de-segurid-2026-08-25.html</link>
@@ -199,14 +207,6 @@
       <pubDate>Sun, 09 Aug 2026 12:00:00 GMT</pubDate>
       <category>Jurisprudencia</category>
       <description>Si su empresa no entrega al trabajador una copia firmada del contrato individual de trabajo al momento de iniciar la relación laboral, los tribunales pueden presumir que las condiciones del contrato l…</description>
-    </item>
-    <item>
-      <title>Alerta: el plazo para distribuir PTU vence el 30 de mayo — lo que debe saber</title>
-      <link>https://clicklaboral.mx/blog/noticia-alerta-el-plazo-para-distribuir-ptu-vence-el-30-de-2026-08-08.html</link>
-      <guid isPermaLink="true">https://clicklaboral.mx/blog/noticia-alerta-el-plazo-para-distribuir-ptu-vence-el-30-de-2026-08-08.html</guid>
-      <pubDate>Sat, 08 Aug 2026 12:00:00 GMT</pubDate>
-      <category>Alerta Legal</category>
-      <description>El plazo para repartir la Participación de los Trabajadores en las Utilidades (PTU) vence el 30 de mayo de 2025 para las personas morales —empresas constituidas como sociedades—, y el 29 de junio para…</description>
     </item>
   </channel>
 </rss>

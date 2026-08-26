@@ -166,6 +166,16 @@
   status = 200
 
 [[redirects]]
+  from = "/api/allsign-enviar"
+  to = "/.netlify/functions/allsign-enviar"
+  status = 200
+
+[[redirects]]
+  from = "/api/allsign-webhook"
+  to = "/.netlify/functions/allsign-webhook"
+  status = 200
+
+[[redirects]]
   from = "/api/whatsapp-bot"
   to = "/.netlify/functions/whatsapp-bot"
   status = 200

@@ -76,9 +76,41 @@ exports.handler = async (event) => {
   try {
     const base = ALLSIGN_BASE();
 
-    // ── 1. Crear documento ────────────────────────────────────────────────────
-    // Compound con un solo PDF en base64. Sin fields[], add-signer e invite-bulk
-    // se encargan de las invitaciones (ver docs AllSign — compound sin fields no invita).
+    // Posiciones de campos de firma en página A4 (595 × 842 pt).
+    // Hasta 2 por fila, empezando desde la base. AllSign requiere al menos
+    // un campo colocado o rechaza invite-bulk con E1200.
+    const FIELD_W = 230, FIELD_H = 60, FIELD_GAP_V = 20;
+    function fieldPos(idx) {
+      const col  = idx % 2;
+      const row  = Math.floor(idx / 2);
+      const x    = col === 0 ? 60 : 305;
+      const y    = 760 - row * (FIELD_H + FIELD_GAP_V);
+      return { x, y };
+    }
+
+    const participantsList = firmantes.map((f, i) => ({
+      email:     f.email,
+      name:      f.nombre,
+      signerKey: `firmante_${i}`,
+    }));
+
+    const fieldsList = firmantes.map((f, i) => {
+      const { x, y } = fieldPos(i);
+      return {
+        signerKey:     `firmante_${i}`,
+        type:          'signature',
+        documentIndex: 0,
+        page:          1,
+        x,
+        y,
+        width:         FIELD_W,
+        height:        FIELD_H,
+      };
+    });
+
+    // ── 1. Crear documento con participantes y campos posicionados ────────────
+    // Incluir participants + fields en la creación evita el modo "autógrafa
+    // sin campos" (E1200) que bloquea invite-bulk.
     const createRes = await fetch(`${base}/documents/`, {
       method: 'POST',
       headers: {
@@ -93,7 +125,8 @@ exports.handler = async (event) => {
             name:          filename.replace(/\.pdf$/i, ''),
           },
         ],
-        participants: [],
+        participants: participantsList,
+        fields:       fieldsList,
       }),
     });
 
@@ -106,9 +139,29 @@ exports.handler = async (event) => {
     const allsignId = createData.id;
     const pdfHash   = createData.pdfHash || '';
 
-    // ── 2. Agregar cada firmante ──────────────────────────────────────────────
+    // ── 2. Agregar cada firmante (por si la creación no los persistió) ────────
+    // add-signer es idempotente: si ya existe devuelve "ya está en la lista",
+    // lo que tratamos como éxito. El signerId viene de esta llamada o del
+    // array participants del createData.
+    const createdParticipants = createData.participants || [];
     const firmantesConId = [];
-    for (const f of firmantes) {
+    for (let i = 0; i < firmantes.length; i++) {
+      const f = firmantes[i];
+
+      // Intentar obtener signerId del createData primero
+      const fromCreate = createdParticipants.find(
+        p => p.email === f.email || p.signerKey === `firmante_${i}`
+      );
+      if (fromCreate?.signerId || fromCreate?.id) {
+        firmantesConId.push({
+          allsign_signer_id: fromCreate.signerId || fromCreate.id,
+          email:             f.email,
+          nombre:            f.nombre,
+          firmado:           false,
+        });
+        continue;
+      }
+
       const signerRes = await fetch(`${base}/documents/${allsignId}/add-signer`, {
         method: 'POST',
         headers: {
@@ -122,12 +175,10 @@ exports.handler = async (event) => {
       });
 
       const signerData = await signerRes.json();
-      if (!signerRes.ok || signerData.success === false) {
+      const alreadyExists = String(signerData.message || signerData.error?.message || '').toLowerCase().includes('ya está en la lista');
+      if (!signerRes.ok && !alreadyExists) {
         console.error(`AllSign add-signer error (${f.email}):`, JSON.stringify(signerData));
-        // No abortar — continuar con los demás firmantes si el error es "ya existe"
-        if (!String(signerData.message || '').includes('ya está en la lista')) {
-          return { statusCode: 502, headers, body: JSON.stringify({ error: `Error al agregar firmante ${f.email}.`, detalle: signerData }) };
-        }
+        return { statusCode: 502, headers, body: JSON.stringify({ error: `Error al agregar firmante ${f.email}.`, detalle: signerData }) };
       }
 
       firmantesConId.push({

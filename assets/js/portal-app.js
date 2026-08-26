@@ -3785,6 +3785,10 @@ function renderFirmas(rows) {
       descargas += '<button onclick="descargarFirma(\'' + r.signed_pdf_path.replace(/'/g,"\'") + '\',\'pdf\')" '
         + 'class="btn btn-outline" style="font-size:11px;padding:4px 10px;">📄 Descargar PDF</button> ';
     }
+    if (estado === 'pendiente' && r.allsign_id) {
+      descargas += '<button onclick="resyncFirma(\'' + esc(r.allsign_id) + '\',\'' + esc(r.cliente_rfc) + '\',this)" '
+        + 'class="btn btn-outline" style="font-size:11px;padding:4px 10px;">↻ Sincronizar estado</button>';
+    }
     return '<div class="card" style="margin-bottom:10px;">'
       + '<div style="display:flex;align-items:flex-start;justify-content:space-between;gap:8px;flex-wrap:wrap;">'
       + '<div>'
@@ -3816,6 +3820,25 @@ async function descargarFirma(path, ext) {
     document.body.removeChild(a);
   } catch (err) {
     alert('Error al descargar: ' + err.message);
+  }
+}
+async function resyncFirma(allsignId, clienteRfc, btn) {
+  if (btn) { btn.disabled = true; btn.textContent = 'Sincronizando…'; }
+  try {
+    var sesResult = await sbAuth.auth.getSession();
+    var token = sesResult?.data?.session?.access_token || '';
+    if (!token) throw new Error('Sesión expirada.');
+    var res = await fetch('/api/allsign-resync', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', Authorization: 'Bearer ' + token },
+      body: JSON.stringify({ allsign_id: allsignId, cliente_rfc: clienteRfc }),
+    });
+    var data = await res.json();
+    if (!res.ok) throw new Error(data.error || 'Error al sincronizar.');
+    await cargarMisFirmas(true);
+  } catch (err) {
+    alert('Error al sincronizar: ' + err.message);
+    if (btn) { btn.disabled = false; btn.textContent = '↻ Sincronizar estado'; }
   }
 }
 // ── Fin AllSign ──────────────────────────────────────────────────────────────

@@ -3683,7 +3683,7 @@ async function allsignEnviar() {
 
     var token = '';
     try {
-      var { data: { session } } = await window._sbClient.auth.getSession();
+      var { data: { session } } = await sbAuth.auth.getSession();
       token = session?.access_token || '';
     } catch(e) {}
     if (!token) throw new Error('Sesión expirada. Recarga la página.');

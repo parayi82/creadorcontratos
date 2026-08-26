@@ -3781,7 +3781,11 @@ function renderFirmas(rows) {
         + icono + ' ' + esc(f.nombre || f.email) + ' <span style="color:var(--ink3);">(' + esc(f.email) + ')</span></div>';
     }).join('');
     var descargas = '';
-    if (r.signed_pdf_path) {
+    if (estado === 'firmado' && r.allsign_id) {
+      // Descarga directa desde AllSign vía proxy (evita archivos corruptos en Supabase)
+      descargas += '<button onclick="descargarFirmaAllSign(\'' + esc(r.allsign_id) + '\',\'' + esc(r.cliente_rfc) + '\',this)" '
+        + 'class="btn btn-outline" style="font-size:11px;padding:4px 10px;">📄 Descargar PDF</button> ';
+    } else if (r.signed_pdf_path) {
       descargas += '<button onclick="descargarFirma(\'' + r.signed_pdf_path.replace(/'/g,"\'") + '\',\'pdf\')" '
         + 'class="btn btn-outline" style="font-size:11px;padding:4px 10px;">📄 Descargar PDF</button> ';
     }
@@ -3822,6 +3826,34 @@ async function descargarFirma(path, ext) {
     alert('Error al descargar: ' + err.message);
   }
 }
+async function descargarFirmaAllSign(allsignId, clienteRfc, btn) {
+  if (btn) { btn.disabled = true; btn.textContent = 'Descargando…'; }
+  try {
+    var sesResult = await sbAuth.auth.getSession();
+    var token = sesResult?.data?.session?.access_token || '';
+    if (!token) throw new Error('Sesión expirada.');
+    var url = '/api/allsign-download?allsign_id=' + encodeURIComponent(allsignId)
+      + '&cliente_rfc=' + encodeURIComponent(clienteRfc);
+    var res = await fetch(url, { headers: { Authorization: 'Bearer ' + token } });
+    if (!res.ok) {
+      var err = await res.json().catch(() => ({}));
+      throw new Error(err.error || 'Error al descargar.');
+    }
+    var blob = await res.blob();
+    var a = document.createElement('a');
+    a.href = URL.createObjectURL(blob);
+    a.download = 'firma-' + allsignId + '.pdf';
+    document.body.appendChild(a);
+    a.click();
+    URL.revokeObjectURL(a.href);
+    document.body.removeChild(a);
+  } catch (err) {
+    alert('Error al descargar: ' + err.message);
+  } finally {
+    if (btn) { btn.disabled = false; btn.textContent = '📄 Descargar PDF'; }
+  }
+}
+
 async function resyncFirma(allsignId, clienteRfc, btn) {
   if (btn) { btn.disabled = true; btn.textContent = 'Sincronizando…'; }
   try {

@@ -181,6 +181,11 @@
   status = 200
 
 [[redirects]]
+  from = "/api/allsign-download"
+  to = "/.netlify/functions/allsign-download"
+  status = 200
+
+[[redirects]]
   from = "/api/whatsapp-bot"
   to = "/.netlify/functions/whatsapp-bot"
   status = 200

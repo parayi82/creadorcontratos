@@ -36,18 +36,30 @@ function allsignAuth() {
 }
 
 // ── Verificación HMAC-SHA256 ──────────────────────────────────────────────────
-// AllSign envía X-AllSign-Signature = HMAC-SHA256(payload, ALLSIGN_WEBHOOK_SECRET).
+// AllSign envía:
+//   X-AllSign-Timestamp: <ISO-8601 UTC>
+//   X-AllSign-Signature: hex HMAC-SHA256 de "{timestamp}.{body}"
+// El mensaje firmado es timestamp + "." + body (no solo el body).
 // Comparación en tiempo constante para evitar timing attacks.
 function verificarFirmaHmac(event) {
   const secret = process.env.ALLSIGN_WEBHOOK_SECRET || '';
   if (!secret) return false;
 
-  const firmaRecibida = (event.headers?.['x-allsign-signature'] || event.headers?.['X-AllSign-Signature'] || '').trim();
+  const firmaRecibida = (
+    event.headers?.['x-allsign-signature'] ||
+    event.headers?.['X-AllSign-Signature'] || ''
+  ).trim();
   if (!firmaRecibida) return false;
 
+  const timestamp = (
+    event.headers?.['x-allsign-timestamp'] ||
+    event.headers?.['X-AllSign-Timestamp'] || ''
+  ).trim();
+
+  const mensaje = `${timestamp}.${event.body || ''}`;
   const firmaEsperada = crypto
     .createHmac('sha256', secret)
-    .update(event.body || '', 'utf8')
+    .update(mensaje, 'utf8')
     .digest('hex');
 
   if (firmaRecibida.length !== firmaEsperada.length) return false;
@@ -162,7 +174,8 @@ exports.handler = async (event) => {
 
       case 'signer.signed': {
         // Un firmante individual completó — actualizar estado del firmante en el array
-        const allsignId = data.document_id || data.document;
+        // Payload: data.document.id  (no data.document_id)
+        const allsignId = data.document?.id || data.document_id || data.document;
         if (!allsignId) break;
 
         const { data: firma } = await sb

@@ -18,6 +18,7 @@ const ALLSIGN_BASE = 'https://api.allsign.io/v2';
 function encontrarUrlPdf(obj, depth = 0) {
   if (depth > 4 || !obj || typeof obj !== 'object') return null;
   const URL_KEYS = [
+    'presignedUrl', 'presigned_url', 'preSignedUrl',
     'downloadUrl', 'download_url', 'url', 'pdfUrl', 'pdf_url',
     'evidenceUrl', 'evidence_url', 'fileUrl', 'file_url',
     'signedUrl', 'signed_url', 'link', 'href', 'src',

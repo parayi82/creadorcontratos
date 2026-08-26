@@ -67,14 +67,16 @@ exports.handler = async (event) => {
     console.log(`[allsign-resync] doc fields: status=${doc.status} state=${doc.state} completed=${doc.completed} evidenceOk=${evidenceRes.ok}`);
 
     const STATUSES_EXPIRED  = ['expired', 'expirado', 'cancelled', 'cancelado'];
-    const STATUSES_COMPLETE = ['completed', 'complete', 'signed', 'done', 'finished'];
-    const rawStatus = (doc.status || doc.state || '').toLowerCase();
+    const STATUSES_COMPLETE = ['completed', 'complete', 'signed', 'done', 'finished', 'todos_firmaron'];
+    const rawStatus = (doc.status || doc.state || doc.signersData?.status || '').toLowerCase();
 
     const isExpired   = STATUSES_EXPIRED.includes(rawStatus);
     const isCompleted = evidenceRes.ok || STATUSES_COMPLETE.includes(rawStatus) ||
       doc.completed === true ||
       (Array.isArray(doc.participants) && doc.participants.length > 0 &&
-        doc.participants.every(p => p.signed || STATUSES_COMPLETE.includes((p.status||'').toLowerCase()) || p.completedAt || p.signedAt));
+        doc.participants.every(p => p.signed || STATUSES_COMPLETE.includes((p.status||'').toLowerCase()) || p.completedAt || p.signedAt)) ||
+      (Array.isArray(doc.signersData?.signatures) && doc.signersData.signatures.length > 0 &&
+        doc.signersData.signatures.every(s => STATUSES_COMPLETE.includes((s.status||'').toLowerCase())));
 
     // ── 3. Actualizar firmantes individuales ─────────────────────────────────
     const { data: firmaRow } = await sb
@@ -145,7 +147,8 @@ exports.handler = async (event) => {
         if (ct.includes('application/json') || ct.includes('text/')) {
           const evJson = await evRes.json();
           evidenceDebug[endpoint.split('/').pop()].json = JSON.stringify(evJson).slice(0, 400);
-          const pdfUrl = evJson.url || evJson.downloadUrl || evJson.evidence_url ||
+          const pdfUrl = evJson.evidencePdf?.presignedUrl || evJson.presignedUrl ||
+            evJson.url || evJson.downloadUrl || evJson.evidence_url ||
             evJson.pdf_url || evJson.fileUrl || evJson.link || evJson.signedUrl ||
             evJson.pdfUrl || evJson.documentUrl;
           if (!pdfUrl) continue;

@@ -118,31 +118,48 @@ exports.handler = async (event) => {
     }
 
     // ── 4. Completado: guardar PDF de evidencia ───────────────────────────────
-    // AllSign puede devolver el PDF binario directo O un JSON con una URL de descarga.
     let pdfPath = null;
+    let evidenceDebug = {};
     try {
-      // Si evidenceRes ya fue consumido (no se puede releer), hacer nueva llamada
-      const evRes = await fetch(`${ALLSIGN_BASE}/documents/${allsign_id}/evidence`, {
-        headers: { Authorization: `Bearer ${process.env.ALLSIGN_API_KEY}` },
-      });
+      // Intentar /evidence y /download; el que devuelva PDF válido gana
+      const endpoints = [
+        `${ALLSIGN_BASE}/documents/${allsign_id}/evidence`,
+        `${ALLSIGN_BASE}/documents/${allsign_id}/download`,
+      ];
 
-      if (evRes.ok) {
-        const contentType = evRes.headers.get('content-type') || '';
+      for (const endpoint of endpoints) {
+        const evRes = await fetch(endpoint, {
+          headers: {
+            Authorization: `Bearer ${process.env.ALLSIGN_API_KEY}`,
+            Accept: 'application/pdf, application/octet-stream, */*',
+          },
+        });
+
+        const ct = evRes.headers.get('content-type') || '';
+        const status = evRes.status;
+        evidenceDebug[endpoint.split('/').pop()] = { status, ct };
+
+        if (!evRes.ok) continue;
+
         let pdfBuffer;
-
-        if (contentType.includes('application/json') || contentType.includes('text/')) {
-          // AllSign devuelve JSON con URL de descarga
+        if (ct.includes('application/json') || ct.includes('text/')) {
           const evJson = await evRes.json();
-          console.log('[allsign-resync] evidence JSON:', JSON.stringify(evJson).slice(0, 300));
+          evidenceDebug[endpoint.split('/').pop()].json = JSON.stringify(evJson).slice(0, 400);
           const pdfUrl = evJson.url || evJson.downloadUrl || evJson.evidence_url ||
-            evJson.pdf_url || evJson.fileUrl || evJson.link || evJson.signedUrl;
-          if (!pdfUrl) throw new Error('No se encontró URL de PDF en respuesta de evidence');
+            evJson.pdf_url || evJson.fileUrl || evJson.link || evJson.signedUrl ||
+            evJson.pdfUrl || evJson.documentUrl;
+          if (!pdfUrl) continue;
           const pdfRes2 = await fetch(pdfUrl);
-          if (!pdfRes2.ok) throw new Error('Error descargando PDF desde URL de evidence');
+          if (!pdfRes2.ok) continue;
           pdfBuffer = Buffer.from(await pdfRes2.arrayBuffer());
         } else {
-          // Respuesta binaria directa
           pdfBuffer = Buffer.from(await evRes.arrayBuffer());
+        }
+
+        // Verificar que es un PDF válido (comienza con %PDF)
+        if (pdfBuffer.length < 5 || pdfBuffer.slice(0, 4).toString() !== '%PDF') {
+          evidenceDebug[endpoint.split('/').pop()].invalid = `no es PDF, primeros bytes: ${pdfBuffer.slice(0, 20).toString('hex')}`;
+          continue;
         }
 
         pdfPath = `${rfcTarget}/firmas/${allsign_id}.pdf`;
@@ -150,10 +167,12 @@ exports.handler = async (event) => {
           contentType: 'application/pdf',
           upsert: true,
         });
-        console.log(`[allsign-resync] PDF guardado: ${pdfPath} (${pdfBuffer.length} bytes)`);
+        console.log(`[allsign-resync] PDF válido guardado desde ${endpoint.split('/').pop()}: ${pdfBuffer.length} bytes`);
+        break;
       }
     } catch (e) {
       console.warn('[allsign-resync] No se pudo guardar evidencia PDF:', e.message);
+      evidenceDebug.error = e.message;
     }
 
     // ── 4. Actualizar Supabase ────────────────────────────────────────────────
@@ -168,7 +187,7 @@ exports.handler = async (event) => {
     return {
       statusCode: 200,
       headers,
-      body: JSON.stringify({ ok: true, estado: 'firmado', signed_pdf_path: pdfPath }),
+      body: JSON.stringify({ ok: true, estado: 'firmado', signed_pdf_path: pdfPath, evidenceDebug }),
     };
 
   } catch (err) {

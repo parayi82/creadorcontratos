@@ -3834,6 +3834,7 @@ async function resyncFirma(allsignId, clienteRfc, btn) {
       body: JSON.stringify({ allsign_id: allsignId, cliente_rfc: clienteRfc }),
     });
     var data = await res.json();
+    console.log('[allsign-resync] respuesta:', JSON.stringify(data));
     if (!res.ok) throw new Error(data.error || 'Error al sincronizar.');
     await cargarMisFirmas(true);
   } catch (err) {

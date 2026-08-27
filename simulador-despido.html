@@ -4,6 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Simulador de exposición por despido · ClickLaboral.mx</title>
+<script src="assets/js/form-persist.js?v=1.0"></script>
 <style>
   *{margin:0;padding:0;box-sizing:border-box;}
   :root{--navy:#0f2640;--navy2:#1a3a5c;--teal:#0d9488;--teal-d:#0b5f57;--ink:#1f2937;--ink2:#475569;--ink3:#64748b;--border:#e2e8f0;--bg:#f1f4f8;--amber:#b45309;}
@@ -181,6 +182,20 @@ function recalcTotales(){
 }
 
 addRow({nombre:params.get('trabajador')||'', salario:params.get('salario')||'', fecha:params.get('ingreso')||''});
+FormPersist.init({
+  key: 'simulador_despido',
+  rfc: params.get('rfc') || '',
+  extra: {
+    save: () => JSON.stringify(rows),
+    restore: (raw) => {
+      try {
+        const saved = JSON.parse(raw);
+        if (Array.isArray(saved) && saved.length) { rows = saved; pintar(); }
+      } catch(e) {}
+    }
+  },
+  afterRestore: () => { if (typeof recalcTotales === 'function') recalcTotales(); }
+});
 </script>
 </body>
 </html>

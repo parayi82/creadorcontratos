@@ -5,6 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Ley Silla · Análisis de bipedestación · ClickLaboral.mx</title>
 <script src="membrete.js?v=3.7"></script>
+<script src="assets/js/form-persist.js?v=1.0"></script>
 <style>
   *{margin:0;padding:0;box-sizing:border-box;}
   :root{--navy:#0f2640;--navy2:#1a3a5c;--teal:#0d9488;--teal-d:#0b5f57;--ink:#1f2937;--ink2:#475569;--ink3:#64748b;--border:#e2e8f0;--bg:#f1f4f8;}
@@ -220,6 +221,24 @@ function render(){
 document.getElementById('fecha').value = new Date().toISOString().split('T')[0];
 addPuesto({nombre:'',naturaleza:'de_pie',tiempo:'',medida:'silla_puesto',sillas:''});
 render();
+
+FormPersist.init({
+  key: 'ley_silla',
+  rfc: rfcURL,
+  extra: {
+    save: () => JSON.stringify(puestos),
+    restore: (raw) => {
+      try {
+        const saved = JSON.parse(raw);
+        if (Array.isArray(saved) && saved.length) {
+          puestos = saved;
+          pintarPuestos();
+        }
+      } catch (e) {}
+    }
+  },
+  afterRestore: () => render()
+});
 </script>
 </body>
 </html>

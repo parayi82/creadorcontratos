@@ -151,6 +151,7 @@ body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);min-h
 .q-card,.progress-bar{animation:fadeUp .3s ease both;}
 @keyframes fadeUp{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:translateY(0)}}
 </style>
+<script src="assets/js/form-persist.js?v=1.0"></script>
 </head>
 <body>
 
@@ -349,6 +350,7 @@ function selectOpt(el) {
   el.classList.add('selected');
   answers[q] = v;
   document.getElementById('btn-next').disabled = false;
+  if (window.FormPersist) FormPersist.save(false);
 }
 
 function updateProgress(q) {
@@ -483,6 +485,25 @@ function showResult() {
 }
 
 // Init
+FormPersist.init({
+  key: 'diagnostico_repse',
+  extra: {
+    save: () => JSON.stringify({ answers, current }),
+    restore: (raw) => {
+      try {
+        const s = JSON.parse(raw);
+        if (s.answers) {
+          Object.assign(answers, s.answers);
+          Object.entries(s.answers).forEach(([q, v]) => {
+            const opt = document.querySelector(`.opt[data-q="${q}"][data-v="${v}"]`);
+            if (opt) opt.classList.add('selected');
+          });
+        }
+        if (s.current) showQ(s.current);
+      } catch(e) {}
+    }
+  }
+});
 showQ(1);
 </script>
 </body>

@@ -5,9 +5,17 @@
     <link>https://clicklaboral.mx/blog/</link>
     <description>Artículos, noticias y tips de compliance laboral para PyMEs mexicanas</description>
     <language>es-MX</language>
-    <lastBuildDate>Wed, 26 Aug 2026 14:36:26 GMT</lastBuildDate>
+    <lastBuildDate>Thu, 27 Aug 2026 23:24:15 GMT</lastBuildDate>
     <managingEditor>blog@clicklaboral.mx (ClickLaboral.mx)</managingEditor>
     <atom:link href="https://clicklaboral.mx/blog/rss.xml" rel="self" type="application/rss+xml"/>
+    <item>
+      <title>Alerta: aguinaldo proporcional es obligatorio incluso si el trabajador renuncia antes de diciembre</title>
+      <link>https://clicklaboral.mx/blog/noticia-alerta-aguinaldo-proporcional-es-obligatorio-inclu-2026-08-27.html</link>
+      <guid isPermaLink="true">https://clicklaboral.mx/blog/noticia-alerta-aguinaldo-proporcional-es-obligatorio-inclu-2026-08-27.html</guid>
+      <pubDate>Thu, 27 Aug 2026 12:00:00 GMT</pubDate>
+      <category>Alerta Legal</category>
+      <description>Si un trabajador renuncia en octubre o noviembre, su empresa sigue obligada a pagarle el aguinaldo proporcional a los días laborados durante 2025. No hacerlo puede derivar en multas de hasta 5,000 vec…</description>
+    </item>
     <item>
       <title>Alerta: las vacaciones no gozadas no prescriben en el año — pueden reclamarse hasta 1 año después</title>
       <link>https://clicklaboral.mx/blog/noticia-alerta-las-vacaciones-no-gozadas-no-prescriben-en--2026-08-26.html</link>
@@ -199,14 +207,6 @@
       <pubDate>Mon, 10 Aug 2026 12:00:00 GMT</pubDate>
       <category>Alerta Legal</category>
       <description>Si su empresa contrata trabajadores &quot;por evento&quot; o &quot;por temporada&quot; sin un contrato escrito que lo acredite, la Ley Federal del Trabajo presume que la relación laboral es por tiempo indeterminado — y u…</description>
-    </item>
-    <item>
-      <title>Salario base de cotización IMSS: qué incluye y cómo calcularlo correctamente</title>
-      <link>https://clicklaboral.mx/blog/salario-base-de-cotizacion-imss-que-incluye-y-como-calcularlo-correctamente-2026-08-10.html</link>
-      <guid isPermaLink="true">https://clicklaboral.mx/blog/salario-base-de-cotizacion-imss-que-incluye-y-como-calcularlo-correctamente-2026-08-10.html</guid>
-      <pubDate>Mon, 10 Aug 2026 12:00:00 GMT</pubDate>
-      <category>Prestaciones</category>
-      <description>El salario base de cotización (SBC) es uno de los conceptos más importantes —y más mal calculados— en la nómina mexicana. Un error en su integración puede costarle a su empresa multas, diferencias en…</description>
     </item>
   </channel>
 </rss>

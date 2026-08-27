@@ -127,6 +127,7 @@ body.modo-cliente .preview-wrap{max-width:800px;}
 body.modo-cliente .banner-cliente{display:block;}
 </style>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
+<script src="assets/js/form-persist.js?v=1.0"></script>
 </head>
 <body>
 
@@ -518,6 +519,11 @@ function generarPaquete(){
 
 initChecklist();
 render();
+FormPersist.init({
+  key: 'paquete_bienvenida',
+  rfc: new URLSearchParams(location.search).get('rfc') || '',
+  afterRestore: () => { if (typeof render === 'function') render(); }
+});
 
 // ════════════════════════════════════════════════════════
 // DETECCIÓN DE MODO: cliente (sesión Supabase) vs admin (manual)

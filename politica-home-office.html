@@ -8,6 +8,7 @@
 <script src="membrete.js?v=3.7"></script>
 <script src="expediente-helper.js?v=3.7"></script>
 <script src="edicion-libre.js?v=4.6"></script>
+<script src="assets/js/form-persist.js?v=1.0"></script>
 <style>
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
 :root{--navy:#0f2640;--navy2:#1a3a5c;--teal:#0f766e;--ink:#111;--ink2:#444;--ink3:#888;--border:rgba(0,0,0,.09);--surface:#f8f7f4;--white:#fff;--r:14px;--r-sm:9px;--font:'Segoe UI',system-ui,-apple-system,sans-serif;}
@@ -183,6 +184,11 @@ document.addEventListener('DOMContentLoaded', () => {
   const hoy = new Date().toISOString().split('T')[0];
   document.getElementById('fecha_firma').value = hoy;
   render();
+  FormPersist.init({
+    key: 'politica_home_office',
+    rfc: new URLSearchParams(location.search).get('rfc') || '',
+    afterRestore: () => render()
+  });
 });
 </script>
 </body>

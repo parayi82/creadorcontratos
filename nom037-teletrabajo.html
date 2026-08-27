@@ -130,6 +130,7 @@
   }
 </style>
 <script src="membrete.js?v=3.7"></script>
+<script src="assets/js/form-persist.js?v=1.0"></script>
 </head>
 <body>
 <div id="auth-gate-loading">Verificando acceso…</div>
@@ -764,6 +765,28 @@ document.addEventListener('DOMContentLoaded', () => {
   renderEquipos();
   updateResultBar();
   render();
+
+  FormPersist.init({
+    key: 'nom037',
+    rfc: new URLSearchParams(location.search).get('rfc') || '',
+    extra: {
+      save: () => JSON.stringify(equipos),
+      restore: (raw) => {
+        try {
+          const saved = JSON.parse(raw);
+          if (Array.isArray(saved)) { equipos = saved; renderEquipos(); }
+        } catch(e) {}
+      }
+    },
+    afterRestore: () => {
+      ITEMS.forEach(id => {
+        const checked = document.querySelector(`input[name="${id}"]:checked`);
+        if (checked) onCheck(id, checked.value);
+      });
+      updateResultBar();
+      render();
+    }
+  });
 
   // Intentar cargar trabajadores del expediente-helper
   if (typeof cargarTrabajadoresParaSelector === 'function') {

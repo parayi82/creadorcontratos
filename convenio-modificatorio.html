@@ -389,5 +389,13 @@ render();
 })();
 </script>
 <script src="edicion-libre.js?v=4.6"></script>
+<script src="assets/js/form-persist.js?v=1.0"></script>
+<script>
+FormPersist.init({
+  key: 'convenio_modificatorio',
+  rfc: new URLSearchParams(location.search).get('rfc') || '',
+  afterRestore: () => { if (typeof render === 'function') render(); }
+});
+</script>
 </body>
 </html>

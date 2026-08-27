@@ -74,6 +74,7 @@ body.modo-demo .doc-sheet::after{content:'MUESTRA — CUENTA DEMO, NO VÁLIDO PA
   .cl-nav-logo .cl-laboral{color:#5eead4;font-weight:400;}
 </style>
 <script src="membrete.js?v=3.7"></script>
+<script src="assets/js/form-persist.js?v=1.0"></script>
 </head>
 <body>
 <div id="auth-gate-loading">Verificando acceso…</div>
@@ -478,6 +479,11 @@ function renderMutuo(lugar, fecha){
 }
 
 setTipo('poder');
+FormPersist.init({
+  key: 'cartas_poder',
+  rfc: new URLSearchParams(location.search).get('rfc') || '',
+  afterRestore: () => { if (typeof render === 'function') render(); }
+});
 </script>
 </body>
 </html>

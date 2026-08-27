@@ -517,7 +517,7 @@ body{font-family:var(--font);background:var(--surface);color:var(--ink);min-heig
       <div class="nav-item" onclick="window.open('simulador-riesgo.html')"><span class="nav-icon">⚠️</span> Simulador de riesgo</div>
       <div class="nav-item" onclick="window.open('contratos-por-sector.html')"><span class="nav-icon">🏭</span> Contratos por sector</div>
       <div class="nav-item" onclick="goPanel('reportes')"><span class="nav-icon">📊</span> Reportes gerenciales</div>
-      <div class="nav-item" onclick="goPanel('firmas')"><span class="nav-icon">✍️</span> Mis firmas</div>
+      <div class="nav-item" onclick="goPanel('firmas')"><span class="nav-icon">✍️</span> Mis firmas <span class="nav-badge" id="sb-firmas-creditos-badge" style="display:none;background:#6366f1;">0</span></div>
       <div class="nav-item" onclick="goPanel('compliance')"><span class="nav-icon">📊</span> Mi compliance</div>
       <div class="nav-item" onclick="goPanel('alertas')"><span class="nav-icon">🔔</span> Alertas <span class="nav-badge" id="sb-alert-badge">0</span></div>
       <div class="nav-item" onclick="goPanel('comisiones')"><span class="nav-icon">🏛</span> Comisiones mixtas</div>
@@ -782,6 +782,33 @@ body{font-family:var(--font);background:var(--surface);color:var(--ink);min-heig
 
       <!-- ── PANEL: Mis Firmas ── -->
       <div class="panel" id="panel-firmas">
+
+        <!-- Tarjeta de créditos -->
+        <div class="card" style="margin-bottom:14px;border-left:4px solid #6366f1;">
+          <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px;">
+            <div>
+              <div style="font-size:11px;font-weight:600;color:#6366f1;letter-spacing:.05em;text-transform:uppercase;margin-bottom:4px;">Créditos de firma electrónica</div>
+              <div style="display:flex;align-items:baseline;gap:8px;">
+                <span id="firmas-saldo-num" style="font-size:28px;font-weight:800;color:var(--navy);line-height:1;">—</span>
+                <span style="font-size:13px;color:var(--ink3);">disponibles</span>
+              </div>
+              <div style="font-size:11px;color:var(--ink3);margin-top:4px;">Cada firma tiene un costo — $89 c/u con FIEL · $160 sin FIEL (biometría)</div>
+            </div>
+            <div style="display:flex;flex-direction:column;gap:6px;min-width:180px;">
+              <button onclick="comprarCreditosFirma('unitaria')" class="btn btn-primary" style="font-size:12px;padding:7px 14px;">
+                ➕ 1 firma — $89 MXN
+              </button>
+              <button onclick="comprarCreditosFirma('paquete6')" class="btn btn-primary" style="font-size:12px;padding:7px 14px;background:#6366f1;border-color:#6366f1;">
+                📦 6 firmas — $350 MXN
+              </button>
+              <a href="https://wa.me/5213339263817?text=Hola%2C%20necesito%20m%C3%A1s%20cr%C3%A9ditos%20de%20firma%20electr%C3%B3nica" target="_blank" rel="noopener"
+                style="font-size:11px;color:#25d366;text-align:center;padding:4px;font-weight:600;">
+                💬 Más firmas — Contactar por WhatsApp
+              </a>
+            </div>
+          </div>
+        </div>
+
         <div class="card" style="margin-bottom:14px;">
           <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px;">
             <div>
@@ -1235,8 +1262,32 @@ body{font-family:var(--font);background:var(--surface);color:var(--ink);min-heig
   </div>
 </div>
 
-<script src="assets/js/portal-app.js?v=20260826j"></script>
+<script src="assets/js/portal-app.js?v=20260826k"></script>
 <script>
+// Redirigir a panel correcto si viene de Stripe (compra de créditos de firma)
+(function() {
+  var params = new URLSearchParams(window.location.search);
+  var panel  = params.get('panel');
+  var creditos = params.get('creditos');
+  if (panel || creditos) {
+    // Limpiar URL sin recargar
+    history.replaceState({}, '', window.location.pathname);
+    if (panel) {
+      // Esperar a que el portal cargue, luego navegar
+      window.addEventListener('portalListo', function() {
+        goPanel(panel);
+        if (creditos === 'ok') {
+          setTimeout(function() {
+            var n = document.getElementById('firmas-saldo-num');
+            if (n) n.style.animation = 'none';
+            cargarCreditosFirma();
+          }, 800);
+        }
+      }, { once: true });
+    }
+  }
+})();
+
 // ── IA Proactiva: recomendaciones personalizadas ──────────────────────────────
 let proacCargado = false;
 

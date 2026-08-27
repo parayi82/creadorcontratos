@@ -73,6 +73,28 @@ exports.handler = async (event) => {
     return { statusCode: 403, headers, body: JSON.stringify({ error: 'No autorizado para este cliente.' }) };
   }
 
+  // ── Verificar créditos de firma ───────────────────────────────────────────
+  // Cada firma cuesta 1 crédito. Se descuenta atómicamente después del envío.
+  const firmantesCount = firmantes.length;
+  const { data: creditRow } = await sb
+    .from('firmas_creditos')
+    .select('saldo')
+    .eq('cliente_rfc', rfcTarget)
+    .maybeSingle();
+  const saldoActual = creditRow?.saldo ?? 0;
+  if (saldoActual < firmantesCount) {
+    return {
+      statusCode: 402,
+      headers,
+      body: JSON.stringify({
+        error:       'sin_creditos',
+        mensaje:     `Saldo insuficiente. Tiene ${saldoActual} crédito(s) y necesita ${firmantesCount}.`,
+        saldo_actual: saldoActual,
+        requeridos:   firmantesCount,
+      }),
+    };
+  }
+
   try {
     const base = ALLSIGN_BASE();
 
@@ -220,6 +242,13 @@ exports.handler = async (event) => {
       allsign_estado:     'pendiente',
       estado:             'pendiente',
     });
+
+    // Descontar 1 crédito por documento enviado (atómico via RPC)
+    const { error: creditErr } = await sb.rpc('descontar_firma_credito', {
+      p_rfc:         rfcTarget,
+      p_allsign_id:  allsignId,
+    });
+    if (creditErr) console.error('[allsign-enviar] descontar_firma_credito error:', creditErr.message);
 
     return {
       statusCode: 200,

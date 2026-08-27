@@ -231,11 +231,11 @@ exports.handler = async (event) => {
               rfc: rfc.toUpperCase(), auth_user_id: existente.id,
               stripe_customer_id: customer.id, updated_at: new Date().toISOString(),
             }, { onConflict: 'rfc' }).catch(e => console.error('clientes_billing upsert (fallback):', e.message || e));
-            console.log('✅ Usuario existente vinculado con Stripe:', rfc, customer.id);
+            console.log('✅ Usuario existente vinculado con Stripe');
           } else {
             // Not yet in clientes_billing (run migration 000700 backfill). The Stripe
             // webhook (invoice.payment_succeeded) will set suscripcion_activa when the payment confirms.
-            console.error('No se encontró usuario existente en clientes_billing para RFC:', rfc);
+            console.error('No se encontró usuario existente en clientes_billing (RFC omitido por PII)');
           }
         } catch (updErr) {
           console.error('Aviso: no se pudo vincular el usuario existente con Stripe:', updErr.message || updErr);
@@ -357,7 +357,7 @@ exports.handler = async (event) => {
               html: emailHtml,
             }),
           });
-          console.log('Email de bienvenida enviado a', email);
+          console.log('Email de bienvenida enviado');
         } catch (emailErr) {
           // El email falló pero el cobro y el alta del portal ya se hicieron — solo registrar el error
           console.error('Aviso: no se pudo enviar el email de bienvenida:', emailErr.message || emailErr);

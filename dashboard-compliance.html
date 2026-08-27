@@ -799,10 +799,24 @@ select.form-input { cursor: pointer; }
             </div>
             <div class="form-field">
               <label class="form-label">Plan *</label>
-              <select class="form-input" id="nc-plan">
-                <option value="estandar" selected>Estándar — 1 a 50 trabajadores ($799/mes)</option>
-                <option value="pro">Pro — 51 a 500 trabajadores ($2,399/mes)</option>
+              <select class="form-input" id="nc-plan" onchange="togglePlanLibreNC()">
+                <optgroup label="── Planes mensuales ──────────">
+                  <option value="Estándar Mensual" selected>Estándar Mensual — 1 a 50 trabajadores ($799/mes)</option>
+                  <option value="Pro Mensual">Pro Mensual — 51 a 500 trabajadores ($2,399/mes)</option>
+                </optgroup>
+                <optgroup label="── Planes anuales ────────────">
+                  <option value="Estándar Anual">Estándar Anual — 1 a 50 trabajadores ($7,990/año)</option>
+                  <option value="Pro Anual">Pro Anual — 51 a 500 trabajadores ($23,990/año)</option>
+                </optgroup>
+                <optgroup label="── Otros ─────────────────────">
+                  <option value="Básico (legacy)">Básico (legacy) — $499/mes (plan anterior)</option>
+                  <option value="Corporativo">Corporativo — 500+ trabajadores (precio especial)</option>
+                  <option value="REPSE / Especializado">REPSE / Especializado (precio negociado)</option>
+                  <option value="Trial">Trial / Periodo de prueba</option>
+                  <option value="_libre">✏️ Personalizado (especificar)…</option>
+                </optgroup>
               </select>
+              <input class="form-input" id="nc-plan-libre" placeholder="Escribe el plan o condición pactada…" style="margin-top:6px;display:none;">
             </div>
           </div>
 
@@ -1288,11 +1302,24 @@ select.form-input { cursor: pointer; }
         <div class="form-field"><label class="form-label">Contacto (email)</label><input class="form-input" type="email" id="mc-email" placeholder="rrhh@empresa.com"></div>
         <div class="form-field"><label class="form-label">Teléfono</label><input class="form-input" id="mc-tel" placeholder="+52 33 1234 5678"></div>
         <div class="form-field"><label class="form-label">Plan contratado</label>
-          <select class="form-input" id="mc-plan">
-            <option value="Básico">Básico — $499/mes (legacy, ya no se ofrece)</option>
-            <option value="Estándar" selected>Estándar — $799/mes (1-50 trabajadores)</option>
-            <option value="Pro">Pro — $2,399/mes (51-500 trabajadores)</option>
+          <select class="form-input" id="mc-plan" onchange="togglePlanLibreMC()">
+            <optgroup label="── Planes mensuales ──────────">
+              <option value="Estándar Mensual">Estándar Mensual — 1 a 50 trabajadores ($799/mes)</option>
+              <option value="Pro Mensual">Pro Mensual — 51 a 500 trabajadores ($2,399/mes)</option>
+            </optgroup>
+            <optgroup label="── Planes anuales ────────────">
+              <option value="Estándar Anual">Estándar Anual — 1 a 50 trabajadores ($7,990/año)</option>
+              <option value="Pro Anual">Pro Anual — 51 a 500 trabajadores ($23,990/año)</option>
+            </optgroup>
+            <optgroup label="── Otros ─────────────────────">
+              <option value="Básico (legacy)">Básico (legacy) — $499/mes (plan anterior)</option>
+              <option value="Corporativo">Corporativo — 500+ trabajadores (precio especial)</option>
+              <option value="REPSE / Especializado">REPSE / Especializado (precio negociado)</option>
+              <option value="Trial">Trial / Periodo de prueba</option>
+              <option value="_libre">✏️ Personalizado (especificar)…</option>
+            </optgroup>
           </select>
+          <input class="form-input" id="mc-plan-libre" placeholder="Escribe el plan o condición pactada…" style="margin-top:6px;display:none;">
         </div>
         <div class="form-field"><label class="form-label">Fecha de inicio de servicio</label><input class="form-input" type="date" id="nc-inicio"></div>
         <div class="form-field"><label class="form-label">Fecha de vencimiento reglamento</label><input class="form-input" type="date" id="nc-venc-reglamento"></div>
@@ -1955,6 +1982,32 @@ async function abrirPortal(rfc, empresa, plan) {
 
 
 // ════════════════════════════════════════════════════════
+// PLAN PERSONALIZADO — mostrar/ocultar campo libre
+// ════════════════════════════════════════════════════════
+function togglePlanLibreNC() {
+  const sel = document.getElementById('nc-plan');
+  const inp = document.getElementById('nc-plan-libre');
+  inp.style.display = sel.value === '_libre' ? '' : 'none';
+  if (sel.value === '_libre') inp.focus();
+}
+function togglePlanLibreMC() {
+  const sel = document.getElementById('mc-plan');
+  const inp = document.getElementById('mc-plan-libre');
+  inp.style.display = sel.value === '_libre' ? '' : 'none';
+  if (sel.value === '_libre') inp.focus();
+}
+function getPlanNC() {
+  const sel = document.getElementById('nc-plan');
+  if (sel.value === '_libre') return document.getElementById('nc-plan-libre').value.trim() || 'Personalizado';
+  return sel.value;
+}
+function getPlanMC() {
+  const sel = document.getElementById('mc-plan');
+  if (sel.value === '_libre') return document.getElementById('mc-plan-libre').value.trim() || 'Personalizado';
+  return sel.value;
+}
+
+// ════════════════════════════════════════════════════════
 // GESTIÓN DE CLIENTES — Tabs, alta manual, contraseñas
 // ════════════════════════════════════════════════════════
 
@@ -1986,7 +2039,7 @@ async function crearClienteManual(){
   const empresa = document.getElementById('nc-empresa').value.trim();
   const email   = document.getElementById('nc-email').value.trim().toLowerCase();
   const tel     = document.getElementById('nc-tel').value.trim();
-  const plan    = document.getElementById('nc-plan').value;
+  const plan    = getPlanNC();
   const pass    = document.getElementById('nc-pass').value;
   const enviar  = document.getElementById('nc-enviar-email').checked;
 
@@ -2036,7 +2089,8 @@ async function crearClienteManual(){
     ['nc-rfc','nc-empresa','nc-email','nc-tel','nc-pass'].forEach(id=>{
       const el=document.getElementById(id); if(el) el.value='';
     });
-    document.getElementById('nc-plan').value='estandar';
+    document.getElementById('nc-plan').value='Estándar Mensual';
+    document.getElementById('nc-plan-libre').style.display='none';
     document.getElementById('nc-enviar-email').checked=true;
     btn.textContent='✅ Crear cliente y enviar bienvenida'; btn.disabled=false;
 
@@ -2389,11 +2443,12 @@ function renderNoms(tab) {
 function abrirModalCliente() {
   editandoIdx = null;
   document.getElementById('modal-cliente-titulo').textContent = 'Nuevo cliente';
-  ['nc-empresa','nc-rfc','nc-imss','nc-domicilio','nc-giro','nc-contacto','nc-email','nc-tel'].forEach(id=>{
+  ['nc-empresa','mc-rfc','nc-imss','nc-domicilio','nc-giro','nc-contacto','mc-email','mc-tel'].forEach(id=>{
     const el=document.getElementById(id);if(el)el.value='';
   });
   document.getElementById('nc-trabajadores').value='';
-  document.getElementById('nc-plan').value='Estándar';
+  document.getElementById('mc-plan').value='Estándar Mensual';
+  document.getElementById('mc-plan-libre').style.display='none';
   document.getElementById('nc-inicio').value='';
   document.getElementById('nc-venc-reglamento').value='';
   document.getElementById('modal-cliente').style.display='flex';
@@ -2405,16 +2460,27 @@ function editarCliente(id) {
   const c = CLIENTES[idx];
   editandoIdx = idx;
   document.getElementById('modal-cliente-titulo').textContent = 'Editar cliente';
-  document.getElementById('nc-empresa').value = c.empresa;
-  document.getElementById('nc-rfc').value = c.rfc;
+  document.getElementById('mc-empresa').value = c.empresa;
+  document.getElementById('mc-rfc').value = c.rfc;
   document.getElementById('nc-imss').value = c.imss||'';
   document.getElementById('nc-domicilio').value = c.domicilio;
   document.getElementById('nc-giro').value = c.giro||'';
   document.getElementById('nc-trabajadores').value = c.trabajadores;
   document.getElementById('nc-contacto').value = c.contacto||'';
-  document.getElementById('nc-email').value = c.email||'';
-  document.getElementById('nc-tel').value = c.tel||'';
-  document.getElementById('nc-plan').value = c.plan||'Estándar';
+  document.getElementById('mc-email').value = c.email||'';
+  document.getElementById('mc-tel').value = c.tel||'';
+  const planOpts = Array.from(document.getElementById('mc-plan').options).map(o=>o.value);
+  if (c.plan && planOpts.includes(c.plan)) {
+    document.getElementById('mc-plan').value = c.plan;
+    document.getElementById('mc-plan-libre').style.display = 'none';
+  } else if (c.plan) {
+    document.getElementById('mc-plan').value = '_libre';
+    document.getElementById('mc-plan-libre').value = c.plan;
+    document.getElementById('mc-plan-libre').style.display = '';
+  } else {
+    document.getElementById('mc-plan').value = 'Estándar Mensual';
+    document.getElementById('mc-plan-libre').style.display = 'none';
+  }
   document.getElementById('nc-inicio').value = c.inicio||'';
   document.getElementById('nc-venc-reglamento').value = c.vencReglamento||'';
   document.getElementById('modal-cliente').style.display='flex';
@@ -2434,7 +2500,7 @@ function guardarCliente() {
     contacto: document.getElementById('nc-contacto').value,
     email: document.getElementById('mc-email').value,
     tel: document.getElementById('mc-tel').value,
-    plan: document.getElementById('mc-plan').value,
+    plan: getPlanMC(),
     inicio: document.getElementById('nc-inicio').value,
     vencReglamento: document.getElementById('nc-venc-reglamento').value,
     semaforo:'amarillo', score: 0, alertas:[], docs:[], historial:[],

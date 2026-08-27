@@ -1206,6 +1206,9 @@ function initPortal(){
   planBadge.className = 'sb-logo-plan plan-'+planSlug;
   document.getElementById('sb-alert-badge').textContent = c.alertas.length;
 
+  // Cargar saldo de créditos de firma en el sidebar
+  cargarCreditosFirma();
+
   // Despacho mode
   if (_modoDespacho) {
     const banner = document.getElementById('sb-despacho-banner');
@@ -1231,6 +1234,7 @@ function initPortal(){
   renderSuscripcion();
   renderNotifPrefs();
   initScrollHintSidebar();
+  window.dispatchEvent(new Event('portalListo'));
 }
 
 // ════════════════════════════════════════════
@@ -2031,7 +2035,7 @@ function goPanel(id){
   if(id==='asistente' && !window._asistInited) asistInit();
   if(id==='nom035') renderNom035();
   if(id==='historial') renderHistorial();
-  if(id==='firmas') cargarMisFirmas();
+  if(id==='firmas') { cargarMisFirmas(); cargarCreditosFirma(); }
   cerrarSidebarMobile();
 }
 
@@ -3703,6 +3707,14 @@ async function allsignEnviar() {
     });
 
     var data = await res.json();
+
+    // Sin créditos → cerrar modal y mostrar diálogo de compra
+    if (res.status === 402 || data.error === 'sin_creditos') {
+      document.getElementById('modal-allsign').style.display = 'none';
+      mostrarDialogoSinCreditos(data.saldo_actual || 0, data.requeridos || 1);
+      return;
+    }
+
     if (!res.ok || !data.ok) {
       var detMsg = '';
       if (data.detalle) {
@@ -3723,10 +3735,11 @@ async function allsignEnviar() {
         + '</div>';
     }).join('');
 
-    // Refrescar panel de firmas si está visible
+    // Refrescar panel de firmas y créditos
     if (document.getElementById('panel-firmas')?.style.display !== 'none') {
       cargarMisFirmas(true);
     }
+    cargarCreditosFirma();
 
   } catch(err) {
     document.getElementById('allsign-sending').style.display = 'none';
@@ -3880,4 +3893,77 @@ async function resyncFirma(allsignId, clienteRfc, btn) {
     if (btn) { btn.disabled = false; btn.textContent = '↻ Sincronizar estado'; }
   }
 }
+// ── Créditos de firma electrónica ────────────────────────────────────────────
+
+async function cargarCreditosFirma() {
+  var rfc = clienteActual && clienteActual.rfc;
+  if (!rfc) return;
+  try {
+    var sesResult = await sbAuth.auth.getSession();
+    var token = sesResult?.data?.session?.access_token || '';
+    if (!token) return;
+    var res = await fetch('/api/firmas-creditos?cliente_rfc=' + encodeURIComponent(rfc), {
+      headers: { Authorization: 'Bearer ' + token },
+    });
+    if (!res.ok) return;
+    var data = await res.json();
+    var saldo = data.saldo ?? 0;
+    // Actualizar número en el panel
+    var numEl = document.getElementById('firmas-saldo-num');
+    if (numEl) numEl.textContent = saldo;
+    // Badge en sidebar
+    var badge = document.getElementById('sb-firmas-creditos-badge');
+    if (badge) {
+      badge.textContent = saldo;
+      badge.style.display = saldo > 0 ? '' : 'none';
+    }
+  } catch (e) { console.warn('[creditos-firma]', e.message); }
+}
+
+async function comprarCreditosFirma(paquete) {
+  var rfc = clienteActual && clienteActual.rfc;
+  if (!rfc) { alert('No se identificó el RFC.'); return; }
+  try {
+    var sesResult = await sbAuth.auth.getSession();
+    var token = sesResult?.data?.session?.access_token || '';
+    if (!token) throw new Error('Sesión expirada.');
+    var res = await fetch('/api/firmas-creditos-compra', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', Authorization: 'Bearer ' + token },
+      body: JSON.stringify({ paquete, cliente_rfc: rfc }),
+    });
+    var data = await res.json();
+    if (!res.ok) throw new Error(data.error || 'Error al iniciar pago.');
+    if (data.url) window.location.href = data.url;
+  } catch (e) {
+    alert('Error al procesar pago: ' + e.message);
+  }
+}
+
+function mostrarDialogoSinCreditos(saldoActual, requeridos) {
+  var overlay = document.createElement('div');
+  overlay.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:9999;display:flex;align-items:center;justify-content:center;';
+  var box = document.createElement('div');
+  box.style.cssText = 'background:var(--bg,#fff);border-radius:16px;padding:28px;max-width:400px;width:90%;box-shadow:0 8px 40px rgba(0,0,0,.18);';
+  box.innerHTML = '<div style="font-size:32px;margin-bottom:8px;">✍️</div>'
+    + '<div style="font-size:18px;font-weight:800;color:var(--navy,#1a3a5c);margin-bottom:6px;">Créditos insuficientes</div>'
+    + '<div style="font-size:13px;color:var(--ink3,#666);margin-bottom:20px;">'
+    + 'Tiene <strong>' + saldoActual + '</strong> crédito(s) y necesita <strong>' + requeridos + '</strong> para enviar este documento.</div>'
+    + '<div style="display:flex;flex-direction:column;gap:10px;">'
+    + '<button onclick="this.closest(\'div[data-cl-overlay]\').remove();comprarCreditosFirma(\'unitaria\')" '
+    + 'style="background:#4f46e5;color:#fff;border:none;border-radius:8px;padding:12px;font-size:14px;font-weight:700;cursor:pointer;">➕ 1 firma — $89 MXN</button>'
+    + '<button onclick="this.closest(\'div[data-cl-overlay]\').remove();comprarCreditosFirma(\'paquete6\')" '
+    + 'style="background:#6366f1;color:#fff;border:none;border-radius:8px;padding:12px;font-size:14px;font-weight:700;cursor:pointer;">📦 6 firmas — $350 MXN</button>'
+    + '<a href="https://wa.me/5213339263817?text=Hola%2C%20necesito%20m%C3%A1s%20cr%C3%A9ditos%20de%20firma%20electr%C3%B3nica" target="_blank" rel="noopener" '
+    + 'style="display:block;text-align:center;color:#25d366;font-size:13px;font-weight:600;padding:6px;">💬 Más firmas — WhatsApp</a>'
+    + '<button onclick="this.closest(\'div[data-cl-overlay]\').remove()" '
+    + 'style="background:none;border:1px solid var(--border,#e5e7eb);border-radius:8px;padding:10px;font-size:13px;cursor:pointer;color:var(--ink3,#666);">Cancelar</button>'
+    + '</div>';
+  overlay.setAttribute('data-cl-overlay', '1');
+  overlay.appendChild(box);
+  // Cerrar al clic en overlay
+  overlay.addEventListener('click', function(e) { if (e.target === overlay) overlay.remove(); });
+  document.body.appendChild(overlay);
+}
+
 // ── Fin AllSign ──────────────────────────────────────────────────────────────

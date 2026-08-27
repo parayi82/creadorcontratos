@@ -385,7 +385,7 @@ exports.handler = async function(event) {
           });
           const resendData = await resendRes.json();
           if (!resendRes.ok) {
-            console.error('Resend error:', JSON.stringify({ status: resendRes.status, body: resendData, rfc, email }));
+            console.error('Resend error:', JSON.stringify({ status: resendRes.status, resend_code: resendData?.statusCode }));
           } else {
             emailsEnviados++;
           }

@@ -1,0 +1,91 @@
+name: Seguridad — Auditoría en cada PR
+
+on:
+  pull_request:
+    branches: [main]
+  push:
+    branches: [main]
+
+jobs:
+  security-and-lint:
+    name: SCA + Lint
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Configurar Node.js 20
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+
+      - name: Instalar dependencias
+        run: npm ci
+
+      # ── SCA: dependencias vulnerables ──────────────────────────────────────
+      # Falla si hay alguna vulnerabilidad HIGH o CRITICAL en las deps de producción.
+      # Separa dev de prod para no bloquear por vulns de herramientas de testing.
+      - name: Análisis de vulnerabilidades (SCA)
+        run: npm audit --audit-level=high --omit=dev
+
+      # ── SAST: lint estricto en funciones Netlify ────────────────────────────
+      # eslint con config propia en .eslintrc.js (ver ese archivo).
+      - name: Lint (SAST básico)
+        run: npm run lint
+
+      # ── Verificación: no haya secretos hardcodeados ─────────────────────────
+      # Busca patrones típicos: claves Stripe, Supabase, tokens de API.
+      - name: Escaneo de secretos hardcodeados
+        run: |
+          # Patrones que nunca deben aparecer en código (solo en env vars)
+          PATTERNS=(
+            "sk_live_"
+            "sk_test_"
+            "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9\."
+            "SUPABASE_SERVICE_KEY\s*=\s*['\"]ey"
+            "allsign_live_sk_"
+            "allsign_test_sk_"
+            "re_[A-Za-z0-9]{32}"
+          )
+          FAILED=0
+          for pattern in "${PATTERNS[@]}"; do
+            if grep -rEn "$pattern" \
+                --include="*.js" --include="*.ts" --include="*.json" \
+                --exclude-dir=node_modules \
+                --exclude-dir=.git \
+                . ; then
+              echo "❌ Posible secreto hardcodeado detectado: $pattern"
+              FAILED=1
+            fi
+          done
+          if [ "$FAILED" = "1" ]; then exit 1; fi
+          echo "✅ No se encontraron secretos hardcodeados"
+
+      # ── Verificación rápida de RLS ──────────────────────────────────────────
+      # Asegura que las migraciones nuevas activen RLS cuando crean tablas.
+      - name: RLS check en migraciones nuevas
+        if: github.event_name == 'pull_request'
+        run: |
+          # Si el PR agrega una nueva tabla (CREATE TABLE) sin ENABLE ROW LEVEL SECURITY
+          # en archivos .sql de migraciones, advierte (no bloquea — puede ser intencional).
+          CHANGED_SQL=$(git diff --name-only origin/${{ github.base_ref }}...HEAD -- '*.sql' 2>/dev/null || true)
+          if [ -z "$CHANGED_SQL" ]; then
+            echo "ℹ️  Sin archivos .sql modificados"
+            exit 0
+          fi
+          FAILED=0
+          for f in $CHANGED_SQL; do
+            if grep -qiE "CREATE TABLE" "$f"; then
+              TABLE=$(grep -oiE "CREATE TABLE (IF NOT EXISTS )?[a-z_]+" "$f" | awk '{print $NF}')
+              if ! grep -qiE "ENABLE ROW LEVEL SECURITY" "$f"; then
+                echo "⚠️  $f crea '$TABLE' sin ENABLE ROW LEVEL SECURITY — verifica si es intencional"
+                FAILED=1
+              fi
+            fi
+          done
+          if [ "$FAILED" = "1" ]; then
+            echo "::warning::Una o más tablas nuevas en este PR no activan RLS. Si los datos son solo del backend (service_role), está bien dejarlo así — documéntalo con un comentario."
+          fi
+          exit 0

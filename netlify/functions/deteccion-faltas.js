@@ -107,8 +107,8 @@ exports.handler = async (event) => {
         }, { onConflict: 'trabajador_id,fecha' });
         if (!insSR) resumen.dias_cerrados++;
       } catch (e) {
-        resumen.errores.push(`cierre ${t.nombre}: ${e?.message || e}`);
-        console.error(`deteccion-faltas cierre ${t.nombre}:`, e?.message);
+        resumen.errores.push(`cierre id:${t.id}: ${e?.message || e}`);
+        console.error(`deteccion-faltas cierre id:${t.id}:`, e?.message);
       }
     }
 
@@ -161,8 +161,8 @@ exports.handler = async (event) => {
         if (!insAlFalta) resumen.alertas_faltas++;
 
       } catch (e) {
-        resumen.errores.push(`falta ${t.nombre}: ${e?.message || e}`);
-        console.error(`deteccion-faltas falta ${t.nombre}:`, e?.message);
+        resumen.errores.push(`falta id:${t.id}: ${e?.message || e}`);
+        console.error(`deteccion-faltas falta id:${t.id}:`, e?.message);
       }
     }
 
@@ -180,8 +180,8 @@ exports.handler = async (event) => {
         }, { onConflict: 'cliente_rfc,tipo,trabajador_nombre,fecha_alerta' });
         if (!insAlRet) resumen.alertas_retrasos++;
       } catch (e) {
-        resumen.errores.push(`retraso ${t.nombre}: ${e?.message || e}`);
-        console.error(`deteccion-faltas retraso ${t.nombre}:`, e?.message);
+        resumen.errores.push(`retraso id:${t.id}: ${e?.message || e}`);
+        console.error(`deteccion-faltas retraso id:${t.id}:`, e?.message);
       }
     }
 

@@ -3,11 +3,17 @@
   "version": "1.0.0",
   "private": true,
   "description": "Clicklaboral.mx — plataforma de cumplimiento legal laboral. Dependencias de las funciones Netlify.",
+  "scripts": {
+    "lint": "eslint netlify/functions/ --ext .js --max-warnings 20",
+    "lint:fix": "eslint netlify/functions/ --ext .js --fix",
+    "audit:prod": "npm audit --audit-level=high --omit=dev"
+  },
   "dependencies": {
     "@supabase/supabase-js": "^2.45.0",
     "stripe": "^17.0.0"
   },
   "devDependencies": {
-    "@playwright/test": "^1.62.1"
+    "@playwright/test": "^1.62.1",
+    "eslint": "^8.57.0"
   }
 }

@@ -4,7 +4,9 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Ley Silla · Análisis de bipedestación · ClickLaboral.mx</title>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
 <script src="membrete.js?v=3.7"></script>
+<script src="expediente-helper.js?v=3.7"></script>
 <script src="assets/js/form-persist.js?v=1.0"></script>
 <style>
   *{margin:0;padding:0;box-sizing:border-box;}
@@ -66,9 +68,9 @@
 <body>
 <div class="topbar">
   <h1>🪑 Ley Silla — Análisis de bipedestación</h1>
-  <div class="actions">
+  <div class="actions header-actions">
     <a class="btn btn-ghost" href="auditor-virtual.html">← Auditor Virtual</a>
-    <button class="btn btn-primary" onclick="window.print()">Imprimir / PDF</button>
+    <button class="btn btn-ghost" id="btn-imprimir-doc" onclick="window.print()">🖨 Imprimir / PDF</button>
   </div>
 </div>
 
@@ -105,7 +107,7 @@
 
   <!-- DOC -->
   <div class="panel-der">
-    <div class="doc-sheet" id="doc"></div>
+    <div id="doc-preview"><div class="doc-sheet" id="doc"></div></div>
   </div>
 </div>
 
@@ -238,6 +240,17 @@ FormPersist.init({
     }
   },
   afterRestore: () => render()
+});
+
+if (window.ExpedienteHelper) ExpedienteHelper.init({
+  inputNombreId: 'empresa',
+  tipoDocumento: 'ley_silla',
+  nombreDocumentoFn: () => 'Análisis Ley Silla — ' + (v('empresa') || 'Empresa'),
+  metadataFn: () => ({
+    puestos: puestos.length,
+    ciudad: v('ciudad'),
+    fecha: v('fecha'),
+  }),
 });
 </script>
 </body>

@@ -5,9 +5,17 @@
     <link>https://clicklaboral.mx/blog/</link>
     <description>Artículos, noticias y tips de compliance laboral para PyMEs mexicanas</description>
     <language>es-MX</language>
-    <lastBuildDate>Thu, 27 Aug 2026 23:24:15 GMT</lastBuildDate>
+    <lastBuildDate>Fri, 28 Aug 2026 00:14:14 GMT</lastBuildDate>
     <managingEditor>blog@clicklaboral.mx (ClickLaboral.mx)</managingEditor>
     <atom:link href="https://clicklaboral.mx/blog/rss.xml" rel="self" type="application/rss+xml"/>
+    <item>
+      <title>Criterio: trabajador de confianza degradado a puesto de base puede rescindir sin responsabilidad</title>
+      <link>https://clicklaboral.mx/blog/noticia-criterio-trabajador-de-confianza-degradado-a-puest-2026-08-28.html</link>
+      <guid isPermaLink="true">https://clicklaboral.mx/blog/noticia-criterio-trabajador-de-confianza-degradado-a-puest-2026-08-28.html</guid>
+      <pubDate>Fri, 28 Aug 2026 12:00:00 GMT</pubDate>
+      <category>Jurisprudencia</category>
+      <description>Si su empresa degrada a un trabajador de confianza a un puesto de base sin su consentimiento, ese trabajador puede rescindir el contrato sin responsabilidad y exigir el pago de una indemnización const…</description>
+    </item>
     <item>
       <title>Alerta: aguinaldo proporcional es obligatorio incluso si el trabajador renuncia antes de diciembre</title>
       <link>https://clicklaboral.mx/blog/noticia-alerta-aguinaldo-proporcional-es-obligatorio-inclu-2026-08-27.html</link>
@@ -199,14 +207,6 @@
       <pubDate>Tue, 11 Aug 2026 12:00:00 GMT</pubDate>
       <category>Tip RH</category>
       <description>Documentar una amonestación verbal el mismo día en que ocurre —y recabar la firma del trabajador como constancia de que fue notificado— es el paso que más omiten las PyMEs y el que más caro les cuesta…</description>
-    </item>
-    <item>
-      <title>Alerta: trabajadores eventuales sin contrato escrito generan presunción de relación laboral indefinida</title>
-      <link>https://clicklaboral.mx/blog/noticia-alerta-trabajadores-eventuales-sin-contrato-escrit-2026-08-10.html</link>
-      <guid isPermaLink="true">https://clicklaboral.mx/blog/noticia-alerta-trabajadores-eventuales-sin-contrato-escrit-2026-08-10.html</guid>
-      <pubDate>Mon, 10 Aug 2026 12:00:00 GMT</pubDate>
-      <category>Alerta Legal</category>
-      <description>Si su empresa contrata trabajadores &quot;por evento&quot; o &quot;por temporada&quot; sin un contrato escrito que lo acredite, la Ley Federal del Trabajo presume que la relación laboral es por tiempo indeterminado — y u…</description>
     </item>
   </channel>
 </rss>

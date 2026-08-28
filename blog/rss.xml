@@ -5,9 +5,17 @@
     <link>https://clicklaboral.mx/blog/</link>
     <description>Artículos, noticias y tips de compliance laboral para PyMEs mexicanas</description>
     <language>es-MX</language>
-    <lastBuildDate>Fri, 28 Aug 2026 00:14:14 GMT</lastBuildDate>
+    <lastBuildDate>Fri, 28 Aug 2026 20:48:52 GMT</lastBuildDate>
     <managingEditor>blog@clicklaboral.mx (ClickLaboral.mx)</managingEditor>
     <atom:link href="https://clicklaboral.mx/blog/rss.xml" rel="self" type="application/rss+xml"/>
+    <item>
+      <title>NOM-035 para empresas con menos de 15 trabajadores: obligaciones mínimas</title>
+      <link>https://clicklaboral.mx/blog/nom-035-para-empresas-con-menos-de-15-trabajadores-obligaciones-minimas-2026-08-28.html</link>
+      <guid isPermaLink="true">https://clicklaboral.mx/blog/nom-035-para-empresas-con-menos-de-15-trabajadores-obligaciones-minimas-2026-08-28.html</guid>
+      <pubDate>Fri, 28 Aug 2026 12:00:00 GMT</pubDate>
+      <category>NOMs</category>
+      <description>Si su empresa tiene menos de 15 trabajadores, la NOM-035-STPS-2018 también le aplica — y no cumplirla puede costarle desde 13,000 hasta casi 300,000 pesos en multas. La buena noticia: las obligaciones…</description>
+    </item>
     <item>
       <title>Criterio: trabajador de confianza degradado a puesto de base puede rescindir sin responsabilidad</title>
       <link>https://clicklaboral.mx/blog/noticia-criterio-trabajador-de-confianza-degradado-a-puest-2026-08-28.html</link>
@@ -199,14 +207,6 @@
       <pubDate>Wed, 12 Aug 2026 12:00:00 GMT</pubDate>
       <category>Prestaciones</category>
       <description>El fondo de ahorro es una de las prestaciones más valoradas por los trabajadores en México y, al mismo tiempo, una de las que más dudas genera en las áreas de recursos humanos y administración. Si su…</description>
-    </item>
-    <item>
-      <title>Tip: cómo registrar correctamente una amonestación verbal sin que se vuelva contra usted</title>
-      <link>https://clicklaboral.mx/blog/noticia-tip-como-registrar-correctamente-una-amonestacion--2026-08-11.html</link>
-      <guid isPermaLink="true">https://clicklaboral.mx/blog/noticia-tip-como-registrar-correctamente-una-amonestacion--2026-08-11.html</guid>
-      <pubDate>Tue, 11 Aug 2026 12:00:00 GMT</pubDate>
-      <category>Tip RH</category>
-      <description>Documentar una amonestación verbal el mismo día en que ocurre —y recabar la firma del trabajador como constancia de que fue notificado— es el paso que más omiten las PyMEs y el que más caro les cuesta…</description>
     </item>
   </channel>
 </rss>

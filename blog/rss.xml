@@ -5,9 +5,17 @@
     <link>https://clicklaboral.mx/blog/</link>
     <description>Artículos, noticias y tips de compliance laboral para PyMEs mexicanas</description>
     <language>es-MX</language>
-    <lastBuildDate>Fri, 28 Aug 2026 20:48:52 GMT</lastBuildDate>
+    <lastBuildDate>Sat, 29 Aug 2026 17:27:44 GMT</lastBuildDate>
     <managingEditor>blog@clicklaboral.mx (ClickLaboral.mx)</managingEditor>
     <atom:link href="https://clicklaboral.mx/blog/rss.xml" rel="self" type="application/rss+xml"/>
+    <item>
+      <title>Tip: cómo documentar una baja voluntaria para que sea irrefutable en juicio</title>
+      <link>https://clicklaboral.mx/blog/noticia-tip-como-documentar-una-baja-voluntaria-para-que-s-2026-08-29.html</link>
+      <guid isPermaLink="true">https://clicklaboral.mx/blog/noticia-tip-como-documentar-una-baja-voluntaria-para-que-s-2026-08-29.html</guid>
+      <pubDate>Sat, 29 Aug 2026 12:00:00 GMT</pubDate>
+      <category>Tip RH</category>
+      <description>Antes de que el trabajador salga por última vez de su empresa, obtenga su firma en un documento de renuncia voluntaria redactado correctamente; sin ese respaldo escrito, cualquier Junta de Conciliació…</description>
+    </item>
     <item>
       <title>NOM-035 para empresas con menos de 15 trabajadores: obligaciones mínimas</title>
       <link>https://clicklaboral.mx/blog/nom-035-para-empresas-con-menos-de-15-trabajadores-obligaciones-minimas-2026-08-28.html</link>
@@ -199,14 +207,6 @@
       <pubDate>Wed, 12 Aug 2026 12:00:00 GMT</pubDate>
       <category>Alerta Legal</category>
       <description>Un RFC con un solo carácter incorrecto en el CFDI de nómina puede provocar que el IMSS rechace el comprobante como prueba de pago de cuotas obrero-patronales, dejando al patrón sin soporte documental…</description>
-    </item>
-    <item>
-      <title>Fondo de ahorro para trabajadores: cómo implementarlo y qué dice la LFT</title>
-      <link>https://clicklaboral.mx/blog/fondo-de-ahorro-para-trabajadores-como-implementarlo-y-que-dice-la-lft-2026-08-12.html</link>
-      <guid isPermaLink="true">https://clicklaboral.mx/blog/fondo-de-ahorro-para-trabajadores-como-implementarlo-y-que-dice-la-lft-2026-08-12.html</guid>
-      <pubDate>Wed, 12 Aug 2026 12:00:00 GMT</pubDate>
-      <category>Prestaciones</category>
-      <description>El fondo de ahorro es una de las prestaciones más valoradas por los trabajadores en México y, al mismo tiempo, una de las que más dudas genera en las áreas de recursos humanos y administración. Si su…</description>
     </item>
   </channel>
 </rss>

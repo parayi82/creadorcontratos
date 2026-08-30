@@ -5,9 +5,17 @@
     <link>https://clicklaboral.mx/blog/</link>
     <description>Artículos, noticias y tips de compliance laboral para PyMEs mexicanas</description>
     <language>es-MX</language>
-    <lastBuildDate>Sat, 29 Aug 2026 17:27:44 GMT</lastBuildDate>
+    <lastBuildDate>Sun, 30 Aug 2026 17:51:43 GMT</lastBuildDate>
     <managingEditor>blog@clicklaboral.mx (ClickLaboral.mx)</managingEditor>
     <atom:link href="https://clicklaboral.mx/blog/rss.xml" rel="self" type="application/rss+xml"/>
+    <item>
+      <title>Alerta: el REPSE vence cada 3 años — verifique si su empresa necesita renovarlo</title>
+      <link>https://clicklaboral.mx/blog/noticia-alerta-el-repse-vence-cada-3-anos-verifique-si-su--2026-08-30.html</link>
+      <guid isPermaLink="true">https://clicklaboral.mx/blog/noticia-alerta-el-repse-vence-cada-3-anos-verifique-si-su--2026-08-30.html</guid>
+      <pubDate>Sun, 30 Aug 2026 12:00:00 GMT</pubDate>
+      <category>Alerta Legal</category>
+      <description>Si su empresa obtuvo el Registro de Prestadoras de Servicios Especializados u Obras Especializadas (REPSE) en 2021, el plazo de tres años ya venció o está próximo a vencer: renovarlo no es opcional, p…</description>
+    </item>
     <item>
       <title>Tip: cómo documentar una baja voluntaria para que sea irrefutable en juicio</title>
       <link>https://clicklaboral.mx/blog/noticia-tip-como-documentar-una-baja-voluntaria-para-que-s-2026-08-29.html</link>
@@ -199,14 +207,6 @@
       <pubDate>Thu, 13 Aug 2026 12:00:00 GMT</pubDate>
       <category>Tip RH</category>
       <description>Formalizar por escrito un préstamo al trabajador es el único respaldo legal que permite descontarlo de nómina sin exponerse a una demanda por retenciones indebidas ante la Junta de Conciliación.…</description>
-    </item>
-    <item>
-      <title>Alerta: IMSS puede rechazar CFDI de nómina con errores en RFC — cómo prevenirlo</title>
-      <link>https://clicklaboral.mx/blog/noticia-alerta-imss-puede-rechazar-cfdi-de-nomina-con-erro-2026-08-12.html</link>
-      <guid isPermaLink="true">https://clicklaboral.mx/blog/noticia-alerta-imss-puede-rechazar-cfdi-de-nomina-con-erro-2026-08-12.html</guid>
-      <pubDate>Wed, 12 Aug 2026 12:00:00 GMT</pubDate>
-      <category>Alerta Legal</category>
-      <description>Un RFC con un solo carácter incorrecto en el CFDI de nómina puede provocar que el IMSS rechace el comprobante como prueba de pago de cuotas obrero-patronales, dejando al patrón sin soporte documental…</description>
     </item>
   </channel>
 </rss>

@@ -5,9 +5,17 @@
     <link>https://clicklaboral.mx/blog/</link>
     <description>Artículos, noticias y tips de compliance laboral para PyMEs mexicanas</description>
     <language>es-MX</language>
-    <lastBuildDate>Mon, 31 Aug 2026 16:59:14 GMT</lastBuildDate>
+    <lastBuildDate>Mon, 31 Aug 2026 19:45:51 GMT</lastBuildDate>
     <managingEditor>blog@clicklaboral.mx (ClickLaboral.mx)</managingEditor>
     <atom:link href="https://clicklaboral.mx/blog/rss.xml" rel="self" type="application/rss+xml"/>
+    <item>
+      <title>Alerta: NOM-035 aplica aunque tenga solo 1 trabajador, aunque con obligaciones mínimas</title>
+      <link>https://clicklaboral.mx/blog/noticia-alerta-nom-035-aplica-aunque-tenga-solo-1-trabajad-2026-08-31.html</link>
+      <guid isPermaLink="true">https://clicklaboral.mx/blog/noticia-alerta-nom-035-aplica-aunque-tenga-solo-1-trabajad-2026-08-31.html</guid>
+      <pubDate>Mon, 31 Aug 2026 12:00:00 GMT</pubDate>
+      <category>Alerta Legal</category>
+      <description>Aunque su empresa tenga un solo trabajador, la NOM-035-STPS-2018 le aplica desde el primer día. La obligación existe para todos los centros de trabajo sin excepción, aunque el tamaño del negocio deter…</description>
+    </item>
     <item>
       <title>Cómo redactar correctamente el puesto y las funciones en un contrato laboral</title>
       <link>https://clicklaboral.mx/blog/como-redactar-correctamente-el-puesto-y-las-funciones-en-un-contrato-laboral-2026-08-31.html</link>
@@ -199,14 +207,6 @@
       <pubDate>Fri, 14 Aug 2026 12:00:00 GMT</pubDate>
       <category>Jurisprudencia</category>
       <description>Una carta de renuncia firmada ante dos testigos constituye prueba suficiente para acreditar la voluntariedad de la separación en juicio laboral, según criterio jurisprudencial reciente que fortalece l…</description>
-    </item>
-    <item>
-      <title>Inspección del IMSS: qué revisan y cómo preparar su empresa</title>
-      <link>https://clicklaboral.mx/blog/inspeccion-del-imss-que-revisan-y-como-preparar-su-empresa-2026-08-14.html</link>
-      <guid isPermaLink="true">https://clicklaboral.mx/blog/inspeccion-del-imss-que-revisan-y-como-preparar-su-empresa-2026-08-14.html</guid>
-      <pubDate>Fri, 14 Aug 2026 12:00:00 GMT</pubDate>
-      <category>Cumplimiento</category>
-      <description>Una visita del IMSS sin preparación puede costarle a su empresa decenas de miles de pesos en créditos fiscales, recargos y multas. Conocer exactamente qué revisan los inspectores y tener su documentac…</description>
     </item>
   </channel>
 </rss>

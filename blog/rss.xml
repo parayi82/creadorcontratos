@@ -5,9 +5,17 @@
     <link>https://clicklaboral.mx/blog/</link>
     <description>Artículos, noticias y tips de compliance laboral para PyMEs mexicanas</description>
     <language>es-MX</language>
-    <lastBuildDate>Mon, 31 Aug 2026 19:45:51 GMT</lastBuildDate>
+    <lastBuildDate>Tue, 01 Sep 2026 17:31:02 GMT</lastBuildDate>
     <managingEditor>blog@clicklaboral.mx (ClickLaboral.mx)</managingEditor>
     <atom:link href="https://clicklaboral.mx/blog/rss.xml" rel="self" type="application/rss+xml"/>
+    <item>
+      <title>Criterio SCJN: mensajes de WhatsApp sí pueden ser prueba en juicio laboral si están bien ofrecidos</title>
+      <link>https://clicklaboral.mx/blog/noticia-criterio-scjn-mensajes-de-whatsapp-si-pueden-ser-p-2026-09-01.html</link>
+      <guid isPermaLink="true">https://clicklaboral.mx/blog/noticia-criterio-scjn-mensajes-de-whatsapp-si-pueden-ser-p-2026-09-01.html</guid>
+      <pubDate>Tue, 01 Sep 2026 12:00:00 GMT</pubDate>
+      <category>Jurisprudencia</category>
+      <description>La Suprema Corte de Justicia de la Nación (SCJN) estableció que los mensajes de WhatsApp pueden ser admitidos como prueba válida en juicios laborales, siempre que la parte oferente los presente de for…</description>
+    </item>
     <item>
       <title>Alerta: NOM-035 aplica aunque tenga solo 1 trabajador, aunque con obligaciones mínimas</title>
       <link>https://clicklaboral.mx/blog/noticia-alerta-nom-035-aplica-aunque-tenga-solo-1-trabajad-2026-08-31.html</link>
@@ -199,14 +207,6 @@
       <pubDate>Sat, 15 Aug 2026 12:00:00 GMT</pubDate>
       <category>Noticias</category>
       <description>El 58% de las pequeñas y medianas empresas mexicanas desconoce el alcance completo de sus obligaciones bajo la NOM-037-STPS-2023, la norma que regula el teletrabajo en el país, según una encuesta reci…</description>
-    </item>
-    <item>
-      <title>Tesis: la carta de renuncia firmada ante dos testigos es prueba suficiente de voluntariedad en juicio</title>
-      <link>https://clicklaboral.mx/blog/noticia-tesis-la-carta-de-renuncia-firmada-ante-dos-testig-2026-08-14.html</link>
-      <guid isPermaLink="true">https://clicklaboral.mx/blog/noticia-tesis-la-carta-de-renuncia-firmada-ante-dos-testig-2026-08-14.html</guid>
-      <pubDate>Fri, 14 Aug 2026 12:00:00 GMT</pubDate>
-      <category>Jurisprudencia</category>
-      <description>Una carta de renuncia firmada ante dos testigos constituye prueba suficiente para acreditar la voluntariedad de la separación en juicio laboral, según criterio jurisprudencial reciente que fortalece l…</description>
     </item>
   </channel>
 </rss>

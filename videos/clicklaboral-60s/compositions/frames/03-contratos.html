@@ -1,0 +1,329 @@
+<!doctype html>
+<html lang="es">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=1080, height=1920" />
+    <script src="assets/js/gsap.min.js"></script>
+    <style>
+      @font-face { font-family: 'Plus Jakarta Sans'; font-weight: 400; font-style: normal; src: url('assets/fonts/pjs-400.woff2') format('woff2'); }
+      @font-face { font-family: 'Plus Jakarta Sans'; font-weight: 600; font-style: normal; src: url('assets/fonts/pjs-600.woff2') format('woff2'); }
+      @font-face { font-family: 'Plus Jakarta Sans'; font-weight: 700; font-style: normal; src: url('assets/fonts/pjs-700.woff2') format('woff2'); }
+
+      * { margin: 0; padding: 0; box-sizing: border-box; }
+      html, body { margin: 0; width: 1080px; height: 1920px; overflow: hidden; background: #FFFFFF; font-family: "Plus Jakarta Sans", sans-serif; }
+
+      #root {
+        width: 1080px;
+        height: 1920px;
+        position: relative;
+        container-type: size;
+        overflow: hidden;
+        background: #FFFFFF;
+      }
+
+      /* Top bar */
+      #top-bar {
+        position: absolute;
+        top: 5cqh;
+        left: 5cqw;
+        right: 5cqw;
+        display: flex;
+        align-items: center;
+        gap: 1.5cqw;
+        z-index: 10;
+      }
+      #logo-dot { width: 3cqw; height: 3cqw; background: #005AC8; border-radius: 50%; flex-shrink: 0; }
+      #logo-text { font-size: 2.2cqw; font-weight: 700; color: #1D1D1F; letter-spacing: -0.01em; }
+
+      /* Scene label */
+      #scene-label {
+        position: absolute;
+        top: 10cqh;
+        left: 5cqw;
+        right: 5cqw;
+        text-align: center;
+      }
+      #scene-title { font-size: 4cqw; font-weight: 700; color: #005AC8; letter-spacing: -0.02em; line-height: 1.2; }
+      #scene-sub { font-size: 2.5cqw; font-weight: 400; color: #1D1D1F; margin-top: 0.8cqh; opacity: 0.7; }
+
+      /* Document card (main) */
+      #doc-card {
+        position: absolute;
+        top: 18cqh;
+        left: 4cqw;
+        right: 4cqw;
+        background: #FFFFFF;
+        border-radius: 16px;
+        border: 1.5px solid rgba(0,90,200,0.15);
+        box-shadow: 0 8px 40px rgba(0,90,200,0.1);
+        overflow: hidden;
+        z-index: 15;
+      }
+
+      #doc-header {
+        background: linear-gradient(135deg, #005AC8 0%, #0047A0 100%);
+        padding: 2.5cqh 3cqw;
+        display: flex;
+        align-items: center;
+        gap: 2cqw;
+      }
+      #doc-header-icon { font-size: 4cqw; }
+      #doc-header-info { flex: 1; }
+      #doc-header-title { font-size: 2.2cqw; font-weight: 700; color: #FFFFFF; }
+      #doc-header-sub { font-size: 1.6cqw; color: rgba(255,255,255,0.75); margin-top: 0.3cqh; }
+      #doc-badge {
+        background: rgba(255,255,255,0.2);
+        color: #FFFFFF;
+        font-size: 1.4cqw;
+        font-weight: 700;
+        padding: 0.5cqh 1.5cqw;
+        border-radius: 20px;
+        letter-spacing: 0.03em;
+      }
+
+      /* Form fields area */
+      #doc-body { padding: 2.5cqh 3cqw; }
+
+      .field-group { margin-bottom: 2cqh; }
+      .field-label { font-size: 1.5cqw; font-weight: 600; color: #727272; text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 0.6cqh; }
+      .field-value {
+        background: #F7F9FF;
+        border: 1.5px solid rgba(0,90,200,0.15);
+        border-radius: 8px;
+        padding: 1.2cqh 2cqw;
+        font-size: 1.8cqw;
+        font-weight: 600;
+        color: #1D1D1F;
+      }
+      .field-value.filled { border-color: #005AC8; background: rgba(0,90,200,0.04); }
+
+      .fields-row { display: flex; gap: 2cqw; }
+      .fields-row .field-group { flex: 1; }
+
+      /* Document lines (visual representation) */
+      #doc-preview {
+        margin: 0 3cqw 2.5cqh;
+        background: #F7F9FF;
+        border-radius: 10px;
+        padding: 2cqh;
+        border: 1px dashed rgba(0,90,200,0.2);
+      }
+      .doc-preview-line { height: 1.2cqh; background: rgba(0,0,0,0.1); border-radius: 2px; margin-bottom: 1.2cqh; }
+      .line-full { width: 90%; }
+      .line-long { width: 75%; }
+      .line-med { width: 55%; }
+      .line-short { width: 35%; }
+
+      /* Firma electrónica badge */
+      #firma-badge {
+        margin: 0 3cqw 3cqw;
+        background: linear-gradient(135deg, rgba(0,90,200,0.06) 0%, rgba(0,90,200,0.02) 100%);
+        border: 1.5px solid rgba(0,90,200,0.2);
+        border-radius: 12px;
+        padding: 2cqh 2.5cqw;
+        display: flex;
+        align-items: center;
+        gap: 2.5cqw;
+      }
+      #firma-icon { font-size: 4cqw; flex-shrink: 0; }
+      #firma-info { flex: 1; }
+      #firma-title { font-size: 2cqw; font-weight: 700; color: #005AC8; }
+      #firma-sub { font-size: 1.6cqw; color: #727272; margin-top: 0.3cqh; }
+      #firma-check {
+        width: 5cqw;
+        height: 5cqw;
+        background: #15803d;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 2.5cqw;
+        color: #FFFFFF;
+        font-weight: 700;
+        flex-shrink: 0;
+      }
+
+      /* LFT tag ribbon */
+      #lft-tag {
+        position: absolute;
+        top: 55cqh;
+        left: 5cqw;
+        z-index: 18;
+        background: #005AC8;
+        color: #FFFFFF;
+        font-size: 2cqw;
+        font-weight: 700;
+        padding: 1.2cqh 3cqw;
+        border-radius: 8px;
+        letter-spacing: 0.04em;
+        box-shadow: 0 4px 16px rgba(0,90,200,0.3);
+      }
+
+      /* Bottom gradient */
+      .bottom-gradient {
+        position: absolute;
+        bottom: 0; left: 0; right: 0;
+        height: 38cqh;
+        z-index: 12;
+        background: linear-gradient(to top, rgba(0,0,0,0.88) 0%, rgba(0,0,0,0.5) 55%, transparent 100%);
+        pointer-events: none;
+      }
+
+      /* Subtitle */
+      #subtitle {
+        position: absolute;
+        bottom: 7cqh;
+        left: 4cqw;
+        right: 4cqw;
+        text-align: center;
+        z-index: 20;
+      }
+      .sub-line {
+        display: block;
+        font-size: 4.2cqw;
+        font-weight: 700;
+        color: #FFFFFF;
+        text-shadow: 2px 2px 6px rgba(0,0,0,1), -1px -1px 0 #000, 1px -1px 0 #000, -1px 1px 0 #000, 1px 1px 0 #000;
+        line-height: 1.35;
+      }
+      .sub-highlight { color: #FFD700; }
+
+      /* Progress */
+      .progress-track { position: absolute; bottom: 0; left: 0; width: 100%; height: 4px; background: rgba(255,255,255,0.15); }
+      #progress-fill { height: 100%; background: #005AC8; width: 0%; }
+      .frame-counter { position: absolute; bottom: 1cqh; right: 4cqw; font-size: 1.4cqw; font-weight: 500; color: rgba(255,255,255,0.5); z-index: 30; }
+    </style>
+  </head>
+  <body>
+    <div
+      id="root"
+      data-composition-id="03-contratos"
+      data-start="0"
+      data-duration="14"
+      data-width="1080"
+      data-height="1920"
+    >
+      <!-- Logo top -->
+      <div id="top-bar" class="clip" data-start="0" data-duration="14" data-track-index="1" data-layout-allow-occlusion>
+        <div id="logo-dot"></div>
+        <span id="logo-text">ClickLaboral.mx</span>
+      </div>
+
+      <!-- Scene label -->
+      <div id="scene-label" class="clip" data-start="0" data-duration="14" data-track-index="2">
+        <div id="scene-title">Contratos & Expedientes</div>
+        <div id="scene-sub">100% alineados a la LFT</div>
+      </div>
+
+      <!-- Document card -->
+      <div id="doc-card" class="clip" data-start="0" data-duration="14" data-track-index="3">
+        <div id="doc-header">
+          <span id="doc-header-icon">📝</span>
+          <div id="doc-header-info">
+            <div id="doc-header-title">Contrato Individual de Trabajo</div>
+            <div id="doc-header-sub">Generado automáticamente · LFT 2024</div>
+          </div>
+          <span id="doc-badge">✓ LISTO</span>
+        </div>
+        <div id="doc-body">
+          <div class="fields-row">
+            <div class="field-group">
+              <div class="field-label">Empleado</div>
+              <div class="field-value filled">Juan García López</div>
+            </div>
+            <div class="field-group">
+              <div class="field-label">RFC</div>
+              <div class="field-value filled">GALJ890312AB1</div>
+            </div>
+          </div>
+          <div class="fields-row">
+            <div class="field-group">
+              <div class="field-label">Puesto</div>
+              <div class="field-value filled">Gerente de Ventas</div>
+            </div>
+            <div class="field-group">
+              <div class="field-label">Salario</div>
+              <div class="field-value filled">$18,500 MXN</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Doc preview lines -->
+        <div id="doc-preview" data-layout-allow-occlusion>
+          <div class="doc-preview-line line-full"></div>
+          <div class="doc-preview-line line-long"></div>
+          <div class="doc-preview-line line-full"></div>
+          <div class="doc-preview-line line-med"></div>
+          <div class="doc-preview-line line-full"></div>
+          <div class="doc-preview-line line-short"></div>
+        </div>
+
+        <!-- Firma badge -->
+        <div id="firma-badge" data-layout-allow-occlusion>
+          <span id="firma-icon">✍️</span>
+          <div id="firma-info">
+            <div id="firma-title">Firma Electrónica Integrada</div>
+            <div id="firma-sub">Válida legalmente · e.firma SAT</div>
+          </div>
+          <div id="firma-check">✓</div>
+        </div>
+      </div>
+
+      <!-- LFT tag -->
+      <div id="lft-tag" class="clip" data-start="0" data-duration="14" data-track-index="4" data-layout-allow-occlusion>
+        📋 Contratos y Expedientes LFT
+      </div>
+
+      <!-- Bottom gradient -->
+      <div class="bottom-gradient"></div>
+
+      <!-- Subtitle -->
+      <div id="subtitle" class="clip" data-start="0" data-duration="14" data-track-index="5">
+        <span class="sub-line">Expedientes digitales completos</span>
+        <span class="sub-line">y contratos <span class="sub-highlight">al instante</span></span>
+        <span class="sub-line">con firma electrónica</span>
+      </div>
+
+      <!-- Chrome -->
+      <div class="frame-counter">3/6</div>
+      <div class="progress-track">
+        <div id="progress-fill"></div>
+      </div>
+    </div>
+
+    <script>
+      window.__timelines = window.__timelines || {};
+      const tl = gsap.timeline({ paused: true });
+
+      // Logo
+      tl.from("#top-bar", { opacity: 0, y: -20, duration: 0.4, ease: "power2.out" }, 0);
+
+      // Scene label
+      tl.from("#scene-title", { opacity: 0, y: -15, duration: 0.5, ease: "power2.out" }, 0.2);
+      tl.from("#scene-sub", { opacity: 0, duration: 0.4, ease: "power2.out" }, 0.5);
+
+      // Doc card slides up
+      tl.from("#doc-card", { opacity: 0, y: 60, duration: 0.7, ease: "power2.out" }, 0.4);
+
+      // Fields fill in staggered
+      tl.from(".field-value", { opacity: 0, x: -20, stagger: 0.15, duration: 0.4, ease: "power2.out" }, 1.2);
+
+      // Doc preview lines draw
+      tl.from(".doc-preview-line", { scaleX: 0, transformOrigin: "left center", stagger: 0.08, duration: 0.3, ease: "power2.out" }, 2.0);
+
+      // Firma badge pops
+      tl.from("#firma-badge", { opacity: 0, scale: 0.9, duration: 0.6, ease: "back.out(1.5)" }, 2.8);
+
+      // LFT tag
+      tl.from("#lft-tag", { opacity: 0, x: -30, duration: 0.5, ease: "power2.out" }, 3.4);
+
+      // Subtitle
+      tl.from("#subtitle", { opacity: 0, y: 25, duration: 0.5, ease: "power2.out" }, 4.0);
+
+      // Progress 30% → 53.3%
+      tl.fromTo("#progress-fill", { width: "30%" }, { width: "53.3%", duration: 14, ease: "none" }, 0);
+
+      window.__timelines["03-contratos"] = tl;
+    </script>
+  </body>
+</html>

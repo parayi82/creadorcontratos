@@ -5,9 +5,17 @@
     <link>https://clicklaboral.mx/blog/</link>
     <description>Artículos, noticias y tips de compliance laboral para PyMEs mexicanas</description>
     <language>es-MX</language>
-    <lastBuildDate>Wed, 02 Sep 2026 13:31:14 GMT</lastBuildDate>
+    <lastBuildDate>Wed, 02 Sep 2026 17:31:46 GMT</lastBuildDate>
     <managingEditor>blog@clicklaboral.mx (ClickLaboral.mx)</managingEditor>
     <atom:link href="https://clicklaboral.mx/blog/rss.xml" rel="self" type="application/rss+xml"/>
+    <item>
+      <title>Reforma de justicia laboral: tres años de nuevos tribunales laborales, qué ha mejorado</title>
+      <link>https://clicklaboral.mx/blog/noticia-reforma-de-justicia-laboral-tres-anos-de-nuevos-tr-2026-09-02.html</link>
+      <guid isPermaLink="true">https://clicklaboral.mx/blog/noticia-reforma-de-justicia-laboral-tres-anos-de-nuevos-tr-2026-09-02.html</guid>
+      <pubDate>Wed, 02 Sep 2026 12:00:00 GMT</pubDate>
+      <category>Reforma Laboral</category>
+      <description>A tres años de la entrada en vigor de la reforma laboral de 2021, los nuevos Centros de Conciliación y los Tribunales Laborales federales y locales han procesado más de 500,000 asuntos en todo el país…</description>
+    </item>
     <item>
       <title>Contrato colectivo de trabajo: qué es, cuándo aplica y cómo negociarlo</title>
       <link>https://clicklaboral.mx/blog/contrato-colectivo-de-trabajo-que-es-cuando-aplica-y-como-negociarlo-2026-09-02.html</link>
@@ -199,14 +207,6 @@
       <pubDate>Mon, 17 Aug 2026 12:00:00 GMT</pubDate>
       <category>Cumplimiento</category>
       <description>Cada año, miles de empresas mexicanas reciben multas de la STPS por un error que pudo evitarse fácilmente: no tener un programa de capacitación registrado y vigente. La Ley Federal del Trabajo obliga…</description>
-    </item>
-    <item>
-      <title>Home office en México: qué prestaciones deben cubrir las empresas según NOM-037</title>
-      <link>https://clicklaboral.mx/blog/noticia-home-office-en-mexico-que-prestaciones-deben-cubri-2026-08-16.html</link>
-      <guid isPermaLink="true">https://clicklaboral.mx/blog/noticia-home-office-en-mexico-que-prestaciones-deben-cubri-2026-08-16.html</guid>
-      <pubDate>Sun, 16 Aug 2026 12:00:00 GMT</pubDate>
-      <category>Noticias</category>
-      <description>Desde su entrada en vigor, la NOM-037-STPS-2023 obliga a los patrones a cubrir costos específicos para los trabajadores en modalidad de teletrabajo: internet, electricidad y el equipamiento ergonómico…</description>
     </item>
   </channel>
 </rss>

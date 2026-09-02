@@ -3338,6 +3338,16 @@ async function confirmarImportCSV() {
         conflicto: 'trabajador_id,fecha'
       });
       if (error) throw error;
+
+      // Eliminar actas de inasistencia que quedaron obsoletas tras el import
+      const presentes = registros.filter(r => r.status === 'presente');
+      for (const r of presentes) {
+        await mutarDatos({
+          tabla: 'actas_inasistencia',
+          accion: 'delete',
+          filtros: { trabajador_id: r.trabajador_id, fecha: r.fecha }
+        });
+      }
     }
 
     mostrarLogImportacion();

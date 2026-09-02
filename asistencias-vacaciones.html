@@ -2526,14 +2526,16 @@ async function guardarDia(){
     if (error && /horas_extra/.test(error.message||'')) {
       ({ error } = await mutarDatos({ tabla:'asistencias', accion:'upsert', payload:payloadBase, conflicto:'trabajador_id,fecha' }));
     }
-    // Columnas de auditoría opcionales — si no existen (sql-auditoria-asistencias.sql pendiente)
+    // Columnas de auditoría opcionales — si no existen en la DB, reintentamos sin ellas
     if (error && /editado_por_uid|editado_por_email/.test(error.message||'')) {
       const { editado_por_uid, editado_por_email, ...payloadSinUid } = payloadBase;
       ({ error } = await mutarDatos({ tabla:'asistencias', accion:'upsert', payload:payloadSinUid, conflicto:'trabajador_id,fecha' }));
-    }
-    // Columnas editado_por/editado_at opcionales — si no existen, reintentamos sin ellas
-    if (error && /editado_por|editado_at/.test(error.message||'')) {
-      const { editado_por, editado_at, ...payloadSinAudit } = payloadBase;
+      if (error && /editado_por|editado_at/.test(error.message||'')) {
+        const { editado_por, editado_at, ...payloadSinAudit } = payloadSinUid;
+        ({ error } = await mutarDatos({ tabla:'asistencias', accion:'upsert', payload:payloadSinAudit, conflicto:'trabajador_id,fecha' }));
+      }
+    } else if (error && /editado_por|editado_at/.test(error.message||'')) {
+      const { editado_por, editado_at, editado_por_uid, editado_por_email, ...payloadSinAudit } = payloadBase;
       ({ error } = await mutarDatos({ tabla:'asistencias', accion:'upsert', payload:payloadSinAudit, conflicto:'trabajador_id,fecha' }));
     }
     // Columnas de turno mixto opcionales — si no existen (sql-turno-mixto.sql aún no aplicado)

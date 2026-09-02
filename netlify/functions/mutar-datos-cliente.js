@@ -200,10 +200,19 @@ async function insertarAsistenciasRetroactivas(sb, trabajadores) {
 
     const CHUNK = 500;
     for (let i = 0; i < registros.length; i += CHUNK) {
-      const { error } = await sb.from('asistencias')
+      // Paso 1: inserta días que no tienen ningún registro
+      const { error: e1 } = await sb.from('asistencias')
         .upsert(registros.slice(i, i + CHUNK), { onConflict: 'trabajador_id,fecha', ignoreDuplicates: true });
-      if (error) console.warn('asistencias-retroactivas upsert:', error.message);
+      if (e1) console.warn('asistencias-retroactivas insert:', e1.message);
     }
+    // Paso 2: sobreescribe falta_injustificada → presente (el cron las puso antes del alta)
+    const { error: e2 } = await sb.from('asistencias')
+      .update({ status: 'presente', fuente: 'manual', notas: 'Asistencia retroactiva — anterior al alta en ClickLaboral' })
+      .eq('trabajador_id', t.id)
+      .eq('status', 'falta_injustificada')
+      .gte('fecha', t.fecha_ingreso)
+      .lte('fecha', ayer);
+    if (e2) console.warn('asistencias-retroactivas update-fi:', e2.message);
   }
 }
 

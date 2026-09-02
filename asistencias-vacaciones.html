@@ -6437,6 +6437,10 @@ function determinarStatusAutomatico(entrada, salida) {
   return 'presente';
 }
 
+function normalizarNombre(s) {
+  return (s || '').trim().toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/\s+/g, ' ');
+}
+
 function detectarColumnas(headers) {
   const map = {};
   headers.forEach((h, idx) => {
@@ -6862,10 +6866,11 @@ async function procesarArchivoHorarioExterno(input) {
 
   try {
     const rows = await leerCSVHorario(file);
-    // Filtrar registros de este trabajador (coincidencia flexible)
+    const nombreNorm = normalizarNombre(nombreTrab);
+    // Filtrar registros de este trabajador (coincidencia flexible, sin acentos)
     const propios = rows.filter(r => {
-      const n = r.nombre.toLowerCase().trim();
-      return n === nombreTrab || n.includes(nombreTrab) || nombreTrab.includes(n);
+      const n = normalizarNombre(r.nombre);
+      return n === nombreNorm || n.includes(nombreNorm) || nombreNorm.includes(n);
     });
 
     if (!propios.length) {
@@ -6915,10 +6920,10 @@ async function procesarHorarioMasivo(input) {
     const rows = await leerCSVHorario(file);
     if (!rows.length) { prev.innerHTML = '<div style="color:var(--red);padding:12px;">No se encontraron registros válidos en el archivo.</div>'; return; }
 
-    // Agrupar por nombre
+    // Agrupar por nombre (normalizado: sin acentos, sin mayúsculas, sin espacios extra)
     const porNombre = {};
     rows.forEach(r => {
-      const k = r.nombre.trim().toLowerCase();
+      const k = normalizarNombre(r.nombre);
       if (!porNombre[k]) porNombre[k] = { nombre: r.nombre.trim(), registros: [] };
       porNombre[k].registros.push(r);
     });
@@ -6927,7 +6932,7 @@ async function procesarHorarioMasivo(input) {
     const { data: trabs } = await selectProxy('trabajadores','id,nombre',{activo:true},{order:{campo:'nombre',asc:true}});
     const resultado = [];
     for (const trab of (trabs || [])) {
-      const k = trab.nombre.trim().toLowerCase();
+      const k = normalizarNombre(trab.nombre);
       // Coincidencia exacta o parcial
       let match = porNombre[k];
       if (!match) {

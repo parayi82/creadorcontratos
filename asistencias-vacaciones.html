@@ -6468,6 +6468,18 @@ function detectarColumnas(headers) {
 
 // Parser optimizado para ZKTeco y genéricos
 
+function normalizarHora(h) {
+  if (!h) return null;
+  h = String(h).trim();
+  if (!h || h === '00:00' || h === '0') return null;
+  // Solo número entero: 8 → "08:00", 16 → "16:00"
+  if (/^\d{1,2}$/.test(h)) return String(parseInt(h)).padStart(2,'0') + ':00';
+  // HH:MM:SS → HH:MM
+  const hms = h.match(/^(\d{1,2}):(\d{2})(?::\d{2})?$/);
+  if (hms) return hms[1].padStart(2,'0') + ':' + hms[2];
+  return null;
+}
+
 function parseRegistroZKTeco(valores, map, lineaOriginal) {
   let nombre = valores[map.nombre];
   let fechaRaw = valores[map.fecha];
@@ -6486,8 +6498,8 @@ function parseRegistroZKTeco(valores, map, lineaOriginal) {
   return {
     nombre,
     fecha,
-    hora_entrada: entrada || null,
-    hora_salida: salida || null,
+    hora_entrada: normalizarHora(entrada),
+    hora_salida: normalizarHora(salida),
     notas: valores[map.notas] || '',
     status: determinarStatusAutomatico(entrada, salida),
     lineaOriginal

@@ -144,7 +144,11 @@ exports.handler = async (event) => {
     }
 
     if (accion === 'insert') {
-      ({ error } = await q.insert(inyectar(payload)));
+      const ins = await q.insert(inyectar(payload)).select('id, fecha_ingreso, cliente_rfc');
+      error = ins.error;
+      if (!error && tabla === 'trabajadores') {
+        await insertarAsistenciasRetroactivas(sb, ins.data || []);
+      }
     } else if (accion === 'upsert') {
       const opts = conflicto ? { onConflict: conflicto } : {};
       ({ error } = await q.upsert(inyectar(payload), opts));
@@ -168,3 +172,53 @@ exports.handler = async (event) => {
     return { statusCode: 500, headers, body: JSON.stringify({ error: e.message || 'Error interno.' }) };
   }
 };
+
+// Inserta 'presente' para todos los días desde fecha_ingreso hasta ayer,
+// al dar de alta un trabajador con ingreso anterior a hoy.
+async function insertarAsistenciasRetroactivas(sb, trabajadores) {
+  const hoyMx = fechaMexicoCDMX();
+  const ayer   = offsetFecha(hoyMx, -1);
+
+  for (const t of trabajadores) {
+    if (!t.id || !t.fecha_ingreso || t.fecha_ingreso >= hoyMx) continue;
+
+    const registros = [];
+    const cur = new Date(t.fecha_ingreso + 'T12:00:00Z');
+    const fin = new Date(ayer + 'T12:00:00Z');
+    while (cur <= fin) {
+      registros.push({
+        trabajador_id: t.id,
+        cliente_rfc:   t.cliente_rfc,
+        fecha:         cur.toISOString().split('T')[0],
+        status:        'presente',
+        fuente:        'manual',
+        notas:         'Asistencia retroactiva — alta con fecha de ingreso anterior.',
+      });
+      cur.setUTCDate(cur.getUTCDate() + 1);
+    }
+    if (!registros.length) continue;
+
+    const CHUNK = 500;
+    for (let i = 0; i < registros.length; i += CHUNK) {
+      const { error } = await sb.from('asistencias')
+        .upsert(registros.slice(i, i + CHUNK), { onConflict: 'trabajador_id,fecha', ignoreDuplicates: true });
+      if (error) console.warn('asistencias-retroactivas upsert:', error.message);
+    }
+  }
+}
+
+function fechaMexicoCDMX() {
+  const fmt = new Intl.DateTimeFormat('en-CA', {
+    timeZone: 'America/Mexico_City',
+    year: 'numeric', month: '2-digit', day: '2-digit',
+  });
+  const partes = {};
+  fmt.formatToParts(new Date()).forEach(p => { partes[p.type] = p.value; });
+  return `${partes.year}-${partes.month}-${partes.day}`;
+}
+
+function offsetFecha(isoDate, dias) {
+  const d = new Date(isoDate + 'T12:00:00Z');
+  d.setUTCDate(d.getUTCDate() + dias);
+  return d.toISOString().split('T')[0];
+}

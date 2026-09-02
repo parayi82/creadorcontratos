@@ -1,0 +1,111 @@
+<!doctype html>
+<html lang="es">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=1920, height=1080" />
+    <script src="assets/js/gsap.min.js"></script>
+    <style>
+      @font-face {
+        font-family: 'Plus Jakarta Sans';
+        font-weight: 400;
+        font-style: normal;
+        src: url('assets/fonts/pjs-400.woff2') format('woff2');
+      }
+      @font-face {
+        font-family: 'Plus Jakarta Sans';
+        font-weight: 500;
+        font-style: normal;
+        src: url('assets/fonts/pjs-500.woff2') format('woff2');
+      }
+      @font-face {
+        font-family: 'Plus Jakarta Sans';
+        font-weight: 600;
+        font-style: normal;
+        src: url('assets/fonts/pjs-600.woff2') format('woff2');
+      }
+      @font-face {
+        font-family: 'Plus Jakarta Sans';
+        font-weight: 700;
+        font-style: normal;
+        src: url('assets/fonts/pjs-700.woff2') format('woff2');
+      }
+
+      * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+      }
+      html,
+      body {
+        margin: 0;
+        width: 1920px;
+        height: 1080px;
+        overflow: hidden;
+        background: #000;
+      }
+      body {
+        font-family: "Plus Jakarta Sans", sans-serif;
+      }
+    </style>
+  </head>
+  <body>
+    <div
+      id="root"
+      data-composition-id="main"
+      data-start="0"
+      data-duration="45"
+      data-width="1920"
+      data-height="1080"
+    >
+      <!-- Frame 1: Problema (0–8s) -->
+      <div
+        id="scene-problema"
+        class="clip"
+        data-start="0"
+        data-duration="8"
+        data-composition-id="scene-problema-host"
+        data-composition-src="compositions/frames/01-problema.html"
+        data-track-index="1"
+      ></div>
+
+      <!-- Frame 2: Solución (8–20s) -->
+      <div
+        id="scene-solucion"
+        class="clip"
+        data-start="8"
+        data-duration="12"
+        data-composition-id="scene-solucion-host"
+        data-composition-src="compositions/frames/02-solucion.html"
+        data-track-index="1"
+      ></div>
+
+      <!-- Frame 3: Beneficios (20–32s) -->
+      <div
+        id="scene-beneficios"
+        class="clip"
+        data-start="20"
+        data-duration="12"
+        data-composition-id="scene-beneficios-host"
+        data-composition-src="compositions/frames/03-beneficios.html"
+        data-track-index="1"
+      ></div>
+
+      <!-- Frame 4: CTA (32–45s) -->
+      <div
+        id="scene-cta"
+        class="clip"
+        data-start="32"
+        data-duration="13"
+        data-composition-id="scene-cta-host"
+        data-composition-src="compositions/frames/04-cta.html"
+        data-track-index="1"
+      ></div>
+    </div>
+
+    <script>
+      window.__timelines = window.__timelines || {};
+      const tl = gsap.timeline({ paused: true });
+      window.__timelines["main"] = tl;
+    </script>
+  </body>
+</html>

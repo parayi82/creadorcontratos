@@ -1,0 +1,195 @@
+<!doctype html>
+<html lang="es">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=1920, height=1080" />
+    <script src="assets/js/gsap.min.js"></script>
+    <style>
+      @font-face { font-family: 'Plus Jakarta Sans'; font-weight: 400; font-style: normal; src: url('assets/fonts/pjs-400.woff2') format('woff2'); }
+      @font-face { font-family: 'Plus Jakarta Sans'; font-weight: 500; font-style: normal; src: url('assets/fonts/pjs-500.woff2') format('woff2'); }
+      @font-face { font-family: 'Plus Jakarta Sans'; font-weight: 600; font-style: normal; src: url('assets/fonts/pjs-600.woff2') format('woff2'); }
+      @font-face { font-family: 'Plus Jakarta Sans'; font-weight: 700; font-style: normal; src: url('assets/fonts/pjs-700.woff2') format('woff2'); }
+      * { margin: 0; padding: 0; box-sizing: border-box; }
+      html, body {
+        margin: 0;
+        width: 1920px;
+        height: 1080px;
+        overflow: hidden;
+        background: #FFFFFF;
+        font-family: "Plus Jakarta Sans", sans-serif;
+      }
+
+      #root {
+        width: 1920px;
+        height: 1080px;
+        position: relative;
+        container-type: size;
+        overflow: hidden;
+        background: #FFFFFF;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+      }
+
+      /* Concentric rings (atmosphere — closing only) */
+      .rings {
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        pointer-events: none;
+      }
+      .ring {
+        position: absolute;
+        border-radius: 50%;
+        border: 1.5px solid rgba(0, 90, 200, 0.12);
+        transform: translate(-50%, -50%);
+      }
+      #ring-1 { width: 60cqw; height: 60cqw; }
+      #ring-2 { width: 80cqw; height: 80cqw; border-color: rgba(0, 90, 200, 0.07); }
+      #ring-3 { width: 100cqw; height: 100cqw; border-color: rgba(0, 90, 200, 0.04); }
+
+      /* Content block — centered */
+      #content {
+        position: relative;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 3.2cqh;
+        text-align: center;
+        z-index: 1;
+      }
+
+      /* Logo / Brand */
+      #logo-accent-line {
+        width: 3.125cqw;
+        height: 0.37cqh;
+        background: #005AC8;
+        border-radius: 2px;
+        margin: 0 auto;
+      }
+
+      #logo-name {
+        font-size: 5cqw;
+        font-weight: 700;
+        color: #1D1D1F;
+        letter-spacing: -0.03em;
+        line-height: 1.0;
+      }
+
+      #logo-tagline {
+        font-size: 1.1cqw;
+        font-weight: 500;
+        color: #005AC8;
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
+        margin-top: -1cqh;
+      }
+
+      /* CTA Button */
+      #cta-button {
+        display: inline-block;
+        background: #005AC8;
+        color: #FFFFFF;
+        font-family: "Plus Jakarta Sans", sans-serif;
+        font-size: 1.4cqw;
+        font-weight: 600;
+        padding: 1.6cqh 4.5cqw;
+        border-radius: 100px;
+        letter-spacing: -0.01em;
+        margin-top: 1cqh;
+      }
+
+      /* URL */
+      #url {
+        font-size: 0.9cqw;
+        font-weight: 500;
+        color: #767676;
+        letter-spacing: 0.02em;
+      }
+
+      /* Progress bar */
+      .progress-track {
+        position: absolute;
+        bottom: 0;
+        left: 0;
+        width: 100%;
+        height: 3px;
+        background: rgba(0, 90, 200, 0.08);
+      }
+      #progress-fill { height: 100%; background: #005AC8; width: 0%; }
+
+      .frame-counter {
+        position: absolute;
+        bottom: 1.5cqh;
+        left: 5cqw;
+        font-size: 0.7cqw;
+        font-weight: 500;
+        color: #767676;
+        letter-spacing: 0.05em;
+      }
+    </style>
+  </head>
+  <body>
+    <div
+      id="root"
+      data-composition-id="04-cta"
+      data-start="0"
+      data-duration="13"
+      data-width="1920"
+      data-height="1080"
+    >
+      <!-- Atmosphere rings (intentionally extend beyond canvas, clipped by root overflow:hidden) -->
+      <div class="rings" aria-hidden="true" data-layout-allow-overflow>
+        <div class="ring" id="ring-1"></div>
+        <div class="ring" id="ring-2"></div>
+        <div class="ring" id="ring-3"></div>
+      </div>
+
+      <!-- Centered content -->
+      <div id="content" class="clip" data-start="0" data-duration="13" data-track-index="1">
+        <div id="logo-accent-line"></div>
+        <div id="logo-name">ClickLaboral</div>
+        <div id="logo-tagline">Compliance Laboral Mexicano</div>
+        <div id="cta-button">Prueba 14 días gratis</div>
+        <div id="url">clicklaboral.mx</div>
+      </div>
+
+      <!-- Chrome -->
+      <div class="frame-counter">4 / 4</div>
+      <div class="progress-track">
+        <div id="progress-fill"></div>
+      </div>
+    </div>
+
+    <script>
+      window.__timelines = window.__timelines || {};
+      const tl = gsap.timeline({ paused: true });
+
+      // Rings expand from center
+      tl.from("#ring-1", { scale: 0, opacity: 0, transformOrigin: "50% 50%", duration: 1.5, ease: "power3.out" }, 0);
+      tl.from("#ring-2", { scale: 0, opacity: 0, transformOrigin: "50% 50%", duration: 1.8, ease: "power3.out" }, 0.2);
+      tl.from("#ring-3", { scale: 0, opacity: 0, transformOrigin: "50% 50%", duration: 2.0, ease: "power3.out" }, 0.4);
+
+      // Accent line
+      tl.from("#logo-accent-line", { scaleX: 0, transformOrigin: "center center", duration: 0.5, ease: "power3.out" }, 0.8);
+
+      // Logo name falls in
+      tl.from("#logo-name", { opacity: 0, y: -30, duration: 0.8, ease: "power2.out" }, 1.0);
+
+      // Tagline
+      tl.from("#logo-tagline", { opacity: 0, duration: 0.6, ease: "power2.out" }, 1.6);
+
+      // CTA button scales in
+      tl.from("#cta-button", { opacity: 0, scale: 0.88, duration: 0.7, ease: "back.out(1.5)" }, 2.4);
+
+      // URL fades in
+      tl.from("#url", { opacity: 0, duration: 0.6, ease: "power2.out" }, 3.2);
+
+      // Progress bar 71.1% → 100%
+      tl.fromTo("#progress-fill", { width: "71.1%" }, { width: "100%", duration: 13, ease: "none" }, 0);
+
+      window.__timelines["04-cta"] = tl;
+    </script>
+  </body>
+</html>

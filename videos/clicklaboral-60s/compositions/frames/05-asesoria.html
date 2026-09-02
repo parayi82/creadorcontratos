@@ -1,0 +1,354 @@
+<!doctype html>
+<html lang="es">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=1080, height=1920" />
+    <script src="assets/js/gsap.min.js"></script>
+    <style>
+      @font-face { font-family: 'Plus Jakarta Sans'; font-weight: 400; font-style: normal; src: url('assets/fonts/pjs-400.woff2') format('woff2'); }
+      @font-face { font-family: 'Plus Jakarta Sans'; font-weight: 600; font-style: normal; src: url('assets/fonts/pjs-600.woff2') format('woff2'); }
+      @font-face { font-family: 'Plus Jakarta Sans'; font-weight: 700; font-style: normal; src: url('assets/fonts/pjs-700.woff2') format('woff2'); }
+
+      * { margin: 0; padding: 0; box-sizing: border-box; }
+      html, body { margin: 0; width: 1080px; height: 1920px; overflow: hidden; background: #FFFFFF; font-family: "Plus Jakarta Sans", sans-serif; }
+
+      #root {
+        width: 1080px;
+        height: 1920px;
+        position: relative;
+        container-type: size;
+        overflow: hidden;
+        background: #FFFFFF;
+      }
+
+      /* Top bar */
+      #top-bar {
+        position: absolute;
+        top: 5cqh;
+        left: 5cqw;
+        right: 5cqw;
+        display: flex;
+        align-items: center;
+        gap: 1.5cqw;
+        z-index: 10;
+      }
+      #logo-dot { width: 3cqw; height: 3cqw; background: #005AC8; border-radius: 50%; flex-shrink: 0; }
+      #logo-text { font-size: 2.2cqw; font-weight: 700; color: #1D1D1F; letter-spacing: -0.01em; }
+
+      /* Scene header */
+      #scene-header {
+        position: absolute;
+        top: 10cqh;
+        left: 5cqw;
+        right: 5cqw;
+        text-align: center;
+      }
+      #scene-title { font-size: 4cqw; font-weight: 700; color: #005AC8; letter-spacing: -0.02em; }
+      #scene-sub { font-size: 2.5cqw; color: #1D1D1F; margin-top: 0.8cqh; opacity: 0.7; }
+
+      /* Lawyer card */
+      #lawyer-card {
+        position: absolute;
+        top: 18cqh;
+        left: 4cqw;
+        right: 4cqw;
+        background: linear-gradient(160deg, #f0f5ff 0%, #e8f0ff 100%);
+        border-radius: 20px;
+        border: 1.5px solid rgba(0,90,200,0.15);
+        box-shadow: 0 8px 40px rgba(0,90,200,0.1);
+        overflow: hidden;
+      }
+
+      #lawyer-profile {
+        padding: 3cqh 3cqw 2.5cqh;
+        display: flex;
+        align-items: center;
+        gap: 3cqw;
+      }
+      #lawyer-avatar {
+        width: 18cqw;
+        height: 18cqw;
+        background: linear-gradient(135deg, #005AC8 0%, #0047A0 100%);
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 8cqw;
+        flex-shrink: 0;
+        box-shadow: 0 4px 16px rgba(0,90,200,0.25);
+      }
+      #lawyer-info { flex: 1; }
+      #lawyer-name { font-size: 2.5cqw; font-weight: 700; color: #1D1D1F; }
+      #lawyer-role { font-size: 1.8cqw; color: #005AC8; font-weight: 600; margin-top: 0.3cqh; }
+      #lawyer-exp { font-size: 1.5cqw; color: #727272; margin-top: 0.5cqh; }
+      #online-badge {
+        display: flex;
+        align-items: center;
+        gap: 1cqw;
+        margin-top: 1cqh;
+      }
+      #online-dot { width: 1.5cqw; height: 1.5cqw; background: #22c55e; border-radius: 50%; animation: none; }
+      #online-text { font-size: 1.5cqw; color: #22c55e; font-weight: 600; }
+
+      /* Chat messages */
+      #chat-area { padding: 0 3cqw; }
+
+      .msg { margin-bottom: 2cqh; display: flex; align-items: flex-end; gap: 1.5cqw; }
+      .msg.user { flex-direction: row-reverse; }
+      .msg-bubble {
+        max-width: 72%;
+        padding: 1.5cqh 2cqw;
+        border-radius: 14px;
+        font-size: 1.8cqw;
+        line-height: 1.4;
+      }
+      .msg.system .msg-bubble {
+        background: #FFFFFF;
+        color: #1D1D1F;
+        border-bottom-left-radius: 4px;
+        box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+        font-weight: 400;
+      }
+      .msg.user .msg-bubble {
+        background: #005AC8;
+        color: #FFFFFF;
+        border-bottom-right-radius: 4px;
+        font-weight: 500;
+      }
+      .msg-time { font-size: 1.3cqw; color: #9A9A9A; flex-shrink: 0; }
+
+      /* Response time badge */
+      #response-badge {
+        margin: 0 3cqw 2.5cqh;
+        background: rgba(34,197,94,0.08);
+        border: 1.5px solid rgba(34,197,94,0.25);
+        border-radius: 12px;
+        padding: 1.5cqh 2.5cqw;
+        display: flex;
+        align-items: center;
+        gap: 2cqw;
+      }
+      #resp-icon { font-size: 3cqw; }
+      #resp-info { flex: 1; }
+      #resp-title { font-size: 1.8cqw; font-weight: 700; color: #1D1D1F; }
+      #resp-sub { font-size: 1.5cqw; color: #727272; margin-top: 0.3cqh; }
+      #resp-time { font-size: 2.5cqw; font-weight: 700; color: #22c55e; white-space: nowrap; }
+
+      /* Features row */
+      #features-row {
+        position: absolute;
+        top: 63cqh;
+        left: 4cqw;
+        right: 4cqw;
+        display: flex;
+        gap: 2cqw;
+      }
+      .feat-chip {
+        flex: 1;
+        background: #FFFFFF;
+        border: 1.5px solid rgba(0,90,200,0.15);
+        border-radius: 12px;
+        padding: 2cqh 1.5cqw;
+        text-align: center;
+        box-shadow: 0 2px 10px rgba(0,90,200,0.06);
+      }
+      .feat-emoji { font-size: 4cqw; display: block; margin-bottom: 0.8cqh; }
+      .feat-text { font-size: 1.5cqw; font-weight: 700; color: #1D1D1F; line-height: 1.3; }
+
+      /* Overlay badge */
+      #overlay-badge {
+        position: absolute;
+        top: 71cqh;
+        z-index: 15;
+        left: 5cqw;
+        right: 5cqw;
+        background: linear-gradient(135deg, #005AC8 0%, #0047A0 100%);
+        border-radius: 14px;
+        padding: 2.5cqh 3cqw;
+        display: flex;
+        align-items: center;
+        gap: 2.5cqw;
+        box-shadow: 0 8px 32px rgba(0,90,200,0.3);
+      }
+      #overlay-icon { font-size: 5cqw; }
+      #overlay-info { flex: 1; }
+      #overlay-title { font-size: 2.8cqw; font-weight: 700; color: #FFFFFF; letter-spacing: -0.01em; }
+      #overlay-sub { font-size: 1.7cqw; color: rgba(255,255,255,0.8); margin-top: 0.3cqh; }
+
+      /* Bottom gradient */
+      .bottom-gradient {
+        position: absolute;
+        bottom: 0; left: 0; right: 0;
+        height: 38cqh;
+        z-index: 12;
+        background: linear-gradient(to top, rgba(0,0,0,0.88) 0%, rgba(0,0,0,0.5) 55%, transparent 100%);
+        pointer-events: none;
+      }
+
+      /* Subtitle */
+      #subtitle {
+        position: absolute;
+        bottom: 7cqh;
+        left: 4cqw;
+        right: 4cqw;
+        text-align: center;
+        z-index: 20;
+      }
+      .sub-line {
+        display: block;
+        font-size: 4.2cqw;
+        font-weight: 700;
+        color: #FFFFFF;
+        text-shadow: 2px 2px 6px rgba(0,0,0,1), -1px -1px 0 #000, 1px -1px 0 #000, -1px 1px 0 #000, 1px 1px 0 #000;
+        line-height: 1.35;
+      }
+      .sub-highlight { color: #FFD700; }
+
+      /* Progress */
+      .progress-track { position: absolute; bottom: 0; left: 0; width: 100%; height: 4px; background: rgba(255,255,255,0.15); }
+      #progress-fill { height: 100%; background: #005AC8; width: 0%; }
+      .frame-counter { position: absolute; bottom: 1cqh; right: 4cqw; font-size: 1.4cqw; font-weight: 500; color: rgba(255,255,255,0.5); z-index: 30; }
+    </style>
+  </head>
+  <body>
+    <div
+      id="root"
+      data-composition-id="05-asesoria"
+      data-start="0"
+      data-duration="7"
+      data-width="1080"
+      data-height="1920"
+    >
+      <!-- Logo top -->
+      <div id="top-bar" class="clip" data-start="0" data-duration="7" data-track-index="1">
+        <div id="logo-dot"></div>
+        <span id="logo-text">ClickLaboral.mx</span>
+      </div>
+
+      <!-- Scene header -->
+      <div id="scene-header" class="clip" data-start="0" data-duration="7" data-track-index="2">
+        <div id="scene-title">Asesoría Legal</div>
+        <div id="scene-sub">Abogado especialista disponible</div>
+      </div>
+
+      <!-- Lawyer card -->
+      <div id="lawyer-card" class="clip" data-start="0" data-duration="7" data-track-index="3">
+        <div id="lawyer-profile">
+          <div id="lawyer-avatar">⚖️</div>
+          <div id="lawyer-info">
+            <div id="lawyer-name">Lic. Carlos Mendoza</div>
+            <div id="lawyer-role">Abogado Laboral</div>
+            <div id="lawyer-exp">15 años de experiencia · LFT</div>
+            <div id="online-badge">
+              <div id="online-dot"></div>
+              <span id="online-text">En línea ahora</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Chat -->
+        <div id="chat-area">
+          <div class="msg user" id="msg-1">
+            <div class="msg-bubble">¿Cómo calcular la liquidación de un empleado con 3 años?</div>
+            <span class="msg-time">10:24</span>
+          </div>
+          <div class="msg system" id="msg-2">
+            <div class="msg-bubble">Con base en la LFT: 3 meses de salario + 20 días por año. Para tu caso son $67,500 MXN. Te genero el cálculo completo ahora. ✓</div>
+            <span class="msg-time">10:24</span>
+          </div>
+        </div>
+
+        <!-- Response time -->
+        <div id="response-badge">
+          <span id="resp-icon">⚡</span>
+          <div id="resp-info">
+            <div id="resp-title">Respuesta garantizada</div>
+            <div id="resp-sub">Disponible 24 horas al día</div>
+          </div>
+          <div id="resp-time">&lt; 24h</div>
+        </div>
+      </div>
+
+      <!-- Features -->
+      <div id="features-row" class="clip" data-start="0" data-duration="7" data-track-index="4">
+        <div class="feat-chip">
+          <span class="feat-emoji">📱</span>
+          <div class="feat-text">En tu teléfono</div>
+        </div>
+        <div class="feat-chip">
+          <span class="feat-emoji">🔒</span>
+          <div class="feat-text">100% confidencial</div>
+        </div>
+        <div class="feat-chip">
+          <span class="feat-emoji">📋</span>
+          <div class="feat-text">Dictámenes legales</div>
+        </div>
+      </div>
+
+      <!-- Overlay badge -->
+      <div id="overlay-badge" class="clip" data-start="0" data-duration="7" data-track-index="5">
+        <span id="overlay-icon">⚖️</span>
+        <div id="overlay-info">
+          <div id="overlay-title">Abogado Laboral Integrado</div>
+          <div id="overlay-sub">En la palma de tu mano · Respuesta en &lt; 24h</div>
+        </div>
+      </div>
+
+      <!-- Bottom gradient -->
+      <div class="bottom-gradient"></div>
+
+      <!-- Subtitle -->
+      <div id="subtitle" class="clip" data-start="0" data-duration="7" data-track-index="6">
+        <span class="sub-line">Abogado laboral especialista</span>
+        <span class="sub-line">en <span class="sub-highlight">la palma</span></span>
+        <span class="sub-line">de tu mano</span>
+      </div>
+
+      <!-- Chrome -->
+      <div class="frame-counter">5/6</div>
+      <div class="progress-track">
+        <div id="progress-fill"></div>
+      </div>
+    </div>
+
+    <script>
+      window.__timelines = window.__timelines || {};
+      const tl = gsap.timeline({ paused: true });
+
+      // Logo
+      tl.from("#top-bar", { opacity: 0, y: -20, duration: 0.4, ease: "power2.out" }, 0);
+
+      // Header
+      tl.from("#scene-title", { opacity: 0, y: -15, duration: 0.5, ease: "power2.out" }, 0.2);
+      tl.from("#scene-sub", { opacity: 0, duration: 0.4, ease: "power2.out" }, 0.5);
+
+      // Lawyer card
+      tl.from("#lawyer-card", { opacity: 0, y: 60, duration: 0.7, ease: "power2.out" }, 0.4);
+
+      // Profile
+      tl.from("#lawyer-avatar", { scale: 0, duration: 0.6, ease: "back.out(1.5)" }, 0.9);
+      tl.from("#lawyer-info", { opacity: 0, x: 20, duration: 0.5, ease: "power2.out" }, 1.2);
+
+      // Chat messages
+      tl.from("#msg-1", { opacity: 0, x: 40, duration: 0.4, ease: "power2.out" }, 1.8);
+      tl.from("#msg-2", { opacity: 0, x: -40, duration: 0.4, ease: "power2.out" }, 2.4);
+
+      // Response badge
+      tl.from("#response-badge", { opacity: 0, y: 15, duration: 0.4, ease: "power2.out" }, 3.0);
+
+      // Features
+      tl.from(".feat-chip", { opacity: 0, y: 20, stagger: 0.1, duration: 0.4, ease: "power2.out" }, 3.4);
+
+      // Overlay badge
+      tl.from("#overlay-badge", { opacity: 0, scale: 0.9, y: 20, duration: 0.6, ease: "back.out(1.4)" }, 3.8);
+
+      // Subtitle
+      tl.from("#subtitle", { opacity: 0, y: 25, duration: 0.5, ease: "power2.out" }, 4.2);
+
+      // Progress 75% → 86.7%
+      tl.fromTo("#progress-fill", { width: "75%" }, { width: "86.7%", duration: 7, ease: "none" }, 0);
+
+      window.__timelines["05-asesoria"] = tl;
+    </script>
+  </body>
+</html>

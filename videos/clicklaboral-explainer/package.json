@@ -1,0 +1,15 @@
+{
+  "name": "clicklaboral-explainer",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "npx --yes hyperframes@0.8.22 preview",
+    "check": "npx --yes hyperframes@0.8.22 check",
+    "render": "npx --yes hyperframes@0.8.22 render",
+    "publish": "npx --yes hyperframes@0.8.22 publish"
+  },
+  "dependencies": {
+    "@fontsource/plus-jakarta-sans": "^5.3.0",
+    "gsap": "^3.15.0"
+  }
+}

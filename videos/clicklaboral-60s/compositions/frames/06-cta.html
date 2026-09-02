@@ -1,0 +1,253 @@
+<!doctype html>
+<html lang="es">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=1080, height=1920" />
+    <script src="assets/js/gsap.min.js"></script>
+    <style>
+      @font-face { font-family: 'Plus Jakarta Sans'; font-weight: 400; font-style: normal; src: url('assets/fonts/pjs-400.woff2') format('woff2'); }
+      @font-face { font-family: 'Plus Jakarta Sans'; font-weight: 600; font-style: normal; src: url('assets/fonts/pjs-600.woff2') format('woff2'); }
+      @font-face { font-family: 'Plus Jakarta Sans'; font-weight: 700; font-style: normal; src: url('assets/fonts/pjs-700.woff2') format('woff2'); }
+
+      * { margin: 0; padding: 0; box-sizing: border-box; }
+      html, body { margin: 0; width: 1080px; height: 1920px; overflow: hidden; background: #FFFFFF; font-family: "Plus Jakarta Sans", sans-serif; }
+
+      #root {
+        width: 1080px;
+        height: 1920px;
+        position: relative;
+        container-type: size;
+        overflow: hidden;
+        background: #FFFFFF;
+      }
+
+      /* Background: cobalt gradient */
+      #bg-gradient {
+        position: absolute;
+        inset: 0;
+        background: linear-gradient(160deg, #005AC8 0%, #0047A0 45%, #002D6E 100%);
+      }
+
+      /* Concentric rings atmosphere */
+      .ring {
+        position: absolute;
+        border-radius: 50%;
+        border: 1px solid rgba(255,255,255,0.08);
+        transform: translate(-50%, -50%);
+        left: 50%;
+        top: 46%;
+      }
+      #ring-1 { width: 80cqw; height: 80cqw; }
+      #ring-2 { width: 120cqw; height: 120cqw; border-color: rgba(255,255,255,0.05); }
+      #ring-3 { width: 160cqw; height: 160cqw; border-color: rgba(255,255,255,0.03); }
+
+      /* Centered content */
+      #content {
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        gap: 0;
+        z-index: 5;
+      }
+
+      /* Logo block */
+      #logo-block { text-align: center; margin-bottom: 6cqh; }
+      #logo-accent {
+        width: 10cqw;
+        height: 0.5cqh;
+        background: rgba(255,255,255,0.5);
+        border-radius: 2px;
+        margin: 0 auto 3cqh;
+      }
+      #logo-name {
+        font-size: 11cqw;
+        font-weight: 700;
+        color: #FFFFFF;
+        letter-spacing: -0.04em;
+        line-height: 1.0;
+      }
+      #logo-tagline {
+        font-size: 2.4cqw;
+        font-weight: 600;
+        color: rgba(255,255,255,0.7);
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
+        margin-top: 2cqh;
+      }
+
+      /* Value props */
+      #value-props {
+        text-align: center;
+        margin-bottom: 8cqh;
+      }
+      .value-prop {
+        font-size: 2.2cqw;
+        color: rgba(255,255,255,0.8);
+        margin-bottom: 1.2cqh;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 1.5cqw;
+      }
+      .value-check {
+        width: 3cqw;
+        height: 3cqw;
+        background: rgba(255,255,255,0.2);
+        border-radius: 50%;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1.8cqw;
+        flex-shrink: 0;
+      }
+
+      /* CTA Button */
+      #cta-btn {
+        background: #FFFFFF;
+        color: #005AC8;
+        font-size: 3cqw;
+        font-weight: 700;
+        padding: 3cqh 8cqw;
+        border-radius: 100px;
+        letter-spacing: -0.01em;
+        margin-bottom: 3cqh;
+        box-shadow: 0 8px 32px rgba(0,0,0,0.2);
+        text-align: center;
+      }
+
+      /* URL */
+      #url-text {
+        font-size: 2.2cqw;
+        font-weight: 500;
+        color: rgba(255,255,255,0.85);
+        letter-spacing: 0.04em;
+      }
+
+      /* Bottom stamp */
+      #bottom-stamp {
+        position: absolute;
+        bottom: 8cqh;
+        left: 5cqw;
+        right: 5cqw;
+        background: rgba(255,255,255,0.1);
+        border: 1px solid rgba(255,255,255,0.2);
+        border-radius: 14px;
+        padding: 2.5cqh 3cqw;
+        text-align: center;
+        z-index: 10;
+      }
+      #stamp-line1 { font-size: 3cqw; font-weight: 700; color: #FFFFFF; margin-bottom: 1cqh; }
+      #stamp-line2 { font-size: 2.2cqw; color: rgba(255,255,255,0.92); }
+
+      /* Progress */
+      .progress-track { position: absolute; bottom: 0; left: 0; width: 100%; height: 4px; background: rgba(255,255,255,0.1); z-index: 20; }
+      #progress-fill { height: 100%; background: rgba(255,255,255,0.5); width: 0%; }
+      .frame-counter { position: absolute; bottom: 1cqh; right: 4cqw; font-size: 1.4cqw; font-weight: 500; color: rgba(255,255,255,0.4); z-index: 20; }
+    </style>
+  </head>
+  <body>
+    <div
+      id="root"
+      data-composition-id="06-cta"
+      data-start="0"
+      data-duration="8"
+      data-width="1080"
+      data-height="1920"
+    >
+      <!-- Background -->
+      <div id="bg-gradient"></div>
+
+      <!-- Rings -->
+      <div class="ring" id="ring-1" aria-hidden="true" data-layout-allow-overflow></div>
+      <div class="ring" id="ring-2" aria-hidden="true" data-layout-allow-overflow></div>
+      <div class="ring" id="ring-3" aria-hidden="true" data-layout-allow-overflow></div>
+
+      <!-- Content -->
+      <div id="content" class="clip" data-start="0" data-duration="8" data-track-index="1">
+        <!-- Logo -->
+        <div id="logo-block">
+          <div id="logo-accent"></div>
+          <div id="logo-name">ClickLaboral</div>
+          <div id="logo-tagline">Compliance Laboral Mexicano</div>
+        </div>
+
+        <!-- Value props -->
+        <div id="value-props">
+          <div class="value-prop">
+            <span class="value-check">✓</span>
+            400+ documentos legales listos
+          </div>
+          <div class="value-prop">
+            <span class="value-check">✓</span>
+            Blindaje LFT · IMSS · STPS automático
+          </div>
+          <div class="value-prop">
+            <span class="value-check">✓</span>
+            Abogado laboral incluido
+          </div>
+        </div>
+
+        <!-- CTA Button -->
+        <div id="cta-btn">👉 ¡Empieza a blindar tu empresa hoy!</div>
+
+        <!-- URL -->
+        <div id="url-text">clicklaboral.mx</div>
+      </div>
+
+      <!-- Bottom stamp -->
+      <div id="bottom-stamp" class="clip" data-start="0" data-duration="8" data-track-index="2">
+        <div id="stamp-line1">ClickLaboral.mx</div>
+        <div id="stamp-line2">Prueba 14 días gratis · Sin tarjeta de crédito</div>
+      </div>
+
+      <!-- Chrome -->
+      <div class="frame-counter">6/6</div>
+      <div class="progress-track">
+        <div id="progress-fill"></div>
+      </div>
+    </div>
+
+    <script>
+      window.__timelines = window.__timelines || {};
+      const tl = gsap.timeline({ paused: true });
+
+      // Background
+      tl.from("#bg-gradient", { opacity: 0, duration: 0.6, ease: "power2.out" }, 0);
+
+      // Rings expand
+      tl.from("#ring-1", { scale: 0, opacity: 0, transformOrigin: "50% 50%", duration: 1.4, ease: "power3.out" }, 0.1);
+      tl.from("#ring-2", { scale: 0, opacity: 0, transformOrigin: "50% 50%", duration: 1.7, ease: "power3.out" }, 0.25);
+      tl.from("#ring-3", { scale: 0, opacity: 0, transformOrigin: "50% 50%", duration: 2.0, ease: "power3.out" }, 0.4);
+
+      // Logo accent wipe
+      tl.from("#logo-accent", { scaleX: 0, transformOrigin: "center center", duration: 0.5, ease: "power3.out" }, 0.5);
+
+      // Logo name
+      tl.from("#logo-name", { opacity: 0, y: -30, duration: 0.8, ease: "power2.out" }, 0.8);
+      tl.from("#logo-tagline", { opacity: 0, duration: 0.5, ease: "power2.out" }, 1.4);
+
+      // Value props stagger
+      tl.from(".value-prop", { opacity: 0, x: -20, stagger: 0.2, duration: 0.45, ease: "power2.out" }, 1.8);
+
+      // CTA button
+      tl.from("#cta-btn", { opacity: 0, scale: 0.88, duration: 0.7, ease: "back.out(1.5)" }, 2.6);
+
+      // URL
+      tl.from("#url-text", { opacity: 0, duration: 0.5, ease: "power2.out" }, 3.2);
+
+      // Bottom stamp
+      tl.from("#bottom-stamp", { opacity: 0, y: 30, duration: 0.6, ease: "power2.out" }, 3.5);
+
+      // Progress 86.7% → 100%
+      tl.fromTo("#progress-fill", { width: "86.7%" }, { width: "100%", duration: 8, ease: "none" }, 0);
+
+      window.__timelines["06-cta"] = tl;
+    </script>
+  </body>
+</html>

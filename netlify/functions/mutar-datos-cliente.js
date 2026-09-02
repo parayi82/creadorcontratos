@@ -191,7 +191,7 @@ async function insertarAsistenciasRetroactivas(sb, trabajadores) {
         cliente_rfc:   t.cliente_rfc,
         fecha:         cur.toISOString().split('T')[0],
         status:        'presente',
-        fuente:        'manual',
+        fuente:        'sistema',
         notas:         'Asistencia retroactiva — alta con fecha de ingreso anterior.',
       });
       cur.setUTCDate(cur.getUTCDate() + 1);
@@ -207,9 +207,9 @@ async function insertarAsistenciasRetroactivas(sb, trabajadores) {
     }
     // Paso 2: sobreescribe falta_injustificada → presente (el cron las puso antes del alta)
     const { error: e2 } = await sb.from('asistencias')
-      .update({ status: 'presente', fuente: 'manual', notas: 'Asistencia retroactiva — anterior al alta en ClickLaboral' })
+      .update({ status: 'presente', fuente: 'sistema', notas: 'Asistencia retroactiva — anterior al alta en ClickLaboral' })
       .eq('trabajador_id', t.id)
-      .eq('status', 'falta_injustificada')
+      .in('status', ['falta_injustificada', 'sin_registro'])
       .gte('fecha', t.fecha_ingreso)
       .lte('fecha', ayer);
     if (e2) console.warn('asistencias-retroactivas update-fi:', e2.message);

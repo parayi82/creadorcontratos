@@ -2559,12 +2559,10 @@ async function guardarDia(){
         updated_at: new Date().toISOString(),
       }, { onConflict: 'trabajador_id,fecha' });
       if (e2) throw e2;
-    } else if (statusElegido==='incapacidad' && actasMes[diaSeleccionado]) {
-      await sb.from('actas_inasistencia').update({
-        tipo: 'justificada', estado: 'cerrada',
-        motivo: 'Incapacidad médica', updated_at: new Date().toISOString(),
-      }).eq('trabajador_id', trabajadorActual.id).eq('fecha', diaSeleccionado);
     }
+    // Para cualquier otro status (presente, vacaciones, permiso, incapacidad, festivo)
+    // el trigger fn_reconciliar_asistencia() en la BD borra el acta provisional y
+    // resuelve las alertas — un solo cerebro para todos los escritores.
 
     cerrarModalDia();
     if(asistenciasMes[diaSeleccionado]){
@@ -3338,16 +3336,7 @@ async function confirmarImportCSV() {
         conflicto: 'trabajador_id,fecha'
       });
       if (error) throw error;
-
-      // Eliminar actas de inasistencia que quedaron obsoletas tras el import
-      const presentes = registros.filter(r => r.status === 'presente');
-      for (const r of presentes) {
-        await mutarDatos({
-          tabla: 'actas_inasistencia',
-          accion: 'delete',
-          filtros: { trabajador_id: r.trabajador_id, fecha: r.fecha }
-        });
-      }
+      // Las actas/alertas obsoletas las limpia el trigger fn_reconciliar_asistencia() en la BD.
     }
 
     mostrarLogImportacion();
@@ -3540,7 +3529,7 @@ async function renderTablero(){
   todosLosTrabajadores.forEach(t=>{
     const tDatos=idx[t.id]||{};
     const tProg =idxProg[t.id]||{};
-    let totVac=0,totPerm=0,totFI=0,totFJ=0,totInc=0,totPres=0,totRet=0,totApart=0;
+    let totVac=0,totPerm=0,totFI=0,totFJ=0,totInc=0,totPres=0,totRet=0,totApart=0,totSinReg=0;
     const celdas=dias.map(({fecha,finde})=>{
       const st=tDatos[fecha];
       if(!st){
@@ -3552,8 +3541,8 @@ async function renderTablero(){
         }
         // Día laborable pasado (no hoy) sin registro → sin_registro
         if (!finde && fecha < hoy && t.fecha_ingreso && fecha >= t.fecha_ingreso) {
-          totFI++;
-          return `<td class="celda-sin-registro" title="${fecha} — Sin registro de asistencia">—</td>`;
+          totSinReg++;
+          return `<td class="celda-sin-registro" title="${fecha} — Sin registro de asistencia (el cierre de jornada lo clasificará)">—</td>`;
         }
         return `<td class="${finde?'celda-finde':''}"></td>`;
       }
@@ -3564,6 +3553,7 @@ async function renderTablero(){
       else if(st==='incapacidad')totInc++;
       else if(st==='presente')totPres++;
       else if(st==='retraso')totRet++;
+      else if(st==='sin_registro')totSinReg++;
       return `<td class="${COLOR_STATUS[st]||''}" title="${fecha}: ${STATUS_LABELS[st]||st}">${ICONO_STATUS[st]||'·'}</td>`;
     }).join('');
 
@@ -3588,6 +3578,7 @@ async function renderTablero(){
         ${mkBar(totFI,'#fca5a5','F.injust.')}
         ${mkBar(totFJ,'#d1d5db','F.just.')}
         ${mkBar(totInc,'#c4b5fd','incap.')}
+        ${mkBar(totSinReg,'#e5e7eb','sin reg.')}
       </div>
     </div>`;
 

@@ -52,6 +52,7 @@ async function cargarDatosCliente(rfc){
       .select('tipo,trabajador_nombre,mensaje,urgencia,fecha_alerta')
       .eq('cliente_rfc', rfcReal)
       .eq('leida', false)
+      .or('resuelta.is.null,resuelta.eq.false')
       .order('fecha_alerta', {ascending:false})
       .limit(10),
   ]);

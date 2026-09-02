@@ -102,6 +102,7 @@ exports.handler = async (event) => {
           .from('alertas_laborales')
           .select('*')
           .eq('cliente_rfc', clienteRFC)
+          .or('resuelta.is.null,resuelta.eq.false')
           .order('urgencia', { ascending: true })
           .order('fecha_alerta', { ascending: false })
           .limit(200);
@@ -114,7 +115,8 @@ exports.handler = async (event) => {
           .from('alertas_laborales')
           .select('*', { count: 'exact', head: true })
           .eq('cliente_rfc', clienteRFC)
-          .eq('leida', false);
+          .eq('leida', false)
+          .or('resuelta.is.null,resuelta.eq.false');
         if (cErr) return err(500, cErr.message);
         return ok({ sin_leer: count || 0 });
       }

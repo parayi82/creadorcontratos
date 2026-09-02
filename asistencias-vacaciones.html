@@ -3291,19 +3291,20 @@ async function confirmarImportCSV() {
 
     const mapTrabajadores = {};
     todosTrab.forEach(t => {
-      mapTrabajadores[t.nombre.toLowerCase().trim()] = t.id;
+      mapTrabajadores[normalizarNombre(t.nombre)] = t.id;
     });
 
     const registros = [];
 
     for (const reg of filasCSV) {
-      let tid = mapTrabajadores[reg.nombre.toLowerCase().trim()];
+      const kReg = normalizarNombre(reg.nombre);
+      let tid = mapTrabajadores[kReg];
 
-      // Matching flexible
+      // Matching flexible (sin acentos)
       if (!tid) {
         for (const [nombre] of Object.entries(mapTrabajadores)) {
-          if (nombre.includes(reg.nombre.toLowerCase().trim()) || reg.nombre.toLowerCase().trim().includes(nombre)) {
-            tid = mapTrabajadores[nombre]; // flexible match
+          if (nombre.includes(kReg) || kReg.includes(nombre)) {
+            tid = mapTrabajadores[nombre];
             break;
           }
         }
@@ -6400,9 +6401,9 @@ init();
 
 function mostrarPreviewCSV() {
   const wrap = document.getElementById('csv-preview-wrap');
-  const _trabSet = new Set((trabajadores||[]).map(t=>t.nombre.toLowerCase().trim()));
+  const _trabSet = new Set((trabajadores||[]).map(t=>normalizarNombre(t.nombre)));
   const noEncontrados = [...new Set(filasCSV.map(f=>f.nombre))]
-    .filter(n => !_trabSet.has(n.toLowerCase().trim()));
+    .filter(n => !_trabSet.has(normalizarNombre(n)));
 
   let contenido = '';
   if(noEncontrados.length){
@@ -6411,7 +6412,7 @@ function mostrarPreviewCSV() {
   contenido += `<table class="csv-preview-table">
     <thead><tr><th>Nombre</th><th>Fecha</th><th>Entrada</th><th>Salida</th><th>Status</th></tr></thead>
     <tbody>${filasCSV.slice(0,15).map(f=>{
-      const ok = _trabSet.has(f.nombre.toLowerCase().trim());
+      const ok = _trabSet.has(normalizarNombre(f.nombre));
       const statusLabel = f.status==='presente'?'✅ Presente':'❌ Falta';
       return `<tr class="${ok?'csv-row-ok':'csv-row-warn'}">
         <td>${f.nombre}</td><td>${f.fecha}</td>

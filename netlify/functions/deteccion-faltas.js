@@ -1,18 +1,26 @@
 // netlify/functions/deteccion-faltas.js
 //
-// Cierra la jornada del día anterior y detecta faltas/retrasos.
+// Cierre de jornada: garantiza que TODOS los trabajadores activos tengan un
+// registro en `asistencias` para el día anterior.
 //
-// Modo diario (cron):
-//   Paso 1 — Cierre de día: trabajadores sin registro de ayer → inserta 'sin_registro'.
-//   Paso 2 — Detección de faltas: sin_registro en día laboral → falta_injustificada + acta + alerta.
-//   Paso 3 — Detección de retrasos: status 'retraso' → alerta.
+// ⚠️  Esta función SOLO escribe en `asistencias`. Las actas de inasistencia y
+//     las alertas las crea/resuelve el trigger fn_reconciliar_asistencia()
+//     (migración 20260902000002_motor_asistencias.sql) — un solo cerebro para
+//     que checador, ADMS, CSV, captura manual y cron queden siempre alineados.
+//
+// Modo diario (cron, 07:00 CDMX):
+//   Para cada trabajador activo sin registro de ayer:
+//     • Día cubierto por vacaciones autorizadas/gozadas → 'vacaciones'
+//     • Día laboral (L-V) posterior a su alta en el sistema → 'falta_injustificada'
+//     • Fin de semana                                   → 'sin_registro'
+//   Trabajadores con status 'retraso' → alerta informativa.
 //
 // Modo backfill (POST { backfill: true } o ?backfill=1):
-//   Procesa todos los días laborales históricos desde fecha_ingreso de cada trabajador.
-//   Inserta 'falta_injustificada' para cada día sin registro.
-//   Crea UNA alerta resumen por trabajador (no una por día).
+//   Reconciliación histórica: rellena huecos desde fecha_ingreso.
+//     • Días anteriores al alta en el sistema (created_at) → 'presente' (política:
+//       la asistencia se controla desde que el cliente empieza a usar ClickLaboral)
+//     • Días posteriores al alta                            → 'falta_injustificada'
 //
-// Ejecutar una vez al día, p.ej. a las 07:00 hora CDMX.
 //   GET /api/deteccion-faltas?secret=CRON_SECRET
 //   POST igual, o con header: Authorization: Bearer CRON_SECRET
 //
@@ -45,147 +53,109 @@ exports.handler = async (event) => {
   const ayer = fechaMexico(-1);
   const hoy  = fechaMexico(0);
 
-  // ── Modo backfill ─────────────────────────────────────────────────────────
   let bodyJson = {};
   try { bodyJson = JSON.parse(event.body || '{}'); } catch {}
   const isBackfill = bodyJson.backfill === true || (event.queryStringParameters || {}).backfill === '1';
-  if (isBackfill) return await runBackfill(sb, hoy, ayer, headers);
+  if (isBackfill) return await runBackfill(sb, hoy, ayer);
 
   const resumen = {
-    ayer,
-    hoy,
-    dias_cerrados:    0,
-    faltas_creadas:   0,
-    actas_creadas:    0,
-    alertas_faltas:   0,
-    alertas_retrasos: 0,
-    errores:          [],
+    ayer, hoy,
+    dias_cerrados:     0,
+    faltas_creadas:    0,
+    vacaciones_creadas: 0,
+    alertas_retrasos:  0,
+    errores:           [],
   };
 
   try {
-    // ── 1. Cargar TODOS los trabajadores activos ────────────────────────────
+    // ── 1. Trabajadores activos ───────────────────────────────────────────
     const { data: trabajadores, error: errTrab } = await sb
       .from('trabajadores')
-      .select('id, nombre, cliente_rfc, hora_entrada_habitual, fecha_ingreso')
+      .select('id, nombre, cliente_rfc, fecha_ingreso, created_at')
       .eq('activo', true);
-
     if (errTrab) throw errTrab;
     if (!trabajadores?.length) {
-      return {
-        statusCode: 200, headers,
-        body: JSON.stringify({ ok: true, ...resumen, nota: 'Sin trabajadores activos.' }),
-      };
+      return { statusCode: 200, headers, body: JSON.stringify({ ok: true, ...resumen, nota: 'Sin trabajadores activos.' }) };
     }
 
-    // ── 2. Cargar registros de asistencia de ayer ───────────────────────────
+    // ── 2. Registros de ayer ──────────────────────────────────────────────
     const ids = trabajadores.map(t => t.id);
     const { data: asistenciasAyer, error: errAsis } = await sb
       .from('asistencias')
       .select('trabajador_id, status')
       .eq('fecha', ayer)
       .in('trabajador_id', ids);
-
     if (errAsis) throw errAsis;
 
     const asistenciaMap = {};
     (asistenciasAyer || []).forEach(a => { asistenciaMap[a.trabajador_id] = a.status; });
 
-    const sinRegistro = trabajadores.filter(t => !asistenciaMap[t.id]);
-    const conRetraso  = trabajadores.filter(t => asistenciaMap[t.id] === 'retraso');
-
-    // ── 3. Cierre de día — insertar 'sin_registro' para TODOS sin registro ──
-    // Garantiza cobertura día a día en la tabla de asistencias.
-    for (const t of sinRegistro) {
-      try {
-        const { error: insSR } = await sb.from('asistencias').upsert({
-          trabajador_id: t.id,
-          cliente_rfc:   t.cliente_rfc,
-          fecha:         ayer,
-          status:        'sin_registro',
-          fuente:        'control_diario',
-          notas:         'Cierre automático de jornada — sin movimiento registrado.',
-        }, { onConflict: 'trabajador_id,fecha' });
-        if (!insSR) resumen.dias_cerrados++;
-      } catch (e) {
-        resumen.errores.push(`cierre id:${t.id}: ${e?.message || e}`);
-        console.error(`deteccion-faltas cierre id:${t.id}:`, e?.message);
-      }
-    }
-
-    // ── 4. Procesar faltas: TODOS los trabajadores sin registro en día laboral
-    // Se excluyen fines de semana; festivos deben marcarse manualmente.
+    // ── 3. Vacaciones autorizadas/gozadas que cubren ayer ─────────────────
+    const { data: vacs } = await sb
+      .from('vacaciones_programadas')
+      .select('trabajador_id, incluye_finde')
+      .in('estado', ['autorizada', 'gozada'])
+      .lte('fecha_inicio', ayer)
+      .gte('fecha_fin', ayer)
+      .in('trabajador_id', ids);
     const ayerDow = new Date(ayer + 'T12:00:00Z').getUTCDay();
-    const esLaboralAyer = ayerDow >= 1 && ayerDow <= 5;
-    const candidatosFalta = esLaboralAyer ? sinRegistro : [];
+    const esLaboral = ayerDow >= 1 && ayerDow <= 5;
+    const conVacaciones = new Set(
+      (vacs || []).filter(v => v.incluye_finde || esLaboral).map(v => v.trabajador_id)
+    );
 
-    for (const t of candidatosFalta) {
-      try {
-        // Actualizar sin_registro → falta_injustificada (solo si no fue modificado ya)
-        const { error: updAsis } = await sb.from('asistencias')
-          .update({
-            status: 'falta_injustificada',
-            notas:  'Falta detectada automáticamente — sin registro en checador.',
-          })
-          .eq('trabajador_id', t.id)
-          .eq('fecha', ayer)
-          .eq('status', 'sin_registro');
+    // ── 4. Cierre de día — un registro para CADA trabajador sin movimiento ─
+    const registros = [];
+    for (const t of trabajadores) {
+      if (asistenciaMap[t.id]) continue;
+      if (t.fecha_ingreso && t.fecha_ingreso > ayer) continue; // aún no ingresaba
 
-        if (updAsis) {
-          resumen.errores.push(`falta upd ${t.nombre}: ${updAsis.message}`);
-          continue;
-        }
+      let status, fuente, notas;
+      if (conVacaciones.has(t.id)) {
+        status = 'vacaciones'; fuente = 'programacion';
+        notas  = 'Periodo de vacaciones autorizado.';
+        resumen.vacaciones_creadas++;
+      } else if (esLaboral && ayer >= altaEnSistema(t)) {
+        status = 'falta_injustificada'; fuente = 'control_diario';
+        notas  = 'Falta detectada automáticamente — sin registro en checador.';
         resumen.faltas_creadas++;
-
-        // Acta de inasistencia provisional
-        const { error: insActa } = await sb.from('actas_inasistencia').upsert({
-          trabajador_id: t.id,
-          cliente_rfc:   t.cliente_rfc,
-          fecha:         ayer,
-          tipo:          'injustificada',
-          motivo:        'No se registró entrada en el checador digital.',
-          observaciones: `Generada automáticamente el ${hoy}. Actualice el motivo si la ausencia fue justificada.`,
-          estado:        'provisional',
-        }, { onConflict: 'trabajador_id,fecha' });
-        if (!insActa) resumen.actas_creadas++;
-
-        // Alerta para el cliente
-        const { error: insAlFalta } = await sb.from('alertas_laborales').upsert({
-          cliente_rfc:       t.cliente_rfc,
-          tipo:              'falta_injustificada',
-          trabajador_nombre: t.nombre,
-          fecha_alerta:      hoy,
-          mensaje:           `${t.nombre} no registró entrada el ${fmtFecha(ayer)}. Se generó un acta de inasistencia provisional. Si la ausencia fue justificada, actualice el registro en Control de Asistencias → seleccione la fecha y cambie el status.`,
-          urgencia:          'alta',
-          leida:             false,
-        }, { onConflict: 'cliente_rfc,tipo,trabajador_nombre,fecha_alerta' });
-        if (!insAlFalta) resumen.alertas_faltas++;
-
-      } catch (e) {
-        resumen.errores.push(`falta id:${t.id}: ${e?.message || e}`);
-        console.error(`deteccion-faltas falta id:${t.id}:`, e?.message);
+      } else {
+        status = 'sin_registro'; fuente = 'control_diario';
+        notas  = 'Cierre automático de jornada — sin movimiento registrado.';
       }
+      registros.push({ trabajador_id: t.id, cliente_rfc: t.cliente_rfc, fecha: ayer, status, fuente, notas });
     }
 
-    // ── 5. Procesar retrasos → solo alerta (el acta la levanta el patrón) ───
+    for (let i = 0; i < registros.length; i += 500) {
+      const { error } = await sb.from('asistencias')
+        .upsert(registros.slice(i, i + 500), { onConflict: 'trabajador_id,fecha', ignoreDuplicates: true });
+      if (error) resumen.errores.push(`cierre batch ${i}: ${error.message}`);
+      else resumen.dias_cerrados += Math.min(500, registros.length - i);
+    }
+
+    // ── 5. Retrasos → alerta informativa (el acta la levanta el patrón) ───
+    const conRetraso = trabajadores.filter(t => asistenciaMap[t.id] === 'retraso');
     for (const t of conRetraso) {
-      try {
-        const { error: insAlRet } = await sb.from('alertas_laborales').upsert({
-          cliente_rfc:       t.cliente_rfc,
-          tipo:              'retraso',
-          trabajador_nombre: t.nombre,
-          fecha_alerta:      hoy,
-          mensaje:           `${t.nombre} llegó tarde el ${fmtFecha(ayer)}. Si desea levantar un acta de amonestación, genérela en Herramientas → Acta Administrativa y seleccione el tipo "Retardo/Atraso".`,
-          urgencia:          'media',
-          leida:             false,
-        }, { onConflict: 'cliente_rfc,tipo,trabajador_nombre,fecha_alerta' });
-        if (!insAlRet) resumen.alertas_retrasos++;
-      } catch (e) {
-        resumen.errores.push(`retraso id:${t.id}: ${e?.message || e}`);
-        console.error(`deteccion-faltas retraso id:${t.id}:`, e?.message);
-      }
+      const { error } = await sb.from('alertas_laborales').upsert({
+        cliente_rfc:       t.cliente_rfc,
+        tipo:              'retraso',
+        trabajador_nombre: t.nombre,
+        trabajador_id:     t.id,
+        fecha_evento:      ayer,
+        fecha_alerta:      hoy,
+        mensaje:           `${t.nombre} llegó tarde el ${fmtFecha(ayer)}. Si desea levantar un acta de amonestación, genérela en Herramientas → Acta Administrativa y seleccione el tipo "Retardo/Atraso".`,
+        urgencia:          'media',
+        leida:             false,
+      }, { onConflict: 'cliente_rfc,tipo,trabajador_nombre,fecha_alerta' });
+      if (error) resumen.errores.push(`retraso id:${t.id}: ${error.message}`);
+      else resumen.alertas_retrasos++;
     }
 
-    console.log('deteccion-faltas resultado:', JSON.stringify(resumen));
+    if (resumen.errores.length) {
+      console.error('deteccion-faltas errores:', JSON.stringify(resumen.errores));
+      reportError('deteccion-faltas', new Error(resumen.errores.join(' | '))).catch(() => {});
+    }
+    console.log('deteccion-faltas resultado:', JSON.stringify({ ...resumen, errores: resumen.errores.length }));
     return { statusCode: 200, headers, body: JSON.stringify({ ok: true, ...resumen }) };
 
   } catch (e) {
@@ -195,25 +165,22 @@ exports.handler = async (event) => {
   }
 };
 
-// ── Backfill histórico ────────────────────────────────────────────────────────
-async function runBackfill(sb, hoy, ayer, headers) {
+// ── Backfill / reconciliación histórica ──────────────────────────────────────
+async function runBackfill(sb, hoy, ayer) {
   const resumen = {
-    modo: 'backfill',
-    hoy,
-    ayer,
-    registros_creados: 0,
-    alertas_creadas:   0,
-    trabajadores_con_faltas: 0,
+    modo: 'backfill', hoy, ayer,
+    presentes_creados: 0,
+    faltas_creadas:    0,
+    vacaciones_creadas: 0,
     errores: [],
   };
 
   try {
     const { data: trabajadores, error: tErr } = await sb
       .from('trabajadores')
-      .select('id, nombre, cliente_rfc, fecha_ingreso')
+      .select('id, nombre, cliente_rfc, fecha_ingreso, created_at')
       .eq('activo', true)
       .not('fecha_ingreso', 'is', null);
-
     if (tErr) throw tErr;
     if (!trabajadores?.length) {
       return { statusCode: 200, headers, body: JSON.stringify({ ok: true, ...resumen, nota: 'Sin trabajadores con fecha_ingreso.' }) };
@@ -221,65 +188,64 @@ async function runBackfill(sb, hoy, ayer, headers) {
 
     const ids = trabajadores.map(t => t.id);
 
-    // Cargar TODOS los registros existentes (solo trabaj_id + fecha para eficiencia)
-    const { data: existentes, error: eErr } = await sb
-      .from('asistencias')
-      .select('trabajador_id,fecha')
+    // Registros existentes (paginado para no perder filas >1000)
+    const existeSet = new Set();
+    for (let from = 0; ; from += 1000) {
+      const { data, error } = await sb.from('asistencias')
+        .select('trabajador_id,fecha')
+        .in('trabajador_id', ids)
+        .range(from, from + 999);
+      if (error) throw error;
+      (data || []).forEach(a => existeSet.add(`${a.trabajador_id}|${a.fecha}`));
+      if (!data || data.length < 1000) break;
+    }
+
+    // Vacaciones autorizadas/gozadas (todas)
+    const { data: vacs } = await sb.from('vacaciones_programadas')
+      .select('trabajador_id, fecha_inicio, fecha_fin, incluye_finde')
+      .in('estado', ['autorizada', 'gozada'])
       .in('trabajador_id', ids);
-    if (eErr) throw eErr;
+    const vacPorTrab = {};
+    (vacs || []).forEach(v => { (vacPorTrab[v.trabajador_id] ||= []).push(v); });
 
-    const existeSet = new Set((existentes || []).map(a => `${a.trabajador_id}|${a.fecha}`));
-
-    // Calcular días laborales faltantes por trabajador
-    const nuevosRegistros = [];
-    const alertasDatos = [];
-
+    const nuevos = [];
     for (const t of trabajadores) {
-      const diasFaltantes = diasLaboralesArr(t.fecha_ingreso, ayer)
-        .filter(d => !existeSet.has(`${t.id}|${d}`));
+      const alta = altaEnSistema(t);
+      const desde = t.fecha_ingreso > ayer ? null : t.fecha_ingreso;
+      if (!desde) continue;
 
-      if (!diasFaltantes.length) continue;
+      for (const dia of diasArr(desde, ayer)) {
+        if (existeSet.has(`${t.id}|${dia}`)) continue;
+        const dow = new Date(dia + 'T12:00:00Z').getUTCDay();
+        const laboral = dow >= 1 && dow <= 5;
+        const enVac = (vacPorTrab[t.id] || []).some(v =>
+          dia >= v.fecha_inicio && dia <= v.fecha_fin && (v.incluye_finde || laboral));
 
-      for (const dia of diasFaltantes) {
-        nuevosRegistros.push({
-          trabajador_id: t.id,
-          cliente_rfc:   t.cliente_rfc,
-          fecha:         dia,
-          status:        'falta_injustificada',
-          fuente:        'control_diario',
-          notas:         'Falta detectada en revisión histórica — sin registro en checador.',
-        });
+        let status, fuente, notas;
+        if (enVac) {
+          status = 'vacaciones'; fuente = 'programacion'; notas = 'Periodo de vacaciones autorizado.';
+          resumen.vacaciones_creadas++;
+        } else if (!laboral) {
+          continue; // fines de semana históricos: no se rellenan
+        } else if (dia < alta) {
+          status = 'presente'; fuente = 'sistema';
+          notas  = 'Asistencia retroactiva — anterior al alta en ClickLaboral';
+          resumen.presentes_creados++;
+        } else {
+          status = 'falta_injustificada'; fuente = 'control_diario';
+          notas  = 'Falta detectada en revisión histórica — sin registro en checador.';
+          resumen.faltas_creadas++;
+        }
+        nuevos.push({ trabajador_id: t.id, cliente_rfc: t.cliente_rfc, fecha: dia, status, fuente, notas });
       }
-
-      alertasDatos.push({
-        cliente_rfc:       t.cliente_rfc,
-        tipo:              'faltas_historicas',
-        trabajador_nombre: t.nombre,
-        fecha_alerta:      hoy,
-        mensaje:           `Revisión histórica: ${t.nombre} tiene ${diasFaltantes.length} día${diasFaltantes.length > 1 ? 's' : ''} sin registro desde su ingreso (${t.fecha_ingreso}). Verifique si las ausencias son justificadas y actualice los registros en Control de Asistencias.`,
-        urgencia:          diasFaltantes.length >= 10 ? 'alta' : diasFaltantes.length >= 3 ? 'media' : 'baja',
-        leida:             false,
-      });
     }
 
-    // Upsert en lotes de 500
-    const CHUNK = 500;
-    for (let i = 0; i < nuevosRegistros.length; i += CHUNK) {
-      const { error: upErr } = await sb.from('asistencias')
-        .upsert(nuevosRegistros.slice(i, i + CHUNK), { onConflict: 'trabajador_id,fecha' });
-      if (upErr) resumen.errores.push(`asistencias batch ${i}: ${upErr.message}`);
-      else resumen.registros_creados += Math.min(CHUNK, nuevosRegistros.length - i);
+    for (let i = 0; i < nuevos.length; i += 500) {
+      const { error } = await sb.from('asistencias')
+        .upsert(nuevos.slice(i, i + 500), { onConflict: 'trabajador_id,fecha', ignoreDuplicates: true });
+      if (error) resumen.errores.push(`batch ${i}: ${error.message}`);
     }
 
-    // Una alerta resumen por trabajador
-    for (const alerta of alertasDatos) {
-      const { error: aErr } = await sb.from('alertas_laborales')
-        .upsert(alerta, { onConflict: 'cliente_rfc,tipo,trabajador_nombre,fecha_alerta' });
-      if (aErr) resumen.errores.push(`alerta ${alerta.trabajador_nombre}: ${aErr.message}`);
-      else resumen.alertas_creadas++;
-    }
-
-    resumen.trabajadores_con_faltas = alertasDatos.length;
     console.log('deteccion-faltas backfill:', JSON.stringify(resumen));
     return { statusCode: 200, headers, body: JSON.stringify({ ok: true, ...resumen }) };
 
@@ -289,19 +255,30 @@ async function runBackfill(sb, hoy, ayer, headers) {
   }
 }
 
-function diasLaboralesArr(desde, hasta) {
+// ── Utilidades ───────────────────────────────────────────────────────────────
+
+// Fecha (CDMX) en que el trabajador fue dado de alta en ClickLaboral.
+// A partir de ese día la ausencia de registro sí es falta.
+function altaEnSistema(t) {
+  if (!t.created_at) return '1900-01-01';
+  const fmt = new Intl.DateTimeFormat('en-CA', {
+    timeZone: 'America/Mexico_City', year: 'numeric', month: '2-digit', day: '2-digit',
+  });
+  const p = {};
+  fmt.formatToParts(new Date(t.created_at)).forEach(x => { p[x.type] = x.value; });
+  return `${p.year}-${p.month}-${p.day}`;
+}
+
+function diasArr(desde, hasta) {
   const dias = [];
   const cur = new Date(desde + 'T12:00:00Z');
   const fin = new Date(hasta + 'T12:00:00Z');
   while (cur <= fin) {
-    const dow = cur.getUTCDay();
-    if (dow >= 1 && dow <= 5) dias.push(cur.toISOString().split('T')[0]);
+    dias.push(cur.toISOString().split('T')[0]);
     cur.setUTCDate(cur.getUTCDate() + 1);
   }
   return dias;
 }
-
-// ── Utilidades ───────────────────────────────────────────────────────────────
 
 function fechaMexico(offsetDias) {
   const fmt = new Intl.DateTimeFormat('en-CA', {

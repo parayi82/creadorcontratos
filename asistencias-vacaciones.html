@@ -3200,14 +3200,26 @@ async function mostrarPreviewAttlog() {
 
 function normalizarFecha(str){
   str = str.trim();
-  // intenta YYYY-MM-DD, DD/MM/YYYY o MM/DD/YYYY
+  // YYYY-MM-DD
   if (/^\d{4}-\d{2}-\d{2}/.test(str)) return str.substring(0,10);
+  // DD/MM/YYYY o DD-MM-YYYY (todo numérico)
   const m = str.match(/^(\d{1,2})[\/\-](\d{1,2})[\/\-](\d{4})$/);
   if (m) {
     let [, a, b, y] = m;
-    // Asume DD/MM/YYYY (formato mexicano) si el primer valor es >12
     if (parseInt(a) > 12) return `${y}-${b.padStart(2,'0')}-${a.padStart(2,'0')}`;
     return `${y}-${a.padStart(2,'0')}-${b.padStart(2,'0')}`;
+  }
+  // DD-mes-YY o DD-mes-YYYY (ej: 01-ago-24, 15-nov-2025)
+  const me = str.match(/^(\d{1,2})[-\/]([a-z]{3})[-\/](\d{2,4})$/i);
+  if (me) {
+    const dia = parseInt(me[1]);
+    const mesNum = {ene:1,feb:2,mar:3,abr:4,may:5,jun:6,jul:7,ago:8,sep:9,oct:10,nov:11,dic:12,
+                    jan:1,apr:4,aug:8,dec:12}[me[2].toLowerCase()];
+    if (mesNum) {
+      let anio = parseInt(me[3]);
+      if (anio < 100) anio += anio < 50 ? 2000 : 1900;
+      return `${anio}-${String(mesNum).padStart(2,'0')}-${String(dia).padStart(2,'0')}`;
+    }
   }
   return str;
 }

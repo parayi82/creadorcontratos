@@ -5,9 +5,17 @@
     <link>https://clicklaboral.mx/blog/</link>
     <description>Artículos, noticias y tips de compliance laboral para PyMEs mexicanas</description>
     <language>es-MX</language>
-    <lastBuildDate>Wed, 02 Sep 2026 17:31:46 GMT</lastBuildDate>
+    <lastBuildDate>Thu, 03 Sep 2026 17:24:27 GMT</lastBuildDate>
     <managingEditor>blog@clicklaboral.mx (ClickLaboral.mx)</managingEditor>
     <atom:link href="https://clicklaboral.mx/blog/rss.xml" rel="self" type="application/rss+xml"/>
+    <item>
+      <title>NOM-037 dos años después: qué obligaciones del teletrabajo siguen sin cumplirse en las PyMEs</title>
+      <link>https://clicklaboral.mx/blog/noticia-nom-037-dos-anos-despues-que-obligaciones-del-tele-2026-09-03.html</link>
+      <guid isPermaLink="true">https://clicklaboral.mx/blog/noticia-nom-037-dos-anos-despues-que-obligaciones-del-tele-2026-09-03.html</guid>
+      <pubDate>Thu, 03 Sep 2026 12:00:00 GMT</pubDate>
+      <category>Reforma Laboral</category>
+      <description>Dos años después de su entrada en vigor, la NOM-037-STPS-2023 sigue sin cumplirse de forma integral en la mayoría de las pequeñas y medianas empresas del país: según estimaciones de la STPS, menos del…</description>
+    </item>
     <item>
       <title>Reforma de justicia laboral: tres años de nuevos tribunales laborales, qué ha mejorado</title>
       <link>https://clicklaboral.mx/blog/noticia-reforma-de-justicia-laboral-tres-anos-de-nuevos-tr-2026-09-02.html</link>
@@ -199,14 +207,6 @@
       <pubDate>Mon, 17 Aug 2026 12:00:00 GMT</pubDate>
       <category>Jurisprudencia</category>
       <description>Un criterio jurisprudencial reciente confirma que el salario en especie no puede representar más del 50% del salario total del trabajador; si su empresa supera ese límite, incurre en incumplimiento pa…</description>
-    </item>
-    <item>
-      <title>Programa anual de capacitación: cómo elaborarlo y registrarlo ante la STPS</title>
-      <link>https://clicklaboral.mx/blog/programa-anual-de-capacitacion-como-elaborarlo-y-registrarlo-ante-la-stps-2026-08-17.html</link>
-      <guid isPermaLink="true">https://clicklaboral.mx/blog/programa-anual-de-capacitacion-como-elaborarlo-y-registrarlo-ante-la-stps-2026-08-17.html</guid>
-      <pubDate>Mon, 17 Aug 2026 12:00:00 GMT</pubDate>
-      <category>Cumplimiento</category>
-      <description>Cada año, miles de empresas mexicanas reciben multas de la STPS por un error que pudo evitarse fácilmente: no tener un programa de capacitación registrado y vigente. La Ley Federal del Trabajo obliga…</description>
     </item>
   </channel>
 </rss>

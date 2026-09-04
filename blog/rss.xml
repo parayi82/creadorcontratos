@@ -5,9 +5,17 @@
     <link>https://clicklaboral.mx/blog/</link>
     <description>Artículos, noticias y tips de compliance laboral para PyMEs mexicanas</description>
     <language>es-MX</language>
-    <lastBuildDate>Fri, 04 Sep 2026 13:23:59 GMT</lastBuildDate>
+    <lastBuildDate>Fri, 04 Sep 2026 17:17:51 GMT</lastBuildDate>
     <managingEditor>blog@clicklaboral.mx (ClickLaboral.mx)</managingEditor>
     <atom:link href="https://clicklaboral.mx/blog/rss.xml" rel="self" type="application/rss+xml"/>
+    <item>
+      <title>Trabajo híbrido y derecho laboral mexicano: qué dice la LFT y qué vacíos legales quedan</title>
+      <link>https://clicklaboral.mx/blog/noticia-trabajo-hibrido-y-derecho-laboral-mexicano-que-dic-2026-09-04.html</link>
+      <guid isPermaLink="true">https://clicklaboral.mx/blog/noticia-trabajo-hibrido-y-derecho-laboral-mexicano-que-dic-2026-09-04.html</guid>
+      <pubDate>Fri, 04 Sep 2026 12:00:00 GMT</pubDate>
+      <category>Noticias</category>
+      <description>El trabajo híbrido es ya una realidad operativa en miles de PyMEs mexicanas, pero la Ley Federal del Trabajo (LFT) solo regula de forma explícita el teletrabajo puro, dejando zonas grises que pueden c…</description>
+    </item>
     <item>
       <title>Cómo documentar un despido por causa justificada y no perder en juicio</title>
       <link>https://clicklaboral.mx/blog/como-documentar-un-despido-por-causa-justificada-y-no-perder-en-juicio-2026-09-04.html</link>
@@ -199,14 +207,6 @@
       <pubDate>Wed, 19 Aug 2026 12:00:00 GMT</pubDate>
       <category>NOMs</category>
       <description>Si su empresa tiene al menos un trabajador, está obligada a integrar una Comisión de Seguridad e Higiene. La NOM-019-STPS-2011 establece exactamente cómo hacerlo, y el incumplimiento puede traducirse…</description>
-    </item>
-    <item>
-      <title>Criterio JLCA: periodo de prueba mal documentado se considera contrato por tiempo indeterminado</title>
-      <link>https://clicklaboral.mx/blog/noticia-criterio-jlca-periodo-de-prueba-mal-documentado-se-2026-08-18.html</link>
-      <guid isPermaLink="true">https://clicklaboral.mx/blog/noticia-criterio-jlca-periodo-de-prueba-mal-documentado-se-2026-08-18.html</guid>
-      <pubDate>Tue, 18 Aug 2026 12:00:00 GMT</pubDate>
-      <category>Jurisprudencia</category>
-      <description>Un periodo de prueba sin contrato escrito y firmado antes del inicio de labores puede ser reconocido como contrato por tiempo indeterminado, según criterio sostenido por la Junta Local de Conciliación…</description>
     </item>
   </channel>
 </rss>

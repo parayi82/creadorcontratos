@@ -5,9 +5,17 @@
     <link>https://clicklaboral.mx/blog/</link>
     <description>Artículos, noticias y tips de compliance laboral para PyMEs mexicanas</description>
     <language>es-MX</language>
-    <lastBuildDate>Thu, 03 Sep 2026 17:24:27 GMT</lastBuildDate>
+    <lastBuildDate>Fri, 04 Sep 2026 13:23:59 GMT</lastBuildDate>
     <managingEditor>blog@clicklaboral.mx (ClickLaboral.mx)</managingEditor>
     <atom:link href="https://clicklaboral.mx/blog/rss.xml" rel="self" type="application/rss+xml"/>
+    <item>
+      <title>Cómo documentar un despido por causa justificada y no perder en juicio</title>
+      <link>https://clicklaboral.mx/blog/como-documentar-un-despido-por-causa-justificada-y-no-perder-en-juicio-2026-09-04.html</link>
+      <guid isPermaLink="true">https://clicklaboral.mx/blog/como-documentar-un-despido-por-causa-justificada-y-no-perder-en-juicio-2026-09-04.html</guid>
+      <pubDate>Fri, 04 Sep 2026 12:00:00 GMT</pubDate>
+      <category>Cumplimiento</category>
+      <description>Un despido mal documentado puede costarle a su empresa el equivalente a tres meses de salario más 20 días por año trabajado, más partes proporcionales, más intereses — todo por no haber seguido el pro…</description>
+    </item>
     <item>
       <title>NOM-037 dos años después: qué obligaciones del teletrabajo siguen sin cumplirse en las PyMEs</title>
       <link>https://clicklaboral.mx/blog/noticia-nom-037-dos-anos-despues-que-obligaciones-del-tele-2026-09-03.html</link>
@@ -199,14 +207,6 @@
       <pubDate>Tue, 18 Aug 2026 12:00:00 GMT</pubDate>
       <category>Jurisprudencia</category>
       <description>Un periodo de prueba sin contrato escrito y firmado antes del inicio de labores puede ser reconocido como contrato por tiempo indeterminado, según criterio sostenido por la Junta Local de Conciliación…</description>
-    </item>
-    <item>
-      <title>Tesis: el salario en especie no puede superar el 50% del salario total — si lo supera hay incumplimiento</title>
-      <link>https://clicklaboral.mx/blog/noticia-tesis-el-salario-en-especie-no-puede-superar-el-50-2026-08-17.html</link>
-      <guid isPermaLink="true">https://clicklaboral.mx/blog/noticia-tesis-el-salario-en-especie-no-puede-superar-el-50-2026-08-17.html</guid>
-      <pubDate>Mon, 17 Aug 2026 12:00:00 GMT</pubDate>
-      <category>Jurisprudencia</category>
-      <description>Un criterio jurisprudencial reciente confirma que el salario en especie no puede representar más del 50% del salario total del trabajador; si su empresa supera ese límite, incurre en incumplimiento pa…</description>
     </item>
   </channel>
 </rss>

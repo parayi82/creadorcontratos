@@ -6476,13 +6476,17 @@ function detectarColumnas(headers) {
 function normalizarHora(h) {
   if (!h) return null;
   h = String(h).trim();
-  if (!h || h === '00:00' || h === '0') return null;
+  if (!h) return null;
+  let out = null;
   // Solo número entero: 8 → "08:00", 16 → "16:00"
-  if (/^\d{1,2}$/.test(h)) return String(parseInt(h)).padStart(2,'0') + ':00';
-  // HH:MM:SS → HH:MM
-  const hms = h.match(/^(\d{1,2}):(\d{2})(?::\d{2})?$/);
-  if (hms) return hms[1].padStart(2,'0') + ':' + hms[2];
-  return null;
+  if (/^\d{1,2}$/.test(h)) out = String(parseInt(h)).padStart(2,'0') + ':00';
+  else {
+    // HH:MM o HH:MM:SS → HH:MM
+    const hms = h.match(/^(\d{1,2}):(\d{2})(?::\d{2})?$/);
+    if (hms) out = hms[1].padStart(2,'0') + ':' + hms[2];
+  }
+  // '00:00' (en cualquiera de sus formas) es el "no marcó" del checador
+  return out === '00:00' ? null : out;
 }
 
 function parseRegistroZKTeco(valores, map, lineaOriginal) {
@@ -6500,13 +6504,19 @@ function parseRegistroZKTeco(valores, map, lineaOriginal) {
     return null;
   }
 
+  // El status debe derivarse de las horas YA normalizadas: si se usan los
+  // valores crudos, un "0" o un valor ilegible da status=presente con
+  // hora_entrada=null (registro incoherente).
+  const hEnt = normalizarHora(entrada);
+  const hSal = normalizarHora(salida);
+
   return {
     nombre,
     fecha,
-    hora_entrada: normalizarHora(entrada),
-    hora_salida: normalizarHora(salida),
+    hora_entrada: hEnt,
+    hora_salida: hSal,
     notas: valores[map.notas] || '',
-    status: determinarStatusAutomatico(entrada, salida),
+    status: determinarStatusAutomatico(hEnt, hSal),
     lineaOriginal
   };
 }

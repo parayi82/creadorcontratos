@@ -33,6 +33,16 @@ async function cargarDatosCliente(rfc){
   const hoy = new Date();
   // hace30, hace7, inicioMes: ya no necesarios
 
+  // 'resuelta' llega con la migración del motor de asistencias (20260902000002).
+  // Si aún no está aplicada, se reintenta sin ese filtro: de lo contrario el
+  // portal mostraría cero alertas en silencio.
+  const qAlertas = () => sbAuth.from('alertas_laborales')
+    .select('tipo,trabajador_nombre,mensaje,urgencia,fecha_alerta')
+    .eq('cliente_rfc', rfcReal)
+    .eq('leida', false)
+    .order('fecha_alerta', { ascending: false })
+    .limit(10);
+
   const [trabRes, solRes, docsRes, asistRes, identRes, alertasRes] = await Promise.all([
     sbAuth.from('trabajadores')
       .select('id,nombre,puesto,activo,fecha_ingreso,nss')
@@ -48,13 +58,8 @@ async function cargarDatosCliente(rfc){
     sbAuth.from('documentos_identidad')
       .select('trabajador_id,tipo,nombre_archivo')
       .eq('cliente_rfc', rfcReal).limit(200),
-    sbAuth.from('alertas_laborales')
-      .select('tipo,trabajador_nombre,mensaje,urgencia,fecha_alerta')
-      .eq('cliente_rfc', rfcReal)
-      .eq('leida', false)
-      .or('resuelta.is.null,resuelta.eq.false')
-      .order('fecha_alerta', {ascending:false})
-      .limit(10),
+    qAlertas().or('resuelta.is.null,resuelta.eq.false')
+      .then(r => (r.error && /resuelta/i.test(r.error.message || '')) ? qAlertas() : r),
   ]);
 
   const trabajadores    = (trabRes.data || []);

@@ -143,15 +143,16 @@ exports.handler = async (event) => {
       }
     }
 
+    let dataInsert;
     if (accion === 'insert') {
-      // Solo 'trabajadores' tiene fecha_ingreso: pedir ese select en otras tablas
-      // rompe el insert con "column ... does not exist".
-      if (tabla === 'trabajadores') {
-        const ins = await q.insert(inyectar(payload)).select('id, fecha_ingreso, cliente_rfc');
-        error = ins.error;
-        if (!error) await insertarAsistenciasRetroactivas(sb, ins.data || []);
-      } else {
-        ({ error } = await q.insert(inyectar(payload)));
+      // select() sin columnas = '*': válido en cualquier tabla. Pedir columnas
+      // concretas (p.ej. fecha_ingreso, que solo existe en trabajadores) rompía
+      // el insert del resto de las tablas con "column ... does not exist".
+      const ins = await q.insert(inyectar(payload)).select();
+      error = ins.error;
+      dataInsert = ins.data;
+      if (!error && tabla === 'trabajadores') {
+        await insertarAsistenciasRetroactivas(sb, ins.data || []);
       }
     } else if (accion === 'upsert') {
       const opts = conflicto ? { onConflict: conflicto } : {};
@@ -170,7 +171,12 @@ exports.handler = async (event) => {
     }
 
     if (error) return { statusCode: 500, headers, body: JSON.stringify({ error: error.message }) };
-    return { statusCode: 200, headers, body: JSON.stringify({ ok: true }) };
+    // El insert devuelve la(s) fila(s) creada(s): gestor-repse las necesita para
+    // pintar el registro nuevo sin recargar la página.
+    return {
+      statusCode: 200, headers,
+      body: JSON.stringify(dataInsert !== undefined ? { ok: true, data: dataInsert } : { ok: true }),
+    };
   } catch (e) {
     console.error('mutar-datos-cliente:', e.message || e);
     return { statusCode: 500, headers, body: JSON.stringify({ error: e.message || 'Error interno.' }) };

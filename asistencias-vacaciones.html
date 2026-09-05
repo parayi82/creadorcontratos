@@ -4012,7 +4012,11 @@ async function guardarApartado(){
     alert(`✓ Periodo apartado: ${fmtFecha(ini)} → ${fmtFecha(fin)} (${fechas.length} día(s)) para ${nombreTrabajador(tid)}.`);
   }catch(e){
     const m = String(e.message||e);
-    if(/relation|does not exist|schema cache|no permitida/i.test(m)){
+    // Solo es "falta la migración" si falta la TABLA. Un error de columna
+    // significa otra cosa (p. ej. un select inválido) y no se arregla
+    // re-ejecutando el SQL.
+    const faltaTabla = /(relation|schema cache|no permitida)/i.test(m) && !/^column\b|\bcolumn\s+\S+\s+does not exist/i.test(m);
+    if(faltaTabla){
       alert('No se pudo guardar porque falta la migración en Supabase.\n\nEjecuta el archivo:\n_db/sql-vacaciones-programadas.sql\n\nDetalle: '+m);
     } else {
       alert('No se pudo guardar el periodo: '+m);

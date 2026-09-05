@@ -144,10 +144,14 @@ exports.handler = async (event) => {
     }
 
     if (accion === 'insert') {
-      const ins = await q.insert(inyectar(payload)).select('id, fecha_ingreso, cliente_rfc');
-      error = ins.error;
-      if (!error && tabla === 'trabajadores') {
-        await insertarAsistenciasRetroactivas(sb, ins.data || []);
+      // Solo 'trabajadores' tiene fecha_ingreso: pedir ese select en otras tablas
+      // rompe el insert con "column ... does not exist".
+      if (tabla === 'trabajadores') {
+        const ins = await q.insert(inyectar(payload)).select('id, fecha_ingreso, cliente_rfc');
+        error = ins.error;
+        if (!error) await insertarAsistenciasRetroactivas(sb, ins.data || []);
+      } else {
+        ({ error } = await q.insert(inyectar(payload)));
       }
     } else if (accion === 'upsert') {
       const opts = conflicto ? { onConflict: conflicto } : {};

@@ -97,26 +97,35 @@ exports.handler = async (event) => {
     // ── Acciones ──────────────────────────────────────────────────────
     switch (accion) {
 
+      // 'resuelta' llega con la migración del motor de asistencias
+      // (20260902000002). Si todavía no está aplicada, se reintenta sin ese
+      // filtro para no dejar al cliente sin alertas.
       case 'listar': {
-        const { data: alertas, error: aErr } = await sb
+        const base = () => sb
           .from('alertas_laborales')
           .select('*')
           .eq('cliente_rfc', clienteRFC)
-          .or('resuelta.is.null,resuelta.eq.false')
           .order('urgencia', { ascending: true })
           .order('fecha_alerta', { ascending: false })
           .limit(200);
+        let { data: alertas, error: aErr } = await base().or('resuelta.is.null,resuelta.eq.false');
+        if (aErr && /resuelta/i.test(aErr.message || '')) {
+          ({ data: alertas, error: aErr } = await base());
+        }
         if (aErr) return err(500, aErr.message);
         return ok({ alertas: alertas || [] });
       }
 
       case 'contar': {
-        const { count, error: cErr } = await sb
+        const base = () => sb
           .from('alertas_laborales')
           .select('*', { count: 'exact', head: true })
           .eq('cliente_rfc', clienteRFC)
-          .eq('leida', false)
-          .or('resuelta.is.null,resuelta.eq.false');
+          .eq('leida', false);
+        let { count, error: cErr } = await base().or('resuelta.is.null,resuelta.eq.false');
+        if (cErr && /resuelta/i.test(cErr.message || '')) {
+          ({ count, error: cErr } = await base());
+        }
         if (cErr) return err(500, cErr.message);
         return ok({ sin_leer: count || 0 });
       }

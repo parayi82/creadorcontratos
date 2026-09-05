@@ -5,9 +5,17 @@
     <link>https://clicklaboral.mx/blog/</link>
     <description>Artículos, noticias y tips de compliance laboral para PyMEs mexicanas</description>
     <language>es-MX</language>
-    <lastBuildDate>Fri, 04 Sep 2026 17:17:51 GMT</lastBuildDate>
+    <lastBuildDate>Sat, 05 Sep 2026 16:25:07 GMT</lastBuildDate>
     <managingEditor>blog@clicklaboral.mx (ClickLaboral.mx)</managingEditor>
     <atom:link href="https://clicklaboral.mx/blog/rss.xml" rel="self" type="application/rss+xml"/>
+    <item>
+      <title>Tip: el error más común al calcular la prima dominical y cómo evitarlo</title>
+      <link>https://clicklaboral.mx/blog/noticia-tip-el-error-mas-comun-al-calcular-la-prima-domini-2026-09-05.html</link>
+      <guid isPermaLink="true">https://clicklaboral.mx/blog/noticia-tip-el-error-mas-comun-al-calcular-la-prima-domini-2026-09-05.html</guid>
+      <pubDate>Sat, 05 Sep 2026 12:00:00 GMT</pubDate>
+      <category>Tip RH</category>
+      <description>Pagar el 25 % sobre el salario ordinario cuando el trabajador laboró en domingo parece sencillo, pero el error más frecuente en las PyMEs es aplicar ese porcentaje sobre el salario base tabular y omit…</description>
+    </item>
     <item>
       <title>Trabajo híbrido y derecho laboral mexicano: qué dice la LFT y qué vacíos legales quedan</title>
       <link>https://clicklaboral.mx/blog/noticia-trabajo-hibrido-y-derecho-laboral-mexicano-que-dic-2026-09-04.html</link>
@@ -199,14 +207,6 @@
       <pubDate>Wed, 19 Aug 2026 12:00:00 GMT</pubDate>
       <category>Tip RH</category>
       <description>Documente cada hora extra desde el primer día: sin registro firmado, cualquier trabajador puede demandar hasta tres años de horas adicionales no pagadas y la empresa difícilmente podrá desvirtuar esa…</description>
-    </item>
-    <item>
-      <title>NOM-019-STPS: Comisiones de Seguridad e Higiene paso a paso</title>
-      <link>https://clicklaboral.mx/blog/nom-019-stps-comisiones-de-seguridad-e-higiene-paso-a-paso-2026-08-19.html</link>
-      <guid isPermaLink="true">https://clicklaboral.mx/blog/nom-019-stps-comisiones-de-seguridad-e-higiene-paso-a-paso-2026-08-19.html</guid>
-      <pubDate>Wed, 19 Aug 2026 12:00:00 GMT</pubDate>
-      <category>NOMs</category>
-      <description>Si su empresa tiene al menos un trabajador, está obligada a integrar una Comisión de Seguridad e Higiene. La NOM-019-STPS-2011 establece exactamente cómo hacerlo, y el incumplimiento puede traducirse…</description>
     </item>
   </channel>
 </rss>

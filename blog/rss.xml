@@ -5,9 +5,17 @@
     <link>https://clicklaboral.mx/blog/</link>
     <description>Artículos, noticias y tips de compliance laboral para PyMEs mexicanas</description>
     <language>es-MX</language>
-    <lastBuildDate>Mon, 07 Sep 2026 18:30:55 GMT</lastBuildDate>
+    <lastBuildDate>Tue, 08 Sep 2026 17:41:31 GMT</lastBuildDate>
     <managingEditor>blog@clicklaboral.mx (ClickLaboral.mx)</managingEditor>
     <atom:link href="https://clicklaboral.mx/blog/rss.xml" rel="self" type="application/rss+xml"/>
+    <item>
+      <title>Reforma 40 horas: el calendario exacto de reducción gradual 2026-2030 y cómo prepararse</title>
+      <link>https://clicklaboral.mx/blog/noticia-reforma-40-horas-el-calendario-exacto-de-reduccion-2026-09-08.html</link>
+      <guid isPermaLink="true">https://clicklaboral.mx/blog/noticia-reforma-40-horas-el-calendario-exacto-de-reduccion-2026-09-08.html</guid>
+      <pubDate>Tue, 08 Sep 2026 12:00:00 GMT</pubDate>
+      <category>Reforma Laboral</category>
+      <description>A partir del 1 de enero de 2026, la jornada laboral máxima en México comenzará a reducirse de forma gradual hasta alcanzar las 40 horas semanales en 2030, conforme al decreto de reforma al artículo 61…</description>
+    </item>
     <item>
       <title>Tip: las 3 razones por las que el patrón pierde en juicio aunque el trabajador haya renunciado</title>
       <link>https://clicklaboral.mx/blog/noticia-tip-las-3-razones-por-las-que-el-patron-pierde-en--2026-09-07.html</link>
@@ -199,14 +207,6 @@
       <pubDate>Sat, 22 Aug 2026 12:00:00 GMT</pubDate>
       <category>Noticias</category>
       <description>La Secretaría del Trabajo y Previsión Social (STPS) habilitó una versión actualizada de su plataforma digital para que los patrones generen su Reglamento Interior de Trabajo (RIT) en línea, sin necesi…</description>
-    </item>
-    <item>
-      <title>Alerta: en 2026 la jornada máxima baja a 46 horas semanales — ¿ya ajustó su nómina?</title>
-      <link>https://clicklaboral.mx/blog/noticia-alerta-en-2026-la-jornada-maxima-baja-a-46-horas-s-2026-08-21.html</link>
-      <guid isPermaLink="true">https://clicklaboral.mx/blog/noticia-alerta-en-2026-la-jornada-maxima-baja-a-46-horas-s-2026-08-21.html</guid>
-      <pubDate>Fri, 21 Aug 2026 12:00:00 GMT</pubDate>
-      <category>Alerta Legal</category>
-      <description>A partir del 1 de enero de 2026, la jornada laboral máxima en México se reducirá de 48 a 46 horas semanales, conforme a la segunda etapa de la reforma al artículo 61 de la Ley Federal del Trabajo. Si…</description>
     </item>
   </channel>
 </rss>

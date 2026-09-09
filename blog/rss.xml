@@ -5,9 +5,17 @@
     <link>https://clicklaboral.mx/blog/</link>
     <description>Artículos, noticias y tips de compliance laboral para PyMEs mexicanas</description>
     <language>es-MX</language>
-    <lastBuildDate>Tue, 08 Sep 2026 17:41:31 GMT</lastBuildDate>
+    <lastBuildDate>Wed, 09 Sep 2026 13:38:52 GMT</lastBuildDate>
     <managingEditor>blog@clicklaboral.mx (ClickLaboral.mx)</managingEditor>
     <atom:link href="https://clicklaboral.mx/blog/rss.xml" rel="self" type="application/rss+xml"/>
+    <item>
+      <title>Prima dominical y días de descanso obligatorio en México</title>
+      <link>https://clicklaboral.mx/blog/prima-dominical-y-dias-de-descanso-obligatorio-en-mexico-2026-09-09.html</link>
+      <guid isPermaLink="true">https://clicklaboral.mx/blog/prima-dominical-y-dias-de-descanso-obligatorio-en-mexico-2026-09-09.html</guid>
+      <pubDate>Wed, 09 Sep 2026 12:00:00 GMT</pubDate>
+      <category>Prestaciones</category>
+      <description>Trabajar en domingo o en un día de descanso obligatorio tiene un costo legal específico que muchos patrones en México desconocen o aplican de forma incorrecta. La prima dominical y las reglas sobre dí…</description>
+    </item>
     <item>
       <title>Reforma 40 horas: el calendario exacto de reducción gradual 2026-2030 y cómo prepararse</title>
       <link>https://clicklaboral.mx/blog/noticia-reforma-40-horas-el-calendario-exacto-de-reduccion-2026-09-08.html</link>
@@ -199,14 +207,6 @@
       <pubDate>Sun, 23 Aug 2026 12:00:00 GMT</pubDate>
       <category>Tip RH</category>
       <description>Antes de iniciar una entrevista de trabajo, defina con claridad qué información es legítima para evaluar al candidato y cuál está prohibida por la Ley Federal de Protección de Datos Personales en Pose…</description>
-    </item>
-    <item>
-      <title>STPS actualiza plataforma digital para que PyMEs generen su reglamento interior en línea</title>
-      <link>https://clicklaboral.mx/blog/noticia-stps-actualiza-plataforma-digital-para-que-pymes-g-2026-08-22.html</link>
-      <guid isPermaLink="true">https://clicklaboral.mx/blog/noticia-stps-actualiza-plataforma-digital-para-que-pymes-g-2026-08-22.html</guid>
-      <pubDate>Sat, 22 Aug 2026 12:00:00 GMT</pubDate>
-      <category>Noticias</category>
-      <description>La Secretaría del Trabajo y Previsión Social (STPS) habilitó una versión actualizada de su plataforma digital para que los patrones generen su Reglamento Interior de Trabajo (RIT) en línea, sin necesi…</description>
     </item>
   </channel>
 </rss>

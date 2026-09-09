@@ -5,9 +5,17 @@
     <link>https://clicklaboral.mx/blog/</link>
     <description>Artículos, noticias y tips de compliance laboral para PyMEs mexicanas</description>
     <language>es-MX</language>
-    <lastBuildDate>Wed, 09 Sep 2026 13:38:52 GMT</lastBuildDate>
+    <lastBuildDate>Wed, 09 Sep 2026 17:27:07 GMT</lastBuildDate>
     <managingEditor>blog@clicklaboral.mx (ClickLaboral.mx)</managingEditor>
     <atom:link href="https://clicklaboral.mx/blog/rss.xml" rel="self" type="application/rss+xml"/>
+    <item>
+      <title>Tip: cómo entregar el CFDI de nómina al trabajador — obligaciones y plazos</title>
+      <link>https://clicklaboral.mx/blog/noticia-tip-como-entregar-el-cfdi-de-nomina-al-trabajador--2026-09-09.html</link>
+      <guid isPermaLink="true">https://clicklaboral.mx/blog/noticia-tip-como-entregar-el-cfdi-de-nomina-al-trabajador--2026-09-09.html</guid>
+      <pubDate>Wed, 09 Sep 2026 12:00:00 GMT</pubDate>
+      <category>Tip RH</category>
+      <description>El patrón tiene un plazo máximo de tres días hábiles después de realizado el pago para entregar el CFDI de nómina al trabajador, conforme al artículo 101 de la Ley Federal del Trabajo y las reglas del…</description>
+    </item>
     <item>
       <title>Prima dominical y días de descanso obligatorio en México</title>
       <link>https://clicklaboral.mx/blog/prima-dominical-y-dias-de-descanso-obligatorio-en-mexico-2026-09-09.html</link>
@@ -199,14 +207,6 @@
       <pubDate>Mon, 24 Aug 2026 12:00:00 GMT</pubDate>
       <category>NOMs</category>
       <description>Si su empresa tiene más de 16 trabajadores, la NOM-035-STPS no es opcional: es una obligación legal vigente con consecuencias reales ante una inspección de la STPS. Esta guía práctica le explica qué d…</description>
-    </item>
-    <item>
-      <title>Tip: qué preguntar y qué no en una entrevista de trabajo para no violar la LFPED</title>
-      <link>https://clicklaboral.mx/blog/noticia-tip-que-preguntar-y-que-no-en-una-entrevista-de-tr-2026-08-23.html</link>
-      <guid isPermaLink="true">https://clicklaboral.mx/blog/noticia-tip-que-preguntar-y-que-no-en-una-entrevista-de-tr-2026-08-23.html</guid>
-      <pubDate>Sun, 23 Aug 2026 12:00:00 GMT</pubDate>
-      <category>Tip RH</category>
-      <description>Antes de iniciar una entrevista de trabajo, defina con claridad qué información es legítima para evaluar al candidato y cuál está prohibida por la Ley Federal de Protección de Datos Personales en Pose…</description>
     </item>
   </channel>
 </rss>

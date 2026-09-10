@@ -5,9 +5,17 @@
     <link>https://clicklaboral.mx/blog/</link>
     <description>Artículos, noticias y tips de compliance laboral para PyMEs mexicanas</description>
     <language>es-MX</language>
-    <lastBuildDate>Wed, 09 Sep 2026 17:27:07 GMT</lastBuildDate>
+    <lastBuildDate>Thu, 10 Sep 2026 17:24:53 GMT</lastBuildDate>
     <managingEditor>blog@clicklaboral.mx (ClickLaboral.mx)</managingEditor>
     <atom:link href="https://clicklaboral.mx/blog/rss.xml" rel="self" type="application/rss+xml"/>
+    <item>
+      <title>Alerta: retener documentos del trabajador al terminar la relación laboral es un delito en México</title>
+      <link>https://clicklaboral.mx/blog/noticia-alerta-retener-documentos-del-trabajador-al-termin-2026-09-10.html</link>
+      <guid isPermaLink="true">https://clicklaboral.mx/blog/noticia-alerta-retener-documentos-del-trabajador-al-termin-2026-09-10.html</guid>
+      <pubDate>Thu, 10 Sep 2026 12:00:00 GMT</pubDate>
+      <category>Alerta Legal</category>
+      <description>Retener la cartilla del IMSS, el INE, títulos profesionales u otros documentos personales de un trabajador al concluir la relación laboral constituye un delito federal en México, sancionado con pena d…</description>
+    </item>
     <item>
       <title>Tip: cómo entregar el CFDI de nómina al trabajador — obligaciones y plazos</title>
       <link>https://clicklaboral.mx/blog/noticia-tip-como-entregar-el-cfdi-de-nomina-al-trabajador--2026-09-09.html</link>
@@ -199,14 +207,6 @@
       <pubDate>Mon, 24 Aug 2026 12:00:00 GMT</pubDate>
       <category>Jurisprudencia</category>
       <description>Un criterio judicial reconoce que el patrón puede presumir abandono de empleo cuando el trabajador acumula más de tres días consecutivos de ausencia injustificada, lo que abre la puerta a dar por term…</description>
-    </item>
-    <item>
-      <title>NOM-035-STPS: guía práctica para centros de trabajo con más de 16 empleados</title>
-      <link>https://clicklaboral.mx/blog/nom-035-stps-guia-practica-para-centros-de-trabajo-con-mas-de-16-empleados-2026-08-24.html</link>
-      <guid isPermaLink="true">https://clicklaboral.mx/blog/nom-035-stps-guia-practica-para-centros-de-trabajo-con-mas-de-16-empleados-2026-08-24.html</guid>
-      <pubDate>Mon, 24 Aug 2026 12:00:00 GMT</pubDate>
-      <category>NOMs</category>
-      <description>Si su empresa tiene más de 16 trabajadores, la NOM-035-STPS no es opcional: es una obligación legal vigente con consecuencias reales ante una inspección de la STPS. Esta guía práctica le explica qué d…</description>
     </item>
   </channel>
 </rss>

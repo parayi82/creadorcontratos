@@ -619,7 +619,7 @@ function updateBlogIndex(posts) {
 
   html = html.replace(
     /(<div class="bl-grid" id="bl-grid">)([\s\S]*?)(<\/div>\s*<p id="bl-no-posts")/,
-    `$1\n${cards}\n\n  $3`
+    (_m, g1, _g2, g3) => `${g1}\n${cards}\n\n  ${g3}`
   );
 
   fs.writeFileSync(file, html);

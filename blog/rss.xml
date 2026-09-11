@@ -5,9 +5,17 @@
     <link>https://clicklaboral.mx/blog/</link>
     <description>Artículos, noticias y tips de compliance laboral para PyMEs mexicanas</description>
     <language>es-MX</language>
-    <lastBuildDate>Fri, 11 Sep 2026 13:28:21 GMT</lastBuildDate>
+    <lastBuildDate>Fri, 11 Sep 2026 17:26:19 GMT</lastBuildDate>
     <managingEditor>blog@clicklaboral.mx (ClickLaboral.mx)</managingEditor>
     <atom:link href="https://clicklaboral.mx/blog/rss.xml" rel="self" type="application/rss+xml"/>
+    <item>
+      <title>Criterio: el correo corporativo enviado desde dispositivo de empresa es propiedad del patrón</title>
+      <link>https://clicklaboral.mx/blog/noticia-criterio-el-correo-corporativo-enviado-desde-dispo-2026-09-11.html</link>
+      <guid isPermaLink="true">https://clicklaboral.mx/blog/noticia-criterio-el-correo-corporativo-enviado-desde-dispo-2026-09-11.html</guid>
+      <pubDate>Fri, 11 Sep 2026 12:00:00 GMT</pubDate>
+      <category>Jurisprudencia</category>
+      <description>Los tribunales laborales han establecido que los correos electrónicos enviados desde una cuenta corporativa y mediante un dispositivo propiedad de la empresa constituyen evidencia lícita que el patrón…</description>
+    </item>
     <item>
       <title>Control de asistencia: qué formatos acepta la STPS y cómo implementarlo</title>
       <link>https://clicklaboral.mx/blog/control-de-asistencia-que-formatos-acepta-la-stps-y-como-implementarlo-2026-09-11.html</link>
@@ -199,14 +207,6 @@
       <pubDate>Wed, 02 Sep 2026 12:00:00 GMT</pubDate>
       <category>Reforma Laboral</category>
       <description>A tres años de la entrada en vigor de la reforma laboral de 2021, los nuevos Centros de Conciliación y los Tribunales Laborales federales y locales han procesado más de 500,000 asuntos en todo el país…</description>
-    </item>
-    <item>
-      <title>Contrato colectivo de trabajo: qué es, cuándo aplica y cómo negociarlo</title>
-      <link>https://clicklaboral.mx/blog/contrato-colectivo-de-trabajo-que-es-cuando-aplica-y-como-negociarlo-2026-09-02.html</link>
-      <guid isPermaLink="true">https://clicklaboral.mx/blog/contrato-colectivo-de-trabajo-que-es-cuando-aplica-y-como-negociarlo-2026-09-02.html</guid>
-      <pubDate>Wed, 02 Sep 2026 12:00:00 GMT</pubDate>
-      <category>Contratos</category>
-      <description>Si su empresa tiene sindicato o está en proceso de sindicalización, el contrato colectivo de trabajo no es opcional: es la columna vertebral de la relación laboral con su plantilla. Ignorarlo o negoci…</description>
     </item>
   </channel>
 </rss>

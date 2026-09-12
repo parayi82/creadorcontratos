@@ -6070,19 +6070,28 @@ async function exportarExpedienteIndividual() {
     ];
 
     // ── Sección 2: Detalle de asistencias día a día ──
+    // Incluye el sello de tiempo del servidor y la geolocalización capturados por
+    // el checador digital (independientes del reloj del dispositivo del trabajador)
+    // como evidencia adicional de mayor fuerza probatoria ante la STPS o un tribunal.
     const filasAsist = [
-      ['DETALLE DE ASISTENCIAS DÍA A DÍA', '', '', '', '', ''],
-      ['Fecha', 'Día', 'Status', 'Hora Entrada', 'Hora Salida', 'Fuente', 'Notas'],
+      ['DETALLE DE ASISTENCIAS DÍA A DÍA', '', '', '', '', '', '', '', ''],
+      ['Fecha', 'Día', 'Status', 'Hora Entrada', 'Hora Salida', 'Fuente', 'Sello de servidor', 'Geolocalización', 'Notas'],
     ];
     for (const dia of (rep.dias || [])) {
       const r = regs[dia] || { status: 'sin_registro' };
       const dow = new Date(dia + 'T12:00:00Z').toLocaleDateString('es-MX', { weekday: 'long', timeZone: 'America/Mexico_City' });
+      const selloServidor = r.registrado_ts
+        ? new Date(r.registrado_ts).toLocaleString('es-MX', { timeZone: 'America/Mexico_City' })
+        : '';
+      const geo = (r.geo_lat != null && r.geo_lng != null) ? `${r.geo_lat}, ${r.geo_lng}` : '';
       filasAsist.push([
         dia, dow,
         STATUS_LABELS[r.status] || r.status,
         r.hora_entrada || '',
         r.hora_salida  || '',
         r.fuente       || '',
+        selloServidor,
+        geo,
         r.notas        || '',
       ]);
     }

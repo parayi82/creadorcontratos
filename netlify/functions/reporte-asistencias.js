@@ -12,7 +12,7 @@
 //   trabajadores: [{ id, nombre, puesto, hora_entrada_habitual, hora_salida_habitual }]
 //   dias: ['YYYY-MM-DD', ...]
 //   dias_laborales: ['YYYY-MM-DD', ...]   ← lunes a viernes
-//   registros: { [trabajador_id]: { [fecha]: { status, hora_entrada, hora_salida, notas, fuente } } }
+//   registros: { [trabajador_id]: { [fecha]: { status, hora_entrada, hora_salida, notas, fuente, registrado_ts, geo_lat, geo_lng } } }
 //   resumen: [{ trabajador_id, nombre, presentes, retrasos, faltas_injustificadas, ... pct_asistencia }]
 //   meta_nom: { generado_en, periodo_desde, periodo_hasta, articulo_804_lft, ... }
 // }
@@ -114,7 +114,7 @@ exports.handler = async (event) => {
     // ── 2. Registros de asistencia en el rango ────────────────────────────────
     const trabIds = trabajadores.map(t => t.id);
     const { data: asistencias, error: aErr } = await sb.from('asistencias')
-      .select('trabajador_id,fecha,status,hora_entrada,hora_salida,notas,fuente')
+      .select('trabajador_id,fecha,status,hora_entrada,hora_salida,notas,fuente,registrado_ts,geo_lat,geo_lng')
       .eq('cliente_rfc', clienteRFC)
       .gte('fecha', desde).lte('fecha', hasta)
       .in('trabajador_id', trabIds);
@@ -126,11 +126,17 @@ exports.handler = async (event) => {
     for (const a of (asistencias || [])) {
       if (regMap[a.trabajador_id]) {
         regMap[a.trabajador_id][a.fecha] = {
-          status:       a.status,
-          hora_entrada: a.hora_entrada,
-          hora_salida:  a.hora_salida,
-          notas:        a.notas,
-          fuente:       a.fuente,
+          status:        a.status,
+          hora_entrada:  a.hora_entrada,
+          hora_salida:   a.hora_salida,
+          notas:         a.notas,
+          fuente:        a.fuente,
+          // Sello de tiempo del servidor (no depende del reloj del dispositivo) y
+          // geolocalización capturados por el checador digital — evidencia de mayor
+          // fuerza probatoria que hora_entrada/hora_salida ante la STPS o un tribunal.
+          registrado_ts: a.registrado_ts,
+          geo_lat:       a.geo_lat,
+          geo_lng:       a.geo_lng,
         };
       }
     }

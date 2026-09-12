@@ -270,7 +270,7 @@ async function generateContent(topic, categoria) {
     messages: [{ role: 'user', content: buildPrompt(topic, categoria) }],
   });
 
-  return response.content[0].text.trim();
+  return stripCodeFences(response.content[0].text.trim());
 }
 
 async function generateNews(topic, categoria) {
@@ -287,7 +287,13 @@ async function generateNews(topic, categoria) {
     messages: [{ role: 'user', content: buildNewsPrompt(topic, categoria) }],
   });
 
-  return response.content[0].text.trim();
+  return stripCodeFences(response.content[0].text.trim());
+}
+
+// Claude a veces envuelve el HTML en una cerca de código markdown (```html ... ```)
+// aunque el prompt pida "sin markdown" — esto la retira si aparece al inicio/final.
+function stripCodeFences(text) {
+  return text.replace(/^```(?:html)?\s*\n?/i, '').replace(/\n?```\s*$/, '').trim();
 }
 
 // ── Estimate reading time ──────────────────────────────────────────────────

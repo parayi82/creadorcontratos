@@ -17,6 +17,9 @@ dist/
 .netlify/
 .cache/
 
+# ── Graphify (grafo de conocimiento generado localmente) ───────────
+graphify-out/
+
 # ── Backups y dumps de base de datos ─────────────────────────────
 # CRÍTICO: nunca subir backups de Supabase/Postgres — contienen datos reales de clientes
 *.sql.bak

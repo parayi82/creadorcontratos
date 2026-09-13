@@ -45,6 +45,7 @@ body{font-family:var(--font);background:var(--surface);color:var(--ink);display:
 .st-retraso{background:#fef3c7;color:#d97706;}
 .st-completo{background:#e0e7ff;color:#4338ca;}
 .st-descanso{background:#f3e8ff;color:#7c3aed;}
+.st-festivo{background:#eeede8;color:#57534e;}
 
 .empty,.gate{text-align:center;padding:60px 24px;color:var(--ink3);}
 .gate h2{font-size:18px;color:var(--navy);margin:14px 0 8px;}
@@ -314,9 +315,36 @@ function esDiaDescansoHoy(t){
   return dow === 0 || dow === 6;
 }
 
+// Días de descanso obligatorio — Art. 74 LFT (fracciones I-VIII). No incluye la
+// fracción IX (jornada electoral), que se determina caso por caso.
+function feriadosObligatoriosMx(year){
+  const pad = n => String(n).padStart(2, '0');
+  const fmt = (y, m, d) => `${y}-${pad(m)}-${pad(d)}`;
+  const nEsimoDiaSemana = (y, mes, diaSemana, n) => {
+    const d = new Date(y, mes - 1, 1);
+    let cuenta = 0;
+    while (d.getMonth() === mes - 1) {
+      if (d.getDay() === diaSemana) { cuenta++; if (cuenta === n) return fmt(d.getFullYear(), d.getMonth()+1, d.getDate()); }
+      d.setDate(d.getDate() + 1);
+    }
+    return null;
+  };
+  const dias = [
+    fmt(year,1,1), nEsimoDiaSemana(year,2,1,1), nEsimoDiaSemana(year,3,1,3),
+    fmt(year,5,1), fmt(year,9,16), nEsimoDiaSemana(year,11,1,3), fmt(year,12,25),
+  ];
+  if (year >= 2024 && (year - 2024) % 6 === 0) dias.push(fmt(year,10,1));
+  return dias.filter(Boolean);
+}
+function esFeriadoHoy(){
+  const hoy = hoyISO();
+  return feriadosObligatoriosMx(parseInt(hoy.slice(0,4),10)).includes(hoy);
+}
+
 function estadoTrabajador(t){
   const r = registrosHoy[t.id];
   if(!r || !r.hora_entrada){
+    if (esFeriadoHoy()) return { clave:'festivo', label:'🎉 Festivo hoy', css:'st-festivo' };
     if (esDiaDescansoHoy(t)) return { clave:'descanso', label:'😴 Descanso hoy', css:'st-descanso' };
     return { clave:'pendiente', label:'Sin registrar', css:'st-pendiente' };
   }
@@ -366,6 +394,10 @@ function abrirAccion(id){
   if(e.clave==='pendiente'){
     document.getElementById('m-ico').textContent = '🌅';
     botones.innerHTML = `<button class="btn btn-entrada" onclick="registrar('entrada')">Registrar ENTRADA</button>`;
+  } else if(e.clave==='festivo'){
+    document.getElementById('m-ico').textContent = '🎉';
+    document.getElementById('m-sub').textContent = 'Hoy es un día de descanso obligatorio (Art. 74 LFT). Si de todas formas trabajó, puede registrar su entrada.';
+    botones.innerHTML = `<button class="btn btn-entrada" onclick="registrar('entrada')">Registrar ENTRADA de todas formas</button>`;
   } else if(e.clave==='descanso'){
     document.getElementById('m-ico').textContent = '😴';
     document.getElementById('m-sub').textContent = 'Hoy es su día de descanso configurado. Si de todas formas trabajó, puede registrar su entrada.';

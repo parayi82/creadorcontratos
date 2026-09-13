@@ -102,6 +102,7 @@ header a:hover{color:#fff;}
 .celda-falta-justificada{background:#f3f4f6;color:#4b5563;}
 .celda-sin-registro{background:#fee2e2;color:#dc2626;font-weight:600;font-style:normal;}
 .celda-descanso{background:#e0e7ff;color:#4338ca;font-weight:600;}
+.celda-festivo{background:#eeede8;color:#57534e;font-weight:600;}
 .celda-finde{background:#fafafa;color:#ccc;}
 /* ── Apartado / programación de vacaciones (v15) ── */
 .celda-vac-solicitada{background:repeating-linear-gradient(45deg,#fff7ed,#fff7ed 3px,#fed7aa 3px,#fed7aa 6px);color:#9a3412;font-weight:800;}
@@ -170,6 +171,8 @@ body.modo-apartar .tablero-tabla tbody td:hover{outline:1px solid #f97316;outlin
 .cal-day.s-permiso{background:var(--teal-bg);}
 .cal-day.s-incapacidad{background:#fee2e2;}
 .cal-day.s-festivo{background:var(--surface2);}
+.cal-day.s-festivo .num{color:#57534e;}
+.cal-day.s-festivo .sin-reg-lbl{position:absolute;bottom:4px;left:3px;right:3px;font-size:8px;color:#57534e;font-weight:700;text-align:center;line-height:1.1;}
 .cal-day.s-sin_registro{background:#fee2e2;border-color:#fca5a5;}
 .cal-day.s-sin_registro .num{color:#dc2626;}
 .cal-day.s-sin_registro .sin-reg-lbl{position:absolute;bottom:4px;left:3px;right:3px;font-size:8px;color:#dc2626;font-weight:700;text-align:center;line-height:1.1;}
@@ -2063,13 +2066,55 @@ function esDiaDescanso(trabajador, dow) {
   return dow === 0 || dow === 6;
 }
 
-// Rellena el mes visible de un trabajador con dos tipos de días virtuales
+// Días de descanso obligatorio — Art. 74 LFT (fracciones I-VIII). No incluye la
+// fracción IX (jornada electoral): esa fecha la determina el INE o el organismo
+// electoral local caso por caso y no sigue una fórmula fija; márquela manualmente
+// como "Día festivo" desde el calendario cuando aplique.
+// A diferencia de calendarios genéricos tipo banking-holiday, la LFT NO recorre
+// estos días al viernes/lunes más cercano cuando caen en fin de semana.
+function feriadosObligatoriosMx(year) {
+  const pad = n => String(n).padStart(2, '0');
+  const fmt = (y, m, d) => `${y}-${pad(m)}-${pad(d)}`;
+  const nEsimoDiaSemana = (y, mes, diaSemana, n) => {
+    const d = new Date(y, mes - 1, 1);
+    let cuenta = 0;
+    while (d.getMonth() === mes - 1) {
+      if (d.getDay() === diaSemana) {
+        cuenta++;
+        if (cuenta === n) return fmt(d.getFullYear(), d.getMonth() + 1, d.getDate());
+      }
+      d.setDate(d.getDate() + 1);
+    }
+    return null;
+  };
+  const dias = [
+    fmt(year, 1, 1),                  // I.   Año nuevo
+    nEsimoDiaSemana(year, 2, 1, 1),    // II.  Primer lunes de febrero (Día de la Constitución)
+    nEsimoDiaSemana(year, 3, 1, 3),    // III. Tercer lunes de marzo (Natalicio de Benito Juárez)
+    fmt(year, 5, 1),                  // IV.  Día del Trabajo
+    fmt(year, 9, 16),                 // V.   Día de la Independencia
+    nEsimoDiaSemana(year, 11, 1, 3),   // VI.  Tercer lunes de noviembre (Día de la Revolución)
+    fmt(year, 12, 25),                // VIII. Navidad
+  ];
+  // VII. Transmisión del Poder Ejecutivo Federal — 1 de octubre cada 6 años desde 2024
+  if (year >= 2024 && (year - 2024) % 6 === 0) dias.push(fmt(year, 10, 1));
+  return dias.filter(Boolean);
+}
+const _feriadosCacheHtml = {};
+function esDiaFeriado(fechaStr) {
+  const year = parseInt(fechaStr.slice(0, 4), 10);
+  if (!_feriadosCacheHtml[year]) _feriadosCacheHtml[year] = feriadosObligatoriosMx(year);
+  return _feriadosCacheHtml[year].includes(fechaStr);
+}
+
+// Rellena el mes visible de un trabajador con tres tipos de días virtuales
 // (no guardados en BD, solo para pintar el calendario):
-//   - 'descanso': cualquier día del mes (pasado o futuro) que caiga en su
-//     día de descanso configurado — igual que las vacaciones, se conoce de
-//     antemano y no depende de si ya pasó o no.
-//   - 'sin_registro': días laborables (no de descanso) ya transcurridos sin
-//     ningún movimiento en el checador — posible falta sin resolver.
+//   - 'festivo': día de descanso obligatorio (Art. 74 LFT) — todo el mes,
+//     pasado o futuro, se conoce de antemano.
+//   - 'descanso': cualquier día del mes que caiga en su día de descanso
+//     configurado — igual que las vacaciones, se conoce de antemano.
+//   - 'sin_registro': días laborables (ni festivo ni descanso) ya
+//     transcurridos sin ningún movimiento en el checador — posible falta.
 function detectarFaltasSinRegistro(trabajador) {
   const virtual = {};
   if (!trabajador?.fecha_ingreso) return virtual;
@@ -2084,6 +2129,10 @@ function detectarFaltasSinRegistro(trabajador) {
     const dow = fecha.getDay();
     if (fecha < ingreso) continue;           // antes del ingreso
     if (asistenciasMes[fechaStr]) continue;  // ya tiene registro real
+    if (esDiaFeriado(fechaStr)) {
+      virtual[fechaStr] = { fecha: fechaStr, status: 'festivo', virtual: true };
+      continue;
+    }
     if (esDiaDescanso(trabajador, dow)) {
       virtual[fechaStr] = { fecha: fechaStr, status: 'descanso', virtual: true };
       continue;
@@ -2204,9 +2253,10 @@ async function renderAlertaArt47() {
 
   for (let d = new Date(inicioComputo); d <= ayer; d.setDate(d.getDate() + 1)) {
     const dow = d.getDay();
-    if (esDiaDescanso(trabajadorActual, dow)) continue; // día de descanso del trabajador
-    diasLaborablesAnio++;
     const fstr = d.toISOString().split('T')[0];
+    if (esDiaFeriado(fstr)) continue;                    // día de descanso obligatorio (Art. 74 LFT)
+    if (esDiaDescanso(trabajadorActual, dow)) continue;   // día de descanso del trabajador
+    diasLaborablesAnio++;
     const st = regMapAnio[fstr];
     if (!st) {
       sinRegAnio++;
@@ -2292,7 +2342,8 @@ function renderCalendario(){
     const claseStatus = reg ? `s-${reg.status}` : (virt ? `s-${virt.status}` : '');
     const badge = (acta && acta.estado==='provisional') ? '<div class="acta-badge" title="Acta pendiente de resolver"></div>' : '';
     const sinRegLbl = virt?.status==='sin_registro' ? '<div class="sin-reg-lbl">Sin<br>registro</div>'
-                     : virt?.status==='descanso'    ? '<div class="sin-reg-lbl">Descanso</div>' : '';
+                     : virt?.status==='descanso'    ? '<div class="sin-reg-lbl">Descanso</div>'
+                     : virt?.status==='festivo'     ? '<div class="sin-reg-lbl">Festivo</div>' : '';
     const esHoy = fechaStr === hoyStr ? ' style="border-width:2px;border-color:var(--navy2);"' : '';
     html += `<div class="cal-day ${claseStatus}" onclick="abrirModalDia('${fechaStr}')"${esHoy}>
       <div class="num">${d}</div>${badge}${sinRegLbl}
@@ -3550,8 +3601,9 @@ async function renderTablero(){
     vacaciones:'celda-vacaciones', permiso:'celda-permiso', retraso:'celda-retraso',
     falta_injustificada:'celda-falta-injustificada', falta_justificada:'celda-falta-justificada',
     incapacidad:'celda-incapacidad', sin_registro:'celda-sin-registro', descanso:'celda-descanso',
+    festivo:'celda-festivo',
   };
-  const ICONO_STATUS={vacaciones:'V',permiso:'P',falta_injustificada:'FI',falta_justificada:'FJ',incapacidad:'INC',retraso:'RT',sin_registro:'—',descanso:'D'};
+  const ICONO_STATUS={vacaciones:'V',permiso:'P',falta_injustificada:'FI',falta_justificada:'FJ',incapacidad:'INC',retraso:'RT',sin_registro:'—',descanso:'D',festivo:'FES'};
 
   const dias=[];
   for(let m=0;m<12;m++){
@@ -3594,6 +3646,10 @@ async function renderTablero(){
           totApart++;
           const aut=p.estado==='autorizada';
           return `<td class="${aut?'celda-vac-autorizada':'celda-vac-solicitada'}" title="${fecha} — Vacaciones ${aut?'AUTORIZADAS':'apartadas (por autorizar)'}\nPeriodo: ${fmtFecha(p.fecha_inicio)} → ${fmtFecha(p.fecha_fin)} (${p.dias} día(s))${p.notas?'\n'+String(p.notas).replace(/"/g,'')  :''}">${aut?'A':'a'}</td>`;
+        }
+        // Día de descanso obligatorio — Art. 74 LFT
+        if (esDiaFeriado(fecha)) {
+          return `<td class="celda-festivo" title="${fecha} — Día de descanso obligatorio (Art. 74 LFT)">FES</td>`;
         }
         // Día de descanso configurado del trabajador (no necesariamente fin de semana)
         if (esDescansoTrab) {

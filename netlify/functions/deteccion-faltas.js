@@ -106,6 +106,7 @@ exports.handler = async (event) => {
     );
 
     // ── 4. Cierre de día — un registro para CADA trabajador sin movimiento ─
+    const ayerEsFeriado = esDiaFeriado(ayer);
     const registros = [];
     for (const t of trabajadores) {
       if (asistenciaMap[t.id]) continue;
@@ -116,6 +117,9 @@ exports.handler = async (event) => {
         status = 'vacaciones'; fuente = 'programacion';
         notas  = 'Periodo de vacaciones autorizado.';
         resumen.vacaciones_creadas++;
+      } else if (ayerEsFeriado) {
+        status = 'festivo'; fuente = 'control_diario';
+        notas  = 'Día de descanso obligatorio — Art. 74 LFT.';
       } else if (esDiaDescanso(t, ayerDow)) {
         status = 'descanso'; fuente = 'control_diario';
         notas  = 'Día de descanso configurado del trabajador.';
@@ -222,6 +226,7 @@ async function runBackfill(sb, hoy, ayer) {
         if (existeSet.has(`${t.id}|${dia}`)) continue;
         const dow = new Date(dia + 'T12:00:00Z').getUTCDay();
         const esDescansoDia = esDiaDescanso(t, dow);
+        const esFeriadoDia = esDiaFeriado(dia);
         const enVac = (vacPorTrab[t.id] || []).some(v =>
           dia >= v.fecha_inicio && dia <= v.fecha_fin && (v.incluye_finde || !esDescansoDia));
 
@@ -229,8 +234,8 @@ async function runBackfill(sb, hoy, ayer) {
         if (enVac) {
           status = 'vacaciones'; fuente = 'programacion'; notas = 'Periodo de vacaciones autorizado.';
           resumen.vacaciones_creadas++;
-        } else if (esDescansoDia) {
-          continue; // días de descanso históricos: no se rellenan (igual que antes con fines de semana)
+        } else if (esFeriadoDia || esDescansoDia) {
+          continue; // festivos y días de descanso históricos: no se rellenan (igual que antes con fines de semana)
         } else if (dia < alta) {
           status = 'presente'; fuente = 'sistema';
           notas  = 'Asistencia retroactiva — anterior al alta en ClickLaboral';
@@ -270,6 +275,56 @@ async function runBackfill(sb, hoy, ayer) {
 function esDiaDescanso(t, dow) {
   if (t?.dias_descanso?.length) return t.dias_descanso.includes(dow);
   return dow === 0 || dow === 6;
+}
+
+// Días de descanso obligatorio — Art. 74 LFT (fracciones I-VIII). NO incluye la
+// fracción IX (jornada electoral): esa fecha la determina el INE o el organismo
+// electoral local caso por caso y no sigue una fórmula fija; se marca manualmente
+// como 'festivo' desde el calendario cuando aplique.
+//
+// A diferencia de calendarios genéricos tipo banking-holiday (p.ej. workalendar),
+// la LFT NO recorre estos días al viernes/lunes más cercano cuando caen en fin de
+// semana — la fecha designada es la fecha designada, punto. Tampoco se le agrega
+// aquí el "puente" del 31 de diciembre ni ningún otro ajuste: son 7 fechas fijas
+// por año, más el 1 de octubre de años de transmisión del Poder Ejecutivo Federal
+// (cada 6 años desde 2024, tras la reforma que movió la fecha del 1 de diciembre).
+function feriadosObligatoriosMx(year) {
+  const pad = n => String(n).padStart(2, '0');
+  const fmt = (y, m, d) => `${y}-${pad(m)}-${pad(d)}`;
+  // n-ésima ocurrencia de un día de la semana en un mes (1=enero..12=diciembre,
+  // 0=domingo..6=sábado), replicando el patrón de Calendar.get_nth_weekday_in_month
+  // de workalendar pero devolviendo directamente el string 'YYYY-MM-DD'.
+  const nEsimoDiaSemana = (y, mes, diaSemana, n) => {
+    const d = new Date(y, mes - 1, 1);
+    let cuenta = 0;
+    while (d.getMonth() === mes - 1) {
+      if (d.getDay() === diaSemana) {
+        cuenta++;
+        if (cuenta === n) return fmt(d.getFullYear(), d.getMonth() + 1, d.getDate());
+      }
+      d.setDate(d.getDate() + 1);
+    }
+    return null;
+  };
+  const dias = [
+    fmt(year, 1, 1),                  // I.   Año nuevo
+    nEsimoDiaSemana(year, 2, 1, 1),    // II.  Primer lunes de febrero (Día de la Constitución)
+    nEsimoDiaSemana(year, 3, 1, 3),    // III. Tercer lunes de marzo (Natalicio de Benito Juárez)
+    fmt(year, 5, 1),                  // IV.  Día del Trabajo
+    fmt(year, 9, 16),                 // V.   Día de la Independencia
+    nEsimoDiaSemana(year, 11, 1, 3),   // VI.  Tercer lunes de noviembre (Día de la Revolución)
+    fmt(year, 12, 25),                // VIII. Navidad
+  ];
+  // VII. Transmisión del Poder Ejecutivo Federal — 1 de octubre cada 6 años desde 2024
+  if (year >= 2024 && (year - 2024) % 6 === 0) dias.push(fmt(year, 10, 1));
+  return dias.filter(Boolean);
+}
+
+const _feriadosCache = {};
+function esDiaFeriado(fechaStr) {
+  const year = parseInt(fechaStr.slice(0, 4), 10);
+  if (!_feriadosCache[year]) _feriadosCache[year] = feriadosObligatoriosMx(year);
+  return _feriadosCache[year].includes(fechaStr);
 }
 
 // Fecha (CDMX) en que el trabajador fue dado de alta en ClickLaboral.

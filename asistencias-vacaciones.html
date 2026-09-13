@@ -5756,7 +5756,7 @@ async function renderControlAsistencias() {
 
   try {
     // Cargar TODOS los trabajadores activos del cliente
-    const { data: trabs } = await selectProxy('trabajadores','id,nombre,puesto,fecha_ingreso',{activo:true},{order:{campo:'nombre',asc:true}});
+    const { data: trabs } = await selectProxy('trabajadores','id,nombre,puesto,fecha_ingreso,hora_entrada_habitual,hora_salida_habitual',{activo:true},{order:{campo:'nombre',asc:true}});
     const { data: asist } = await selectProxy('asistencias','trabajador_id,status,hora_entrada,hora_salida,notas',{fecha:controlFecha});
 
     const asistMap = {};
@@ -5789,8 +5789,11 @@ async function renderControlAsistencias() {
       const reg = controlCambios[t.id] || asistMap[t.id];
       const st  = reg?.status || '';
       const bgColor = COLORES_STATUS[st] || '#fff';
-      const horaE = reg?.hora_entrada || '';
-      const horaS = reg?.hora_salida  || '';
+      // Sin registro real todavía para este día: precargar la hora habitual del
+      // trabajador (Editar trabajador) como punto de partida, en vez de dejarlo
+      // vacío — antes este panel no tenía ninguna conexión con ese horario.
+      const horaE = reg?.hora_entrada || (!reg ? (t.hora_entrada_habitual||'').slice(0,5) : '');
+      const horaS = reg?.hora_salida  || (!reg ? (t.hora_salida_habitual ||'').slice(0,5) : '');
 
       return `<div id="ctrl-row-${t.id}" style="display:grid;grid-template-columns:1fr auto auto auto auto auto;gap:8px;align-items:center;padding:10px 0;border-bottom:1px solid var(--border);background:${bgColor};border-radius:6px;padding:10px 12px;margin-bottom:4px;">
         <div>

@@ -44,6 +44,7 @@ body{font-family:var(--font);background:var(--surface);color:var(--ink);display:
 .st-dentro{background:#dcfce7;color:#16a34a;}
 .st-retraso{background:#fef3c7;color:#d97706;}
 .st-completo{background:#e0e7ff;color:#4338ca;}
+.st-descanso{background:#f3e8ff;color:#7c3aed;}
 
 .empty,.gate{text-align:center;padding:60px 24px;color:var(--ink3);}
 .gate h2{font-size:18px;color:var(--navy);margin:14px 0 8px;}
@@ -271,11 +272,11 @@ async function cerrarSesionKiosco(){
 
 // ── Datos ─────────────────────────────────────────────────────────────────────
 async function cargarDatos(){
-  // Roster con fallback si nip/salario aún no existen (migración pendiente)
+  // Roster con fallback si nip/salario/dias_descanso aún no existen (migración pendiente)
   let res = await sb.from('trabajadores')
-    .select('id,nombre,puesto,nip,hora_entrada_habitual')
+    .select('id,nombre,puesto,nip,hora_entrada_habitual,dias_descanso')
     .eq('cliente_rfc', clienteRFC).eq('activo', true).order('nombre');
-  if(res.error && /nip|42703/i.test(res.error.message||'')){
+  if(res.error && /nip|dias_descanso|42703/i.test(res.error.message||'')){
     res = await sb.from('trabajadores')
       .select('id,nombre,puesto,hora_entrada_habitual')
       .eq('cliente_rfc', clienteRFC).eq('activo', true).order('nombre');
@@ -305,9 +306,20 @@ async function cargarDatos(){
   render();
 }
 
+// ¿Descansa el trabajador hoy? (0=domingo..6=sábado, Date.getDay()). Si no tiene
+// dias_descanso configurado, usa el default histórico sábado/domingo.
+function esDiaDescansoHoy(t){
+  const dow = new Date().getDay();
+  if (t?.dias_descanso?.length) return t.dias_descanso.includes(dow);
+  return dow === 0 || dow === 6;
+}
+
 function estadoTrabajador(t){
   const r = registrosHoy[t.id];
-  if(!r || !r.hora_entrada) return { clave:'pendiente', label:'Sin registrar', css:'st-pendiente' };
+  if(!r || !r.hora_entrada){
+    if (esDiaDescansoHoy(t)) return { clave:'descanso', label:'😴 Descanso hoy', css:'st-descanso' };
+    return { clave:'pendiente', label:'Sin registrar', css:'st-pendiente' };
+  }
   if(r.hora_entrada && !r.hora_salida){
     const deAyer = r.fecha && r.fecha !== hoyISO();
     return r.status==='retraso'
@@ -354,6 +366,10 @@ function abrirAccion(id){
   if(e.clave==='pendiente'){
     document.getElementById('m-ico').textContent = '🌅';
     botones.innerHTML = `<button class="btn btn-entrada" onclick="registrar('entrada')">Registrar ENTRADA</button>`;
+  } else if(e.clave==='descanso'){
+    document.getElementById('m-ico').textContent = '😴';
+    document.getElementById('m-sub').textContent = 'Hoy es su día de descanso configurado. Si de todas formas trabajó, puede registrar su entrada.';
+    botones.innerHTML = `<button class="btn btn-entrada" onclick="registrar('entrada')">Registrar ENTRADA de todas formas</button>`;
   } else if(e.clave==='dentro'){
     document.getElementById('m-ico').textContent = '🌇';
     botones.innerHTML = `<button class="btn btn-salida" onclick="registrar('salida')">Registrar SALIDA</button>`;

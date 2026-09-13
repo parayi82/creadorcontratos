@@ -10,7 +10,7 @@
 
 const { handleCors } = require('./_security');
 const { createClient } = require('@supabase/supabase-js');
-const { puedeAccederRFC, esAdmin } = require('./_admin-auth');
+const { puedeAccederRFC, verificarAdmin } = require('./_admin-auth');
 
 exports.handler = async (event) => {
   const corsResult = handleCors(event);
@@ -46,7 +46,7 @@ exports.handler = async (event) => {
 
   // ── POST: ajuste admin ────────────────────────────────────────────────────
   if (event.httpMethod === 'POST') {
-    if (!await esAdmin(sb, uData.user)) {
+    if (!await verificarAdmin(event, sb)) {
       return { statusCode: 403, headers, body: JSON.stringify({ error: 'Solo administradores.' }) };
     }
 

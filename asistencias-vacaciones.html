@@ -5756,8 +5756,15 @@ async function renderControlAsistencias() {
 
   try {
     // Cargar TODOS los trabajadores activos del cliente
-    const { data: trabs } = await selectProxy('trabajadores','id,nombre,puesto,fecha_ingreso,hora_entrada_habitual,hora_salida_habitual',{activo:true},{order:{campo:'nombre',asc:true}});
-    const { data: asist } = await selectProxy('asistencias','trabajador_id,status,hora_entrada,hora_salida,notas',{fecha:controlFecha});
+    let { data: trabs } = await selectProxy('trabajadores','id,nombre,puesto,fecha_ingreso,hora_entrada_habitual,hora_salida_habitual,hora_entrada_habitual_2,hora_salida_habitual_2',{activo:true},{order:{campo:'nombre',asc:true}});
+    if (!trabs) {
+      // Columnas de turno mixto opcionales — fallback si sql-turno-mixto.sql aún no se ejecutó
+      ({ data: trabs } = await selectProxy('trabajadores','id,nombre,puesto,fecha_ingreso,hora_entrada_habitual,hora_salida_habitual',{activo:true},{order:{campo:'nombre',asc:true}}));
+    }
+    let { data: asist } = await selectProxy('asistencias','trabajador_id,status,hora_entrada,hora_salida,hora_entrada_2,hora_salida_2,notas',{fecha:controlFecha});
+    if (!asist) {
+      ({ data: asist } = await selectProxy('asistencias','trabajador_id,status,hora_entrada,hora_salida,notas',{fecha:controlFecha}));
+    }
 
     const asistMap = {};
     (asist||[]).forEach(a => { asistMap[a.trabajador_id] = a; });
@@ -5795,7 +5802,27 @@ async function renderControlAsistencias() {
       const horaE = reg?.hora_entrada || (!reg ? (t.hora_entrada_habitual||'').slice(0,5) : '');
       const horaS = reg?.hora_salida  || (!reg ? (t.hora_salida_habitual ||'').slice(0,5) : '');
 
-      return `<div id="ctrl-row-${t.id}" style="display:grid;grid-template-columns:1fr auto auto auto auto auto;gap:8px;align-items:center;padding:10px 0;border-bottom:1px solid var(--border);background:${bgColor};border-radius:6px;padding:10px 12px;margin-bottom:4px;">
+      // Turno mixto / jornada partida: solo se muestra el 2º par de horas para
+      // trabajadores que lo tienen configurado en "Editar trabajador" (o que ya
+      // tienen un 2º turno registrado ese día) — igual que en el modal individual
+      // "Editar día". El resto de los trabajadores no ve estos campos.
+      const tieneTurno2 = !!(t.hora_entrada_habitual_2) || !!(reg?.hora_entrada_2);
+      const horaE2 = reg?.hora_entrada_2 || (!reg ? (t.hora_entrada_habitual_2||'').slice(0,5) : '');
+      const horaS2 = reg?.hora_salida_2  || (!reg ? (t.hora_salida_habitual_2 ||'').slice(0,5) : '');
+      const turno2Html = tieneTurno2 ? `
+        <div style="grid-column:2/-1;display:flex;align-items:center;gap:8px;margin-top:6px;padding-top:6px;border-top:1px dashed var(--border);">
+          <span style="font-size:11px;color:var(--accent);font-weight:700;white-space:nowrap;">⏱ 2ª jornada</span>
+          <input type="time" value="${horaE2}" placeholder="Entrada 2"
+            onchange="cambiarHoraControl('${t.id}','entrada2',this.value)"
+            style="font-size:12px;padding:5px 8px;border:1px solid var(--border);border-radius:6px;width:90px;"
+            title="Hora de entrada — 2ª jornada">
+          <input type="time" value="${horaS2}" placeholder="Salida 2"
+            onchange="cambiarHoraControl('${t.id}','salida2',this.value)"
+            style="font-size:12px;padding:5px 8px;border:1px solid var(--border);border-radius:6px;width:90px;"
+            title="Hora de salida — 2ª jornada">
+        </div>` : '';
+
+      return `<div id="ctrl-row-${t.id}" style="display:grid;grid-template-columns:1fr auto auto auto auto auto;gap:8px;align-items:center;padding:10px 12px;border-bottom:1px solid var(--border);background:${bgColor};border-radius:6px;margin-bottom:4px;">
         <div>
           <div style="font-size:13px;font-weight:600;">${t.nombre}</div>
           <div style="font-size:11px;color:var(--ink3);">${t.puesto||''}</div>
@@ -5821,6 +5848,7 @@ async function renderControlAsistencias() {
           onchange="cambiarNotaControl('${t.id}',this.value)"
           style="font-size:12px;padding:5px 8px;border:1px solid var(--border);border-radius:6px;width:140px;">
         ${reg ? '<span style="font-size:10px;padding:2px 6px;background:#e8f2fc;color:#1a3a5c;border-radius:10px;">✓ reg.</span>' : '<span style="font-size:10px;color:#ccc;">nuevo</span>'}
+        ${turno2Html}
       </div>`;
     }).join('') || '<div style="color:var(--ink3);text-align:center;padding:30px;">No hay trabajadores activos.</div>';
 
@@ -5847,7 +5875,9 @@ function cambiarStatusControl(id, status, rowEl) {
 function cambiarHoraControl(id, tipo, val) {
   if (!controlCambios[id]) controlCambios[id] = {};
   if (tipo==='entrada') controlCambios[id].hora_entrada = val || null;
-  else controlCambios[id].hora_salida = val || null;
+  else if (tipo==='salida') controlCambios[id].hora_salida = val || null;
+  else if (tipo==='entrada2') controlCambios[id].hora_entrada_2 = val || null;
+  else if (tipo==='salida2') controlCambios[id].hora_salida_2 = val || null;
 }
 
 function cambiarNotaControl(id, val) {
@@ -5915,6 +5945,10 @@ async function guardarControlAsistencias() {
       controlCambios[tid].status       = sel.value;
       controlCambios[tid].hora_entrada = inputs[0]?.value || null;
       controlCambios[tid].hora_salida  = inputs[1]?.value || null;
+      // Solo hay 2º turno en el DOM si la fila tiene la sección "2ª jornada" —
+      // inputs[2]/[3] no existen para el resto de los trabajadores.
+      controlCambios[tid].hora_entrada_2 = inputs[2]?.value || null;
+      controlCambios[tid].hora_salida_2  = inputs[3]?.value || null;
       controlCambios[tid].notas        = nota?.value || null;
     }
   });
@@ -5928,6 +5962,8 @@ async function guardarControlAsistencias() {
       status:        v.status,
       hora_entrada:  (v.status==='presente'||v.status==='retraso') ? v.hora_entrada : null,
       hora_salida:   (v.status==='presente'||v.status==='retraso') ? v.hora_salida  : null,
+      hora_entrada_2:(v.status==='presente'||v.status==='retraso') ? (v.hora_entrada_2||null) : null,
+      hora_salida_2: (v.status==='presente'||v.status==='retraso') ? (v.hora_salida_2 ||null) : null,
       notas:         v.notas || null,
       fuente:        'manual',
     }));
@@ -5939,7 +5975,12 @@ async function guardarControlAsistencias() {
   }
 
   try {
-    const { error } = await mutarDatos({ tabla:'asistencias', accion:'upsert', payload:registros, conflicto:'trabajador_id,fecha' });
+    let { error } = await mutarDatos({ tabla:'asistencias', accion:'upsert', payload:registros, conflicto:'trabajador_id,fecha' });
+    // Columnas de turno mixto opcionales — fallback si sql-turno-mixto.sql aún no se ejecutó
+    if (error && /hora_entrada_2|hora_salida_2/.test(error.message||'')) {
+      const registrosSinTurno2 = registros.map(({ hora_entrada_2, hora_salida_2, ...r }) => r);
+      ({ error } = await mutarDatos({ tabla:'asistencias', accion:'upsert', payload:registrosSinTurno2, conflicto:'trabajador_id,fecha' }));
+    }
     if (error) throw error;
     alert(`✅ ${registros.length} registro(s) guardados correctamente.`);
     controlCambios = {};

@@ -11,9 +11,12 @@
 // {
 //   trabajadores: [{ id, nombre, puesto, hora_entrada_habitual, hora_salida_habitual }]
 //   dias: ['YYYY-MM-DD', ...]
-//   dias_laborales: ['YYYY-MM-DD', ...]   ← lunes a viernes
+//   dias_laborales: ['YYYY-MM-DD', ...]   ← lunes a viernes, vista general de la empresa
+//                                            (el % de asistencia por trabajador usa
+//                                            dias_laborales_propios, que sí respeta el
+//                                            dias_descanso individual de cada uno)
 //   registros: { [trabajador_id]: { [fecha]: { status, hora_entrada, hora_salida, notas, fuente, registrado_ts, geo_lat, geo_lng } } }
-//   resumen: [{ trabajador_id, nombre, presentes, retrasos, faltas_injustificadas, ... pct_asistencia }]
+//   resumen: [{ trabajador_id, nombre, presentes, retrasos, faltas_injustificadas, ... descansos, pct_asistencia }]
 //   meta_nom: { generado_en, periodo_desde, periodo_hasta, articulo_804_lft, ... }
 // }
 //
@@ -98,7 +101,7 @@ exports.handler = async (event) => {
   try {
     // ── 1. Trabajadores activos ────────────────────────────────────────────────
     let trabQ = sb.from('trabajadores')
-      .select('id,nombre,puesto,fecha_ingreso,hora_entrada_habitual,hora_salida_habitual,nss')
+      .select('id,nombre,puesto,fecha_ingreso,hora_entrada_habitual,hora_salida_habitual,nss,dias_descanso')
       .eq('cliente_rfc', clienteRFC)
       .eq('activo', true)
       .order('nombre');
@@ -151,8 +154,14 @@ exports.handler = async (event) => {
     }
     const diasLaborales = dias.filter(d => {
       const dow = new Date(d + 'T12:00:00Z').getUTCDay();
-      return dow >= 1 && dow <= 5; // lunes-viernes
+      return dow >= 1 && dow <= 5; // lunes-viernes — vista general de la empresa
     });
+
+    // Días de la semana en que descansa cada trabajador (0=domingo..6=sábado).
+    // Si no tiene dias_descanso configurado, usa el default sábado/domingo
+    // (mismo comportamiento que antes de existir esta columna).
+    const esDiaDescanso = (t, dow) =>
+      t.dias_descanso?.length ? t.dias_descanso.includes(dow) : (dow === 0 || dow === 6);
 
     // ── 5. Completar registros — llenar gaps con 'sin_registro' ──────────────
     const registros = {};
@@ -176,12 +185,20 @@ exports.handler = async (event) => {
       const incapacidades    = cnt('incapacidad');
       const festivos         = cnt('festivo');
       const sinRegistro      = cnt('sin_registro');
+      const descansos        = cnt('descanso');
 
-      // Días laborales desde que ingresó el trabajador (o desde el inicio del período)
+      // Días laborales PROPIOS del trabajador: todo el rango desde su ingreso,
+      // excluyendo sus días de descanso configurados (no necesariamente
+      // sábado/domingo — un trabajador con descanso entre semana no debe
+      // contar esos días como jornada esperada).
       const ingreso = t.fecha_ingreso && t.fecha_ingreso > desde ? t.fecha_ingreso : desde;
-      const diasLabTrab = diasLaborales.filter(d => d >= ingreso).length;
+      const diasLabTrab = dias.filter(d => {
+        if (d < ingreso) return false;
+        const dow = new Date(d + 'T12:00:00Z').getUTCDay();
+        return !esDiaDescanso(t, dow);
+      }).length;
 
-      // % asistencia = (presentes + retrasos) / días laborales desde su ingreso en el período
+      // % asistencia = (presentes + retrasos) / días laborales propios desde su ingreso
       const pctAsistencia = diasLabTrab > 0
         ? Math.round((presentes + retrasos) / diasLabTrab * 100)
         : null;
@@ -202,6 +219,7 @@ exports.handler = async (event) => {
         incapacidades,
         festivos,
         sin_registro:  sinRegistro,
+        descansos,
         pct_asistencia: pctAsistencia,
       };
     });

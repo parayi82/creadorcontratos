@@ -71,7 +71,7 @@ exports.handler = async (event) => {
     // ── 1. Trabajadores activos ───────────────────────────────────────────
     const { data: trabajadores, error: errTrab } = await sb
       .from('trabajadores')
-      .select('id, nombre, cliente_rfc, fecha_ingreso, created_at')
+      .select('id, nombre, cliente_rfc, fecha_ingreso, created_at, dias_descanso')
       .eq('activo', true);
     if (errTrab) throw errTrab;
     if (!trabajadores?.length) {
@@ -99,9 +99,10 @@ exports.handler = async (event) => {
       .gte('fecha_fin', ayer)
       .in('trabajador_id', ids);
     const ayerDow = new Date(ayer + 'T12:00:00Z').getUTCDay();
-    const esLaboral = ayerDow >= 1 && ayerDow <= 5;
+    const trabajadorMap = {};
+    trabajadores.forEach(t => { trabajadorMap[t.id] = t; });
     const conVacaciones = new Set(
-      (vacs || []).filter(v => v.incluye_finde || esLaboral).map(v => v.trabajador_id)
+      (vacs || []).filter(v => v.incluye_finde || !esDiaDescanso(trabajadorMap[v.trabajador_id], ayerDow)).map(v => v.trabajador_id)
     );
 
     // ── 4. Cierre de día — un registro para CADA trabajador sin movimiento ─
@@ -115,7 +116,10 @@ exports.handler = async (event) => {
         status = 'vacaciones'; fuente = 'programacion';
         notas  = 'Periodo de vacaciones autorizado.';
         resumen.vacaciones_creadas++;
-      } else if (esLaboral && ayer >= altaEnSistema(t)) {
+      } else if (esDiaDescanso(t, ayerDow)) {
+        status = 'descanso'; fuente = 'control_diario';
+        notas  = 'Día de descanso configurado del trabajador.';
+      } else if (ayer >= altaEnSistema(t)) {
         status = 'falta_injustificada'; fuente = 'control_diario';
         notas  = 'Falta detectada automáticamente — sin registro en checador.';
         resumen.faltas_creadas++;
@@ -178,7 +182,7 @@ async function runBackfill(sb, hoy, ayer) {
   try {
     const { data: trabajadores, error: tErr } = await sb
       .from('trabajadores')
-      .select('id, nombre, cliente_rfc, fecha_ingreso, created_at')
+      .select('id, nombre, cliente_rfc, fecha_ingreso, created_at, dias_descanso')
       .eq('activo', true)
       .not('fecha_ingreso', 'is', null);
     if (tErr) throw tErr;
@@ -217,16 +221,16 @@ async function runBackfill(sb, hoy, ayer) {
       for (const dia of diasArr(desde, ayer)) {
         if (existeSet.has(`${t.id}|${dia}`)) continue;
         const dow = new Date(dia + 'T12:00:00Z').getUTCDay();
-        const laboral = dow >= 1 && dow <= 5;
+        const esDescansoDia = esDiaDescanso(t, dow);
         const enVac = (vacPorTrab[t.id] || []).some(v =>
-          dia >= v.fecha_inicio && dia <= v.fecha_fin && (v.incluye_finde || laboral));
+          dia >= v.fecha_inicio && dia <= v.fecha_fin && (v.incluye_finde || !esDescansoDia));
 
         let status, fuente, notas;
         if (enVac) {
           status = 'vacaciones'; fuente = 'programacion'; notas = 'Periodo de vacaciones autorizado.';
           resumen.vacaciones_creadas++;
-        } else if (!laboral) {
-          continue; // fines de semana históricos: no se rellenan
+        } else if (esDescansoDia) {
+          continue; // días de descanso históricos: no se rellenan (igual que antes con fines de semana)
         } else if (dia < alta) {
           status = 'presente'; fuente = 'sistema';
           notas  = 'Asistencia retroactiva — anterior al alta en ClickLaboral';
@@ -256,6 +260,17 @@ async function runBackfill(sb, hoy, ayer) {
 }
 
 // ── Utilidades ───────────────────────────────────────────────────────────────
+
+// ¿El trabajador descansa el día de la semana `dow` (0=domingo..6=sábado,
+// convención Date.getUTCDay())? Si el trabajador tiene dias_descanso
+// configurado, se respeta tal cual (puede ser cualquier combinación de días,
+// no solo fin de semana). Si no lo tiene configurado (arreglo vacío o
+// ausente), se usa el default histórico sábado/domingo para no cambiar el
+// comportamiento de trabajadores que nunca lo configuraron.
+function esDiaDescanso(t, dow) {
+  if (t?.dias_descanso?.length) return t.dias_descanso.includes(dow);
+  return dow === 0 || dow === 6;
+}
 
 // Fecha (CDMX) en que el trabajador fue dado de alta en ClickLaboral.
 // A partir de ese día la ausencia de registro sí es falta.

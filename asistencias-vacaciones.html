@@ -101,6 +101,7 @@ header a:hover{color:#fff;}
 .celda-incapacidad{background:#ede9fe;color:#5b21b6;}
 .celda-falta-justificada{background:#f3f4f6;color:#4b5563;}
 .celda-sin-registro{background:#fee2e2;color:#dc2626;font-weight:600;font-style:normal;}
+.celda-descanso{background:#e0e7ff;color:#4338ca;font-weight:600;}
 .celda-finde{background:#fafafa;color:#ccc;}
 /* ── Apartado / programación de vacaciones (v15) ── */
 .celda-vac-solicitada{background:repeating-linear-gradient(45deg,#fff7ed,#fff7ed 3px,#fed7aa 3px,#fed7aa 6px);color:#9a3412;font-weight:800;}
@@ -172,6 +173,9 @@ body.modo-apartar .tablero-tabla tbody td:hover{outline:1px solid #f97316;outlin
 .cal-day.s-sin_registro{background:#fee2e2;border-color:#fca5a5;}
 .cal-day.s-sin_registro .num{color:#dc2626;}
 .cal-day.s-sin_registro .sin-reg-lbl{position:absolute;bottom:4px;left:3px;right:3px;font-size:8px;color:#dc2626;font-weight:700;text-align:center;line-height:1.1;}
+.cal-day.s-descanso{background:#e0e7ff;border-color:#c7d2fe;}
+.cal-day.s-descanso .num{color:#4338ca;}
+.cal-day.s-descanso .sin-reg-lbl{position:absolute;bottom:4px;left:3px;right:3px;font-size:8px;color:#4338ca;font-weight:700;text-align:center;line-height:1.1;}
 .cal-legend{display:flex;gap:14px;flex-wrap:wrap;margin-top:14px;font-size:11px;color:var(--ink2);}
 .cal-legend span{display:inline-flex;align-items:center;gap:5px;}
 .cal-legend .dot{width:9px;height:9px;border-radius:2px;display:inline-block;}
@@ -800,7 +804,22 @@ body.modo-apartar .tablero-tabla tbody td:hover{outline:1px solid #f97316;outlin
       <button class="btn btn-outline btn-sm" type="button" onclick="abrirImportHorarioExterno()" style="font-size:11px;padding:3px 10px;white-space:nowrap;">📂 Desde checador externo</button>
     </div>
     <input type="file" id="horario-externo-file" accept=".csv,.txt" style="display:none;" onchange="procesarArchivoHorarioExterno(this)">
-    <div id="horario-externo-info" style="display:none;font-size:11px;background:var(--surface);border-radius:var(--r-sm);padding:8px 10px;margin-bottom:10px;"></div>
+    <div id="horario-externo-info" style="display:none;font-size:11px;background:var(--surface);border-radius:var(--r-sm);margin-bottom:10px;"></div>
+    <div class="field">
+      <label>Día(s) de descanso</label>
+      <div id="trab-dias-descanso" style="display:flex;gap:4px;flex-wrap:wrap;">
+        <label style="display:flex;flex-direction:column;align-items:center;gap:2px;font-size:10px;color:var(--ink3);cursor:pointer;"><input type="checkbox" class="dd-check" value="1">Lun</label>
+        <label style="display:flex;flex-direction:column;align-items:center;gap:2px;font-size:10px;color:var(--ink3);cursor:pointer;"><input type="checkbox" class="dd-check" value="2">Mar</label>
+        <label style="display:flex;flex-direction:column;align-items:center;gap:2px;font-size:10px;color:var(--ink3);cursor:pointer;"><input type="checkbox" class="dd-check" value="3">Mié</label>
+        <label style="display:flex;flex-direction:column;align-items:center;gap:2px;font-size:10px;color:var(--ink3);cursor:pointer;"><input type="checkbox" class="dd-check" value="4">Jue</label>
+        <label style="display:flex;flex-direction:column;align-items:center;gap:2px;font-size:10px;color:var(--ink3);cursor:pointer;"><input type="checkbox" class="dd-check" value="5">Vie</label>
+        <label style="display:flex;flex-direction:column;align-items:center;gap:2px;font-size:10px;color:var(--ink3);cursor:pointer;"><input type="checkbox" class="dd-check" value="6">Sáb</label>
+        <label style="display:flex;flex-direction:column;align-items:center;gap:2px;font-size:10px;color:var(--ink3);cursor:pointer;"><input type="checkbox" class="dd-check" value="0">Dom</label>
+      </div>
+      <div style="font-size:11px;color:var(--ink3);margin-top:6px;">
+        Si no marca ninguno, se asume sábado y domingo por defecto. Marque los días reales de descanso de este trabajador (turnos rotativos, personal de salud, retail, etc.) para que el calendario los llene automáticamente como "Descanso" en vez de contarlos como falta.
+      </div>
+    </div>
     <div class="modal-close-row">
       <button class="btn btn-outline" onclick="cerrarModalTrabajador()">Cancelar</button>
       <button class="btn btn-primary" onclick="guardarTrabajador()">Guardar</button>
@@ -1045,6 +1064,7 @@ const STATUS_LABELS = {
   permiso:'Permiso',
   incapacidad:'Incapacidad',
   festivo:'Día festivo',
+  descanso:'Descanso',
   sin_registro:'Sin registro',
 };
 
@@ -1152,7 +1172,7 @@ init();
 
 async function cargarTrabajadores(){
   try {
-    const columnas = 'id,nombre,puesto,fecha_ingreso,nss,salario_diario,nip,activo,fecha_baja,motivo_baja,observaciones_baja,fecha_eliminacion_permitida';
+    const columnas = 'id,nombre,puesto,fecha_ingreso,nss,salario_diario,nip,dias_descanso,activo,fecha_baja,motivo_baja,observaciones_baja,fecha_eliminacion_permitida';
     const resSesion = await sb.auth.getSession();
     const token = resSesion?.data?.session?.access_token || '';
     const esDespacho = resSesion?.data?.session?.user?.user_metadata?.tipo === 'despacho';
@@ -1192,9 +1212,9 @@ async function cargarTrabajadores(){
         sb.from('trabajadores').select(columnas,{count:'exact'}).eq('cliente_rfc',clienteRFC).eq('activo',true).is('fecha_baja',null).order('nombre').range(rosterPaginaActivos*ROSTER_PAGE_SIZE,(rosterPaginaActivos+1)*ROSTER_PAGE_SIZE-1),
         sb.from('trabajadores').select(columnas,{count:'exact'}).eq('cliente_rfc',clienteRFC).or('activo.eq.false,fecha_baja.not.is.null').order('fecha_baja',{ascending:false}).range(rosterPaginaBajas*ROSTER_PAGE_SIZE,(rosterPaginaBajas+1)*ROSTER_PAGE_SIZE-1),
       ]);
-      // Fallback si la migración de salario/nip aún no se ejecuta (error 42703: columna inexistente)
-      if (resActivos.error && /salario_diario|nip|42703/i.test(resActivos.error.message||'')) {
-        console.warn('[Roster] Columnas salario_diario/nip no existen aún — ejecute sql-migracion-salario-riesgo.sql y sql-migracion-movimientos-checador.sql. Usando columnas base.');
+      // Fallback si la migración de salario/nip/dias_descanso aún no se ejecuta (error 42703: columna inexistente)
+      if (resActivos.error && /salario_diario|nip|dias_descanso|42703/i.test(resActivos.error.message||'')) {
+        console.warn('[Roster] Columnas salario_diario/nip/dias_descanso no existen aún — ejecute las migraciones pendientes. Usando columnas base.');
         const colBase = 'id,nombre,puesto,fecha_ingreso,nss,activo,fecha_baja,motivo_baja,observaciones_baja,fecha_eliminacion_permitida';
         [resActivos, resBajas] = await Promise.all([
           sb.from('trabajadores').select(colBase,{count:'exact'}).eq('cliente_rfc',clienteRFC).eq('activo',true).is('fecha_baja',null).order('nombre').range(rosterPaginaActivos*ROSTER_PAGE_SIZE,(rosterPaginaActivos+1)*ROSTER_PAGE_SIZE-1),
@@ -2034,8 +2054,22 @@ async function cargarExpediente(){
 // ════════════════════════════════════════════
 // CALENDARIO
 // ════════════════════════════════════════════
-// Detecta días laborables (L-V) del mes visible sin registro en asistenciasMes,
-// desde la fecha de ingreso del trabajador hasta ayer inclusive.
+// ¿El trabajador descansa el día de la semana `dow` (0=domingo..6=sábado)?
+// Si tiene dias_descanso configurado, se respeta tal cual (cualquier
+// combinación de días, no solo fin de semana). Si no lo tiene configurado,
+// se usa el default histórico sábado/domingo.
+function esDiaDescanso(trabajador, dow) {
+  if (trabajador?.dias_descanso?.length) return trabajador.dias_descanso.includes(dow);
+  return dow === 0 || dow === 6;
+}
+
+// Rellena el mes visible de un trabajador con dos tipos de días virtuales
+// (no guardados en BD, solo para pintar el calendario):
+//   - 'descanso': cualquier día del mes (pasado o futuro) que caiga en su
+//     día de descanso configurado — igual que las vacaciones, se conoce de
+//     antemano y no depende de si ya pasó o no.
+//   - 'sin_registro': días laborables (no de descanso) ya transcurridos sin
+//     ningún movimiento en el checador — posible falta sin resolver.
 function detectarFaltasSinRegistro(trabajador) {
   const virtual = {};
   if (!trabajador?.fecha_ingreso) return virtual;
@@ -2048,10 +2082,13 @@ function detectarFaltasSinRegistro(trabajador) {
     fecha.setHours(12, 0, 0, 0);
     const fechaStr = `${y}-${String(mo + 1).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
     const dow = fecha.getDay();
-    if (dow === 0 || dow === 6) continue;    // fin de semana
-    if (fecha > ayer) continue;              // hoy y futuro: no aplica
     if (fecha < ingreso) continue;           // antes del ingreso
     if (asistenciasMes[fechaStr]) continue;  // ya tiene registro real
+    if (esDiaDescanso(trabajador, dow)) {
+      virtual[fechaStr] = { fecha: fechaStr, status: 'descanso', virtual: true };
+      continue;
+    }
+    if (fecha > ayer) continue;              // hoy y futuro: no aplica a faltas
     virtual[fechaStr] = { fecha: fechaStr, status: 'sin_registro', virtual: true };
   }
   return virtual;
@@ -2167,7 +2204,7 @@ async function renderAlertaArt47() {
 
   for (let d = new Date(inicioComputo); d <= ayer; d.setDate(d.getDate() + 1)) {
     const dow = d.getDay();
-    if (dow === 0 || dow === 6) continue; // fin de semana
+    if (esDiaDescanso(trabajadorActual, dow)) continue; // día de descanso del trabajador
     diasLaborablesAnio++;
     const fstr = d.toISOString().split('T')[0];
     const st = regMapAnio[fstr];
@@ -2252,9 +2289,10 @@ function renderCalendario(){
     const reg = asistenciasMes[fechaStr];
     const virt = !reg ? faltasVirtualesMes[fechaStr] : null;
     const acta = actasMes[fechaStr];
-    const claseStatus = reg ? `s-${reg.status}` : (virt ? 's-sin_registro' : '');
+    const claseStatus = reg ? `s-${reg.status}` : (virt ? `s-${virt.status}` : '');
     const badge = (acta && acta.estado==='provisional') ? '<div class="acta-badge" title="Acta pendiente de resolver"></div>' : '';
-    const sinRegLbl = virt ? '<div class="sin-reg-lbl">Sin<br>registro</div>' : '';
+    const sinRegLbl = virt?.status==='sin_registro' ? '<div class="sin-reg-lbl">Sin<br>registro</div>'
+                     : virt?.status==='descanso'    ? '<div class="sin-reg-lbl">Descanso</div>' : '';
     const esHoy = fechaStr === hoyStr ? ' style="border-width:2px;border-color:var(--navy2);"' : '';
     html += `<div class="cal-day ${claseStatus}" onclick="abrirModalDia('${fechaStr}')"${esHoy}>
       <div class="num">${d}</div>${badge}${sinRegLbl}
@@ -2265,7 +2303,9 @@ function renderCalendario(){
 
 async function renderStats(){
   const regs = Object.values(asistenciasMes);
-  const sinRegistroMes = Object.keys(faltasVirtualesMes).length;
+  // Solo los virtuales 'sin_registro' son posibles faltas — los 'descanso' son
+  // días de descanso configurados del trabajador, no cuentan como falta.
+  const sinRegistroMes = Object.values(faltasVirtualesMes).filter(v=>v.status==='sin_registro').length;
   const faltasReales = regs.filter(r=>r.status==='falta_injustificada'||r.status==='falta_justificada').length;
   document.getElementById('st-presentes').textContent = regs.filter(r=>r.status==='presente'||r.status==='retraso').length;
   document.getElementById('st-faltas').textContent = faltasReales + sinRegistroMes;
@@ -2752,6 +2792,11 @@ async function abrirModalTrabajador(t){
     if(he2F) he2F.value = horario?.entrada2 || '';
     if(hs2F) hs2F.value = horario?.salida2  || '';
   }
+  // Días de descanso
+  const diasDescansoSet = new Set((t?.dias_descanso || []).map(Number));
+  document.querySelectorAll('#trab-dias-descanso .dd-check').forEach(cb => {
+    cb.checked = diasDescansoSet.has(parseInt(cb.value, 10));
+  });
   // Limpiar el panel de info de importación anterior
   const infoEl = document.getElementById('horario-externo-info');
   if (infoEl) { infoEl.style.display = 'none'; infoEl.textContent = ''; }
@@ -2811,6 +2856,7 @@ async function guardarTrabajador(){
   const turnoMixto   = document.getElementById('trab-turno-mixto')?.checked || false;
   const horaEntrada2 = turnoMixto ? (document.getElementById('trab-hora-entrada-2')?.value || null) : null;
   const horaSalida2  = turnoMixto ? (document.getElementById('trab-hora-salida-2')?.value  || null) : null;
+  const diasDescanso = [...document.querySelectorAll('#trab-dias-descanso .dd-check:checked')].map(c => parseInt(c.value, 10));
 
   const payload = {
     cliente_rfc: clienteRFC, nombre,
@@ -2823,16 +2869,25 @@ async function guardarTrabajador(){
     hora_salida_habitual:    horaSalida,
     hora_entrada_habitual_2: horaEntrada2,
     hora_salida_habitual_2:  horaSalida2,
+    dias_descanso: diasDescanso,
     activo: true,
   };
   const guardarTrabajadorConPayload = async (p, fId) => {
     const accion = fId ? 'update' : 'insert';
     const filtros = fId ? { id: fId } : {};
-    let { error } = await mutarDatos({ tabla:'trabajadores', accion, payload:p, filtros });
+    let payloadActual = p;
+    let { error } = await mutarDatos({ tabla:'trabajadores', accion, payload:payloadActual, filtros });
+    // dias_descanso opcional — fallback si la migración 20260913000000 aún no se ejecutó
+    if (error && /dias_descanso/.test(error.message||'')) {
+      const { dias_descanso: _dd, ...pSinDD } = payloadActual;
+      payloadActual = pSinDD;
+      ({ error } = await mutarDatos({ tabla:'trabajadores', accion, payload:payloadActual, filtros }));
+    }
     // Columnas de turno mixto opcionales — fallback si sql-turno-mixto.sql aún no se ejecutó
     if (error && /hora_entrada_habitual_2|hora_salida_habitual_2/.test(error.message||'')) {
-      const { hora_entrada_habitual_2: _he2, hora_salida_habitual_2: _hs2, ...pSin } = p;
-      ({ error } = await mutarDatos({ tabla:'trabajadores', accion, payload:pSin, filtros }));
+      const { hora_entrada_habitual_2: _he2, hora_salida_habitual_2: _hs2, ...pSin } = payloadActual;
+      payloadActual = pSin;
+      ({ error } = await mutarDatos({ tabla:'trabajadores', accion, payload:payloadActual, filtros }));
     }
     return error;
   };
@@ -3494,9 +3549,9 @@ async function renderTablero(){
   const COLOR_STATUS={
     vacaciones:'celda-vacaciones', permiso:'celda-permiso', retraso:'celda-retraso',
     falta_injustificada:'celda-falta-injustificada', falta_justificada:'celda-falta-justificada',
-    incapacidad:'celda-incapacidad', sin_registro:'celda-sin-registro',
+    incapacidad:'celda-incapacidad', sin_registro:'celda-sin-registro', descanso:'celda-descanso',
   };
-  const ICONO_STATUS={vacaciones:'V',permiso:'P',falta_injustificada:'FI',falta_justificada:'FJ',incapacidad:'INC',retraso:'RT',sin_registro:'—'};
+  const ICONO_STATUS={vacaciones:'V',permiso:'P',falta_injustificada:'FI',falta_justificada:'FJ',incapacidad:'INC',retraso:'RT',sin_registro:'—',descanso:'D'};
 
   const dias=[];
   for(let m=0;m<12;m++){
@@ -3504,7 +3559,7 @@ async function renderTablero(){
     for(let d=1;d<=enMes;d++){
       const fecha=`${tableroAnio}-${String(m+1).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
       const dow=new Date(tableroAnio,m,d).getDay();
-      dias.push({fecha,d,m,finde:dow===0||dow===6});
+      dias.push({fecha,d,m,dow,finde:dow===0||dow===6});
     }
   }
 
@@ -3530,7 +3585,8 @@ async function renderTablero(){
     const tDatos=idx[t.id]||{};
     const tProg =idxProg[t.id]||{};
     let totVac=0,totPerm=0,totFI=0,totFJ=0,totInc=0,totPres=0,totRet=0,totApart=0,totSinReg=0;
-    const celdas=dias.map(({fecha,finde})=>{
+    const celdas=dias.map(({fecha,finde,dow})=>{
+      const esDescansoTrab = esDiaDescanso(t, dow);
       const st=tDatos[fecha];
       if(!st){
         const p=tProg[fecha];
@@ -3539,8 +3595,12 @@ async function renderTablero(){
           const aut=p.estado==='autorizada';
           return `<td class="${aut?'celda-vac-autorizada':'celda-vac-solicitada'}" title="${fecha} — Vacaciones ${aut?'AUTORIZADAS':'apartadas (por autorizar)'}\nPeriodo: ${fmtFecha(p.fecha_inicio)} → ${fmtFecha(p.fecha_fin)} (${p.dias} día(s))${p.notas?'\n'+String(p.notas).replace(/"/g,'')  :''}">${aut?'A':'a'}</td>`;
         }
+        // Día de descanso configurado del trabajador (no necesariamente fin de semana)
+        if (esDescansoTrab) {
+          return `<td class="celda-descanso" title="${fecha} — Día de descanso">D</td>`;
+        }
         // Día laborable pasado (no hoy) sin registro → sin_registro
-        if (!finde && fecha < hoy && t.fecha_ingreso && fecha >= t.fecha_ingreso) {
+        if (fecha < hoy && t.fecha_ingreso && fecha >= t.fecha_ingreso) {
           totSinReg++;
           return `<td class="celda-sin-registro" title="${fecha} — Sin registro de asistencia (el cierre de jornada lo clasificará)">—</td>`;
         }
@@ -4887,26 +4947,36 @@ async function guardarHorarioHabitual(todos){
   const salida2  = document.getElementById('dia-hora-salida-2')?.value  || '';
   const horario = { entrada, salida, entrada2, salida2 };
 
+  let error = null;
   if(todos){
     if(!confirm(`¿Fijar ${entrada} – ${salida}${entrada2?' + '+entrada2+' – '+salida2:''} como horario habitual para TODOS los trabajadores de la empresa?\n(El horario individual de cada trabajador, si lo tiene, seguirá teniendo prioridad.)`)) return;
-    localStorage.setItem('cl_horario_rfc_'+clienteRFC, JSON.stringify(horario));
     try {
-      await mutarDatos({ tabla:'trabajadores', accion:'update',
+      ({ error } = await mutarDatos({ tabla:'trabajadores', accion:'update',
         payload:{ hora_entrada_habitual:entrada, hora_salida_habitual:salida,
-                  hora_entrada_habitual_2:entrada2||null, hora_salida_habitual_2:salida2||null }, filtros:{} });
+                  hora_entrada_habitual_2:entrada2||null, hora_salida_habitual_2:salida2||null }, filtros:{} }));
+    } catch(e){ error = e; }
+    if(!error){
+      localStorage.setItem('cl_horario_rfc_'+clienteRFC, JSON.stringify(horario));
       Object.keys(horarioCacheDB).forEach(k=>horarioCacheDB[k]=horario);
-    } catch(_){ console.warn('Columnas de horario habitual no existen aún en la BD (ejecute sql-horario-habitual.sql). Guardado localmente.'); }
+    }
   } else {
-    localStorage.setItem('cl_horario_'+trabajadorActual.id, JSON.stringify(horario));
-    horarioCacheDB[trabajadorActual.id] = horario;
     try {
-      await mutarDatos({ tabla:'trabajadores', accion:'update',
+      ({ error } = await mutarDatos({ tabla:'trabajadores', accion:'update',
         payload:{ hora_entrada_habitual:entrada, hora_salida_habitual:salida,
-                  hora_entrada_habitual_2:entrada2||null, hora_salida_habitual_2:salida2||null }, filtros:{ id:trabajadorActual.id } });
-    } catch(_){ console.warn('Columnas de horario habitual no existen aún en la BD (ejecute sql-horario-habitual.sql). Guardado localmente.'); }
+                  hora_entrada_habitual_2:entrada2||null, hora_salida_habitual_2:salida2||null }, filtros:{ id:trabajadorActual.id } }));
+    } catch(e){ error = e; }
+    if(!error){
+      localStorage.setItem('cl_horario_'+trabajadorActual.id, JSON.stringify(horario));
+      horarioCacheDB[trabajadorActual.id] = horario;
+    }
+  }
+  const aviso = document.getElementById('horario-habitual-info');
+  if(error){
+    console.error('No se pudo guardar el horario habitual:', error.message||error);
+    alert('No se pudo guardar el horario habitual en la base de datos. No se guardó ningún cambio.\n\n'+(error.message||error));
+    return;
   }
   pintarHorarioHabitual();
-  const aviso = document.getElementById('horario-habitual-info');
   if(aviso) aviso.innerHTML += ' <span style="color:#16a34a;">✓ guardado</span>';
 }
 
@@ -5948,7 +6018,7 @@ async function exportarAsistenciasGrupal() {
 
     const STATUS_ABREV = {
       presente:'P', retraso:'RT', falta_injustificada:'FI', falta_justificada:'FJ',
-      vacaciones:'V', permiso:'PRM', incapacidad:'INC', festivo:'FES', sin_registro:'—',
+      vacaciones:'V', permiso:'PRM', incapacidad:'INC', festivo:'FES', descanso:'D', sin_registro:'—',
     };
 
     const filas = [
@@ -6155,17 +6225,17 @@ function abrirConstanciaHtml(json, desde, hasta) {
 
   const STATUS_ABREV = {
     presente:'P', retraso:'RT', falta_injustificada:'FI', falta_justificada:'FJ',
-    vacaciones:'V', permiso:'PRM', incapacidad:'INC', festivo:'FES', sin_registro:'—',
+    vacaciones:'V', permiso:'PRM', incapacidad:'INC', festivo:'FES', descanso:'D', sin_registro:'—',
   };
   const STATUS_COLOR = {
     presente:'#dcfce7', retraso:'#fef3c7', falta_injustificada:'#fee2e2',
     falta_justificada:'#f3f4f6', vacaciones:'#dcfce7', permiso:'#fef3c7',
-    incapacidad:'#ede9fe', festivo:'#e0f2fe', sin_registro:'#f8fafc',
+    incapacidad:'#ede9fe', festivo:'#e0f2fe', descanso:'#e0e7ff', sin_registro:'#f8fafc',
   };
   const STATUS_TXT = {
     falta_injustificada:'#991b1b', falta_justificada:'#6b7280', retraso:'#92400e',
     vacaciones:'#15803d', permiso:'#92400e', incapacidad:'#5b21b6', presente:'#166534',
-    festivo:'#0369a1', sin_registro:'#94a3b8',
+    festivo:'#0369a1', descanso:'#4338ca', sin_registro:'#94a3b8',
   };
 
   // Encabezados de columnas

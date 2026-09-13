@@ -2916,10 +2916,13 @@ async function guardarTrabajador(){
     nss: document.getElementById('trab-nss').value.trim() || null,
     salario_diario: salarioVal ? parseFloat(salarioVal) : null,
     nip: nipVal || null,
-    hora_entrada_habitual:   horaEntrada,
-    hora_salida_habitual:    horaSalida,
-    hora_entrada_habitual_2: horaEntrada2,
-    hora_salida_habitual_2:  horaSalida2,
+    hora_entrada_habitual: horaEntrada,
+    hora_salida_habitual:  horaSalida,
+    // hora_entrada_habitual_2/hora_salida_habitual_2 solo se incluyen si se usa turno
+    // mixto — así el guardado no depende de que sql-turno-mixto.sql se haya ejecutado
+    // cuando el trabajador ni siquiera usa esa opción (evita un intento fallido +
+    // reintento en cada guardado para la inmensa mayoría de los trabajadores).
+    ...(turnoMixto ? { hora_entrada_habitual_2: horaEntrada2, hora_salida_habitual_2: horaSalida2 } : {}),
     dias_descanso: diasDescanso,
     activo: true,
   };
@@ -4979,8 +4982,15 @@ async function selectProxy(tabla, columnas, filtrosExtra={}, opts={}){
 async function cargarHorarioHabitualDB(trabId){
   if(trabId in horarioCacheDB) return horarioCacheDB[trabId];
   try {
-    const { data, error } = await sb.from('trabajadores')
+    let { data, error } = await sb.from('trabajadores')
       .select('hora_entrada_habitual,hora_salida_habitual,hora_entrada_habitual_2,hora_salida_habitual_2').eq('id', trabId).single();
+    // Columnas de turno mixto opcionales — si sql-turno-mixto.sql aún no se ejecutó,
+    // pedirlas hace fallar TODA la consulta (incluyendo hora_entrada_habitual, que sí
+    // existe) y el horario habitual se ve como "no guardado" aunque sí lo esté.
+    if(error && /hora_entrada_habitual_2|hora_salida_habitual_2/.test(error.message||'')){
+      ({ data, error } = await sb.from('trabajadores')
+        .select('hora_entrada_habitual,hora_salida_habitual').eq('id', trabId).single());
+    }
     if(!error && data && (data.hora_entrada_habitual || data.hora_salida_habitual)){
       horarioCacheDB[trabId] = {
         entrada:  (data.hora_entrada_habitual||'').slice(0,5),
@@ -5003,24 +5013,34 @@ async function guardarHorarioHabitual(todos){
   const salida2  = document.getElementById('dia-hora-salida-2')?.value  || '';
   const horario = { entrada, salida, entrada2, salida2 };
 
+  // hora_entrada_habitual_2/hora_salida_habitual_2 solo se incluyen si de verdad
+  // se capturó un segundo turno — si esas columnas no existen aún en la BD
+  // (sql-turno-mixto.sql sin ejecutar) el guardado del horario normal no debe
+  // depender de ellas. Si sí se capturó un 2do turno y la columna no existe,
+  // se reintenta sin esos dos campos en vez de fallar por completo.
+  const payloadBase = { hora_entrada_habitual: entrada, hora_salida_habitual: salida };
+  const payloadConTurno2 = (entrada2 && salida2)
+    ? { ...payloadBase, hora_entrada_habitual_2: entrada2, hora_salida_habitual_2: salida2 }
+    : payloadBase;
+
+  const guardarConFallback = async (filtros) => {
+    let { error } = await mutarDatos({ tabla:'trabajadores', accion:'update', payload:payloadConTurno2, filtros });
+    if (error && /hora_entrada_habitual_2|hora_salida_habitual_2/.test(error.message||'')) {
+      ({ error } = await mutarDatos({ tabla:'trabajadores', accion:'update', payload:payloadBase, filtros }));
+    }
+    return error;
+  };
+
   let error = null;
   if(todos){
     if(!confirm(`¿Fijar ${entrada} – ${salida}${entrada2?' + '+entrada2+' – '+salida2:''} como horario habitual para TODOS los trabajadores de la empresa?\n(El horario individual de cada trabajador, si lo tiene, seguirá teniendo prioridad.)`)) return;
-    try {
-      ({ error } = await mutarDatos({ tabla:'trabajadores', accion:'update',
-        payload:{ hora_entrada_habitual:entrada, hora_salida_habitual:salida,
-                  hora_entrada_habitual_2:entrada2||null, hora_salida_habitual_2:salida2||null }, filtros:{} }));
-    } catch(e){ error = e; }
+    try { error = await guardarConFallback({}); } catch(e){ error = e; }
     if(!error){
       localStorage.setItem('cl_horario_rfc_'+clienteRFC, JSON.stringify(horario));
       Object.keys(horarioCacheDB).forEach(k=>horarioCacheDB[k]=horario);
     }
   } else {
-    try {
-      ({ error } = await mutarDatos({ tabla:'trabajadores', accion:'update',
-        payload:{ hora_entrada_habitual:entrada, hora_salida_habitual:salida,
-                  hora_entrada_habitual_2:entrada2||null, hora_salida_habitual_2:salida2||null }, filtros:{ id:trabajadorActual.id } }));
-    } catch(e){ error = e; }
+    try { error = await guardarConFallback({ id: trabajadorActual.id }); } catch(e){ error = e; }
     if(!error){
       localStorage.setItem('cl_horario_'+trabajadorActual.id, JSON.stringify(horario));
       horarioCacheDB[trabajadorActual.id] = horario;

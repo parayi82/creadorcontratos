@@ -14,7 +14,8 @@
 //   dias_laborales: ['YYYY-MM-DD', ...]   ← lunes a viernes, vista general de la empresa
 //                                            (el % de asistencia por trabajador usa
 //                                            dias_laborales_propios, que sí respeta el
-//                                            dias_descanso individual de cada uno)
+//                                            dias_descanso individual de cada uno y los
+//                                            días de descanso obligatorio — Art. 74 LFT)
 //   registros: { [trabajador_id]: { [fecha]: { status, hora_entrada, hora_salida, notas, fuente, registrado_ts, geo_lat, geo_lng } } }
 //   resumen: [{ trabajador_id, nombre, presentes, retrasos, faltas_injustificadas, ... descansos, pct_asistencia }]
 //   meta_nom: { generado_en, periodo_desde, periodo_hasta, articulo_804_lft, ... }
@@ -194,6 +195,7 @@ exports.handler = async (event) => {
       const ingreso = t.fecha_ingreso && t.fecha_ingreso > desde ? t.fecha_ingreso : desde;
       const diasLabTrab = dias.filter(d => {
         if (d < ingreso) return false;
+        if (esDiaFeriado(d)) return false; // día de descanso obligatorio — Art. 74 LFT
         const dow = new Date(d + 'T12:00:00Z').getUTCDay();
         return !esDiaDescanso(t, dow);
       }).length;
@@ -264,3 +266,44 @@ exports.handler = async (event) => {
     return err(500, e?.message || 'Error interno.');
   }
 };
+
+// ── Días de descanso obligatorio — Art. 74 LFT (fracciones I-VIII) ──────────
+// No incluye la fracción IX (jornada electoral): esa fecha la determina el INE
+// o el organismo electoral local caso por caso y no sigue una fórmula fija.
+// A diferencia de calendarios genéricos tipo banking-holiday, la LFT NO recorre
+// estos días al viernes/lunes más cercano cuando caen en fin de semana.
+function feriadosObligatoriosMx(year) {
+  const pad = n => String(n).padStart(2, '0');
+  const fmt = (y, m, d) => `${y}-${pad(m)}-${pad(d)}`;
+  const nEsimoDiaSemana = (y, mes, diaSemana, n) => {
+    const d = new Date(y, mes - 1, 1);
+    let cuenta = 0;
+    while (d.getMonth() === mes - 1) {
+      if (d.getDay() === diaSemana) {
+        cuenta++;
+        if (cuenta === n) return fmt(d.getFullYear(), d.getMonth() + 1, d.getDate());
+      }
+      d.setDate(d.getDate() + 1);
+    }
+    return null;
+  };
+  const dias = [
+    fmt(year, 1, 1),                  // I.   Año nuevo
+    nEsimoDiaSemana(year, 2, 1, 1),    // II.  Primer lunes de febrero (Día de la Constitución)
+    nEsimoDiaSemana(year, 3, 1, 3),    // III. Tercer lunes de marzo (Natalicio de Benito Juárez)
+    fmt(year, 5, 1),                  // IV.  Día del Trabajo
+    fmt(year, 9, 16),                 // V.   Día de la Independencia
+    nEsimoDiaSemana(year, 11, 1, 3),   // VI.  Tercer lunes de noviembre (Día de la Revolución)
+    fmt(year, 12, 25),                // VIII. Navidad
+  ];
+  // VII. Transmisión del Poder Ejecutivo Federal — 1 de octubre cada 6 años desde 2024
+  if (year >= 2024 && (year - 2024) % 6 === 0) dias.push(fmt(year, 10, 1));
+  return dias.filter(Boolean);
+}
+
+const _feriadosCache = {};
+function esDiaFeriado(fechaStr) {
+  const year = parseInt(fechaStr.slice(0, 4), 10);
+  if (!_feriadosCache[year]) _feriadosCache[year] = feriadosObligatoriosMx(year);
+  return _feriadosCache[year].includes(fechaStr);
+}

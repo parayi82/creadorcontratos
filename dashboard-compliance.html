@@ -613,6 +613,9 @@ select.form-input { cursor: pointer; }
     <div class="nav-item" onclick="goPanel('seguridad')">
       <span class="nav-icon">🔒</span> Seguridad / accesos
     </div>
+    <div class="nav-item" onclick="goPanel('firmas')">
+      <span class="nav-icon">✍️</span> Firmas electrónicas
+    </div>
     <div class="nav-item" onclick="window.open('launcher.html')">
       <span class="nav-icon">🧭</span> Centro de acceso
     </div>
@@ -998,6 +1001,33 @@ select.form-input { cursor: pointer; }
       </div>
     </div>
 
+    <!-- ══ FIRMAS ELECTRÓNICAS (AllSign) ══ -->
+    <div class="panel" id="panel-firmas">
+      <div class="three-col" style="margin-bottom:20px;">
+        <div class="stat-card" style="border-left:3px solid var(--navy2);">
+          <div class="stat-label">Créditos vigentes (todos los clientes)</div>
+          <div class="stat-value" style="color:var(--navy2);" id="firmas-cnt-creditos">0</div>
+        </div>
+        <div class="stat-card" style="border-left:3px solid var(--amber);">
+          <div class="stat-label">Firmas pendientes</div>
+          <div class="stat-value" style="color:var(--amber);" id="firmas-cnt-pendientes">0</div>
+        </div>
+        <div class="stat-card" style="border-left:3px solid var(--green);">
+          <div class="stat-label">Firmas completadas</div>
+          <div class="stat-value" style="color:var(--green);" id="firmas-cnt-firmadas">0</div>
+        </div>
+      </div>
+      <div class="card">
+        <div class="section-header" style="margin-bottom:16px;display:flex;justify-content:space-between;align-items:center;">
+          <div class="section-title">Créditos y firmas por cliente</div>
+          <button class="btn btn-ghost btn-sm" onclick="cargarFirmasAdmin()">🔄 Actualizar</button>
+        </div>
+        <div id="firmas-admin-tabla">
+          <div style="text-align:center;color:var(--ink3);font-size:13px;padding:24px 0;">Cargando...</div>
+        </div>
+      </div>
+    </div>
+
     <!-- ══ GENERADORES ══ -->
     
 
@@ -1332,6 +1362,38 @@ select.form-input { cursor: pointer; }
   </div>
 </div>
 
+<div class="modal-overlay" id="modal-firmas-detalle" style="display:none;">
+  <div class="modal">
+    <div class="modal-header">
+      <div class="modal-title" id="mfd-titulo">Firmas del cliente</div>
+      <button class="modal-close" onclick="cerrarModal('modal-firmas-detalle')">✕</button>
+    </div>
+    <div class="modal-body">
+      <div style="display:flex;gap:10px;align-items:flex-end;margin-bottom:16px;padding:12px;background:var(--bg2,#f8f9fb);border-radius:8px;">
+        <div style="flex:1;">
+          <label class="form-label">Ajustar créditos (usar negativo para restar)</label>
+          <input class="form-input" type="number" id="mfd-cantidad" placeholder="Ej. 6 ó -1" step="1">
+        </div>
+        <button class="btn btn-primary btn-sm" onclick="aplicarAjusteCreditos()">Aplicar ajuste</button>
+      </div>
+      <div id="mfd-msg" style="font-size:12px;margin-bottom:10px;"></div>
+
+      <div class="section-title" style="margin-bottom:8px;font-size:13px;">Historial de firmas</div>
+      <div id="mfd-firmas" style="margin-bottom:20px;">
+        <div style="text-align:center;color:var(--ink3);font-size:12px;padding:16px 0;">Cargando...</div>
+      </div>
+
+      <div class="section-title" style="margin-bottom:8px;font-size:13px;">Movimientos de créditos</div>
+      <div id="mfd-movimientos">
+        <div style="text-align:center;color:var(--ink3);font-size:12px;padding:16px 0;">Cargando...</div>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-ghost" onclick="cerrarModal('modal-firmas-detalle')">Cerrar</button>
+    </div>
+  </div>
+</div>
+
 <script>// ── Variables globales ──
 let CLIENTES             = [];
 let SOLICITUDES          = [];
@@ -1537,7 +1599,7 @@ const panelTitles = {
   configuracion:'Configuración',
   mrr:'MRR y métricas financieras', retencion:'Retención y churn',
   planes:'Planes y pricing', onboarding:'Onboarding de nuevos clientes',
-  seguridad:'Seguridad y accesos'
+  seguridad:'Seguridad y accesos', firmas:'Firmas electrónicas (AllSign)'
 };
 
 // Header de autorización para las funciones admin (token de la sesión)
@@ -1652,7 +1714,7 @@ async function goPanel(id) {
   if (id === 'despachos') cargarDespachos();
 
   // Cargar clientes si están vacíos
-  const panelsQueNecesitanClientes = ['clientes','suscripcion','mrr','retencion','planes','onboarding','seguridad'];
+  const panelsQueNecesitanClientes = ['clientes','suscripcion','mrr','retencion','planes','onboarding','seguridad','firmas'];
   if (panelsQueNecesitanClientes.includes(id) && CLIENTES.length === 0) {
     try {
       CLIENTES = await cargarClientesDesdeSupabase();
@@ -1671,6 +1733,7 @@ async function goPanel(id) {
   if (id==='planes')      renderPlanes_admin();
   if (id==='onboarding')  renderOnboarding_admin();
   if (id==='seguridad')   renderSeguridad_admin();
+  if (id==='firmas')      cargarFirmasAdmin();
 }
 
 // ════════════════════════════════════════════════════════
@@ -2767,6 +2830,158 @@ async function guardarRespuesta(id){
     alert('✓ Respuesta guardada — el cliente la verá en su portal.');
     await cargarSolicitudesAdmin();
   } catch(e) { alert('No se pudo guardar: '+(e.message||e)); }
+}
+
+// ════════════════════════════════════════════════════════
+// FIRMAS ELECTRÓNICAS (AllSign) — créditos y firmas por cliente
+// ════════════════════════════════════════════════════════
+let FIRMAS_RESUMEN = [];
+
+async function cargarFirmasAdmin(){
+  const cont = document.getElementById('firmas-admin-tabla');
+  cont.innerHTML = '<div style="text-align:center;color:var(--ink3);font-size:13px;padding:24px 0;">⏳ Cargando...</div>';
+  try {
+    const resp = await fetch('/.netlify/functions/firmas-admin-resumen', { headers: await authHeaders() });
+    const data = await resp.json();
+    if (!resp.ok) throw new Error(data.error || 'Error al cargar firmas');
+    FIRMAS_RESUMEN = data.clientes || [];
+  } catch(e) {
+    cont.innerHTML = `<div style="text-align:center;color:var(--ink3);font-size:13px;padding:24px 0;">
+      No se pudo cargar la información de firmas.<br>
+      <span style="font-size:11px;">${escHtml(e.message||String(e))}</span>
+    </div>`;
+    return;
+  }
+  renderFirmas_admin();
+}
+
+function renderFirmas_admin(){
+  const cont = document.getElementById('firmas-admin-tabla');
+  const nombrePorRfc = {};
+  CLIENTES.forEach(c => { nombrePorRfc[c.rfc] = c.empresa; });
+
+  const totalCreditos  = FIRMAS_RESUMEN.reduce((a,c) => a + (c.saldo||0), 0);
+  const totalPendientes = FIRMAS_RESUMEN.reduce((a,c) => a + (c.pendientes||0), 0);
+  const totalFirmadas   = FIRMAS_RESUMEN.reduce((a,c) => a + (c.firmadas||0), 0);
+  document.getElementById('firmas-cnt-creditos').textContent   = totalCreditos;
+  document.getElementById('firmas-cnt-pendientes').textContent = totalPendientes;
+  document.getElementById('firmas-cnt-firmadas').textContent   = totalFirmadas;
+
+  // Unir clientes conocidos aunque todavía no tengan créditos ni firmas,
+  // para poder darles de alta un paquete inicial desde este mismo panel.
+  const rfcs = new Set([...FIRMAS_RESUMEN.map(c=>c.cliente_rfc), ...CLIENTES.map(c=>c.rfc)]);
+  const filas = [...rfcs].map(rfc => {
+    const r = FIRMAS_RESUMEN.find(c => c.cliente_rfc === rfc);
+    return r || { cliente_rfc: rfc, saldo:0, total:0, pendientes:0, firmadas:0, expiradas:0 };
+  }).sort((a,b) => (b.total - a.total) || (b.saldo - a.saldo));
+
+  if (!filas.length) {
+    cont.innerHTML = '<div style="text-align:center;color:var(--ink3);font-size:13px;padding:24px 0;">Sin clientes todavía.</div>';
+    return;
+  }
+
+  cont.innerHTML = `
+    <table style="width:100%;border-collapse:collapse;">
+      <thead><tr style="border-bottom:2px solid var(--border);">
+        <th style="text-align:left;padding:8px 6px;font-size:11px;color:var(--ink3);">Empresa / RFC</th>
+        <th style="text-align:right;padding:8px 6px;font-size:11px;color:var(--ink3);">Créditos</th>
+        <th style="text-align:right;padding:8px 6px;font-size:11px;color:var(--ink3);">Pendientes</th>
+        <th style="text-align:right;padding:8px 6px;font-size:11px;color:var(--ink3);">Firmadas</th>
+        <th style="text-align:right;padding:8px 6px;font-size:11px;color:var(--ink3);">Expiradas</th>
+        <th style="text-align:center;padding:8px 6px;font-size:11px;color:var(--ink3);">Acciones</th>
+      </tr></thead>
+      <tbody>
+        ${filas.map(f => `
+          <tr style="border-bottom:1px solid var(--border);">
+            <td style="padding:10px 6px;">
+              <div style="font-weight:600;font-size:13px;">${escHtml(nombrePorRfc[f.cliente_rfc] || f.cliente_rfc)}</div>
+              <div style="font-size:10px;color:var(--ink3);">${escHtml(f.cliente_rfc)}</div>
+            </td>
+            <td style="padding:10px 6px;text-align:right;font-weight:700;color:${f.saldo>0?'var(--green)':'var(--ink3)'};">${f.saldo}</td>
+            <td style="padding:10px 6px;text-align:right;">${f.pendientes || '<span style="color:var(--ink3)">—</span>'}</td>
+            <td style="padding:10px 6px;text-align:right;">${f.firmadas || '<span style="color:var(--ink3)">—</span>'}</td>
+            <td style="padding:10px 6px;text-align:right;">${f.expiradas || '<span style="color:var(--ink3)">—</span>'}</td>
+            <td style="padding:10px 6px;text-align:center;">
+              <button class="btn btn-ghost btn-sm" onclick="verFirmasDetalle('${escHtml(f.cliente_rfc)}')">Ver / ajustar</button>
+            </td>
+          </tr>`).join('')}
+      </tbody>
+    </table>`;
+}
+
+async function verFirmasDetalle(rfc){
+  document.getElementById('mfd-titulo').textContent = 'Firmas — ' + rfc;
+  document.getElementById('mfd-cantidad').value = '';
+  document.getElementById('mfd-msg').textContent = '';
+  document.getElementById('modal-firmas-detalle').dataset.rfc = rfc;
+  document.getElementById('modal-firmas-detalle').style.display = 'flex';
+  await cargarDetalleFirmas(rfc);
+}
+
+// Llena las listas de firmas y movimientos del modal sin tocar el
+// encabezado ni el mensaje de estado (para poder refrescar después de un
+// ajuste de créditos sin borrar el "✅ Nuevo saldo..." que se acaba de mostrar).
+async function cargarDetalleFirmas(rfc){
+  document.getElementById('mfd-firmas').innerHTML = '<div style="text-align:center;color:var(--ink3);font-size:12px;padding:16px 0;">Cargando...</div>';
+  document.getElementById('mfd-movimientos').innerHTML = '<div style="text-align:center;color:var(--ink3);font-size:12px;padding:16px 0;">Cargando...</div>';
+
+  try {
+    const resp = await fetch('/.netlify/functions/firmas-admin-resumen?cliente_rfc=' + encodeURIComponent(rfc), { headers: await authHeaders() });
+    const data = await resp.json();
+    if (!resp.ok) throw new Error(data.error || 'Error al cargar el detalle');
+
+    const estadoBadge = { firmado:'badge-green', expirado:'badge-red', pendiente:'badge-amber' };
+    const firmas = data.firmas || [];
+    document.getElementById('mfd-firmas').innerHTML = firmas.length ? firmas.map(f => `
+      <div style="display:flex;justify-content:space-between;align-items:center;padding:8px 0;border-bottom:1px solid var(--border);font-size:12px;">
+        <div>
+          <div style="font-weight:600;">${escHtml(f.documento_tipo||'Documento')} ${f.documento_folio ? '· '+escHtml(f.documento_folio) : ''}</div>
+          <div style="color:var(--ink3);font-size:11px;">${new Date(f.created_at).toLocaleString('es-MX')}</div>
+        </div>
+        <span class="badge ${estadoBadge[f.allsign_estado||f.estado]||'badge-gray'}">${escHtml(f.allsign_estado||f.estado||'pendiente')}</span>
+      </div>`).join('') : '<div style="color:var(--ink3);font-size:12px;">Sin firmas registradas.</div>';
+
+    const movs = data.movimientos || [];
+    const tipoLabel = { compra_unitaria:'Compra unitaria', compra_paquete6:'Compra paquete x6', uso:'Uso', ajuste_admin:'Ajuste admin' };
+    document.getElementById('mfd-movimientos').innerHTML = movs.length ? movs.map(m => `
+      <div style="display:flex;justify-content:space-between;align-items:center;padding:8px 0;border-bottom:1px solid var(--border);font-size:12px;">
+        <div>
+          <div style="font-weight:600;">${escHtml(tipoLabel[m.tipo]||m.tipo)}</div>
+          <div style="color:var(--ink3);font-size:11px;">${new Date(m.created_at).toLocaleString('es-MX')} · saldo ${m.saldo_previo} → ${m.saldo_nuevo}</div>
+        </div>
+        <span style="font-weight:700;color:${m.cantidad>0?'var(--green)':'var(--red,#dc2626)'};">${m.cantidad>0?'+':''}${m.cantidad}</span>
+      </div>`).join('') : '<div style="color:var(--ink3);font-size:12px;">Sin movimientos todavía.</div>';
+  } catch(e) {
+    document.getElementById('mfd-firmas').innerHTML = `<div style="color:var(--red,#dc2626);font-size:12px;">${escHtml(e.message||String(e))}</div>`;
+    document.getElementById('mfd-movimientos').innerHTML = '';
+  }
+}
+
+async function aplicarAjusteCreditos(){
+  const rfc = document.getElementById('modal-firmas-detalle').dataset.rfc;
+  const cantidadRaw = document.getElementById('mfd-cantidad').value.trim();
+  const msg = document.getElementById('mfd-msg');
+  const cantidad = parseInt(cantidadRaw, 10);
+  if (!cantidadRaw || !Number.isInteger(cantidad) || cantidad === 0) {
+    msg.style.color = 'var(--red,#dc2626)'; msg.textContent = 'Escriba un entero distinto de cero (use negativo para restar).';
+    return;
+  }
+  msg.style.color = 'var(--ink3)'; msg.textContent = 'Aplicando...';
+  try {
+    const resp = await fetch('/.netlify/functions/firmas-creditos', {
+      method:'POST', headers: await authHeaders({'Content-Type':'application/json'}),
+      body: JSON.stringify({ accion:'ajuste_admin', cliente_rfc: rfc, cantidad }),
+    });
+    const data = await resp.json();
+    if (!resp.ok) throw new Error(data.error || 'Error al ajustar créditos');
+    msg.style.color = 'var(--green,#16a34a)';
+    msg.textContent = `✅ Nuevo saldo: ${data.saldo} créditos.`;
+    document.getElementById('mfd-cantidad').value = '';
+    await cargarDetalleFirmas(rfc);
+    await cargarFirmasAdmin();
+  } catch(e) {
+    msg.style.color = 'var(--red,#dc2626)'; msg.textContent = e.message || String(e);
+  }
 }
 
 // ════════════════════════════════════════════════════════

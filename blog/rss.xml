@@ -5,9 +5,17 @@
     <link>https://clicklaboral.mx/blog/</link>
     <description>Artículos, noticias y tips de compliance laboral para PyMEs mexicanas</description>
     <language>es-MX</language>
-    <lastBuildDate>Sun, 13 Sep 2026 17:09:15 GMT</lastBuildDate>
+    <lastBuildDate>Mon, 14 Sep 2026 15:50:44 GMT</lastBuildDate>
     <managingEditor>blog@clicklaboral.mx (ClickLaboral.mx)</managingEditor>
     <atom:link href="https://clicklaboral.mx/blog/rss.xml" rel="self" type="application/rss+xml"/>
+    <item>
+      <title>Cláusulas prohibidas en contratos de trabajo según la LFT</title>
+      <link>https://clicklaboral.mx/blog/clausulas-prohibidas-en-contratos-de-trabajo-segun-la-lft-2026-09-14.html</link>
+      <guid isPermaLink="true">https://clicklaboral.mx/blog/clausulas-prohibidas-en-contratos-de-trabajo-segun-la-lft-2026-09-14.html</guid>
+      <pubDate>Mon, 14 Sep 2026 12:00:00 GMT</pubDate>
+      <category>Contratos</category>
+      <description>Un contrato de trabajo mal redactado puede costarle a su empresa multas, juicios laborales y hasta la nulidad de cláusulas que usted creyó protectoras. La Ley Federal del Trabajo (LFT) establece con c…</description>
+    </item>
     <item>
       <title>Tesis: las cámaras de seguridad en el trabajo son prueba válida solo si el trabajador fue notificado</title>
       <link>https://clicklaboral.mx/blog/noticia-tesis-las-camaras-de-seguridad-en-el-trabajo-son-p-2026-09-13.html</link>
@@ -199,14 +207,6 @@
       <pubDate>Fri, 11 Sep 2026 12:00:00 GMT</pubDate>
       <category>Cumplimiento</category>
       <description>No todos los checadores digitales son iguales, y elegir mal significa terminar con un sistema que registra entradas y salidas pero no sirve para nada más — ni para calcular nómina, ni para defenderse…</description>
-    </item>
-    <item>
-      <title>Las 3 mejores apps para cumplimiento laboral en México: ClickLaboral vs. Buk vs. Humand</title>
-      <link>https://clicklaboral.mx/blog/las-3-mejores-apps-para-cumplimiento-laboral-en-mexico-clicklaboral-vs-buk-vs-humand-2026-09-11.html</link>
-      <guid isPermaLink="true">https://clicklaboral.mx/blog/las-3-mejores-apps-para-cumplimiento-laboral-en-mexico-clicklaboral-vs-buk-vs-humand-2026-09-11.html</guid>
-      <pubDate>Fri, 11 Sep 2026 12:00:00 GMT</pubDate>
-      <category>Cumplimiento</category>
-      <description>Buscar &quot;mejor app de RH en México&quot; mezcla en la misma lista herramientas que resuelven problemas completamente distintos: nómina, comunicación interna, cumplimiento legal. Si lo que su empresa necesit…</description>
     </item>
   </channel>
 </rss>

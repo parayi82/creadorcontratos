@@ -5,9 +5,17 @@
     <link>https://clicklaboral.mx/blog/</link>
     <description>Artículos, noticias y tips de compliance laboral para PyMEs mexicanas</description>
     <language>es-MX</language>
-    <lastBuildDate>Mon, 14 Sep 2026 15:50:44 GMT</lastBuildDate>
+    <lastBuildDate>Mon, 14 Sep 2026 18:57:54 GMT</lastBuildDate>
     <managingEditor>blog@clicklaboral.mx (ClickLaboral.mx)</managingEditor>
     <atom:link href="https://clicklaboral.mx/blog/rss.xml" rel="self" type="application/rss+xml"/>
+    <item>
+      <title>Tip: cómo comunicar un cambio de turno sin arriesgar una demanda por modificación unilateral</title>
+      <link>https://clicklaboral.mx/blog/noticia-tip-como-comunicar-un-cambio-de-turno-sin-arriesga-2026-09-14.html</link>
+      <guid isPermaLink="true">https://clicklaboral.mx/blog/noticia-tip-como-comunicar-un-cambio-de-turno-sin-arriesga-2026-09-14.html</guid>
+      <pubDate>Mon, 14 Sep 2026 12:00:00 GMT</pubDate>
+      <category>Tip RH</category>
+      <description>Antes de modificar el turno de cualquier trabajador, obtenga su aceptación por escrito: sin ese paso, la empresa queda expuesta a una demanda por modificación unilateral de condiciones de trabajo bajo…</description>
+    </item>
     <item>
       <title>Cláusulas prohibidas en contratos de trabajo según la LFT</title>
       <link>https://clicklaboral.mx/blog/clausulas-prohibidas-en-contratos-de-trabajo-segun-la-lft-2026-09-14.html</link>
@@ -199,14 +207,6 @@
       <pubDate>Fri, 11 Sep 2026 12:00:00 GMT</pubDate>
       <category>Cumplimiento</category>
       <description>Cuando una PyME empieza a tener suficientes trabajadores para preocuparse por el cumplimiento laboral, surge siempre la misma pregunta: ¿contrato a un abogado de planta, negocio con un despacho extern…</description>
-    </item>
-    <item>
-      <title>Qué es un checador digital y cómo elegir el mejor para su empresa en México</title>
-      <link>https://clicklaboral.mx/blog/que-es-un-checador-digital-y-como-elegir-el-mejor-para-su-empresa-en-mexico-2026-09-11.html</link>
-      <guid isPermaLink="true">https://clicklaboral.mx/blog/que-es-un-checador-digital-y-como-elegir-el-mejor-para-su-empresa-en-mexico-2026-09-11.html</guid>
-      <pubDate>Fri, 11 Sep 2026 12:00:00 GMT</pubDate>
-      <category>Cumplimiento</category>
-      <description>No todos los checadores digitales son iguales, y elegir mal significa terminar con un sistema que registra entradas y salidas pero no sirve para nada más — ni para calcular nómina, ni para defenderse…</description>
     </item>
   </channel>
 </rss>

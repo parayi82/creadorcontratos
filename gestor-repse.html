@@ -179,6 +179,7 @@ header h1{font-size:14px;font-weight:600;flex:1;}
   <div style="display:flex;gap:8px;">
     <a href="diagnostico-repse.html" class="hbtn" style="text-decoration:none;">¿Necesito REPSE?</a>
     <a href="contrato-repse.html" class="hbtn" style="text-decoration:none;">Generar contrato</a>
+    <button class="hbtn" onclick="abrirModalInvitar()">🔗 Invitar proveedor</button>
     <button class="hbtn hbtn-primary" onclick="abrirModal()">+ Agregar proveedor</button>
   </div>
 </header>
@@ -269,6 +270,43 @@ header h1{font-size:14px;font-weight:600;flex:1;}
     <div class="modal-actions">
       <button class="mbtn mbtn-cancel" onclick="cerrarModal()">Cancelar</button>
       <button class="mbtn mbtn-primary" onclick="guardarProveedor()">Guardar proveedor</button>
+    </div>
+  </div>
+</div>
+
+<!-- ── Modal invitar proveedor ── -->
+<div class="modal-bg" id="modal-invitar-bg" onclick="if(event.target===this)cerrarModalInvitar()">
+  <div class="modal">
+    <h2>Invitar proveedor a llenar su REPSE</h2>
+    <p style="font-size:12px;color:var(--ink2);margin-bottom:16px;line-height:1.6;">
+      Genere un link y compártalo con su proveedor de servicios especializados. Él llena su propia información
+      (sin necesitar cuenta) y queda registrada aquí automáticamente — usted responde solidariamente por sus
+      contratistas ante la Ley REPSE, así que le conviene tener esto documentado.
+    </p>
+
+    <div class="mfield-row">
+      <div class="mfield">
+        <label>Nombre del proveedor (opcional, solo para su referencia)</label>
+        <input type="text" id="mi-nombre" placeholder="Ej. Servicios del Norte">
+      </div>
+      <div class="mfield">
+        <label>Email del proveedor (opcional)</label>
+        <input type="email" id="mi-email" placeholder="contacto@proveedor.mx">
+      </div>
+    </div>
+
+    <div id="modal-invitar-err" style="display:none;padding:8px 12px;background:var(--red2);color:var(--red);border-radius:6px;font-size:12px;margin-bottom:10px;"></div>
+
+    <div class="modal-actions">
+      <button class="mbtn mbtn-cancel" onclick="cerrarModalInvitar()">Cerrar</button>
+      <button class="mbtn mbtn-primary" onclick="generarInvitacion()">Generar link de invitación</button>
+    </div>
+
+    <div class="msep" style="margin:20px 0;"></div>
+
+    <h3 style="font-size:13px;margin-bottom:10px;">Invitaciones enviadas</h3>
+    <div id="lista-invitaciones" style="max-height:240px;overflow-y:auto;">
+      <p style="font-size:12px;color:var(--ink3);">Cargando…</p>
     </div>
   </div>
 </div>
@@ -724,6 +762,113 @@ async function guardarProveedor() {
   // Re-seleccionar el mismo proveedor si era edición
   if (EDIT_ID) await seleccionarProveedor(EDIT_ID);
   else if (PROVEEDORES.length === 1) await seleccionarProveedor(PROVEEDORES[0].id);
+}
+
+// ── Invitar proveedor (link público, sin cuenta) ─────────────────────────────
+let INVITACIONES = [];
+
+async function abrirModalInvitar() {
+  document.getElementById('mi-nombre').value = '';
+  document.getElementById('mi-email').value = '';
+  document.getElementById('modal-invitar-err').style.display = 'none';
+  document.getElementById('modal-invitar-bg').classList.add('open');
+  await cargarInvitaciones();
+}
+
+function cerrarModalInvitar() {
+  document.getElementById('modal-invitar-bg').classList.remove('open');
+}
+
+async function cargarInvitaciones() {
+  const { data, error } = await sb
+    .from('repse_invitaciones')
+    .select('*')
+    .eq('cliente_rfc', CLIENT_RFC)
+    .order('created_at', { ascending: false });
+
+  const cont = document.getElementById('lista-invitaciones');
+  if (error) {
+    if (error.code === '42P01') {
+      cont.innerHTML = `<p style="font-size:12px;color:var(--ink3);">Ejecute la migración <code>20260915000000_repse_invitaciones.sql</code> en Supabase primero.</p>`;
+    } else {
+      cont.innerHTML = `<p style="font-size:12px;color:var(--red);">Error al cargar invitaciones: ${error.message}</p>`;
+    }
+    return;
+  }
+  INVITACIONES = data || [];
+  renderInvitaciones();
+}
+
+function renderInvitaciones() {
+  const cont = document.getElementById('lista-invitaciones');
+  if (!INVITACIONES.length) {
+    cont.innerHTML = '<p style="font-size:12px;color:var(--ink3);">Aún no ha enviado ninguna invitación.</p>';
+    return;
+  }
+  cont.innerHTML = INVITACIONES.map(inv => {
+    const link = `${window.location.origin}/invitacion-repse.html?token=${inv.token}`;
+    const badge = inv.estado === 'completado'
+      ? '<span class="badge badge-green">Completada</span>'
+      : '<span class="badge badge-amber">Pendiente</span>';
+    return `<div style="display:flex;justify-content:space-between;align-items:center;padding:8px 0;border-bottom:1px solid var(--border);gap:8px;">
+      <div style="min-width:0;">
+        <div style="font-size:12px;font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${inv.nombre_contacto || inv.email_contacto || 'Proveedor sin nombre'}</div>
+        <div style="font-size:10px;color:var(--ink3);">${new Date(inv.created_at).toLocaleDateString('es-MX')} · ${badge}</div>
+      </div>
+      <div style="display:flex;gap:6px;flex-shrink:0;">
+        ${inv.estado === 'pendiente' ? `<button class="btn" style="color:var(--teal);border-color:var(--teal);padding:4px 10px;font-size:11px;" onclick="copiarLinkInvitacion('${link}')">Copiar link</button>
+        <button class="btn" style="color:var(--red);border-color:var(--red);padding:4px 10px;font-size:11px;" onclick="cancelarInvitacion('${inv.id}')">Cancelar</button>` : ''}
+      </div>
+    </div>`;
+  }).join('');
+}
+
+async function generarInvitacion() {
+  const err = document.getElementById('modal-invitar-err');
+  err.style.display = 'none';
+
+  const payload = {
+    nombre_contacto: document.getElementById('mi-nombre').value.trim() || null,
+    email_contacto:  document.getElementById('mi-email').value.trim() || null,
+  };
+
+  const resp = await fetch('/api/mutar-datos-cliente', {
+    method: 'POST',
+    headers: { 'Content-Type':'application/json', 'Authorization':'Bearer '+ACCESS_TOKEN },
+    body: JSON.stringify({ tabla: 'repse_invitaciones', accion: 'insert', cliente_rfc: CLIENT_RFC, payload })
+  });
+
+  const j = await resp.json().catch(()=>({}));
+  if (!resp.ok) {
+    err.textContent = j.error || 'Error al generar la invitación. Intente de nuevo.';
+    err.style.display = 'block';
+    return;
+  }
+
+  const nueva = Array.isArray(j.data) ? j.data[0] : j.data;
+  document.getElementById('mi-nombre').value = '';
+  document.getElementById('mi-email').value = '';
+  await cargarInvitaciones();
+  if (nueva?.token) copiarLinkInvitacion(`${window.location.origin}/invitacion-repse.html?token=${nueva.token}`);
+}
+
+function copiarLinkInvitacion(link) {
+  navigator.clipboard.writeText(link).then(() => {
+    alert('✓ Link copiado. Compártalo con su proveedor por WhatsApp o email:\n\n' + link);
+  }).catch(() => {
+    prompt('Copie este link y compártalo con su proveedor:', link);
+  });
+}
+
+async function cancelarInvitacion(id) {
+  if (!confirm('¿Cancelar esta invitación? El link dejará de funcionar.')) return;
+  const resp = await fetch('/api/mutar-datos-cliente', {
+    method: 'POST',
+    headers: { 'Content-Type':'application/json', 'Authorization':'Bearer '+ACCESS_TOKEN },
+    body: JSON.stringify({ tabla: 'repse_invitaciones', accion: 'delete', cliente_rfc: CLIENT_RFC, filtros: { id } })
+  });
+  if (!resp.ok) { alert('No se pudo cancelar la invitación.'); return; }
+  await cargarInvitaciones();
 }
 
 // ── Archivar/reactivar ────────────────────────────────────────────────────────

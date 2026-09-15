@@ -2,6 +2,7 @@
 const { createClient } = require('@supabase/supabase-js');
 const { reportError } = require('./_security');
 const { waTexto } = require('./_whatsapp');
+const { provisionarClientePortal } = require('./_provisionar-cliente');
 
 exports.handler = async (event) => {
   const stripe = require('stripe')(process.env.STRIPE_SECRET_KEY);
@@ -70,7 +71,40 @@ exports.handler = async (event) => {
 
       case 'invoice.payment_succeeded': {
         const inv  = stripeEvent.data.object;
-        const user = await getUserByCustomerId(inv.customer);
+        let   user = await getUserByCustomerId(inv.customer);
+
+        // Primera factura de una suscripción sin usuario todavía en
+        // clientes_billing: es el caso de alta por transferencia SPEI
+        // (crear-checkout-spei.js) — el cliente y la suscripción ya existen
+        // en Stripe desde que se creó la Checkout Session, pero el acceso al
+        // portal se da de alta hasta que el banco confirma la transferencia,
+        // que es justo este evento. El flujo de tarjeta nunca entra aquí
+        // porque ya crea el usuario de forma síncrona en crear-suscripcion.js.
+        if (!user && inv.billing_reason === 'subscription_create') {
+          try {
+            const customer = await stripe.customers.retrieve(inv.customer);
+            const meta = customer?.metadata || {};
+            if (meta.rfc && meta.plan && meta.empresa) {
+              await provisionarClientePortal({
+                supabase,
+                rfc: meta.rfc,
+                plan: meta.plan,
+                empresa: meta.empresa,
+                email: customer.email,
+                contacto: meta.contacto || '',
+                customerId: inv.customer,
+                subscriptionId: inv.subscription,
+              });
+              user = await getUserByCustomerId(inv.customer);
+              console.log(`✅ Alta por transferencia SPEI confirmada — ${meta.rfc}`);
+            } else {
+              console.error('invoice.payment_succeeded sin usuario y sin metadata de alta SPEI en el customer:', inv.customer);
+            }
+          } catch (provErr) {
+            reportError('stripe-webhook:provisionar-spei', provErr, { customer: inv.customer }).catch(() => {});
+          }
+        }
+
         if (!user) break;
         await supabase.auth.admin.updateUserById(user.id, {
           user_metadata: {

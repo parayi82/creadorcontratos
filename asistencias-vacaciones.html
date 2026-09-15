@@ -6,6 +6,7 @@
 <title>Expedientes de Trabajadores · ClickLaboral.mx</title>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 <style>
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
 :root{
@@ -998,13 +999,13 @@ body.modo-apartar .tablero-tabla tbody td:hover{outline:1px solid #f97316;outlin
 <!-- MODAL: importar roster de trabajadores -->
 <div class="modal-overlay" id="modal-importar-roster">
   <div class="modal-box" style="max-width:640px;">
-    <h3>Importar trabajadores desde CSV</h3>
+    <h3>Importar trabajadores desde Excel o CSV</h3>
     <p style="font-size:12px;color:var(--ink3);margin-bottom:12px;line-height:1.6;">
-      Sube un CSV con tu lista de trabajadores. Columnas esperadas (en cualquier orden, detectadas por encabezado):
-      <strong>nombre</strong> (obligatoria), <strong>puesto</strong>, <strong>fecha_ingreso</strong> (formato AAAA-MM-DD), <strong>nss</strong>.<br>
+      Sube un archivo <strong>.xlsx</strong>, <strong>.xls</strong> o <strong>.csv</strong> con tu lista de trabajadores (por ejemplo, el mismo que usa tu nómina o tu contador). Columnas esperadas (en cualquier orden, detectadas por encabezado):
+      <strong>nombre</strong> (obligatoria), <strong>puesto</strong>, <strong>fecha_ingreso</strong> (formato AAAA-MM-DD), <strong>nss</strong> (11 dígitos).<br>
       Ejemplo de primera línea: <code style="background:var(--surface);padding:1px 5px;border-radius:3px;">nombre,puesto,fecha_ingreso,nss</code>
     </p>
-    <input type="file" id="roster-csv-file" accept=".csv" onchange="leerCSVRoster(this)">
+    <input type="file" id="roster-csv-file" accept=".csv,.xlsx,.xls" onchange="leerArchivoRoster(this)">
     <div id="roster-csv-preview-wrap"></div>
     <div class="modal-close-row">
       <button class="btn btn-outline" onclick="cerrarModalImportarRoster()">Cancelar</button>
@@ -3463,62 +3464,120 @@ async function confirmarImportCSV() {
 function abrirModalImportarRoster(){
   document.getElementById('roster-csv-file').value='';
   document.getElementById('roster-csv-preview-wrap').innerHTML='';
-  document.getElementById('roster-csv-confirmar-btn').disabled = true;
+  const btn = document.getElementById('roster-csv-confirmar-btn');
+  btn.disabled = true;
+  btn.textContent = 'Importar trabajadores';
   filasRosterCSV = [];
   document.getElementById('modal-importar-roster').classList.add('show');
 }
 function cerrarModalImportarRoster(){ document.getElementById('modal-importar-roster').classList.remove('show'); }
 
-function leerCSVRoster(input){
+// Valida una fila ya normalizada del roster. Devuelve la lista de problemas
+// encontrados (vacía si la fila está lista para importarse).
+function validarFilaRoster(f){
+  const errores = [];
+  if (!f.nombre) errores.push('falta el nombre');
+  if (f.nss && !/^\d{11}$/.test(f.nss)) errores.push('NSS debe tener 11 dígitos');
+  if (f.fecha_ingreso) {
+    const d = new Date(f.fecha_ingreso + 'T00:00:00');
+    if (isNaN(d.getTime())) errores.push('fecha de ingreso inválida');
+    else if (d.getTime() > Date.now()) errores.push('fecha de ingreso en el futuro');
+  }
+  return errores;
+}
+
+// Formatea una celda de fecha de Excel (puede llegar como objeto Date real,
+// gracias a cellDates:true) o como texto de un CSV, reusando normalizarFecha
+// solo para el caso de texto — evita la ambigüedad DD/MM vs MM/DD cuando la
+// celda de Excel ya trae un valor de fecha nativo.
+function formatearFechaCelda(valor){
+  if (valor instanceof Date && !isNaN(valor.getTime())) {
+    const y = valor.getFullYear(), m = String(valor.getMonth()+1).padStart(2,'0'), d = String(valor.getDate()).padStart(2,'0');
+    return `${y}-${m}-${d}`;
+  }
+  return normalizarFecha(String(valor ?? ''));
+}
+
+function leerArchivoRoster(input){
   const file = input.files[0];
   if (!file) return;
+  const esExcel = /\.xlsx?$/i.test(file.name);
   const reader = new FileReader();
   reader.onload = (e) => {
-    const texto = e.target.result;
-    const sep = texto.includes(';') && !texto.includes(',') ? ';' : ',';
-    const lineas = texto.split(/\r?\n/).filter(l=>l.trim());
-    if (lineas.length < 2) { alert('El archivo no tiene datos suficientes.'); return; }
-    const headers = lineas[0].split(sep).map(h=>h.trim());
-
-    const idxNombre = detectarColumna(headers, ['nombre','name','employee','empleado']);
-    const idxPuesto = detectarColumna(headers, ['puesto','cargo','position','role']);
-    const idxIngreso = detectarColumna(headers, ['fecha_ingreso','fecha ingreso','ingreso','hire date','fecha_alta']);
-    const idxNss = detectarColumna(headers, ['nss','seguro social','social security']);
-
-    if (idxNombre===-1) {
-      document.getElementById('roster-csv-preview-wrap').innerHTML = `<div class="csv-warn">⚠️ No pudimos detectar la columna de nombre. Asegúrese de que el CSV tenga un encabezado claro (ej. "nombre") y vuelva a intentar.</div>`;
-      return;
+    try {
+      let filas;
+      if (esExcel) {
+        const wb = XLSX.read(e.target.result, { type: 'array', cellDates: true });
+        const hoja = wb.Sheets[wb.SheetNames[0]];
+        filas = XLSX.utils.sheet_to_json(hoja, { header: 1, raw: true, defval: '' });
+      } else {
+        const contenido = e.target.result;
+        const sep = contenido.includes(';') && !contenido.includes(',') ? ';' : ',';
+        filas = contenido.split(/\r?\n/).filter(l=>l.trim()).map(l => l.split(sep).map(c=>c.trim()));
+      }
+      procesarFilasRoster(filas);
+    } catch(err) {
+      document.getElementById('roster-csv-preview-wrap').innerHTML = `<div class="csv-warn">⚠️ No se pudo leer el archivo: ${err.message||err}</div>`;
     }
-
-    filasRosterCSV = lineas.slice(1).map(linea=>{
-      const cols = linea.split(sep).map(c=>c.trim());
-      return {
-        nombre: cols[idxNombre]||'',
-        puesto: idxPuesto!==-1 ? (cols[idxPuesto]||'') : '',
-        fecha_ingreso: idxIngreso!==-1 ? normalizarFecha(cols[idxIngreso]||'') : '',
-        nss: idxNss!==-1 ? (cols[idxNss]||'') : '',
-      };
-    }).filter(f=>f.nombre);
-
-    const yaExisten = filasRosterCSV.filter(f => trabajadores.some(t=>t.nombre.toLowerCase().trim()===f.nombre.toLowerCase().trim()));
-
-    let html = `<p style="font-size:12px;margin:10px 0;">Se detectaron <strong>${filasRosterCSV.length}</strong> trabajador(es) en el archivo.</p>`;
-    if (yaExisten.length) {
-      html += `<div class="csv-warn">⚠️ ${yaExisten.length} nombre(s) ya existen en tu roster y se omitirán para evitar duplicados: ${yaExisten.map(f=>f.nombre).join(', ')}.</div>`;
-    }
-    html += `<table class="csv-preview-table"><tr><th>Nombre</th><th>Puesto</th><th>Fecha ingreso</th><th>NSS</th></tr>`;
-    html += filasRosterCSV.slice(0,8).map(f=>`<tr><td>${f.nombre}</td><td>${f.puesto||'—'}</td><td>${f.fecha_ingreso||'—'}</td><td>${f.nss||'—'}</td></tr>`).join('');
-    html += `</table>`;
-    if (filasRosterCSV.length>8) html += `<p style="font-size:11px;color:var(--ink3);">...y ${filasRosterCSV.length-8} más.</p>`;
-    document.getElementById('roster-csv-preview-wrap').innerHTML = html;
-    document.getElementById('roster-csv-confirmar-btn').disabled = filasRosterCSV.length===0;
   };
-  reader.readAsText(file);
+  if (esExcel) reader.readAsArrayBuffer(file); else reader.readAsText(file);
+}
+
+function procesarFilasRoster(filas){
+  if (filas.length < 2) { alert('El archivo no tiene datos suficientes.'); return; }
+  const texto = (v) => String(v ?? '').trim();
+  const headers = filas[0].map(texto);
+
+  const idxNombre = detectarColumna(headers, ['nombre','name','employee','empleado']);
+  const idxPuesto = detectarColumna(headers, ['puesto','cargo','position','role']);
+  const idxIngreso = detectarColumna(headers, ['fecha_ingreso','fecha ingreso','ingreso','hire date','fecha_alta']);
+  const idxNss = detectarColumna(headers, ['nss','seguro social','social security']);
+
+  if (idxNombre===-1) {
+    document.getElementById('roster-csv-preview-wrap').innerHTML = `<div class="csv-warn">⚠️ No pudimos detectar la columna de nombre. Asegúrese de que el archivo tenga un encabezado claro (ej. "nombre") y vuelva a intentar.</div>`;
+    return;
+  }
+
+  const todas = filas.slice(1)
+    .filter(cols => cols.some(c => texto(c)))
+    .map(cols => ({
+      nombre: texto(cols[idxNombre]),
+      puesto: idxPuesto!==-1 ? texto(cols[idxPuesto]) : '',
+      fecha_ingreso: idxIngreso!==-1 ? formatearFechaCelda(cols[idxIngreso]) : '',
+      nss: idxNss!==-1 ? texto(cols[idxNss]).replace(/[^\d]/g,'') : '',
+    }))
+    .filter(f => f.nombre);
+
+  filasRosterCSV = todas.map(f => ({ ...f, errores: validarFilaRoster(f) }));
+
+  const yaExisteEnRoster = f => trabajadores.some(t=>t.nombre.toLowerCase().trim()===f.nombre.toLowerCase().trim());
+  const yaExisten    = filasRosterCSV.filter(f => !f.errores.length && yaExisteEnRoster(f));
+  const invalidas    = filasRosterCSV.filter(f => f.errores.length);
+  const validasNuevas = filasRosterCSV.filter(f => !f.errores.length && !yaExisteEnRoster(f));
+
+  let html = `<p style="font-size:12px;margin:10px 0;">Se detectaron <strong>${filasRosterCSV.length}</strong> fila(s) con datos. <strong>${validasNuevas.length}</strong> se importarán.</p>`;
+  if (yaExisten.length) {
+    html += `<div class="csv-warn">⚠️ ${yaExisten.length} nombre(s) ya existen en tu roster y se omitirán para evitar duplicados: ${yaExisten.map(f=>f.nombre).join(', ')}.</div>`;
+  }
+  if (invalidas.length) {
+    html += `<div class="csv-warn">⚠️ ${invalidas.length} fila(s) con error no se importarán:<ul style="margin:6px 0 0 18px;">${invalidas.map(f=>`<li>${f.nombre||'(sin nombre)'}: ${f.errores.join(', ')}</li>`).join('')}</ul></div>`;
+  }
+  html += `<table class="csv-preview-table"><tr><th>Nombre</th><th>Puesto</th><th>Fecha ingreso</th><th>NSS</th><th>Estado</th></tr>`;
+  html += filasRosterCSV.slice(0,8).map(f=>{
+    const estado = f.errores.length ? `⚠️ ${f.errores.join(', ')}` : (yaExisteEnRoster(f) ? '↺ ya existe' : '✓ nuevo');
+    return `<tr><td>${f.nombre}</td><td>${f.puesto||'—'}</td><td>${f.fecha_ingreso||'—'}</td><td>${f.nss||'—'}</td><td>${estado}</td></tr>`;
+  }).join('');
+  html += `</table>`;
+  if (filasRosterCSV.length>8) html += `<p style="font-size:11px;color:var(--ink3);">...y ${filasRosterCSV.length-8} más.</p>`;
+  document.getElementById('roster-csv-preview-wrap').innerHTML = html;
+  const btn = document.getElementById('roster-csv-confirmar-btn');
+  btn.disabled = validasNuevas.length===0;
+  btn.textContent = `Importar ${validasNuevas.length} trabajador(es) válido(s)`;
 }
 
 async function confirmarImportRoster(){
-  const nuevos = filasRosterCSV.filter(f => !trabajadores.some(t=>t.nombre.toLowerCase().trim()===f.nombre.toLowerCase().trim()));
-  if (!nuevos.length) { alert('Todos los trabajadores del archivo ya existen en el roster. No hay nada nuevo que importar.'); return; }
+  const nuevos = filasRosterCSV.filter(f => !f.errores.length && !trabajadores.some(t=>t.nombre.toLowerCase().trim()===f.nombre.toLowerCase().trim()));
+  if (!nuevos.length) { alert('No hay trabajadores válidos y nuevos que importar.'); return; }
 
   const registros = nuevos.map(f => ({
     cliente_rfc: clienteRFC,

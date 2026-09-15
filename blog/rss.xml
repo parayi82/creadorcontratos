@@ -5,9 +5,17 @@
     <link>https://clicklaboral.mx/blog/</link>
     <description>Artículos, noticias y tips de compliance laboral para PyMEs mexicanas</description>
     <language>es-MX</language>
-    <lastBuildDate>Mon, 14 Sep 2026 18:57:54 GMT</lastBuildDate>
+    <lastBuildDate>Tue, 15 Sep 2026 17:51:11 GMT</lastBuildDate>
     <managingEditor>blog@clicklaboral.mx (ClickLaboral.mx)</managingEditor>
     <atom:link href="https://clicklaboral.mx/blog/rss.xml" rel="self" type="application/rss+xml"/>
+    <item>
+      <title>Aguinaldo de 30 días: dónde quedó la propuesta legislativa y cuál es la obligación actual</title>
+      <link>https://clicklaboral.mx/blog/noticia-aguinaldo-de-30-dias-donde-quedo-la-propuesta-legi-2026-09-15.html</link>
+      <guid isPermaLink="true">https://clicklaboral.mx/blog/noticia-aguinaldo-de-30-dias-donde-quedo-la-propuesta-legi-2026-09-15.html</guid>
+      <pubDate>Tue, 15 Sep 2026 12:00:00 GMT</pubDate>
+      <category>Reforma Laboral</category>
+      <description>La propuesta para elevar el aguinaldo de 15 a 30 días de salario no ha avanzado en el Congreso de la Unión y, por el momento, la obligación legal vigente permanece sin cambios: el patrón debe pagar al…</description>
+    </item>
     <item>
       <title>Tip: cómo comunicar un cambio de turno sin arriesgar una demanda por modificación unilateral</title>
       <link>https://clicklaboral.mx/blog/noticia-tip-como-comunicar-un-cambio-de-turno-sin-arriesga-2026-09-14.html</link>
@@ -199,14 +207,6 @@
       <pubDate>Fri, 11 Sep 2026 12:00:00 GMT</pubDate>
       <category>Cumplimiento</category>
       <description>La mayoría de los dueños de PyMEs en México no sabe con certeza si su empresa cumple con la Ley Federal del Trabajo — no porque no les importe, sino porque nadie les ha hecho las preguntas correctas.…</description>
-    </item>
-    <item>
-      <title>Abogado de planta, despacho externo o software por suscripción: qué le conviene a su PyME</title>
-      <link>https://clicklaboral.mx/blog/abogado-de-planta-despacho-externo-o-software-por-suscripcion-que-le-conviene-a-su-pyme-2026-09-11.html</link>
-      <guid isPermaLink="true">https://clicklaboral.mx/blog/abogado-de-planta-despacho-externo-o-software-por-suscripcion-que-le-conviene-a-su-pyme-2026-09-11.html</guid>
-      <pubDate>Fri, 11 Sep 2026 12:00:00 GMT</pubDate>
-      <category>Cumplimiento</category>
-      <description>Cuando una PyME empieza a tener suficientes trabajadores para preocuparse por el cumplimiento laboral, surge siempre la misma pregunta: ¿contrato a un abogado de planta, negocio con un despacho extern…</description>
     </item>
   </channel>
 </rss>

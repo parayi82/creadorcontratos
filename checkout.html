@@ -286,19 +286,36 @@ src="https://www.facebook.com/tr?id=772478098942349&ev=PageView&noscript=1"
           <div class="step-title">Información de pago</div>
         </div>
 
-        <div class="sim-notice" style="background:#eef7f0;border-color:rgba(22,163,74,.25);color:#14532d;">
-          🔒 <strong>Pago seguro con Stripe.</strong> Los datos de su tarjeta se capturan directamente por Stripe y nunca pasan por nuestros servidores.
+        <div style="display:flex;gap:8px;margin-bottom:16px;">
+          <button type="button" id="btn-metodo-tarjeta" onclick="elegirMetodoPago('tarjeta')"
+            style="flex:1;padding:10px 14px;border-radius:8px;border:1.5px solid #0f2640;background:#0f2640;color:#fff;font-size:13px;font-weight:600;cursor:pointer;">
+            💳 Tarjeta
+          </button>
+          <button type="button" id="btn-metodo-spei" onclick="elegirMetodoPago('spei')"
+            style="flex:1;padding:10px 14px;border-radius:8px;border:1.5px solid #ddd;background:#fff;color:#0f2640;font-size:13px;font-weight:600;cursor:pointer;">
+            🏦 Transferencia SPEI
+          </button>
         </div>
 
-        <div class="field">
-          <label>Datos de la tarjeta</label>
-          <div class="stripe-element-wrap" id="card-element"></div>
-          <div class="card-error" id="card-error"></div>
+        <div class="sim-notice" id="pago-tarjeta-aviso" style="background:#eef7f0;border-color:rgba(22,163,74,.25);color:#14532d;">
+          🔒 <strong>Pago seguro con Stripe.</strong> Los datos de su tarjeta se capturan directamente por Stripe y nunca pasan por nuestros servidores.
         </div>
-        <div class="field">
-          <label>Nombre en la tarjeta</label>
-          <input type="text" id="f-nombre-tarjeta" placeholder="Tal como aparece en la tarjeta">
+        <div class="sim-notice" id="pago-spei-aviso" style="display:none;background:#eef4fc;border-color:rgba(26,58,92,.2);color:#1a3a5c;">
+          🏦 <strong>Transferencia SPEI.</strong> Al continuar, Stripe le mostrará una CLABE interbancaria para transferir desde la app o portal de su banco. Su suscripción se activa en cuanto el banco confirma la transferencia (normalmente el mismo día hábil).
         </div>
+
+        <div id="pago-tarjeta-campos">
+          <div class="field">
+            <label>Datos de la tarjeta</label>
+            <div class="stripe-element-wrap" id="card-element"></div>
+            <div class="card-error" id="card-error"></div>
+          </div>
+          <div class="field">
+            <label>Nombre en la tarjeta</label>
+            <input type="text" id="f-nombre-tarjeta" placeholder="Tal como aparece en la tarjeta">
+          </div>
+        </div>
+
         <div class="field">
           <label>Método de facturación</label>
           <select id="f-facturacion">
@@ -310,6 +327,7 @@ src="https://www.facebook.com/tr?id=772478098942349&ev=PageView&noscript=1"
         <button class="pay-btn" id="pay-btn" onclick="procesarPago()">
           <span id="pay-icon">🔒</span>
           <span id="pay-text">Suscribirme por <span id="pay-amount">$1,999</span> MXN, IVA incluido</span>
+          <span id="pay-text-spei" style="display:none;">Continuar con transferencia SPEI</span>
           <div class="spinner" id="pay-spinner"></div>
         </button>
 
@@ -443,16 +461,37 @@ cardElement.on('change', ({ error, complete }) => {
   else { errEl.style.display = 'none'; }
 });
 
+let metodoPagoActual = 'tarjeta';
+
+function elegirMetodoPago(metodo){
+  metodoPagoActual = metodo;
+  const esSpei = metodo === 'spei';
+  document.getElementById('btn-metodo-tarjeta').style.cssText =
+    'flex:1;padding:10px 14px;border-radius:8px;font-size:13px;font-weight:600;cursor:pointer;' +
+    (esSpei ? 'border:1.5px solid #ddd;background:#fff;color:#0f2640;' : 'border:1.5px solid #0f2640;background:#0f2640;color:#fff;');
+  document.getElementById('btn-metodo-spei').style.cssText =
+    'flex:1;padding:10px 14px;border-radius:8px;font-size:13px;font-weight:600;cursor:pointer;' +
+    (esSpei ? 'border:1.5px solid #0f2640;background:#0f2640;color:#fff;' : 'border:1.5px solid #ddd;background:#fff;color:#0f2640;');
+  document.getElementById('pago-tarjeta-aviso').style.display = esSpei ? 'none' : '';
+  document.getElementById('pago-spei-aviso').style.display = esSpei ? '' : 'none';
+  document.getElementById('pago-tarjeta-campos').style.display = esSpei ? 'none' : '';
+  setBotonCargando(false);
+}
+
 function setBotonCargando(cargando, textoError) {
   const btn = document.getElementById('pay-btn');
+  const esSpei = metodoPagoActual === 'spei';
   btn.disabled = cargando;
   document.getElementById('pay-icon').style.display = cargando ? 'none' : 'inline';
-  document.getElementById('pay-text').style.display = cargando ? 'none' : 'inline';
+  document.getElementById('pay-text').style.display = (cargando || esSpei) ? 'none' : 'inline';
+  document.getElementById('pay-text-spei').style.display = (!cargando && esSpei) ? 'inline' : 'none';
   document.getElementById('pay-spinner').style.display = cargando ? 'block' : 'none';
   if (textoError) alert(textoError);
 }
 
 async function procesarPago(){
+  if (metodoPagoActual === 'spei') return procesarPagoSPEI();
+
   const empresa = document.getElementById('f-empresa').value.trim();
   const rfc = document.getElementById('f-rfc').value.trim().toUpperCase();
   const email = document.getElementById('f-email').value.trim();
@@ -520,6 +559,48 @@ async function procesarPago(){
       credencialesPortal: data.credencialesPortal || null,
     });
 
+  } catch (err) {
+    console.error(err);
+    setBotonCargando(false, 'Ocurrió un error de conexión. Verifique su internet e intente de nuevo.');
+  }
+}
+
+// Transferencia SPEI: a diferencia de la tarjeta, el pago no se confirma en
+// esta página — Stripe Checkout le muestra al cliente una CLABE y espera la
+// transferencia real desde su banco. Por eso aquí solo se pide la sesión de
+// Checkout y se redirige; el alta del cliente (usuario del portal + correo de
+// bienvenida) ocurre después, en el webhook, cuando el banco confirma el pago.
+async function procesarPagoSPEI(){
+  const empresa = document.getElementById('f-empresa').value.trim();
+  const rfc = document.getElementById('f-rfc').value.trim().toUpperCase();
+  const email = document.getElementById('f-email').value.trim();
+  const contacto = document.getElementById('f-contacto').value.trim();
+
+  if(!empresa||!rfc||!email||!contacto){ alert('Complete los campos obligatorios (razón social, RFC, email y contacto)'); return; }
+
+  if (typeof fbq === 'function') {
+    const planInfo = PLANES[planActual];
+    fbq('track', 'InitiateCheckout', { content_name: planInfo.nombre, value: planInfo.total, currency: 'MXN' });
+  }
+
+  setBotonCargando(true);
+  try {
+    const response = await fetch('/api/crear-checkout-spei', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        plan: planActual, empresa, rfc, email, contacto,
+        codigoReferido: codigoReferido || null,
+      }),
+    });
+    const data = await response.json();
+
+    if (!response.ok) {
+      setBotonCargando(false, data.error || 'No se pudo iniciar el pago por transferencia. Intente de nuevo.');
+      return;
+    }
+
+    window.location.href = data.url; // Stripe Checkout hospedado — muestra la CLABE
   } catch (err) {
     console.error(err);
     setBotonCargando(false, 'Ocurrió un error de conexión. Verifique su internet e intente de nuevo.');

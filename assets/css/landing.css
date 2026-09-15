@@ -135,7 +135,7 @@ section{padding:112px 24px;}
 
 /* ── Riesgos ──────────────────────────────────────────────────────────────── */
 .riesgo{background:var(--white);}
-.risk-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:16px;}
+.risk-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:16px;}
 .risk-card{background:var(--surface);border:1px solid transparent;border-radius:var(--r-xl);padding:34px 30px;position:relative;overflow:hidden;transition:transform .4s var(--ease-spring),box-shadow .4s var(--ease);box-shadow:none;}
 .risk-card:hover{transform:translateY(-4px);box-shadow:0 24px 48px -28px rgba(0,0,0,.3);border-color:transparent;}
 .risk-card:active{transform:translateY(-1px);transition-duration:var(--dur-instant);}

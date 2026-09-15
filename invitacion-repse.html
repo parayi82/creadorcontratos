@@ -1,0 +1,256 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Invitación REPSE — ClickLaboral.mx</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap">
+<style>
+:root {
+  --bg: #f8fafc;
+  --surface: #ffffff;
+  --surface-2: #f1f5f9;
+  --border: #e2e8f0;
+  --text: #0f172a;
+  --text-2: #475569;
+  --text-3: #94a3b8;
+  --accent: #0ea5e9;
+  --accent-d: #0284c7;
+  --green: #16a34a;
+  --green-bg: #f0fdf4;
+  --green-b: #bbf7d0;
+  --red: #dc2626;
+  --red-bg: #fef2f2;
+  --red-b: #fecaca;
+  --radius: 14px;
+  --shadow: 0 4px 24px rgba(0,0,0,.08);
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #0f172a; --surface: #1e293b; --surface-2: #273449; --border: #334155;
+    --text: #f1f5f9; --text-2: #94a3b8; --text-3: #475569;
+    --green-bg: #052e16; --green-b: #166534; --red-bg: #450a0a; --red-b: #7f1d1d;
+  }
+}
+:root[data-theme="dark"] {
+  --bg: #0f172a; --surface: #1e293b; --surface-2: #273449; --border: #334155;
+  --text: #f1f5f9; --text-2: #94a3b8; --text-3: #475569;
+  --green-bg: #052e16; --green-b: #166534; --red-bg: #450a0a; --red-b: #7f1d1d;
+}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);min-height:100vh;display:flex;flex-direction:column;align-items:center;padding:32px 16px;}
+
+.wrap{width:100%;max-width:560px;}
+.eyebrow{font-size:.72rem;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--accent-d);text-align:center;margin-bottom:8px;}
+h1{font-size:1.4rem;font-weight:800;text-align:center;line-height:1.35;margin-bottom:8px;}
+.sub{font-size:.9rem;color:var(--text-2);text-align:center;margin-bottom:28px;line-height:1.6;}
+
+.card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);box-shadow:var(--shadow);padding:28px 24px;}
+
+.field{margin-bottom:16px;}
+.field label{display:block;font-size:.82rem;font-weight:600;color:var(--text);margin-bottom:6px;}
+.field .hint{font-size:.72rem;color:var(--text-3);margin-top:4px;}
+.field input{width:100%;padding:10px 12px;border:1px solid var(--border);border-radius:8px;font-size:.88rem;background:var(--surface);color:var(--text);font-family:inherit;}
+.field input:focus{outline:none;border-color:var(--accent);box-shadow:0 0 0 3px rgba(14,165,233,.15);}
+.field-row{display:grid;grid-template-columns:1fr 1fr;gap:12px;}
+@media (max-width:480px){ .field-row{grid-template-columns:1fr;} }
+
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:6px;padding:12px 20px;border-radius:8px;font-size:.9rem;font-weight:700;cursor:pointer;border:none;width:100%;font-family:inherit;}
+.btn-primary{background:var(--accent);color:#fff;}
+.btn-primary:hover{background:var(--accent-d);}
+.btn-primary:disabled{opacity:.6;cursor:not-allowed;}
+.btn-outline{background:transparent;border:1.5px solid var(--border);color:var(--text);}
+
+.msg-error{background:var(--red-bg);border:1px solid var(--red-b);color:var(--red);border-radius:8px;padding:10px 14px;font-size:.82rem;margin-bottom:16px;}
+.center{text-align:center;}
+.ico-big{font-size:2.4rem;margin-bottom:12px;}
+.spinner{width:28px;height:28px;border:3px solid var(--border);border-top-color:var(--accent);border-radius:50%;animation:spin .7s linear infinite;margin:0 auto;}
+@keyframes spin{to{transform:rotate(360deg);}}
+footer{margin-top:24px;text-align:center;font-size:.75rem;color:var(--text-3);}
+footer a{color:var(--accent-d);}
+</style>
+</head>
+<body>
+
+<div class="wrap">
+  <div class="eyebrow">Compliance laboral · Ley REPSE</div>
+  <h1 id="titulo">Comparte tu información de registro REPSE</h1>
+  <p class="sub" id="subtitulo">Cargando invitación…</p>
+
+  <div class="card">
+    <div id="vista-cargando" class="center">
+      <div class="spinner"></div>
+    </div>
+
+    <div id="vista-error" style="display:none;" class="center">
+      <div class="ico-big">⚠️</div>
+      <p style="font-size:.9rem;color:var(--text-2);" id="error-texto">Este link de invitación no es válido.</p>
+    </div>
+
+    <div id="vista-completado" style="display:none;" class="center">
+      <div class="ico-big">✅</div>
+      <p style="font-size:.95rem;font-weight:600;margin-bottom:6px;">Ya se recibió tu información.</p>
+      <p style="font-size:.85rem;color:var(--text-2);">No necesitas hacer nada más — si algo cambió (vigencia, datos de contacto), pide a quien te invitó un nuevo link.</p>
+    </div>
+
+    <div id="vista-formulario" style="display:none;">
+      <div class="field">
+        <label>Razón social o nombre *</label>
+        <input type="text" id="f-nombre" placeholder="Servicios Especializados del Norte, S.A. de C.V.">
+      </div>
+      <div class="field-row">
+        <div class="field">
+          <label>RFC</label>
+          <input type="text" id="f-rfc" placeholder="SEN800101AAA" maxlength="13">
+        </div>
+        <div class="field">
+          <label>Número de registro REPSE *</label>
+          <input type="text" id="f-repse" placeholder="REPSE-STPS-2021-12345">
+        </div>
+      </div>
+      <div class="field-row">
+        <div class="field">
+          <label>Vigencia del registro REPSE *</label>
+          <input type="date" id="f-vigencia">
+        </div>
+        <div class="field">
+          <label>Actividad especializada registrada</label>
+          <input type="text" id="f-actividad" placeholder="Ej. Servicios de limpieza industrial">
+        </div>
+      </div>
+      <div class="field">
+        <label>Representante legal</label>
+        <input type="text" id="f-rep" placeholder="Nombre completo">
+      </div>
+      <div class="field-row">
+        <div class="field">
+          <label>Email de contacto</label>
+          <input type="email" id="f-email" placeholder="contacto@tuempresa.mx">
+        </div>
+        <div class="field">
+          <label>Teléfono</label>
+          <input type="text" id="f-tel" placeholder="33 1234 5678">
+        </div>
+      </div>
+      <div class="field">
+        <label>Domicilio</label>
+        <input type="text" id="f-domicilio" placeholder="Calle, No., Colonia, Ciudad, Estado, C.P.">
+      </div>
+
+      <div id="form-err" class="msg-error" style="display:none;"></div>
+
+      <button class="btn btn-primary" id="btn-enviar" onclick="enviarInformacion()">Enviar mi información</button>
+    </div>
+
+    <div id="vista-exito" style="display:none;" class="center">
+      <div class="ico-big">🎉</div>
+      <p style="font-size:.95rem;font-weight:700;margin-bottom:6px;">¡Listo! Tu información ya quedó registrada.</p>
+      <p style="font-size:.85rem;color:var(--text-2);margin-bottom:20px;">Gracias por completarla — esto ayuda a que tu cliente cumpla con la Ley REPSE, y a ti también te sirve tenerla en un solo lugar.</p>
+      <div style="background:var(--surface-2);border-radius:10px;padding:18px;margin-bottom:16px;">
+        <p style="font-size:.85rem;font-weight:600;margin-bottom:8px;">¿Tu propia empresa también contrata trabajadores?</p>
+        <p style="font-size:.8rem;color:var(--text-2);margin-bottom:14px;">ClickLaboral.mx hace lo mismo que acabas de ver por ti, para tu propio cumplimiento laboral: contratos, NOM-035, REPSE, asistencias y más — en un solo lugar.</p>
+        <a href="index.html" class="btn btn-outline" style="text-decoration:none;">Conocer ClickLaboral.mx →</a>
+      </div>
+    </div>
+  </div>
+
+  <footer>ClickLaboral.mx · <a href="aviso-de-privacidad.html">Aviso de privacidad</a></footer>
+</div>
+
+<script>
+const params = new URLSearchParams(window.location.search);
+const TOKEN = params.get('token') || '';
+
+function mostrarVista(id) {
+  ['vista-cargando','vista-error','vista-completado','vista-formulario','vista-exito'].forEach(v => {
+    document.getElementById(v).style.display = v === id ? '' : 'none';
+  });
+}
+
+async function init() {
+  if (!TOKEN) {
+    document.getElementById('subtitulo').textContent = '';
+    document.getElementById('error-texto').textContent = 'Falta el link completo — pide a quien te invitó que te lo reenvíe.';
+    mostrarVista('vista-error');
+    return;
+  }
+  try {
+    const resp = await fetch('/api/repse-invitacion?token=' + encodeURIComponent(TOKEN));
+    const data = await resp.json();
+    if (!resp.ok) {
+      document.getElementById('subtitulo').textContent = '';
+      document.getElementById('error-texto').textContent = data.error || 'Este link de invitación no es válido.';
+      mostrarVista('vista-error');
+      return;
+    }
+    if (data.estado === 'completado') {
+      document.getElementById('subtitulo').textContent = '';
+      mostrarVista('vista-completado');
+      return;
+    }
+    document.getElementById('subtitulo').textContent =
+      `${data.empresa} te invitó a compartir tu información de registro REPSE — les ayuda a cumplir con la Ley REPSE (Art. 15-A LFT), y te toma menos de 2 minutos.`;
+    mostrarVista('vista-formulario');
+  } catch (e) {
+    document.getElementById('subtitulo').textContent = '';
+    document.getElementById('error-texto').textContent = 'No se pudo cargar la invitación. Verifique su conexión e intente de nuevo.';
+    mostrarVista('vista-error');
+  }
+}
+
+async function enviarInformacion() {
+  const nombre = document.getElementById('f-nombre').value.trim();
+  const rfc = document.getElementById('f-rfc').value.trim().toUpperCase();
+  const numRepse = document.getElementById('f-repse').value.trim();
+  const vigencia = document.getElementById('f-vigencia').value;
+  const actividad = document.getElementById('f-actividad').value.trim();
+  const rep = document.getElementById('f-rep').value.trim();
+  const email = document.getElementById('f-email').value.trim();
+  const tel = document.getElementById('f-tel').value.trim();
+  const domicilio = document.getElementById('f-domicilio').value.trim();
+
+  const err = document.getElementById('form-err');
+  err.style.display = 'none';
+
+  if (!nombre || !numRepse || !vigencia) {
+    err.textContent = 'Complete los campos obligatorios: nombre, número REPSE y vigencia.';
+    err.style.display = 'block';
+    return;
+  }
+
+  const btn = document.getElementById('btn-enviar');
+  btn.disabled = true;
+  btn.textContent = 'Enviando…';
+
+  try {
+    const resp = await fetch('/api/repse-invitacion', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        token: TOKEN, nombre, rfc_proveedor: rfc || null, num_repse: numRepse, vigencia_repse: vigencia,
+        actividad: actividad || null, domicilio: domicilio || null, rep_legal: rep || null,
+        email: email || null, telefono: tel || null,
+      }),
+    });
+    const data = await resp.json();
+    if (!resp.ok) {
+      err.textContent = data.error || 'No se pudo enviar. Intente de nuevo.';
+      err.style.display = 'block';
+      btn.disabled = false;
+      btn.textContent = 'Enviar mi información';
+      return;
+    }
+    mostrarVista('vista-exito');
+  } catch (e) {
+    err.textContent = 'Ocurrió un error de conexión. Verifique su internet e intente de nuevo.';
+    err.style.display = 'block';
+    btn.disabled = false;
+    btn.textContent = 'Enviar mi información';
+  }
+}
+
+init();
+</script>
+</body>
+</html>

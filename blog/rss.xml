@@ -5,9 +5,17 @@
     <link>https://clicklaboral.mx/blog/</link>
     <description>Artículos, noticias y tips de compliance laboral para PyMEs mexicanas</description>
     <language>es-MX</language>
-    <lastBuildDate>Tue, 15 Sep 2026 17:51:11 GMT</lastBuildDate>
+    <lastBuildDate>Wed, 16 Sep 2026 14:09:17 GMT</lastBuildDate>
     <managingEditor>blog@clicklaboral.mx (ClickLaboral.mx)</managingEditor>
     <atom:link href="https://clicklaboral.mx/blog/rss.xml" rel="self" type="application/rss+xml"/>
+    <item>
+      <title>Comisión Mixta de PTU: integración, funciones y plazos legales</title>
+      <link>https://clicklaboral.mx/blog/comision-mixta-de-ptu-integracion-funciones-y-plazos-legales-2026-09-16.html</link>
+      <guid isPermaLink="true">https://clicklaboral.mx/blog/comision-mixta-de-ptu-integracion-funciones-y-plazos-legales-2026-09-16.html</guid>
+      <pubDate>Wed, 16 Sep 2026 12:00:00 GMT</pubDate>
+      <category>Cumplimiento</category>
+      <description>Si su empresa tiene utilidades que repartir, la Comisión Mixta de PTU no es opcional: es una obligación legal que debe cumplirse antes del 1 de mayo para empresas y antes del 29 de junio para personas…</description>
+    </item>
     <item>
       <title>Aguinaldo de 30 días: dónde quedó la propuesta legislativa y cuál es la obligación actual</title>
       <link>https://clicklaboral.mx/blog/noticia-aguinaldo-de-30-dias-donde-quedo-la-propuesta-legi-2026-09-15.html</link>
@@ -199,14 +207,6 @@
       <pubDate>Fri, 11 Sep 2026 12:00:00 GMT</pubDate>
       <category>Cumplimiento</category>
       <description>El Reglamento Interior de Trabajo no es un documento opcional ni un formato genérico que se descarga de internet: la Ley Federal del Trabajo exige que se deposite ante el Centro Federal de Conciliació…</description>
-    </item>
-    <item>
-      <title>Cómo saber si su empresa cumple con la LFT: autodiagnóstico gratuito</title>
-      <link>https://clicklaboral.mx/blog/como-saber-si-su-empresa-cumple-con-la-lft-autodiagnostico-gratuito-2026-09-11.html</link>
-      <guid isPermaLink="true">https://clicklaboral.mx/blog/como-saber-si-su-empresa-cumple-con-la-lft-autodiagnostico-gratuito-2026-09-11.html</guid>
-      <pubDate>Fri, 11 Sep 2026 12:00:00 GMT</pubDate>
-      <category>Cumplimiento</category>
-      <description>La mayoría de los dueños de PyMEs en México no sabe con certeza si su empresa cumple con la Ley Federal del Trabajo — no porque no les importe, sino porque nadie les ha hecho las preguntas correctas.…</description>
     </item>
   </channel>
 </rss>

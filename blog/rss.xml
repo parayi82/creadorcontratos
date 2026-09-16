@@ -5,9 +5,17 @@
     <link>https://clicklaboral.mx/blog/</link>
     <description>Artículos, noticias y tips de compliance laboral para PyMEs mexicanas</description>
     <language>es-MX</language>
-    <lastBuildDate>Wed, 16 Sep 2026 14:09:17 GMT</lastBuildDate>
+    <lastBuildDate>Wed, 16 Sep 2026 17:53:01 GMT</lastBuildDate>
     <managingEditor>blog@clicklaboral.mx (ClickLaboral.mx)</managingEditor>
     <atom:link href="https://clicklaboral.mx/blog/rss.xml" rel="self" type="application/rss+xml"/>
+    <item>
+      <title>IMSS reporta aumento en multas a empresas con trabajadores no registrados en 2025</title>
+      <link>https://clicklaboral.mx/blog/noticia-imss-reporta-aumento-en-multas-a-empresas-con-trab-2026-09-16.html</link>
+      <guid isPermaLink="true">https://clicklaboral.mx/blog/noticia-imss-reporta-aumento-en-multas-a-empresas-con-trab-2026-09-16.html</guid>
+      <pubDate>Wed, 16 Sep 2026 12:00:00 GMT</pubDate>
+      <category>Noticias</category>
+      <description>El Instituto Mexicano del Seguro Social intensificó en 2025 sus operativos de verificación patronal y reporta un incremento superior al 35% en multas aplicadas a empresas que mantienen trabajadores si…</description>
+    </item>
     <item>
       <title>Comisión Mixta de PTU: integración, funciones y plazos legales</title>
       <link>https://clicklaboral.mx/blog/comision-mixta-de-ptu-integracion-funciones-y-plazos-legales-2026-09-16.html</link>
@@ -199,14 +207,6 @@
       <pubDate>Fri, 11 Sep 2026 12:00:00 GMT</pubDate>
       <category>Cumplimiento</category>
       <description>Levantar un acta administrativa desde cero, cada vez que ocurre una falta, es de las tareas que más tiempo le roba a un área de RH pequeña — y de las que más caro salen cuando se hacen mal. Un acta re…</description>
-    </item>
-    <item>
-      <title>Cómo generar el reglamento interior de trabajo sin contratar a un despacho</title>
-      <link>https://clicklaboral.mx/blog/como-generar-el-reglamento-interior-de-trabajo-sin-contratar-a-un-despacho-2026-09-11.html</link>
-      <guid isPermaLink="true">https://clicklaboral.mx/blog/como-generar-el-reglamento-interior-de-trabajo-sin-contratar-a-un-despacho-2026-09-11.html</guid>
-      <pubDate>Fri, 11 Sep 2026 12:00:00 GMT</pubDate>
-      <category>Cumplimiento</category>
-      <description>El Reglamento Interior de Trabajo no es un documento opcional ni un formato genérico que se descarga de internet: la Ley Federal del Trabajo exige que se deposite ante el Centro Federal de Conciliació…</description>
     </item>
   </channel>
 </rss>

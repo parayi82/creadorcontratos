@@ -5,9 +5,17 @@
     <link>https://clicklaboral.mx/blog/</link>
     <description>Artículos, noticias y tips de compliance laboral para PyMEs mexicanas</description>
     <language>es-MX</language>
-    <lastBuildDate>Wed, 16 Sep 2026 17:53:01 GMT</lastBuildDate>
+    <lastBuildDate>Thu, 17 Sep 2026 17:52:46 GMT</lastBuildDate>
     <managingEditor>blog@clicklaboral.mx (ClickLaboral.mx)</managingEditor>
     <atom:link href="https://clicklaboral.mx/blog/rss.xml" rel="self" type="application/rss+xml"/>
+    <item>
+      <title>Tip: cómo calcular correctamente la prima vacacional proporcional al momento de una renuncia</title>
+      <link>https://clicklaboral.mx/blog/noticia-tip-como-calcular-correctamente-la-prima-vacaciona-2026-09-17.html</link>
+      <guid isPermaLink="true">https://clicklaboral.mx/blog/noticia-tip-como-calcular-correctamente-la-prima-vacaciona-2026-09-17.html</guid>
+      <pubDate>Thu, 17 Sep 2026 12:00:00 GMT</pubDate>
+      <category>Tip RH</category>
+      <description>Al recibir una renuncia, calcule de inmediato la prima vacacional proporcional: el trabajador tiene derecho a ese concepto aunque no haya completado el año, y omitirlo puede derivar en una demanda ant…</description>
+    </item>
     <item>
       <title>IMSS reporta aumento en multas a empresas con trabajadores no registrados en 2025</title>
       <link>https://clicklaboral.mx/blog/noticia-imss-reporta-aumento-en-multas-a-empresas-con-trab-2026-09-16.html</link>
@@ -199,14 +207,6 @@
       <pubDate>Fri, 11 Sep 2026 12:00:00 GMT</pubDate>
       <category>Cumplimiento</category>
       <description>Desde 2027, con la reforma gradual de la jornada de 40 horas, el registro de jornada dejará de ser una buena práctica para convertirse en una obligación documentada. Pero incluso antes de esa fecha, n…</description>
-    </item>
-    <item>
-      <title>Cómo generar actas administrativas válidas sin redactarlas desde cero</title>
-      <link>https://clicklaboral.mx/blog/como-generar-actas-administrativas-validas-sin-redactarlas-desde-cero-2026-09-11.html</link>
-      <guid isPermaLink="true">https://clicklaboral.mx/blog/como-generar-actas-administrativas-validas-sin-redactarlas-desde-cero-2026-09-11.html</guid>
-      <pubDate>Fri, 11 Sep 2026 12:00:00 GMT</pubDate>
-      <category>Cumplimiento</category>
-      <description>Levantar un acta administrativa desde cero, cada vez que ocurre una falta, es de las tareas que más tiempo le roba a un área de RH pequeña — y de las que más caro salen cuando se hacen mal. Un acta re…</description>
     </item>
   </channel>
 </rss>

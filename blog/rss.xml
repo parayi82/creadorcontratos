@@ -5,9 +5,17 @@
     <link>https://clicklaboral.mx/blog/</link>
     <description>Artículos, noticias y tips de compliance laboral para PyMEs mexicanas</description>
     <language>es-MX</language>
-    <lastBuildDate>Fri, 18 Sep 2026 13:32:50 GMT</lastBuildDate>
+    <lastBuildDate>Fri, 18 Sep 2026 17:23:07 GMT</lastBuildDate>
     <managingEditor>blog@clicklaboral.mx (ClickLaboral.mx)</managingEditor>
     <atom:link href="https://clicklaboral.mx/blog/rss.xml" rel="self" type="application/rss+xml"/>
+    <item>
+      <title>El outsourcing tres años después de la reforma: cómo cambió la relación laboral en México</title>
+      <link>https://clicklaboral.mx/blog/noticia-el-outsourcing-tres-anos-despues-de-la-reforma-com-2026-09-18.html</link>
+      <guid isPermaLink="true">https://clicklaboral.mx/blog/noticia-el-outsourcing-tres-anos-despues-de-la-reforma-com-2026-09-18.html</guid>
+      <pubDate>Fri, 18 Sep 2026 12:00:00 GMT</pubDate>
+      <category>Noticias</category>
+      <description>Tres años después de la reforma a la Ley Federal del Trabajo en materia de subcontratación —publicada el 23 de abril de 2021—, más de 1.2 millones de trabajadores fueron regularizados directamente por…</description>
+    </item>
     <item>
       <title>Trabajadores domésticos: obligaciones del patrón en 2025</title>
       <link>https://clicklaboral.mx/blog/trabajadores-domesticos-obligaciones-del-patron-en-2025-2026-09-18.html</link>
@@ -199,14 +207,6 @@
       <pubDate>Fri, 11 Sep 2026 12:00:00 GMT</pubDate>
       <category>Cumplimiento</category>
       <description>La NOM-035-STPS-2018 es obligatoria para toda empresa en México, sin importar cuántos trabajadores tenga. El problema no es saber que existe — la mayoría de los patrones ya lo sabe — sino cumplirla si…</description>
-    </item>
-    <item>
-      <title>Qué es el expediente digital laboral y cómo armarlo conforme al Artículo 804 de la LFT</title>
-      <link>https://clicklaboral.mx/blog/que-es-el-expediente-digital-laboral-y-como-armarlo-conforme-al-articulo-804-de-la-lft-2026-09-11.html</link>
-      <guid isPermaLink="true">https://clicklaboral.mx/blog/que-es-el-expediente-digital-laboral-y-como-armarlo-conforme-al-articulo-804-de-la-lft-2026-09-11.html</guid>
-      <pubDate>Fri, 11 Sep 2026 12:00:00 GMT</pubDate>
-      <category>Cumplimiento</category>
-      <description>El artículo 804 de la Ley Federal del Trabajo obliga al patrón a conservar y exhibir en juicio la documentación laboral de cada trabajador: contratos, recibos de pago, controles de asistencia, comprob…</description>
     </item>
   </channel>
 </rss>

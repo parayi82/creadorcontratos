@@ -5,9 +5,17 @@
     <link>https://clicklaboral.mx/blog/</link>
     <description>Artículos, noticias y tips de compliance laboral para PyMEs mexicanas</description>
     <language>es-MX</language>
-    <lastBuildDate>Thu, 17 Sep 2026 17:52:46 GMT</lastBuildDate>
+    <lastBuildDate>Fri, 18 Sep 2026 13:32:50 GMT</lastBuildDate>
     <managingEditor>blog@clicklaboral.mx (ClickLaboral.mx)</managingEditor>
     <atom:link href="https://clicklaboral.mx/blog/rss.xml" rel="self" type="application/rss+xml"/>
+    <item>
+      <title>Trabajadores domésticos: obligaciones del patrón en 2025</title>
+      <link>https://clicklaboral.mx/blog/trabajadores-domesticos-obligaciones-del-patron-en-2025-2026-09-18.html</link>
+      <guid isPermaLink="true">https://clicklaboral.mx/blog/trabajadores-domesticos-obligaciones-del-patron-en-2025-2026-09-18.html</guid>
+      <pubDate>Fri, 18 Sep 2026 12:00:00 GMT</pubDate>
+      <category>Contratos</category>
+      <description>Si tiene una trabajadora del hogar, una nana, un jardinero o cualquier persona que labore en su domicilio, la ley mexicana le impone obligaciones concretas y exigibles. En 2025, el trabajo doméstico y…</description>
+    </item>
     <item>
       <title>Tip: cómo calcular correctamente la prima vacacional proporcional al momento de una renuncia</title>
       <link>https://clicklaboral.mx/blog/noticia-tip-como-calcular-correctamente-la-prima-vacaciona-2026-09-17.html</link>
@@ -199,14 +207,6 @@
       <pubDate>Fri, 11 Sep 2026 12:00:00 GMT</pubDate>
       <category>Cumplimiento</category>
       <description>El artículo 804 de la Ley Federal del Trabajo obliga al patrón a conservar y exhibir en juicio la documentación laboral de cada trabajador: contratos, recibos de pago, controles de asistencia, comprob…</description>
-    </item>
-    <item>
-      <title>Qué aplicación usar para el registro de asistencia y jornada laboral en México</title>
-      <link>https://clicklaboral.mx/blog/que-aplicacion-usar-para-el-registro-de-asistencia-y-jornada-laboral-en-mexico-2026-09-11.html</link>
-      <guid isPermaLink="true">https://clicklaboral.mx/blog/que-aplicacion-usar-para-el-registro-de-asistencia-y-jornada-laboral-en-mexico-2026-09-11.html</guid>
-      <pubDate>Fri, 11 Sep 2026 12:00:00 GMT</pubDate>
-      <category>Cumplimiento</category>
-      <description>Desde 2027, con la reforma gradual de la jornada de 40 horas, el registro de jornada dejará de ser una buena práctica para convertirse en una obligación documentada. Pero incluso antes de esa fecha, n…</description>
     </item>
   </channel>
 </rss>

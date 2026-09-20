@@ -5,9 +5,17 @@
     <link>https://clicklaboral.mx/blog/</link>
     <description>Artículos, noticias y tips de compliance laboral para PyMEs mexicanas</description>
     <language>es-MX</language>
-    <lastBuildDate>Sat, 19 Sep 2026 16:56:35 GMT</lastBuildDate>
+    <lastBuildDate>Sun, 20 Sep 2026 17:10:47 GMT</lastBuildDate>
     <managingEditor>blog@clicklaboral.mx (ClickLaboral.mx)</managingEditor>
     <atom:link href="https://clicklaboral.mx/blog/rss.xml" rel="self" type="application/rss+xml"/>
+    <item>
+      <title>Reforma de vacaciones 2023: dos años después, lo que aún confunde a los patrones</title>
+      <link>https://clicklaboral.mx/blog/noticia-reforma-de-vacaciones-2023-dos-anos-despues-lo-que-2026-09-20.html</link>
+      <guid isPermaLink="true">https://clicklaboral.mx/blog/noticia-reforma-de-vacaciones-2023-dos-anos-despues-lo-que-2026-09-20.html</guid>
+      <pubDate>Sun, 20 Sep 2026 12:00:00 GMT</pubDate>
+      <category>Reforma Laboral</category>
+      <description>Dos años después de que entró en vigor la reforma al artículo 76 de la Ley Federal del Trabajo, una parte considerable de los patrones de PyMEs sigue aplicando el esquema anterior de vacaciones —seis…</description>
+    </item>
     <item>
       <title>PTU 2025: por qué el cálculo es diferente para empresas de reciente creación</title>
       <link>https://clicklaboral.mx/blog/noticia-ptu-2025-por-que-el-calculo-es-diferente-para-empr-2026-09-19.html</link>
@@ -199,14 +207,6 @@
       <pubDate>Fri, 11 Sep 2026 12:00:00 GMT</pubDate>
       <category>Contratos</category>
       <description>Redactar un contrato de trabajo válido en México no requiere que cada PyME contrate un abogado de planta ni pague honorarios por cada empleado nuevo. Lo que sí requiere es que el contrato cumpla con l…</description>
-    </item>
-    <item>
-      <title>Cuánto cuesta un abogado laboral en México (y cuándo conviene una alternativa digital)</title>
-      <link>https://clicklaboral.mx/blog/cuanto-cuesta-un-abogado-laboral-en-mexico-y-cuando-conviene-una-alternativa-digital-2026-09-11.html</link>
-      <guid isPermaLink="true">https://clicklaboral.mx/blog/cuanto-cuesta-un-abogado-laboral-en-mexico-y-cuando-conviene-una-alternativa-digital-2026-09-11.html</guid>
-      <pubDate>Fri, 11 Sep 2026 12:00:00 GMT</pubDate>
-      <category>Cumplimiento</category>
-      <description>Un abogado laboralista de planta en México cuesta entre $8,000 y $25,000 MXN mensuales, dependiendo de la ciudad y su experiencia — sin contar prestaciones, IMSS ni el tiempo que toma encontrar uno co…</description>
     </item>
   </channel>
 </rss>

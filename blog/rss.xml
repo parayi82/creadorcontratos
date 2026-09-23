@@ -5,9 +5,17 @@
     <link>https://clicklaboral.mx/blog/</link>
     <description>Artículos, noticias y tips de compliance laboral para PyMEs mexicanas</description>
     <language>es-MX</language>
-    <lastBuildDate>Wed, 23 Sep 2026 14:11:39 GMT</lastBuildDate>
+    <lastBuildDate>Wed, 23 Sep 2026 18:05:54 GMT</lastBuildDate>
     <managingEditor>blog@clicklaboral.mx (ClickLaboral.mx)</managingEditor>
     <atom:link href="https://clicklaboral.mx/blog/rss.xml" rel="self" type="application/rss+xml"/>
+    <item>
+      <title>Tip: cuándo un permiso sin goce de sueldo puede convertirse en un riesgo laboral</title>
+      <link>https://clicklaboral.mx/blog/noticia-tip-cuando-un-permiso-sin-goce-de-sueldo-puede-con-2026-09-23.html</link>
+      <guid isPermaLink="true">https://clicklaboral.mx/blog/noticia-tip-cuando-un-permiso-sin-goce-de-sueldo-puede-con-2026-09-23.html</guid>
+      <pubDate>Wed, 23 Sep 2026 12:00:00 GMT</pubDate>
+      <category>Tip RH</category>
+      <description>Documentar correctamente un permiso sin goce de sueldo puede ser la diferencia entre una ausencia acordada y una demanda por despido injustificado ante la Junta de Conciliación y Arbitraje.…</description>
+    </item>
     <item>
       <title>Aviso de rescisión: qué debe decir y en qué plazo entregarlo</title>
       <link>https://clicklaboral.mx/blog/aviso-de-rescision-que-debe-decir-y-en-que-plazo-entregarlo-2026-09-23.html</link>
@@ -199,14 +207,6 @@
       <pubDate>Sat, 12 Sep 2026 12:00:00 GMT</pubDate>
       <category>Cumplimiento</category>
       <description>Casi ninguna PyME que termina en una demanda laboral llegó ahí por un solo error grave. Llega por la acumulación de pequeños descuidos — un contrato genérico, un acta que no se redactó, una prestación…</description>
-    </item>
-    <item>
-      <title>Qué documentos pide la STPS en una inspección laboral y cómo prepararse</title>
-      <link>https://clicklaboral.mx/blog/que-documentos-pide-la-stps-en-una-inspeccion-laboral-y-como-prepararse-2026-09-12.html</link>
-      <guid isPermaLink="true">https://clicklaboral.mx/blog/que-documentos-pide-la-stps-en-una-inspeccion-laboral-y-como-prepararse-2026-09-12.html</guid>
-      <pubDate>Sat, 12 Sep 2026 12:00:00 GMT</pubDate>
-      <category>Cumplimiento</category>
-      <description>Cuando la STPS notifica una inspección, la empresa suele tener un plazo corto para reunir la documentación — y es en ese momento cuando se descubre qué tan preparada estaba realmente. Saber de anteman…</description>
     </item>
   </channel>
 </rss>

@@ -5,9 +5,17 @@
     <link>https://clicklaboral.mx/blog/</link>
     <description>Artículos, noticias y tips de compliance laboral para PyMEs mexicanas</description>
     <language>es-MX</language>
-    <lastBuildDate>Tue, 22 Sep 2026 17:50:47 GMT</lastBuildDate>
+    <lastBuildDate>Wed, 23 Sep 2026 14:11:39 GMT</lastBuildDate>
     <managingEditor>blog@clicklaboral.mx (ClickLaboral.mx)</managingEditor>
     <atom:link href="https://clicklaboral.mx/blog/rss.xml" rel="self" type="application/rss+xml"/>
+    <item>
+      <title>Aviso de rescisión: qué debe decir y en qué plazo entregarlo</title>
+      <link>https://clicklaboral.mx/blog/aviso-de-rescision-que-debe-decir-y-en-que-plazo-entregarlo-2026-09-23.html</link>
+      <guid isPermaLink="true">https://clicklaboral.mx/blog/aviso-de-rescision-que-debe-decir-y-en-que-plazo-entregarlo-2026-09-23.html</guid>
+      <pubDate>Wed, 23 Sep 2026 12:00:00 GMT</pubDate>
+      <category>Terminación laboral</category>
+      <description>Despedir a un trabajador por causa justificada es un derecho del patrón, pero ejecutarlo mal puede convertir esa rescisión en una condena millonaria. El aviso de rescisión no es un trámite menor: es e…</description>
+    </item>
     <item>
       <title>Alerta: los contratos a prueba no pueden prorrogarse — el error podría costarle una liquidación completa</title>
       <link>https://clicklaboral.mx/blog/noticia-alerta-los-contratos-a-prueba-no-pueden-prorrogars-2026-09-22.html</link>
@@ -199,14 +207,6 @@
       <pubDate>Sat, 12 Sep 2026 12:00:00 GMT</pubDate>
       <category>Cumplimiento</category>
       <description>Cuando la STPS notifica una inspección, la empresa suele tener un plazo corto para reunir la documentación — y es en ese momento cuando se descubre qué tan preparada estaba realmente. Saber de anteman…</description>
-    </item>
-    <item>
-      <title>Qué debe tener una app de RH para PyMEs en México además de nómina</title>
-      <link>https://clicklaboral.mx/blog/que-debe-tener-una-app-de-rh-para-pymes-en-mexico-ademas-de-nomina-2026-09-12.html</link>
-      <guid isPermaLink="true">https://clicklaboral.mx/blog/que-debe-tener-una-app-de-rh-para-pymes-en-mexico-ademas-de-nomina-2026-09-12.html</guid>
-      <pubDate>Sat, 12 Sep 2026 12:00:00 GMT</pubDate>
-      <category>Cumplimiento</category>
-      <description>El mercado de apps de RH para PyMEs en México está lleno de plataformas que resuelven nómina, reclutamiento o comunicación interna — pero muy pocas resuelven el problema que más expone legalmente a un…</description>
     </item>
   </channel>
 </rss>

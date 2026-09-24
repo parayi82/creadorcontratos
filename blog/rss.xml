@@ -5,9 +5,17 @@
     <link>https://clicklaboral.mx/blog/</link>
     <description>Artículos, noticias y tips de compliance laboral para PyMEs mexicanas</description>
     <language>es-MX</language>
-    <lastBuildDate>Wed, 23 Sep 2026 18:05:54 GMT</lastBuildDate>
+    <lastBuildDate>Thu, 24 Sep 2026 18:05:27 GMT</lastBuildDate>
     <managingEditor>blog@clicklaboral.mx (ClickLaboral.mx)</managingEditor>
     <atom:link href="https://clicklaboral.mx/blog/rss.xml" rel="self" type="application/rss+xml"/>
+    <item>
+      <title>Licencia de paternidad en México: la reforma que muchos patrones todavía aplican mal</title>
+      <link>https://clicklaboral.mx/blog/noticia-licencia-de-paternidad-en-mexico-la-reforma-que-mu-2026-09-24.html</link>
+      <guid isPermaLink="true">https://clicklaboral.mx/blog/noticia-licencia-de-paternidad-en-mexico-la-reforma-que-mu-2026-09-24.html</guid>
+      <pubDate>Thu, 24 Sep 2026 12:00:00 GMT</pubDate>
+      <category>Reforma Laboral</category>
+      <description>Más de cuatro años después de la reforma al artículo 132 de la Ley Federal del Trabajo, muchas PyMEs mexicanas siguen otorgando la licencia de paternidad de forma incorrecta —o simplemente no la aplic…</description>
+    </item>
     <item>
       <title>Tip: cuándo un permiso sin goce de sueldo puede convertirse en un riesgo laboral</title>
       <link>https://clicklaboral.mx/blog/noticia-tip-cuando-un-permiso-sin-goce-de-sueldo-puede-con-2026-09-23.html</link>
@@ -199,14 +207,6 @@
       <pubDate>Sat, 12 Sep 2026 12:00:00 GMT</pubDate>
       <category>Reforma Laboral</category>
       <description>La reforma que reducirá gradualmente la jornada laboral máxima de 48 a 40 horas semanales ya está en marcha, con implementación escalonada entre 2026 y 2030. No es una reforma lejana para &quot;resolver de…</description>
-    </item>
-    <item>
-      <title>Los errores más comunes que llevan a una PyME a una demanda laboral</title>
-      <link>https://clicklaboral.mx/blog/los-errores-mas-comunes-que-llevan-a-una-pyme-a-una-demanda-laboral-2026-09-12.html</link>
-      <guid isPermaLink="true">https://clicklaboral.mx/blog/los-errores-mas-comunes-que-llevan-a-una-pyme-a-una-demanda-laboral-2026-09-12.html</guid>
-      <pubDate>Sat, 12 Sep 2026 12:00:00 GMT</pubDate>
-      <category>Cumplimiento</category>
-      <description>Casi ninguna PyME que termina en una demanda laboral llegó ahí por un solo error grave. Llega por la acumulación de pequeños descuidos — un contrato genérico, un acta que no se redactó, una prestación…</description>
     </item>
   </channel>
 </rss>

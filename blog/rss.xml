@@ -5,9 +5,17 @@
     <link>https://clicklaboral.mx/blog/</link>
     <description>Artículos, noticias y tips de compliance laboral para PyMEs mexicanas</description>
     <language>es-MX</language>
-    <lastBuildDate>Thu, 24 Sep 2026 18:05:27 GMT</lastBuildDate>
+    <lastBuildDate>Fri, 25 Sep 2026 14:32:52 GMT</lastBuildDate>
     <managingEditor>blog@clicklaboral.mx (ClickLaboral.mx)</managingEditor>
     <atom:link href="https://clicklaboral.mx/blog/rss.xml" rel="self" type="application/rss+xml"/>
+    <item>
+      <title>NOM-006-STPS: manejo y almacenamiento de materiales — obligaciones básicas</title>
+      <link>https://clicklaboral.mx/blog/nom-006-stps-manejo-y-almacenamiento-de-materiales-obligaciones-basicas-2026-09-25.html</link>
+      <guid isPermaLink="true">https://clicklaboral.mx/blog/nom-006-stps-manejo-y-almacenamiento-de-materiales-obligaciones-basicas-2026-09-25.html</guid>
+      <pubDate>Fri, 25 Sep 2026 12:00:00 GMT</pubDate>
+      <category>NOMs</category>
+      <description>Si su empresa maneja, transporta o almacena materiales de cualquier tipo, la NOM-006-STPS no es opcional: es una obligación legal con consecuencias económicas directas. Conocer sus requisitos le permi…</description>
+    </item>
     <item>
       <title>Licencia de paternidad en México: la reforma que muchos patrones todavía aplican mal</title>
       <link>https://clicklaboral.mx/blog/noticia-licencia-de-paternidad-en-mexico-la-reforma-que-mu-2026-09-24.html</link>
@@ -199,14 +207,6 @@
       <pubDate>Sat, 12 Sep 2026 12:00:00 GMT</pubDate>
       <category>Contratos</category>
       <description>El periodo de prueba es uno de los conceptos más malentendidos de la LFT: muchas empresas creen que pueden despedir &quot;sin problema&quot; a cualquier trabajador dentro de los primeros meses, sin importar la…</description>
-    </item>
-    <item>
-      <title>Qué es la reforma de la jornada laboral de 40 horas y cómo prepararse</title>
-      <link>https://clicklaboral.mx/blog/que-es-la-reforma-de-la-jornada-laboral-de-40-horas-y-como-prepararse-2026-09-12.html</link>
-      <guid isPermaLink="true">https://clicklaboral.mx/blog/que-es-la-reforma-de-la-jornada-laboral-de-40-horas-y-como-prepararse-2026-09-12.html</guid>
-      <pubDate>Sat, 12 Sep 2026 12:00:00 GMT</pubDate>
-      <category>Reforma Laboral</category>
-      <description>La reforma que reducirá gradualmente la jornada laboral máxima de 48 a 40 horas semanales ya está en marcha, con implementación escalonada entre 2026 y 2030. No es una reforma lejana para &quot;resolver de…</description>
     </item>
   </channel>
 </rss>

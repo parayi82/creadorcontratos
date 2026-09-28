@@ -5,9 +5,17 @@
     <link>https://clicklaboral.mx/blog/</link>
     <description>Artículos, noticias y tips de compliance laboral para PyMEs mexicanas</description>
     <language>es-MX</language>
-    <lastBuildDate>Sun, 27 Sep 2026 17:59:50 GMT</lastBuildDate>
+    <lastBuildDate>Mon, 28 Sep 2026 17:33:15 GMT</lastBuildDate>
     <managingEditor>blog@clicklaboral.mx (ClickLaboral.mx)</managingEditor>
     <atom:link href="https://clicklaboral.mx/blog/rss.xml" rel="self" type="application/rss+xml"/>
+    <item>
+      <title>Licencia de maternidad y paternidad 2025: días, pagos y obligaciones patronales</title>
+      <link>https://clicklaboral.mx/blog/licencia-de-maternidad-y-paternidad-2025-dias-pagos-y-obligaciones-patronales-2026-09-28.html</link>
+      <guid isPermaLink="true">https://clicklaboral.mx/blog/licencia-de-maternidad-y-paternidad-2025-dias-pagos-y-obligaciones-patronales-2026-09-28.html</guid>
+      <pubDate>Mon, 28 Sep 2026 12:00:00 GMT</pubDate>
+      <category>Prestaciones</category>
+      <description>En 2025, desconocer las obligaciones patronales en materia de licencias de maternidad y paternidad puede costarle a su empresa multas que van desde los 50 hasta 5,000 salarios mínimos. Este artículo l…</description>
+    </item>
     <item>
       <title>Reforma de justicia laboral: tres años de nuevos tribunales laborales, qué ha mejorado</title>
       <link>https://clicklaboral.mx/blog/noticia-reforma-de-justicia-laboral-tres-anos-de-nuevos-tr-2026-09-27.html</link>
@@ -199,14 +207,6 @@
       <pubDate>Sat, 12 Sep 2026 12:00:00 GMT</pubDate>
       <category>Cumplimiento</category>
       <description>Retrasar el alta de un trabajador ante el IMSS unos días &quot;mientras se confirma que se queda&quot; es una práctica común en PyMEs pequeñas — y una de las más caras si algo sale mal en ese periodo. Un accide…</description>
-    </item>
-    <item>
-      <title>Cómo despedir a un trabajador sin que la empresa termine demandada</title>
-      <link>https://clicklaboral.mx/blog/como-despedir-a-un-trabajador-sin-que-la-empresa-termine-demandada-2026-09-12.html</link>
-      <guid isPermaLink="true">https://clicklaboral.mx/blog/como-despedir-a-un-trabajador-sin-que-la-empresa-termine-demandada-2026-09-12.html</guid>
-      <pubDate>Sat, 12 Sep 2026 12:00:00 GMT</pubDate>
-      <category>Terminación laboral</category>
-      <description>Despedir a un trabajador de bajo desempeño o con faltas repetidas debería ser sencillo cuando la causa es real. En la práctica, la mayoría de las demandas laborales que pierde una PyME no ocurren porq…</description>
     </item>
   </channel>
 </rss>

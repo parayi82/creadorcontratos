@@ -5,9 +5,17 @@
     <link>https://clicklaboral.mx/blog/</link>
     <description>Artículos, noticias y tips de compliance laboral para PyMEs mexicanas</description>
     <language>es-MX</language>
-    <lastBuildDate>Mon, 28 Sep 2026 17:33:15 GMT</lastBuildDate>
+    <lastBuildDate>Mon, 28 Sep 2026 20:19:52 GMT</lastBuildDate>
     <managingEditor>blog@clicklaboral.mx (ClickLaboral.mx)</managingEditor>
     <atom:link href="https://clicklaboral.mx/blog/rss.xml" rel="self" type="application/rss+xml"/>
+    <item>
+      <title>Alerta: la cuota patronal al IMSS cambia cuando el trabajador cumple 60 años — verifique su nómina</title>
+      <link>https://clicklaboral.mx/blog/noticia-alerta-la-cuota-patronal-al-imss-cambia-cuando-el--2026-09-28.html</link>
+      <guid isPermaLink="true">https://clicklaboral.mx/blog/noticia-alerta-la-cuota-patronal-al-imss-cambia-cuando-el--2026-09-28.html</guid>
+      <pubDate>Mon, 28 Sep 2026 12:00:00 GMT</pubDate>
+      <category>Alerta Legal</category>
+      <description>Cuando un trabajador cumple 60 años, la cuota patronal al IMSS en el seguro de Enfermedades y Maternidad (EM) cambia de forma automática — y si su nómina no lo refleja, el patrón puede estar pagando d…</description>
+    </item>
     <item>
       <title>Licencia de maternidad y paternidad 2025: días, pagos y obligaciones patronales</title>
       <link>https://clicklaboral.mx/blog/licencia-de-maternidad-y-paternidad-2025-dias-pagos-y-obligaciones-patronales-2026-09-28.html</link>
@@ -199,14 +207,6 @@
       <pubDate>Sat, 12 Sep 2026 12:00:00 GMT</pubDate>
       <category>Terminación laboral</category>
       <description>Calcular mal un finiquito o una liquidación es una de las formas más comunes en que una PyME termina pagando el doble: primero por error al momento de la baja, y después en un juicio laboral cuando el…</description>
-    </item>
-    <item>
-      <title>Qué pasa si no doy de alta a un trabajador en el IMSS a tiempo</title>
-      <link>https://clicklaboral.mx/blog/que-pasa-si-no-doy-de-alta-a-un-trabajador-en-el-imss-a-tiempo-2026-09-12.html</link>
-      <guid isPermaLink="true">https://clicklaboral.mx/blog/que-pasa-si-no-doy-de-alta-a-un-trabajador-en-el-imss-a-tiempo-2026-09-12.html</guid>
-      <pubDate>Sat, 12 Sep 2026 12:00:00 GMT</pubDate>
-      <category>Cumplimiento</category>
-      <description>Retrasar el alta de un trabajador ante el IMSS unos días &quot;mientras se confirma que se queda&quot; es una práctica común en PyMEs pequeñas — y una de las más caras si algo sale mal en ese periodo. Un accide…</description>
     </item>
   </channel>
 </rss>

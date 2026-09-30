@@ -5,9 +5,17 @@
     <link>https://clicklaboral.mx/blog/</link>
     <description>Artículos, noticias y tips de compliance laboral para PyMEs mexicanas</description>
     <language>es-MX</language>
-    <lastBuildDate>Wed, 30 Sep 2026 15:48:05 GMT</lastBuildDate>
+    <lastBuildDate>Wed, 30 Sep 2026 18:44:22 GMT</lastBuildDate>
     <managingEditor>blog@clicklaboral.mx (ClickLaboral.mx)</managingEditor>
     <atom:link href="https://clicklaboral.mx/blog/rss.xml" rel="self" type="application/rss+xml"/>
+    <item>
+      <title>STPS actualiza plataforma digital para que PyMEs generen su reglamento interior en línea</title>
+      <link>https://clicklaboral.mx/blog/noticia-stps-actualiza-plataforma-digital-para-que-pymes-g-2026-09-30.html</link>
+      <guid isPermaLink="true">https://clicklaboral.mx/blog/noticia-stps-actualiza-plataforma-digital-para-que-pymes-g-2026-09-30.html</guid>
+      <pubDate>Wed, 30 Sep 2026 12:00:00 GMT</pubDate>
+      <category>Noticias</category>
+      <description>La Secretaría del Trabajo y Previsión Social (STPS) actualizó su plataforma digital para que los patrones de pequeñas y medianas empresas puedan generar, modificar y registrar su Reglamento Interior d…</description>
+    </item>
     <item>
       <title>PTU 2025: qué es la participación de utilidades y cómo distribuirla</title>
       <link>https://clicklaboral.mx/blog/ptu-2025-que-es-la-participacion-de-utilidades-y-como-distribuirla-2026-09-30.html</link>
@@ -199,14 +207,6 @@
       <pubDate>Mon, 14 Sep 2026 12:00:00 GMT</pubDate>
       <category>Contratos</category>
       <description>Un contrato de trabajo mal redactado puede costarle a su empresa multas, juicios laborales y hasta la nulidad de cláusulas que usted creyó protectoras. La Ley Federal del Trabajo (LFT) establece con c…</description>
-    </item>
-    <item>
-      <title>Tesis: las cámaras de seguridad en el trabajo son prueba válida solo si el trabajador fue notificado</title>
-      <link>https://clicklaboral.mx/blog/noticia-tesis-las-camaras-de-seguridad-en-el-trabajo-son-p-2026-09-13.html</link>
-      <guid isPermaLink="true">https://clicklaboral.mx/blog/noticia-tesis-las-camaras-de-seguridad-en-el-trabajo-son-p-2026-09-13.html</guid>
-      <pubDate>Sun, 13 Sep 2026 12:00:00 GMT</pubDate>
-      <category>Jurisprudencia</category>
-      <description>Las cámaras de videovigilancia instaladas en el centro de trabajo solo constituyen prueba válida ante una Junta de Conciliación o Tribunal Laboral si el trabajador fue notificado de su existencia, seg…</description>
     </item>
   </channel>
 </rss>

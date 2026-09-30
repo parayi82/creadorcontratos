@@ -5,9 +5,17 @@
     <link>https://clicklaboral.mx/blog/</link>
     <description>Artículos, noticias y tips de compliance laboral para PyMEs mexicanas</description>
     <language>es-MX</language>
-    <lastBuildDate>Tue, 29 Sep 2026 19:01:01 GMT</lastBuildDate>
+    <lastBuildDate>Wed, 30 Sep 2026 15:48:05 GMT</lastBuildDate>
     <managingEditor>blog@clicklaboral.mx (ClickLaboral.mx)</managingEditor>
     <atom:link href="https://clicklaboral.mx/blog/rss.xml" rel="self" type="application/rss+xml"/>
+    <item>
+      <title>PTU 2025: qué es la participación de utilidades y cómo distribuirla</title>
+      <link>https://clicklaboral.mx/blog/ptu-2025-que-es-la-participacion-de-utilidades-y-como-distribuirla-2026-09-30.html</link>
+      <guid isPermaLink="true">https://clicklaboral.mx/blog/ptu-2025-que-es-la-participacion-de-utilidades-y-como-distribuirla-2026-09-30.html</guid>
+      <pubDate>Wed, 30 Sep 2026 12:00:00 GMT</pubDate>
+      <category>Prestaciones</category>
+      <description>Cada año, entre mayo y junio, miles de empresas en México deben repartir una parte de sus ganancias entre sus trabajadores. Se llama PTU —Participación de los Trabajadores en las Utilidades— y no cump…</description>
+    </item>
     <item>
       <title>Alerta: las multas por no tener Comisión de Seguridad e Higiene actualizada son hasta 435 UMAs</title>
       <link>https://clicklaboral.mx/blog/noticia-alerta-las-multas-por-no-tener-comision-de-segurid-2026-09-29.html</link>
@@ -199,14 +207,6 @@
       <pubDate>Sun, 13 Sep 2026 12:00:00 GMT</pubDate>
       <category>Jurisprudencia</category>
       <description>Las cámaras de videovigilancia instaladas en el centro de trabajo solo constituyen prueba válida ante una Junta de Conciliación o Tribunal Laboral si el trabajador fue notificado de su existencia, seg…</description>
-    </item>
-    <item>
-      <title>Tesis: el bono discrecional que se paga de forma regular sí integra el salario cotizable al IMSS</title>
-      <link>https://clicklaboral.mx/blog/noticia-tesis-el-bono-discrecional-que-se-paga-de-forma-re-2026-09-12.html</link>
-      <guid isPermaLink="true">https://clicklaboral.mx/blog/noticia-tesis-el-bono-discrecional-que-se-paga-de-forma-re-2026-09-12.html</guid>
-      <pubDate>Sat, 12 Sep 2026 12:00:00 GMT</pubDate>
-      <category>Jurisprudencia</category>
-      <description>Un bono que se paga de forma regular y sistemática no puede tratarse como &quot;discrecional&quot; para efectos del IMSS: así lo establece un nuevo criterio jurisprudencial que obliga al patrón a integrar ese c…</description>
     </item>
   </channel>
 </rss>

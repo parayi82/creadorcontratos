@@ -5,9 +5,17 @@
     <link>https://clicklaboral.mx/blog/</link>
     <description>Artículos, noticias y tips de compliance laboral para PyMEs mexicanas</description>
     <language>es-MX</language>
-    <lastBuildDate>Wed, 30 Sep 2026 18:44:22 GMT</lastBuildDate>
+    <lastBuildDate>Thu, 01 Oct 2026 19:10:32 GMT</lastBuildDate>
     <managingEditor>blog@clicklaboral.mx (ClickLaboral.mx)</managingEditor>
     <atom:link href="https://clicklaboral.mx/blog/rss.xml" rel="self" type="application/rss+xml"/>
+    <item>
+      <title>Tesis: el bono discrecional que se paga de forma regular sí integra el salario cotizable al IMSS</title>
+      <link>https://clicklaboral.mx/blog/noticia-tesis-el-bono-discrecional-que-se-paga-de-forma-re-2026-10-01.html</link>
+      <guid isPermaLink="true">https://clicklaboral.mx/blog/noticia-tesis-el-bono-discrecional-que-se-paga-de-forma-re-2026-10-01.html</guid>
+      <pubDate>Thu, 01 Oct 2026 12:00:00 GMT</pubDate>
+      <category>Jurisprudencia</category>
+      <description>Si su empresa paga un bono discrecional de forma regular y periódica, el IMSS puede integrarlo al salario base de cotización, aunque no esté previsto en el contrato colectivo ni en el individual.…</description>
+    </item>
     <item>
       <title>STPS actualiza plataforma digital para que PyMEs generen su reglamento interior en línea</title>
       <link>https://clicklaboral.mx/blog/noticia-stps-actualiza-plataforma-digital-para-que-pymes-g-2026-09-30.html</link>
@@ -199,14 +207,6 @@
       <pubDate>Mon, 14 Sep 2026 12:00:00 GMT</pubDate>
       <category>Tip RH</category>
       <description>Antes de modificar el turno de cualquier trabajador, obtenga su aceptación por escrito: sin ese paso, la empresa queda expuesta a una demanda por modificación unilateral de condiciones de trabajo bajo…</description>
-    </item>
-    <item>
-      <title>Cláusulas prohibidas en contratos de trabajo según la LFT</title>
-      <link>https://clicklaboral.mx/blog/clausulas-prohibidas-en-contratos-de-trabajo-segun-la-lft-2026-09-14.html</link>
-      <guid isPermaLink="true">https://clicklaboral.mx/blog/clausulas-prohibidas-en-contratos-de-trabajo-segun-la-lft-2026-09-14.html</guid>
-      <pubDate>Mon, 14 Sep 2026 12:00:00 GMT</pubDate>
-      <category>Contratos</category>
-      <description>Un contrato de trabajo mal redactado puede costarle a su empresa multas, juicios laborales y hasta la nulidad de cláusulas que usted creyó protectoras. La Ley Federal del Trabajo (LFT) establece con c…</description>
     </item>
   </channel>
 </rss>

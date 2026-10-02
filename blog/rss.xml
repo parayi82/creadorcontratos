@@ -5,9 +5,17 @@
     <link>https://clicklaboral.mx/blog/</link>
     <description>Artículos, noticias y tips de compliance laboral para PyMEs mexicanas</description>
     <language>es-MX</language>
-    <lastBuildDate>Fri, 02 Oct 2026 15:39:18 GMT</lastBuildDate>
+    <lastBuildDate>Fri, 02 Oct 2026 18:50:15 GMT</lastBuildDate>
     <managingEditor>blog@clicklaboral.mx (ClickLaboral.mx)</managingEditor>
     <atom:link href="https://clicklaboral.mx/blog/rss.xml" rel="self" type="application/rss+xml"/>
+    <item>
+      <title>Tip: cómo registrar correctamente una amonestación verbal sin que se vuelva contra usted</title>
+      <link>https://clicklaboral.mx/blog/noticia-tip-como-registrar-correctamente-una-amonestacion--2026-10-02.html</link>
+      <guid isPermaLink="true">https://clicklaboral.mx/blog/noticia-tip-como-registrar-correctamente-una-amonestacion--2026-10-02.html</guid>
+      <pubDate>Fri, 02 Oct 2026 12:00:00 GMT</pubDate>
+      <category>Tip RH</category>
+      <description>Documente cada amonestación verbal con una minuta firmada por el trabajador y un testigo el mismo día en que ocurra el hecho; sin ese respaldo escrito, la sanción no existirá ante la Junta de Concilia…</description>
+    </item>
     <item>
       <title>NOM-030-STPS: servicios preventivos de seguridad y salud en el trabajo</title>
       <link>https://clicklaboral.mx/blog/nom-030-stps-servicios-preventivos-de-seguridad-y-salud-en-el-trabajo-2026-10-02.html</link>
@@ -199,14 +207,6 @@
       <pubDate>Wed, 16 Sep 2026 12:00:00 GMT</pubDate>
       <category>Cumplimiento</category>
       <description>Si su empresa tiene utilidades que repartir, la Comisión Mixta de PTU no es opcional: es una obligación legal que debe cumplirse antes del 1 de mayo para empresas y antes del 29 de junio para personas…</description>
-    </item>
-    <item>
-      <title>Aguinaldo de 30 días: dónde quedó la propuesta legislativa y cuál es la obligación actual</title>
-      <link>https://clicklaboral.mx/blog/noticia-aguinaldo-de-30-dias-donde-quedo-la-propuesta-legi-2026-09-15.html</link>
-      <guid isPermaLink="true">https://clicklaboral.mx/blog/noticia-aguinaldo-de-30-dias-donde-quedo-la-propuesta-legi-2026-09-15.html</guid>
-      <pubDate>Tue, 15 Sep 2026 12:00:00 GMT</pubDate>
-      <category>Reforma Laboral</category>
-      <description>La propuesta para elevar el aguinaldo de 15 a 30 días de salario no ha avanzado en el Congreso de la Unión y, por el momento, la obligación legal vigente permanece sin cambios: el patrón debe pagar al…</description>
     </item>
   </channel>
 </rss>

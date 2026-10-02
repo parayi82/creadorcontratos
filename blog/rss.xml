@@ -5,9 +5,17 @@
     <link>https://clicklaboral.mx/blog/</link>
     <description>Artículos, noticias y tips de compliance laboral para PyMEs mexicanas</description>
     <language>es-MX</language>
-    <lastBuildDate>Thu, 01 Oct 2026 19:10:32 GMT</lastBuildDate>
+    <lastBuildDate>Fri, 02 Oct 2026 15:39:18 GMT</lastBuildDate>
     <managingEditor>blog@clicklaboral.mx (ClickLaboral.mx)</managingEditor>
     <atom:link href="https://clicklaboral.mx/blog/rss.xml" rel="self" type="application/rss+xml"/>
+    <item>
+      <title>NOM-030-STPS: servicios preventivos de seguridad y salud en el trabajo</title>
+      <link>https://clicklaboral.mx/blog/nom-030-stps-servicios-preventivos-de-seguridad-y-salud-en-el-trabajo-2026-10-02.html</link>
+      <guid isPermaLink="true">https://clicklaboral.mx/blog/nom-030-stps-servicios-preventivos-de-seguridad-y-salud-en-el-trabajo-2026-10-02.html</guid>
+      <pubDate>Fri, 02 Oct 2026 12:00:00 GMT</pubDate>
+      <category>NOMs</category>
+      <description>Si su empresa tiene trabajadores, la NOM-030-STPS no es opcional: es la norma que define cómo deben organizarse los servicios preventivos de seguridad y salud en el trabajo, y su incumplimiento puede…</description>
+    </item>
     <item>
       <title>Tesis: el bono discrecional que se paga de forma regular sí integra el salario cotizable al IMSS</title>
       <link>https://clicklaboral.mx/blog/noticia-tesis-el-bono-discrecional-que-se-paga-de-forma-re-2026-10-01.html</link>
@@ -199,14 +207,6 @@
       <pubDate>Tue, 15 Sep 2026 12:00:00 GMT</pubDate>
       <category>Reforma Laboral</category>
       <description>La propuesta para elevar el aguinaldo de 15 a 30 días de salario no ha avanzado en el Congreso de la Unión y, por el momento, la obligación legal vigente permanece sin cambios: el patrón debe pagar al…</description>
-    </item>
-    <item>
-      <title>Tip: cómo comunicar un cambio de turno sin arriesgar una demanda por modificación unilateral</title>
-      <link>https://clicklaboral.mx/blog/noticia-tip-como-comunicar-un-cambio-de-turno-sin-arriesga-2026-09-14.html</link>
-      <guid isPermaLink="true">https://clicklaboral.mx/blog/noticia-tip-como-comunicar-un-cambio-de-turno-sin-arriesga-2026-09-14.html</guid>
-      <pubDate>Mon, 14 Sep 2026 12:00:00 GMT</pubDate>
-      <category>Tip RH</category>
-      <description>Antes de modificar el turno de cualquier trabajador, obtenga su aceptación por escrito: sin ese paso, la empresa queda expuesta a una demanda por modificación unilateral de condiciones de trabajo bajo…</description>
     </item>
   </channel>
 </rss>

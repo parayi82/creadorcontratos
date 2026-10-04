@@ -5,9 +5,17 @@
     <link>https://clicklaboral.mx/blog/</link>
     <description>Artículos, noticias y tips de compliance laboral para PyMEs mexicanas</description>
     <language>es-MX</language>
-    <lastBuildDate>Sat, 03 Oct 2026 17:41:56 GMT</lastBuildDate>
+    <lastBuildDate>Sun, 04 Oct 2026 17:55:52 GMT</lastBuildDate>
     <managingEditor>blog@clicklaboral.mx (ClickLaboral.mx)</managingEditor>
     <atom:link href="https://clicklaboral.mx/blog/rss.xml" rel="self" type="application/rss+xml"/>
+    <item>
+      <title>Subcontratación 2021: qué puede y qué no puede hacer con el REPSE en 2025</title>
+      <link>https://clicklaboral.mx/blog/noticia-subcontratacion-2021-que-puede-y-que-no-puede-hace-2026-10-04.html</link>
+      <guid isPermaLink="true">https://clicklaboral.mx/blog/noticia-subcontratacion-2021-que-puede-y-que-no-puede-hace-2026-10-04.html</guid>
+      <pubDate>Sun, 04 Oct 2026 12:00:00 GMT</pubDate>
+      <category>Reforma Laboral</category>
+      <description>Desde la reforma laboral de abril de 2021, la subcontratación de personal quedó prohibida en México; sin embargo, cuatro años después, muchas PyMEs aún operan con esquemas que los exponen a multas y c…</description>
+    </item>
     <item>
       <title>Reforma de vacaciones 2023: dos años después, lo que aún confunde a los patrones</title>
       <link>https://clicklaboral.mx/blog/noticia-reforma-de-vacaciones-2023-dos-anos-despues-lo-que-2026-10-03.html</link>
@@ -199,14 +207,6 @@
       <pubDate>Thu, 17 Sep 2026 12:00:00 GMT</pubDate>
       <category>Tip RH</category>
       <description>Al recibir una renuncia, calcule de inmediato la prima vacacional proporcional: el trabajador tiene derecho a ese concepto aunque no haya completado el año, y omitirlo puede derivar en una demanda ant…</description>
-    </item>
-    <item>
-      <title>IMSS reporta aumento en multas a empresas con trabajadores no registrados en 2025</title>
-      <link>https://clicklaboral.mx/blog/noticia-imss-reporta-aumento-en-multas-a-empresas-con-trab-2026-09-16.html</link>
-      <guid isPermaLink="true">https://clicklaboral.mx/blog/noticia-imss-reporta-aumento-en-multas-a-empresas-con-trab-2026-09-16.html</guid>
-      <pubDate>Wed, 16 Sep 2026 12:00:00 GMT</pubDate>
-      <category>Noticias</category>
-      <description>El Instituto Mexicano del Seguro Social intensificó en 2025 sus operativos de verificación patronal y reporta un incremento superior al 35% en multas aplicadas a empresas que mantienen trabajadores si…</description>
     </item>
   </channel>
 </rss>

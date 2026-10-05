@@ -5,9 +5,17 @@
     <link>https://clicklaboral.mx/blog/</link>
     <description>Artículos, noticias y tips de compliance laboral para PyMEs mexicanas</description>
     <language>es-MX</language>
-    <lastBuildDate>Sun, 04 Oct 2026 17:55:52 GMT</lastBuildDate>
+    <lastBuildDate>Mon, 05 Oct 2026 18:14:39 GMT</lastBuildDate>
     <managingEditor>blog@clicklaboral.mx (ClickLaboral.mx)</managingEditor>
     <atom:link href="https://clicklaboral.mx/blog/rss.xml" rel="self" type="application/rss+xml"/>
+    <item>
+      <title>Nuevo sistema de justicia laboral: cómo funcionan los juicios laborales en 2025</title>
+      <link>https://clicklaboral.mx/blog/nuevo-sistema-de-justicia-laboral-como-funcionan-los-juicios-laborales-en-2025-2026-10-05.html</link>
+      <guid isPermaLink="true">https://clicklaboral.mx/blog/nuevo-sistema-de-justicia-laboral-como-funcionan-los-juicios-laborales-en-2025-2026-10-05.html</guid>
+      <pubDate>Mon, 05 Oct 2026 12:00:00 GMT</pubDate>
+      <category>Cumplimiento</category>
+      <description>Desde la reforma laboral de 2019, los juicios laborales en México ya no funcionan como antes. Si su empresa enfrenta una demanda en 2025 y sigue pensando en el esquema antiguo de Juntas de Conciliació…</description>
+    </item>
     <item>
       <title>Subcontratación 2021: qué puede y qué no puede hacer con el REPSE en 2025</title>
       <link>https://clicklaboral.mx/blog/noticia-subcontratacion-2021-que-puede-y-que-no-puede-hace-2026-10-04.html</link>
@@ -199,14 +207,6 @@
       <pubDate>Fri, 18 Sep 2026 12:00:00 GMT</pubDate>
       <category>Contratos</category>
       <description>Si tiene una trabajadora del hogar, una nana, un jardinero o cualquier persona que labore en su domicilio, la ley mexicana le impone obligaciones concretas y exigibles. En 2025, el trabajo doméstico y…</description>
-    </item>
-    <item>
-      <title>Tip: cómo calcular correctamente la prima vacacional proporcional al momento de una renuncia</title>
-      <link>https://clicklaboral.mx/blog/noticia-tip-como-calcular-correctamente-la-prima-vacaciona-2026-09-17.html</link>
-      <guid isPermaLink="true">https://clicklaboral.mx/blog/noticia-tip-como-calcular-correctamente-la-prima-vacaciona-2026-09-17.html</guid>
-      <pubDate>Thu, 17 Sep 2026 12:00:00 GMT</pubDate>
-      <category>Tip RH</category>
-      <description>Al recibir una renuncia, calcule de inmediato la prima vacacional proporcional: el trabajador tiene derecho a ese concepto aunque no haya completado el año, y omitirlo puede derivar en una demanda ant…</description>
     </item>
   </channel>
 </rss>

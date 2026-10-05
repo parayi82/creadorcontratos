@@ -5,9 +5,17 @@
     <link>https://clicklaboral.mx/blog/</link>
     <description>Artículos, noticias y tips de compliance laboral para PyMEs mexicanas</description>
     <language>es-MX</language>
-    <lastBuildDate>Mon, 05 Oct 2026 18:14:39 GMT</lastBuildDate>
+    <lastBuildDate>Mon, 05 Oct 2026 21:28:34 GMT</lastBuildDate>
     <managingEditor>blog@clicklaboral.mx (ClickLaboral.mx)</managingEditor>
     <atom:link href="https://clicklaboral.mx/blog/rss.xml" rel="self" type="application/rss+xml"/>
+    <item>
+      <title>Tesis: la carta de renuncia firmada ante dos testigos es prueba suficiente de voluntariedad en juicio</title>
+      <link>https://clicklaboral.mx/blog/noticia-tesis-la-carta-de-renuncia-firmada-ante-dos-testig-2026-10-05.html</link>
+      <guid isPermaLink="true">https://clicklaboral.mx/blog/noticia-tesis-la-carta-de-renuncia-firmada-ante-dos-testig-2026-10-05.html</guid>
+      <pubDate>Mon, 05 Oct 2026 12:00:00 GMT</pubDate>
+      <category>Jurisprudencia</category>
+      <description>Una carta de renuncia firmada por el trabajador ante dos testigos constituye prueba suficiente para acreditar la voluntariedad de la separación laboral en juicio, según criterio sostenido por tribunal…</description>
+    </item>
     <item>
       <title>Nuevo sistema de justicia laboral: cómo funcionan los juicios laborales en 2025</title>
       <link>https://clicklaboral.mx/blog/nuevo-sistema-de-justicia-laboral-como-funcionan-los-juicios-laborales-en-2025-2026-10-05.html</link>
@@ -199,14 +207,6 @@
       <pubDate>Fri, 18 Sep 2026 12:00:00 GMT</pubDate>
       <category>Noticias</category>
       <description>Tres años después de la reforma a la Ley Federal del Trabajo en materia de subcontratación —publicada el 23 de abril de 2021—, más de 1.2 millones de trabajadores fueron regularizados directamente por…</description>
-    </item>
-    <item>
-      <title>Trabajadores domésticos: obligaciones del patrón en 2025</title>
-      <link>https://clicklaboral.mx/blog/trabajadores-domesticos-obligaciones-del-patron-en-2025-2026-09-18.html</link>
-      <guid isPermaLink="true">https://clicklaboral.mx/blog/trabajadores-domesticos-obligaciones-del-patron-en-2025-2026-09-18.html</guid>
-      <pubDate>Fri, 18 Sep 2026 12:00:00 GMT</pubDate>
-      <category>Contratos</category>
-      <description>Si tiene una trabajadora del hogar, una nana, un jardinero o cualquier persona que labore en su domicilio, la ley mexicana le impone obligaciones concretas y exigibles. En 2025, el trabajo doméstico y…</description>
     </item>
   </channel>
 </rss>

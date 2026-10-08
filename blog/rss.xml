@@ -5,9 +5,17 @@
     <link>https://clicklaboral.mx/blog/</link>
     <description>Artículos, noticias y tips de compliance laboral para PyMEs mexicanas</description>
     <language>es-MX</language>
-    <lastBuildDate>Wed, 07 Oct 2026 19:39:40 GMT</lastBuildDate>
+    <lastBuildDate>Thu, 08 Oct 2026 19:35:09 GMT</lastBuildDate>
     <managingEditor>blog@clicklaboral.mx (ClickLaboral.mx)</managingEditor>
     <atom:link href="https://clicklaboral.mx/blog/rss.xml" rel="self" type="application/rss+xml"/>
+    <item>
+      <title>Alerta: las vacaciones no gozadas no prescriben en el año — pueden reclamarse hasta 1 año después</title>
+      <link>https://clicklaboral.mx/blog/noticia-alerta-las-vacaciones-no-gozadas-no-prescriben-en--2026-10-08.html</link>
+      <guid isPermaLink="true">https://clicklaboral.mx/blog/noticia-alerta-las-vacaciones-no-gozadas-no-prescriben-en--2026-10-08.html</guid>
+      <pubDate>Thu, 08 Oct 2026 12:00:00 GMT</pubDate>
+      <category>Alerta Legal</category>
+      <description>El trabajador que no gozó sus vacaciones tiene hasta un año adicional para reclamarlas ante la autoridad laboral — y si su empresa no tiene evidencia documental del goce, el riesgo de condena es muy a…</description>
+    </item>
     <item>
       <title>Tesis: las cámaras de seguridad en el trabajo son prueba válida solo si el trabajador fue notificado</title>
       <link>https://clicklaboral.mx/blog/noticia-tesis-las-camaras-de-seguridad-en-el-trabajo-son-p-2026-10-07.html</link>
@@ -199,14 +207,6 @@
       <pubDate>Mon, 21 Sep 2026 12:00:00 GMT</pubDate>
       <category>Noticias</category>
       <description>Una PyME con 20 trabajadores que opere actualmente a 48 horas semanales podría ver incrementada su nómina entre un 12 % y un 18 % si la reforma constitucional para reducir la jornada laboral a 40 hora…</description>
-    </item>
-    <item>
-      <title>Contrato por obra determinada: cuándo es válido y cómo redactarlo</title>
-      <link>https://clicklaboral.mx/blog/contrato-por-obra-determinada-cuando-es-valido-y-como-redactarlo-2026-09-21.html</link>
-      <guid isPermaLink="true">https://clicklaboral.mx/blog/contrato-por-obra-determinada-cuando-es-valido-y-como-redactarlo-2026-09-21.html</guid>
-      <pubDate>Mon, 21 Sep 2026 12:00:00 GMT</pubDate>
-      <category>Contratos</category>
-      <description>Contratar a alguien para un proyecto específico puede parecer la solución perfecta para cubrir una necesidad temporal, pero si el contrato por obra determinada no está bien redactado —o se usa en el c…</description>
     </item>
   </channel>
 </rss>

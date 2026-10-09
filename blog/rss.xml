@@ -5,9 +5,17 @@
     <link>https://clicklaboral.mx/blog/</link>
     <description>Artículos, noticias y tips de compliance laboral para PyMEs mexicanas</description>
     <language>es-MX</language>
-    <lastBuildDate>Thu, 08 Oct 2026 19:35:09 GMT</lastBuildDate>
+    <lastBuildDate>Fri, 09 Oct 2026 16:03:31 GMT</lastBuildDate>
     <managingEditor>blog@clicklaboral.mx (ClickLaboral.mx)</managingEditor>
     <atom:link href="https://clicklaboral.mx/blog/rss.xml" rel="self" type="application/rss+xml"/>
+    <item>
+      <title>INFONAVIT: obligaciones del patrón con los créditos de sus trabajadores</title>
+      <link>https://clicklaboral.mx/blog/infonavit-obligaciones-del-patron-con-los-creditos-de-sus-trabajadores-2026-10-09.html</link>
+      <guid isPermaLink="true">https://clicklaboral.mx/blog/infonavit-obligaciones-del-patron-con-los-creditos-de-sus-trabajadores-2026-10-09.html</guid>
+      <pubDate>Fri, 09 Oct 2026 12:00:00 GMT</pubDate>
+      <category>Prestaciones</category>
+      <description>Si su empresa tiene trabajadores con crédito INFONAVIT activo, usted tiene obligaciones legales que van mucho más allá de simplemente retener el descuento de nómina. Incumplirlas puede derivar en mult…</description>
+    </item>
     <item>
       <title>Alerta: las vacaciones no gozadas no prescriben en el año — pueden reclamarse hasta 1 año después</title>
       <link>https://clicklaboral.mx/blog/noticia-alerta-las-vacaciones-no-gozadas-no-prescriben-en--2026-10-08.html</link>
@@ -199,14 +207,6 @@
       <pubDate>Tue, 22 Sep 2026 12:00:00 GMT</pubDate>
       <category>Alerta Legal</category>
       <description>Prorrogar un contrato a prueba equivale, en la práctica, a convertirlo en un contrato por tiempo indeterminado — lo que obliga al patrón a cubrir tres meses de salario más veinte días por año trabajad…</description>
-    </item>
-    <item>
-      <title>Reforma 40 horas: impacto real en nómina para una PyME de 20 empleados</title>
-      <link>https://clicklaboral.mx/blog/noticia-reforma-40-horas-impacto-real-en-nomina-para-una-p-2026-09-21.html</link>
-      <guid isPermaLink="true">https://clicklaboral.mx/blog/noticia-reforma-40-horas-impacto-real-en-nomina-para-una-p-2026-09-21.html</guid>
-      <pubDate>Mon, 21 Sep 2026 12:00:00 GMT</pubDate>
-      <category>Noticias</category>
-      <description>Una PyME con 20 trabajadores que opere actualmente a 48 horas semanales podría ver incrementada su nómina entre un 12 % y un 18 % si la reforma constitucional para reducir la jornada laboral a 40 hora…</description>
     </item>
   </channel>
 </rss>

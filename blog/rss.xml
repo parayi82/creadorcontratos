@@ -5,9 +5,17 @@
     <link>https://clicklaboral.mx/blog/</link>
     <description>Artículos, noticias y tips de compliance laboral para PyMEs mexicanas</description>
     <language>es-MX</language>
-    <lastBuildDate>Sat, 10 Oct 2026 18:08:04 GMT</lastBuildDate>
+    <lastBuildDate>Sun, 11 Oct 2026 18:32:36 GMT</lastBuildDate>
     <managingEditor>blog@clicklaboral.mx (ClickLaboral.mx)</managingEditor>
     <atom:link href="https://clicklaboral.mx/blog/rss.xml" rel="self" type="application/rss+xml"/>
+    <item>
+      <title>Alerta: la cuota patronal al IMSS cambia cuando el trabajador cumple 60 años — verifique su nómina</title>
+      <link>https://clicklaboral.mx/blog/noticia-alerta-la-cuota-patronal-al-imss-cambia-cuando-el--2026-10-11.html</link>
+      <guid isPermaLink="true">https://clicklaboral.mx/blog/noticia-alerta-la-cuota-patronal-al-imss-cambia-cuando-el--2026-10-11.html</guid>
+      <pubDate>Sun, 11 Oct 2026 12:00:00 GMT</pubDate>
+      <category>Alerta Legal</category>
+      <description>Cuando un trabajador cumple 60 años, la prima que su empresa paga al IMSS por el seguro de enfermedades y maternidad cambia de forma automática — y si su nómina no refleja ese ajuste, el patrón acumul…</description>
+    </item>
     <item>
       <title>Reforma 40 horas: el calendario exacto de reducción gradual 2026-2030 y cómo prepararse</title>
       <link>https://clicklaboral.mx/blog/noticia-reforma-40-horas-el-calendario-exacto-de-reduccion-2026-10-10.html</link>
@@ -199,14 +207,6 @@
       <pubDate>Thu, 24 Sep 2026 12:00:00 GMT</pubDate>
       <category>Reforma Laboral</category>
       <description>Más de cuatro años después de la reforma al artículo 132 de la Ley Federal del Trabajo, muchas PyMEs mexicanas siguen otorgando la licencia de paternidad de forma incorrecta —o simplemente no la aplic…</description>
-    </item>
-    <item>
-      <title>Tip: cuándo un permiso sin goce de sueldo puede convertirse en un riesgo laboral</title>
-      <link>https://clicklaboral.mx/blog/noticia-tip-cuando-un-permiso-sin-goce-de-sueldo-puede-con-2026-09-23.html</link>
-      <guid isPermaLink="true">https://clicklaboral.mx/blog/noticia-tip-cuando-un-permiso-sin-goce-de-sueldo-puede-con-2026-09-23.html</guid>
-      <pubDate>Wed, 23 Sep 2026 12:00:00 GMT</pubDate>
-      <category>Tip RH</category>
-      <description>Documentar correctamente un permiso sin goce de sueldo puede ser la diferencia entre una ausencia acordada y una demanda por despido injustificado ante la Junta de Conciliación y Arbitraje.…</description>
     </item>
   </channel>
 </rss>

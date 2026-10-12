@@ -5,9 +5,17 @@
     <link>https://clicklaboral.mx/blog/</link>
     <description>Artículos, noticias y tips de compliance laboral para PyMEs mexicanas</description>
     <language>es-MX</language>
-    <lastBuildDate>Sun, 11 Oct 2026 18:32:36 GMT</lastBuildDate>
+    <lastBuildDate>Mon, 12 Oct 2026 18:52:08 GMT</lastBuildDate>
     <managingEditor>blog@clicklaboral.mx (ClickLaboral.mx)</managingEditor>
     <atom:link href="https://clicklaboral.mx/blog/rss.xml" rel="self" type="application/rss+xml"/>
+    <item>
+      <title>PTU 2025: qué es la participación de utilidades y cómo distribuirla</title>
+      <link>https://clicklaboral.mx/blog/ptu-2025-que-es-la-participacion-de-utilidades-y-como-distribuirla-2026-10-12.html</link>
+      <guid isPermaLink="true">https://clicklaboral.mx/blog/ptu-2025-que-es-la-participacion-de-utilidades-y-como-distribuirla-2026-10-12.html</guid>
+      <pubDate>Mon, 12 Oct 2026 12:00:00 GMT</pubDate>
+      <category>Prestaciones</category>
+      <description>Cada año, entre mayo y junio, miles de empresas en México enfrentan la misma presión: calcular y distribuir correctamente la Participación de los Trabajadores en las Utilidades (PTU). Un error en este…</description>
+    </item>
     <item>
       <title>Alerta: la cuota patronal al IMSS cambia cuando el trabajador cumple 60 años — verifique su nómina</title>
       <link>https://clicklaboral.mx/blog/noticia-alerta-la-cuota-patronal-al-imss-cambia-cuando-el--2026-10-11.html</link>
@@ -199,14 +207,6 @@
       <pubDate>Fri, 25 Sep 2026 12:00:00 GMT</pubDate>
       <category>NOMs</category>
       <description>Si su empresa maneja, transporta o almacena materiales de cualquier tipo, la NOM-006-STPS no es opcional: es una obligación legal con consecuencias económicas directas. Conocer sus requisitos le permi…</description>
-    </item>
-    <item>
-      <title>Licencia de paternidad en México: la reforma que muchos patrones todavía aplican mal</title>
-      <link>https://clicklaboral.mx/blog/noticia-licencia-de-paternidad-en-mexico-la-reforma-que-mu-2026-09-24.html</link>
-      <guid isPermaLink="true">https://clicklaboral.mx/blog/noticia-licencia-de-paternidad-en-mexico-la-reforma-que-mu-2026-09-24.html</guid>
-      <pubDate>Thu, 24 Sep 2026 12:00:00 GMT</pubDate>
-      <category>Reforma Laboral</category>
-      <description>Más de cuatro años después de la reforma al artículo 132 de la Ley Federal del Trabajo, muchas PyMEs mexicanas siguen otorgando la licencia de paternidad de forma incorrecta —o simplemente no la aplic…</description>
     </item>
   </channel>
 </rss>

@@ -3716,7 +3716,7 @@ async function allsignEnviar() {
 
     // Sin créditos → cerrar modal y mostrar diálogo de compra
     if (res.status === 402 || data.error === 'sin_creditos') {
-      document.getElementById('modal-allsign').style.display = 'none';
+      cerrarModalAllSign();
       mostrarDialogoSinCreditos(data.saldo_actual || 0, data.requeridos || 1);
       return;
     }

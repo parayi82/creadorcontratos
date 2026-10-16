@@ -5,9 +5,17 @@
     <link>https://clicklaboral.mx/blog/</link>
     <description>Artículos, noticias y tips de compliance laboral para PyMEs mexicanas</description>
     <language>es-MX</language>
-    <lastBuildDate>Thu, 15 Oct 2026 17:57:07 GMT</lastBuildDate>
+    <lastBuildDate>Fri, 16 Oct 2026 13:53:22 GMT</lastBuildDate>
     <managingEditor>blog@clicklaboral.mx (ClickLaboral.mx)</managingEditor>
     <atom:link href="https://clicklaboral.mx/blog/rss.xml" rel="self" type="application/rss+xml"/>
+    <item>
+      <title>Archivo laboral: qué documentos debe conservar el patrón y por cuánto tiempo</title>
+      <link>https://clicklaboral.mx/blog/archivo-laboral-que-documentos-debe-conservar-el-patron-y-por-cuanto-tiempo-2026-10-16.html</link>
+      <guid isPermaLink="true">https://clicklaboral.mx/blog/archivo-laboral-que-documentos-debe-conservar-el-patron-y-por-cuanto-tiempo-2026-10-16.html</guid>
+      <pubDate>Fri, 16 Oct 2026 12:00:00 GMT</pubDate>
+      <category>Cumplimiento</category>
+      <description>Guardar documentos laborales no es opcional: es una obligación legal que, si se ignora, puede costarle a su empresa multas, juicios perdidos y pagos que de otra forma hubiera evitado. Sepa exactamente…</description>
+    </item>
     <item>
       <title>PTU 2025: por qué el cálculo es diferente para empresas de reciente creación</title>
       <link>https://clicklaboral.mx/blog/noticia-ptu-2025-por-que-el-calculo-es-diferente-para-empr-2026-10-15.html</link>
@@ -199,14 +207,6 @@
       <pubDate>Tue, 29 Sep 2026 12:00:00 GMT</pubDate>
       <category>Alerta Legal</category>
       <description>Las empresas que no cuenten con una Comisión de Seguridad e Higiene debidamente constituida y actualizada pueden recibir multas de hasta 435 veces la Unidad de Medida y Actualización (UMA), equivalent…</description>
-    </item>
-    <item>
-      <title>Alerta: la cuota patronal al IMSS cambia cuando el trabajador cumple 60 años — verifique su nómina</title>
-      <link>https://clicklaboral.mx/blog/noticia-alerta-la-cuota-patronal-al-imss-cambia-cuando-el--2026-09-28.html</link>
-      <guid isPermaLink="true">https://clicklaboral.mx/blog/noticia-alerta-la-cuota-patronal-al-imss-cambia-cuando-el--2026-09-28.html</guid>
-      <pubDate>Mon, 28 Sep 2026 12:00:00 GMT</pubDate>
-      <category>Alerta Legal</category>
-      <description>Cuando un trabajador cumple 60 años, la cuota patronal al IMSS en el seguro de Enfermedades y Maternidad (EM) cambia de forma automática — y si su nómina no lo refleja, el patrón puede estar pagando d…</description>
     </item>
   </channel>
 </rss>

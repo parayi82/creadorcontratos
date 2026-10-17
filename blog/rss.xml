@@ -5,9 +5,17 @@
     <link>https://clicklaboral.mx/blog/</link>
     <description>Artículos, noticias y tips de compliance laboral para PyMEs mexicanas</description>
     <language>es-MX</language>
-    <lastBuildDate>Fri, 16 Oct 2026 17:45:12 GMT</lastBuildDate>
+    <lastBuildDate>Sat, 17 Oct 2026 16:45:49 GMT</lastBuildDate>
     <managingEditor>blog@clicklaboral.mx (ClickLaboral.mx)</managingEditor>
     <atom:link href="https://clicklaboral.mx/blog/rss.xml" rel="self" type="application/rss+xml"/>
+    <item>
+      <title>Tip: qué debe decir un acta administrativa para que sea válida ante un juez laboral</title>
+      <link>https://clicklaboral.mx/blog/noticia-tip-que-debe-decir-un-acta-administrativa-para-que-2026-10-17.html</link>
+      <guid isPermaLink="true">https://clicklaboral.mx/blog/noticia-tip-que-debe-decir-un-acta-administrativa-para-que-2026-10-17.html</guid>
+      <pubDate>Sat, 17 Oct 2026 12:00:00 GMT</pubDate>
+      <category>Tip RH</category>
+      <description>Un acta administrativa mal redactada puede convertirse en la principal debilidad de su empresa ante un juicio laboral. Para que tenga valor probatorio ante la Junta de Conciliación o el Tribunal Labor…</description>
+    </item>
     <item>
       <title>Alerta: IMSS puede rechazar CFDI de nómina con errores en RFC — cómo prevenirlo</title>
       <link>https://clicklaboral.mx/blog/noticia-alerta-imss-puede-rechazar-cfdi-de-nomina-con-erro-2026-10-16.html</link>
@@ -199,14 +207,6 @@
       <pubDate>Wed, 30 Sep 2026 12:00:00 GMT</pubDate>
       <category>Noticias</category>
       <description>La Secretaría del Trabajo y Previsión Social (STPS) actualizó su plataforma digital para que los patrones de pequeñas y medianas empresas puedan generar, modificar y registrar su Reglamento Interior d…</description>
-    </item>
-    <item>
-      <title>PTU 2025: qué es la participación de utilidades y cómo distribuirla</title>
-      <link>https://clicklaboral.mx/blog/ptu-2025-que-es-la-participacion-de-utilidades-y-como-distribuirla-2026-09-30.html</link>
-      <guid isPermaLink="true">https://clicklaboral.mx/blog/ptu-2025-que-es-la-participacion-de-utilidades-y-como-distribuirla-2026-09-30.html</guid>
-      <pubDate>Wed, 30 Sep 2026 12:00:00 GMT</pubDate>
-      <category>Prestaciones</category>
-      <description>Cada año, entre mayo y junio, miles de empresas en México deben repartir una parte de sus ganancias entre sus trabajadores. Se llama PTU —Participación de los Trabajadores en las Utilidades— y no cump…</description>
     </item>
   </channel>
 </rss>

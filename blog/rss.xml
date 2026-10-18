@@ -5,9 +5,17 @@
     <link>https://clicklaboral.mx/blog/</link>
     <description>Artículos, noticias y tips de compliance laboral para PyMEs mexicanas</description>
     <language>es-MX</language>
-    <lastBuildDate>Sat, 17 Oct 2026 16:45:49 GMT</lastBuildDate>
+    <lastBuildDate>Sun, 18 Oct 2026 17:01:16 GMT</lastBuildDate>
     <managingEditor>blog@clicklaboral.mx (ClickLaboral.mx)</managingEditor>
     <atom:link href="https://clicklaboral.mx/blog/rss.xml" rel="self" type="application/rss+xml"/>
+    <item>
+      <title>Tip: cómo evitar que las horas extra no documentadas se conviertan en una deuda millonaria</title>
+      <link>https://clicklaboral.mx/blog/noticia-tip-como-evitar-que-las-horas-extra-no-documentada-2026-10-18.html</link>
+      <guid isPermaLink="true">https://clicklaboral.mx/blog/noticia-tip-como-evitar-que-las-horas-extra-no-documentada-2026-10-18.html</guid>
+      <pubDate>Sun, 18 Oct 2026 12:00:00 GMT</pubDate>
+      <category>Tip RH</category>
+      <description>Registre por escrito cada hora extra desde el primer día: sin ese soporte, cualquier reclamación del trabajador ante la STPS o el IMSS puede convertirse en una contingencia laboral que su empresa difí…</description>
+    </item>
     <item>
       <title>Tip: qué debe decir un acta administrativa para que sea válida ante un juez laboral</title>
       <link>https://clicklaboral.mx/blog/noticia-tip-que-debe-decir-un-acta-administrativa-para-que-2026-10-17.html</link>
@@ -199,14 +207,6 @@
       <pubDate>Thu, 01 Oct 2026 12:00:00 GMT</pubDate>
       <category>Jurisprudencia</category>
       <description>Si su empresa paga un bono discrecional de forma regular y periódica, el IMSS puede integrarlo al salario base de cotización, aunque no esté previsto en el contrato colectivo ni en el individual.…</description>
-    </item>
-    <item>
-      <title>STPS actualiza plataforma digital para que PyMEs generen su reglamento interior en línea</title>
-      <link>https://clicklaboral.mx/blog/noticia-stps-actualiza-plataforma-digital-para-que-pymes-g-2026-09-30.html</link>
-      <guid isPermaLink="true">https://clicklaboral.mx/blog/noticia-stps-actualiza-plataforma-digital-para-que-pymes-g-2026-09-30.html</guid>
-      <pubDate>Wed, 30 Sep 2026 12:00:00 GMT</pubDate>
-      <category>Noticias</category>
-      <description>La Secretaría del Trabajo y Previsión Social (STPS) actualizó su plataforma digital para que los patrones de pequeñas y medianas empresas puedan generar, modificar y registrar su Reglamento Interior d…</description>
     </item>
   </channel>
 </rss>

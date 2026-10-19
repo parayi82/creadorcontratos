@@ -5,9 +5,17 @@
     <link>https://clicklaboral.mx/blog/</link>
     <description>Artículos, noticias y tips de compliance laboral para PyMEs mexicanas</description>
     <language>es-MX</language>
-    <lastBuildDate>Sun, 18 Oct 2026 17:01:16 GMT</lastBuildDate>
+    <lastBuildDate>Mon, 19 Oct 2026 16:23:15 GMT</lastBuildDate>
     <managingEditor>blog@clicklaboral.mx (ClickLaboral.mx)</managingEditor>
     <atom:link href="https://clicklaboral.mx/blog/rss.xml" rel="self" type="application/rss+xml"/>
+    <item>
+      <title>Reinstalación de trabajador por laudo: derechos del patrón y opciones legales</title>
+      <link>https://clicklaboral.mx/blog/reinstalacion-de-trabajador-por-laudo-derechos-del-patron-y-opciones-legales-2026-10-19.html</link>
+      <guid isPermaLink="true">https://clicklaboral.mx/blog/reinstalacion-de-trabajador-por-laudo-derechos-del-patron-y-opciones-legales-2026-10-19.html</guid>
+      <pubDate>Mon, 19 Oct 2026 12:00:00 GMT</pubDate>
+      <category>Terminación laboral</category>
+      <description>Cuando un laudo condena a su empresa a reinstalar a un trabajador despedido, el reloj empieza a correr de inmediato. Muchos patrones no saben que la Ley Federal del Trabajo les otorga opciones reales…</description>
+    </item>
     <item>
       <title>Tip: cómo evitar que las horas extra no documentadas se conviertan en una deuda millonaria</title>
       <link>https://clicklaboral.mx/blog/noticia-tip-como-evitar-que-las-horas-extra-no-documentada-2026-10-18.html</link>
@@ -199,14 +207,6 @@
       <pubDate>Fri, 02 Oct 2026 12:00:00 GMT</pubDate>
       <category>NOMs</category>
       <description>Si su empresa tiene trabajadores, la NOM-030-STPS no es opcional: es la norma que define cómo deben organizarse los servicios preventivos de seguridad y salud en el trabajo, y su incumplimiento puede…</description>
-    </item>
-    <item>
-      <title>Tesis: el bono discrecional que se paga de forma regular sí integra el salario cotizable al IMSS</title>
-      <link>https://clicklaboral.mx/blog/noticia-tesis-el-bono-discrecional-que-se-paga-de-forma-re-2026-10-01.html</link>
-      <guid isPermaLink="true">https://clicklaboral.mx/blog/noticia-tesis-el-bono-discrecional-que-se-paga-de-forma-re-2026-10-01.html</guid>
-      <pubDate>Thu, 01 Oct 2026 12:00:00 GMT</pubDate>
-      <category>Jurisprudencia</category>
-      <description>Si su empresa paga un bono discrecional de forma regular y periódica, el IMSS puede integrarlo al salario base de cotización, aunque no esté previsto en el contrato colectivo ni en el individual.…</description>
     </item>
   </channel>
 </rss>

@@ -5,9 +5,17 @@
     <link>https://clicklaboral.mx/blog/</link>
     <description>Artículos, noticias y tips de compliance laboral para PyMEs mexicanas</description>
     <language>es-MX</language>
-    <lastBuildDate>Mon, 19 Oct 2026 19:34:46 GMT</lastBuildDate>
+    <lastBuildDate>Tue, 20 Oct 2026 18:12:30 GMT</lastBuildDate>
     <managingEditor>blog@clicklaboral.mx (ClickLaboral.mx)</managingEditor>
     <atom:link href="https://clicklaboral.mx/blog/rss.xml" rel="self" type="application/rss+xml"/>
+    <item>
+      <title>Alerta: las multas por no tener Comisión de Seguridad e Higiene actualizada son hasta 435 UMAs</title>
+      <link>https://clicklaboral.mx/blog/noticia-alerta-las-multas-por-no-tener-comision-de-segurid-2026-10-20.html</link>
+      <guid isPermaLink="true">https://clicklaboral.mx/blog/noticia-alerta-las-multas-por-no-tener-comision-de-segurid-2026-10-20.html</guid>
+      <pubDate>Tue, 20 Oct 2026 12:00:00 GMT</pubDate>
+      <category>Alerta Legal</category>
+      <description>Las empresas que no cuenten con una Comisión de Seguridad e Higiene activa, documentada y actualizada pueden recibir multas de hasta 435 veces la Unidad de Medida y Actualización (UMA), equivalentes a…</description>
+    </item>
     <item>
       <title>Tesis: la carta de renuncia firmada ante dos testigos es prueba suficiente de voluntariedad en juicio</title>
       <link>https://clicklaboral.mx/blog/noticia-tesis-la-carta-de-renuncia-firmada-ante-dos-testig-2026-10-19.html</link>
@@ -199,14 +207,6 @@
       <pubDate>Sat, 03 Oct 2026 12:00:00 GMT</pubDate>
       <category>Reforma Laboral</category>
       <description>Dos años después de la reforma al artículo 76 de la Ley Federal del Trabajo, más de la mitad de las PyMEs mexicanas siguen calculando vacaciones con el esquema anterior —seis días al primer año— lo qu…</description>
-    </item>
-    <item>
-      <title>Tip: cómo registrar correctamente una amonestación verbal sin que se vuelva contra usted</title>
-      <link>https://clicklaboral.mx/blog/noticia-tip-como-registrar-correctamente-una-amonestacion--2026-10-02.html</link>
-      <guid isPermaLink="true">https://clicklaboral.mx/blog/noticia-tip-como-registrar-correctamente-una-amonestacion--2026-10-02.html</guid>
-      <pubDate>Fri, 02 Oct 2026 12:00:00 GMT</pubDate>
-      <category>Tip RH</category>
-      <description>Documente cada amonestación verbal con una minuta firmada por el trabajador y un testigo el mismo día en que ocurra el hecho; sin ese respaldo escrito, la sanción no existirá ante la Junta de Concilia…</description>
     </item>
   </channel>
 </rss>

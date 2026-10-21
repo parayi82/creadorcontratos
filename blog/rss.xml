@@ -5,9 +5,17 @@
     <link>https://clicklaboral.mx/blog/</link>
     <description>Artículos, noticias y tips de compliance laboral para PyMEs mexicanas</description>
     <language>es-MX</language>
-    <lastBuildDate>Tue, 20 Oct 2026 18:12:30 GMT</lastBuildDate>
+    <lastBuildDate>Wed, 21 Oct 2026 14:26:44 GMT</lastBuildDate>
     <managingEditor>blog@clicklaboral.mx (ClickLaboral.mx)</managingEditor>
     <atom:link href="https://clicklaboral.mx/blog/rss.xml" rel="self" type="application/rss+xml"/>
+    <item>
+      <title>Subcontratación (outsourcing) tras la reforma 2021: qué cambió y cómo cumplir</title>
+      <link>https://clicklaboral.mx/blog/subcontratacion-outsourcing-tras-la-reforma-2021-que-cambio-y-como-cumplir-2026-10-21.html</link>
+      <guid isPermaLink="true">https://clicklaboral.mx/blog/subcontratacion-outsourcing-tras-la-reforma-2021-que-cambio-y-como-cumplir-2026-10-21.html</guid>
+      <pubDate>Wed, 21 Oct 2026 12:00:00 GMT</pubDate>
+      <category>Contratos</category>
+      <description>Desde mayo de 2021, la subcontratación de personal en México dejó de ser una opción libre para convertirse en un régimen estrictamente regulado. Si su empresa todavía opera bajo esquemas del antiguo o…</description>
+    </item>
     <item>
       <title>Alerta: las multas por no tener Comisión de Seguridad e Higiene actualizada son hasta 435 UMAs</title>
       <link>https://clicklaboral.mx/blog/noticia-alerta-las-multas-por-no-tener-comision-de-segurid-2026-10-20.html</link>
@@ -199,14 +207,6 @@
       <pubDate>Sun, 04 Oct 2026 12:00:00 GMT</pubDate>
       <category>Reforma Laboral</category>
       <description>Desde la reforma laboral de abril de 2021, la subcontratación de personal quedó prohibida en México; sin embargo, cuatro años después, muchas PyMEs aún operan con esquemas que los exponen a multas y c…</description>
-    </item>
-    <item>
-      <title>Reforma de vacaciones 2023: dos años después, lo que aún confunde a los patrones</title>
-      <link>https://clicklaboral.mx/blog/noticia-reforma-de-vacaciones-2023-dos-anos-despues-lo-que-2026-10-03.html</link>
-      <guid isPermaLink="true">https://clicklaboral.mx/blog/noticia-reforma-de-vacaciones-2023-dos-anos-despues-lo-que-2026-10-03.html</guid>
-      <pubDate>Sat, 03 Oct 2026 12:00:00 GMT</pubDate>
-      <category>Reforma Laboral</category>
-      <description>Dos años después de la reforma al artículo 76 de la Ley Federal del Trabajo, más de la mitad de las PyMEs mexicanas siguen calculando vacaciones con el esquema anterior —seis días al primer año— lo qu…</description>
     </item>
   </channel>
 </rss>

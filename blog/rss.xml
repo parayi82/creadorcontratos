@@ -5,9 +5,17 @@
     <link>https://clicklaboral.mx/blog/</link>
     <description>Artículos, noticias y tips de compliance laboral para PyMEs mexicanas</description>
     <language>es-MX</language>
-    <lastBuildDate>Wed, 21 Oct 2026 18:19:17 GMT</lastBuildDate>
+    <lastBuildDate>Thu, 22 Oct 2026 18:13:24 GMT</lastBuildDate>
     <managingEditor>blog@clicklaboral.mx (ClickLaboral.mx)</managingEditor>
     <atom:link href="https://clicklaboral.mx/blog/rss.xml" rel="self" type="application/rss+xml"/>
+    <item>
+      <title>Alerta: el REPSE vence cada 3 años — verifique si su empresa necesita renovarlo</title>
+      <link>https://clicklaboral.mx/blog/noticia-alerta-el-repse-vence-cada-3-anos-verifique-si-su--2026-10-22.html</link>
+      <guid isPermaLink="true">https://clicklaboral.mx/blog/noticia-alerta-el-repse-vence-cada-3-anos-verifique-si-su--2026-10-22.html</guid>
+      <pubDate>Thu, 22 Oct 2026 12:00:00 GMT</pubDate>
+      <category>Alerta Legal</category>
+      <description>Si su empresa contrató servicios especializados u obras especializadas después de abril de 2021, verifique la fecha de registro en el REPSE: el certificado vence cada tres años y operar con uno caduca…</description>
+    </item>
     <item>
       <title>Tip: cómo entregar el CFDI de nómina al trabajador — obligaciones y plazos</title>
       <link>https://clicklaboral.mx/blog/noticia-tip-como-entregar-el-cfdi-de-nomina-al-trabajador--2026-10-21.html</link>
@@ -199,14 +207,6 @@
       <pubDate>Mon, 05 Oct 2026 12:00:00 GMT</pubDate>
       <category>Jurisprudencia</category>
       <description>Una carta de renuncia firmada por el trabajador ante dos testigos constituye prueba suficiente para acreditar la voluntariedad de la separación laboral en juicio, según criterio sostenido por tribunal…</description>
-    </item>
-    <item>
-      <title>Nuevo sistema de justicia laboral: cómo funcionan los juicios laborales en 2025</title>
-      <link>https://clicklaboral.mx/blog/nuevo-sistema-de-justicia-laboral-como-funcionan-los-juicios-laborales-en-2025-2026-10-05.html</link>
-      <guid isPermaLink="true">https://clicklaboral.mx/blog/nuevo-sistema-de-justicia-laboral-como-funcionan-los-juicios-laborales-en-2025-2026-10-05.html</guid>
-      <pubDate>Mon, 05 Oct 2026 12:00:00 GMT</pubDate>
-      <category>Cumplimiento</category>
-      <description>Desde la reforma laboral de 2019, los juicios laborales en México ya no funcionan como antes. Si su empresa enfrenta una demanda en 2025 y sigue pensando en el esquema antiguo de Juntas de Conciliació…</description>
     </item>
   </channel>
 </rss>

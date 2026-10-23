@@ -5,9 +5,17 @@
     <link>https://clicklaboral.mx/blog/</link>
     <description>Artículos, noticias y tips de compliance laboral para PyMEs mexicanas</description>
     <language>es-MX</language>
-    <lastBuildDate>Fri, 23 Oct 2026 14:10:58 GMT</lastBuildDate>
+    <lastBuildDate>Fri, 23 Oct 2026 18:02:00 GMT</lastBuildDate>
     <managingEditor>blog@clicklaboral.mx (ClickLaboral.mx)</managingEditor>
     <atom:link href="https://clicklaboral.mx/blog/rss.xml" rel="self" type="application/rss+xml"/>
+    <item>
+      <title>NOM-037 dos años después: qué obligaciones del teletrabajo siguen sin cumplirse en las PyMEs</title>
+      <link>https://clicklaboral.mx/blog/noticia-nom-037-dos-anos-despues-que-obligaciones-del-tele-2026-10-23.html</link>
+      <guid isPermaLink="true">https://clicklaboral.mx/blog/noticia-nom-037-dos-anos-despues-que-obligaciones-del-tele-2026-10-23.html</guid>
+      <pubDate>Fri, 23 Oct 2026 12:00:00 GMT</pubDate>
+      <category>Reforma Laboral</category>
+      <description>A dos años de su entrada en vigor, la NOM-037-STPS-2023 sigue presentando niveles bajos de cumplimiento en las pequeñas y medianas empresas: según estimaciones de la Secretaría del Trabajo y Previsión…</description>
+    </item>
     <item>
       <title>Inspección del IMSS: qué revisan y cómo preparar su empresa</title>
       <link>https://clicklaboral.mx/blog/inspeccion-del-imss-que-revisan-y-como-preparar-su-empresa-2026-10-23.html</link>
@@ -199,14 +207,6 @@
       <pubDate>Wed, 07 Oct 2026 12:00:00 GMT</pubDate>
       <category>Terminación laboral</category>
       <description>Despedir a un trabajador sin hacerlo correctamente puede costarle a su empresa hasta tres meses de salario en indemnización, más salarios caídos, cuotas IMSS no pagadas y el desgaste de un juicio labo…</description>
-    </item>
-    <item>
-      <title>Alerta: aguinaldo proporcional es obligatorio incluso si el trabajador renuncia antes de diciembre</title>
-      <link>https://clicklaboral.mx/blog/noticia-alerta-aguinaldo-proporcional-es-obligatorio-inclu-2026-10-06.html</link>
-      <guid isPermaLink="true">https://clicklaboral.mx/blog/noticia-alerta-aguinaldo-proporcional-es-obligatorio-inclu-2026-10-06.html</guid>
-      <pubDate>Tue, 06 Oct 2026 12:00:00 GMT</pubDate>
-      <category>Alerta Legal</category>
-      <description>Todo trabajador que renuncie antes del 1 de diciembre tiene derecho a recibir su aguinaldo proporcional a los días laborados durante 2025. No pagarlo es una infracción a la Ley Federal del Trabajo que…</description>
     </item>
   </channel>
 </rss>

@@ -5,9 +5,17 @@
     <link>https://clicklaboral.mx/blog/</link>
     <description>Artículos, noticias y tips de compliance laboral para PyMEs mexicanas</description>
     <language>es-MX</language>
-    <lastBuildDate>Thu, 22 Oct 2026 18:13:24 GMT</lastBuildDate>
+    <lastBuildDate>Fri, 23 Oct 2026 14:10:58 GMT</lastBuildDate>
     <managingEditor>blog@clicklaboral.mx (ClickLaboral.mx)</managingEditor>
     <atom:link href="https://clicklaboral.mx/blog/rss.xml" rel="self" type="application/rss+xml"/>
+    <item>
+      <title>Inspección del IMSS: qué revisan y cómo preparar su empresa</title>
+      <link>https://clicklaboral.mx/blog/inspeccion-del-imss-que-revisan-y-como-preparar-su-empresa-2026-10-23.html</link>
+      <guid isPermaLink="true">https://clicklaboral.mx/blog/inspeccion-del-imss-que-revisan-y-como-preparar-su-empresa-2026-10-23.html</guid>
+      <pubDate>Fri, 23 Oct 2026 12:00:00 GMT</pubDate>
+      <category>Cumplimiento</category>
+      <description>Una visita del IMSS sin preparación puede costarle a su empresa decenas de miles de pesos en créditos fiscales, recargos y multas. Conocer exactamente qué revisan los inspectores —y tener la documenta…</description>
+    </item>
     <item>
       <title>Alerta: el REPSE vence cada 3 años — verifique si su empresa necesita renovarlo</title>
       <link>https://clicklaboral.mx/blog/noticia-alerta-el-repse-vence-cada-3-anos-verifique-si-su--2026-10-22.html</link>
@@ -199,14 +207,6 @@
       <pubDate>Tue, 06 Oct 2026 12:00:00 GMT</pubDate>
       <category>Alerta Legal</category>
       <description>Todo trabajador que renuncie antes del 1 de diciembre tiene derecho a recibir su aguinaldo proporcional a los días laborados durante 2025. No pagarlo es una infracción a la Ley Federal del Trabajo que…</description>
-    </item>
-    <item>
-      <title>Tesis: la carta de renuncia firmada ante dos testigos es prueba suficiente de voluntariedad en juicio</title>
-      <link>https://clicklaboral.mx/blog/noticia-tesis-la-carta-de-renuncia-firmada-ante-dos-testig-2026-10-05.html</link>
-      <guid isPermaLink="true">https://clicklaboral.mx/blog/noticia-tesis-la-carta-de-renuncia-firmada-ante-dos-testig-2026-10-05.html</guid>
-      <pubDate>Mon, 05 Oct 2026 12:00:00 GMT</pubDate>
-      <category>Jurisprudencia</category>
-      <description>Una carta de renuncia firmada por el trabajador ante dos testigos constituye prueba suficiente para acreditar la voluntariedad de la separación laboral en juicio, según criterio sostenido por tribunal…</description>
     </item>
   </channel>
 </rss>

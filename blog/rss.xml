@@ -5,9 +5,17 @@
     <link>https://clicklaboral.mx/blog/</link>
     <description>Artículos, noticias y tips de compliance laboral para PyMEs mexicanas</description>
     <language>es-MX</language>
-    <lastBuildDate>Mon, 26 Oct 2026 16:02:30 GMT</lastBuildDate>
+    <lastBuildDate>Mon, 26 Oct 2026 19:40:32 GMT</lastBuildDate>
     <managingEditor>blog@clicklaboral.mx (ClickLaboral.mx)</managingEditor>
     <atom:link href="https://clicklaboral.mx/blog/rss.xml" rel="self" type="application/rss+xml"/>
+    <item>
+      <title>Alerta: las vacaciones no gozadas no prescriben en el año — pueden reclamarse hasta 1 año después</title>
+      <link>https://clicklaboral.mx/blog/noticia-alerta-las-vacaciones-no-gozadas-no-prescriben-en--2026-10-26.html</link>
+      <guid isPermaLink="true">https://clicklaboral.mx/blog/noticia-alerta-las-vacaciones-no-gozadas-no-prescriben-en--2026-10-26.html</guid>
+      <pubDate>Mon, 26 Oct 2026 12:00:00 GMT</pubDate>
+      <category>Alerta Legal</category>
+      <description>Alerta para patrones: si un trabajador no disfrutó sus vacaciones en el año que le correspondían, tiene hasta un año adicional para reclamarlas ante la STPS o un Tribunal Laboral, conforme al artículo…</description>
+    </item>
     <item>
       <title>NOM-017-STPS: equipo de protección personal — qué debe proveer el patrón</title>
       <link>https://clicklaboral.mx/blog/nom-017-stps-equipo-de-proteccion-personal-que-debe-proveer-el-patron-2026-10-26.html</link>
@@ -199,14 +207,6 @@
       <pubDate>Fri, 09 Oct 2026 12:00:00 GMT</pubDate>
       <category>Alerta Legal</category>
       <description>Si su empresa presta servicios especializados u obras especializadas, tenga presente que el Registro de Prestadoras de Servicios Especializados u Obras Especializadas (REPSE) tiene una vigencia de tre…</description>
-    </item>
-    <item>
-      <title>INFONAVIT: obligaciones del patrón con los créditos de sus trabajadores</title>
-      <link>https://clicklaboral.mx/blog/infonavit-obligaciones-del-patron-con-los-creditos-de-sus-trabajadores-2026-10-09.html</link>
-      <guid isPermaLink="true">https://clicklaboral.mx/blog/infonavit-obligaciones-del-patron-con-los-creditos-de-sus-trabajadores-2026-10-09.html</guid>
-      <pubDate>Fri, 09 Oct 2026 12:00:00 GMT</pubDate>
-      <category>Prestaciones</category>
-      <description>Si su empresa tiene trabajadores con crédito INFONAVIT activo, usted tiene obligaciones legales que van mucho más allá de simplemente retener el descuento de nómina. Incumplirlas puede derivar en mult…</description>
     </item>
   </channel>
 </rss>

@@ -5,9 +5,17 @@
     <link>https://clicklaboral.mx/blog/</link>
     <description>Artículos, noticias y tips de compliance laboral para PyMEs mexicanas</description>
     <language>es-MX</language>
-    <lastBuildDate>Mon, 26 Oct 2026 19:40:32 GMT</lastBuildDate>
+    <lastBuildDate>Tue, 27 Oct 2026 19:07:37 GMT</lastBuildDate>
     <managingEditor>blog@clicklaboral.mx (ClickLaboral.mx)</managingEditor>
     <atom:link href="https://clicklaboral.mx/blog/rss.xml" rel="self" type="application/rss+xml"/>
+    <item>
+      <title>Alerta: el REPSE vence cada 3 años — verifique si su empresa necesita renovarlo</title>
+      <link>https://clicklaboral.mx/blog/noticia-alerta-el-repse-vence-cada-3-anos-verifique-si-su--2026-10-27.html</link>
+      <guid isPermaLink="true">https://clicklaboral.mx/blog/noticia-alerta-el-repse-vence-cada-3-anos-verifique-si-su--2026-10-27.html</guid>
+      <pubDate>Tue, 27 Oct 2026 12:00:00 GMT</pubDate>
+      <category>Alerta Legal</category>
+      <description>El Registro de Prestadoras de Servicios Especializados u Obras Especializadas (REPSE) tiene una vigencia de tres años: si su empresa lo obtuvo en 2021 —cuando entró en vigor la reforma al artículo 15…</description>
+    </item>
     <item>
       <title>Alerta: las vacaciones no gozadas no prescriben en el año — pueden reclamarse hasta 1 año después</title>
       <link>https://clicklaboral.mx/blog/noticia-alerta-las-vacaciones-no-gozadas-no-prescriben-en--2026-10-26.html</link>
@@ -199,14 +207,6 @@
       <pubDate>Sat, 10 Oct 2026 12:00:00 GMT</pubDate>
       <category>Reforma Laboral</category>
       <description>A partir del 1 de enero de 2026, la jornada laboral máxima en México comenzará a reducirse de forma progresiva hasta alcanzar las 40 horas semanales en 2030, de acuerdo con el decreto de reforma al ar…</description>
-    </item>
-    <item>
-      <title>Alerta: el REPSE vence cada 3 años — verifique si su empresa necesita renovarlo</title>
-      <link>https://clicklaboral.mx/blog/noticia-alerta-el-repse-vence-cada-3-anos-verifique-si-su--2026-10-09.html</link>
-      <guid isPermaLink="true">https://clicklaboral.mx/blog/noticia-alerta-el-repse-vence-cada-3-anos-verifique-si-su--2026-10-09.html</guid>
-      <pubDate>Fri, 09 Oct 2026 12:00:00 GMT</pubDate>
-      <category>Alerta Legal</category>
-      <description>Si su empresa presta servicios especializados u obras especializadas, tenga presente que el Registro de Prestadoras de Servicios Especializados u Obras Especializadas (REPSE) tiene una vigencia de tre…</description>
     </item>
   </channel>
 </rss>

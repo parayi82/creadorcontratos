@@ -5,9 +5,17 @@
     <link>https://clicklaboral.mx/blog/</link>
     <description>Artículos, noticias y tips de compliance laboral para PyMEs mexicanas</description>
     <language>es-MX</language>
-    <lastBuildDate>Wed, 28 Oct 2026 19:12:19 GMT</lastBuildDate>
+    <lastBuildDate>Thu, 29 Oct 2026 19:21:36 GMT</lastBuildDate>
     <managingEditor>blog@clicklaboral.mx (ClickLaboral.mx)</managingEditor>
     <atom:link href="https://clicklaboral.mx/blog/rss.xml" rel="self" type="application/rss+xml"/>
+    <item>
+      <title>Trabajo híbrido y derecho laboral mexicano: qué dice la LFT y qué vacíos legales quedan</title>
+      <link>https://clicklaboral.mx/blog/noticia-trabajo-hibrido-y-derecho-laboral-mexicano-que-dic-2026-10-29.html</link>
+      <guid isPermaLink="true">https://clicklaboral.mx/blog/noticia-trabajo-hibrido-y-derecho-laboral-mexicano-que-dic-2026-10-29.html</guid>
+      <pubDate>Thu, 29 Oct 2026 12:00:00 GMT</pubDate>
+      <category>Noticias</category>
+      <description>El trabajo híbrido opera hoy en miles de PyMEs mexicanas sin un marco legal específico que lo regule: la Ley Federal del Trabajo reconoce el teletrabajo, pero guarda silencio sobre los esquemas mixtos…</description>
+    </item>
     <item>
       <title>Encuesta: el 58% de PyMEs mexicanas no conoce todas sus obligaciones bajo NOM-037</title>
       <link>https://clicklaboral.mx/blog/noticia-encuesta-el-58-de-pymes-mexicanas-no-conoce-todas--2026-10-28.html</link>
@@ -199,14 +207,6 @@
       <pubDate>Mon, 12 Oct 2026 12:00:00 GMT</pubDate>
       <category>Reforma Laboral</category>
       <description>Tres años después de la entrada en vigor de los Centros de Conciliación y los Tribunales Laborales —creados por la reforma laboral de 2019 e implementados progresivamente desde 2021— el modelo de just…</description>
-    </item>
-    <item>
-      <title>PTU 2025: qué es la participación de utilidades y cómo distribuirla</title>
-      <link>https://clicklaboral.mx/blog/ptu-2025-que-es-la-participacion-de-utilidades-y-como-distribuirla-2026-10-12.html</link>
-      <guid isPermaLink="true">https://clicklaboral.mx/blog/ptu-2025-que-es-la-participacion-de-utilidades-y-como-distribuirla-2026-10-12.html</guid>
-      <pubDate>Mon, 12 Oct 2026 12:00:00 GMT</pubDate>
-      <category>Prestaciones</category>
-      <description>Cada año, entre mayo y junio, miles de empresas en México enfrentan la misma presión: calcular y distribuir correctamente la Participación de los Trabajadores en las Utilidades (PTU). Un error en este…</description>
     </item>
   </channel>
 </rss>

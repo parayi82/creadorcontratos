@@ -5,9 +5,17 @@
     <link>https://clicklaboral.mx/blog/</link>
     <description>Artículos, noticias y tips de compliance laboral para PyMEs mexicanas</description>
     <language>es-MX</language>
-    <lastBuildDate>Fri, 30 Oct 2026 18:56:33 GMT</lastBuildDate>
+    <lastBuildDate>Sat, 31 Oct 2026 18:04:40 GMT</lastBuildDate>
     <managingEditor>blog@clicklaboral.mx (ClickLaboral.mx)</managingEditor>
     <atom:link href="https://clicklaboral.mx/blog/rss.xml" rel="self" type="application/rss+xml"/>
+    <item>
+      <title>Tip: el error más común al calcular la prima dominical y cómo evitarlo</title>
+      <link>https://clicklaboral.mx/blog/noticia-tip-el-error-mas-comun-al-calcular-la-prima-domini-2026-10-31.html</link>
+      <guid isPermaLink="true">https://clicklaboral.mx/blog/noticia-tip-el-error-mas-comun-al-calcular-la-prima-domini-2026-10-31.html</guid>
+      <pubDate>Sat, 31 Oct 2026 12:00:00 GMT</pubDate>
+      <category>Tip RH</category>
+      <description>Pagar el 25 % sobre el salario diario es el error que más repite en nómina cuando se calcula la prima dominical: la ley exige aplicar ese porcentaje exclusivamente sobre el salario ordinario del traba…</description>
+    </item>
     <item>
       <title>Tip: qué debe decir un acta administrativa para que sea válida ante un juez laboral</title>
       <link>https://clicklaboral.mx/blog/noticia-tip-que-debe-decir-un-acta-administrativa-para-que-2026-10-30.html</link>
@@ -199,14 +207,6 @@
       <pubDate>Wed, 14 Oct 2026 12:00:00 GMT</pubDate>
       <category>Tip RH</category>
       <description>Documente toda amonestación verbal el mismo día en que ocurra: un escrito interno firmado por testigos vale más que el recuerdo del supervisor cuando el trabajador acude ante la Junta de Conciliación…</description>
-    </item>
-    <item>
-      <title>Nuevo sistema de justicia laboral: cómo funcionan los juicios laborales en 2025</title>
-      <link>https://clicklaboral.mx/blog/nuevo-sistema-de-justicia-laboral-como-funcionan-los-juicios-laborales-en-2025-2026-10-14.html</link>
-      <guid isPermaLink="true">https://clicklaboral.mx/blog/nuevo-sistema-de-justicia-laboral-como-funcionan-los-juicios-laborales-en-2025-2026-10-14.html</guid>
-      <pubDate>Wed, 14 Oct 2026 12:00:00 GMT</pubDate>
-      <category>Cumplimiento</category>
-      <description>Desde la reforma laboral de 2019, México opera con un nuevo sistema de justicia laboral que eliminó las Juntas de Conciliación y Arbitraje y las reemplazó con tribunales federales y locales especializ…</description>
     </item>
   </channel>
 </rss>

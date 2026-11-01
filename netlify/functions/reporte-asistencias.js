@@ -16,7 +16,7 @@
 //                                            dias_laborales_propios, que sí respeta el
 //                                            dias_descanso individual de cada uno y los
 //                                            días de descanso obligatorio — Art. 74 LFT)
-//   registros: { [trabajador_id]: { [fecha]: { status, hora_entrada, hora_salida, notas, fuente, registrado_ts, geo_lat, geo_lng } } }
+//   registros: { [trabajador_id]: { [fecha]: { status, hora_entrada, hora_salida, notas, fuente, registrado_ts, entrada_ts, salida_ts, geo_lat, geo_lng } } }
 //   resumen: [{ trabajador_id, nombre, presentes, retrasos, faltas_injustificadas, ... descansos, pct_asistencia }]
 //   meta_nom: { generado_en, periodo_desde, periodo_hasta, articulo_804_lft, ... }
 // }
@@ -117,11 +117,17 @@ exports.handler = async (event) => {
 
     // ── 2. Registros de asistencia en el rango ────────────────────────────────
     const trabIds = trabajadores.map(t => t.id);
-    const { data: asistencias, error: aErr } = await sb.from('asistencias')
-      .select('trabajador_id,fecha,status,hora_entrada,hora_salida,notas,fuente,registrado_ts,geo_lat,geo_lng')
+    const COLS_BASE = 'trabajador_id,fecha,status,hora_entrada,hora_salida,notas,fuente,registrado_ts,geo_lat,geo_lng';
+    const qAsis = cols => sb.from('asistencias')
+      .select(cols)
       .eq('cliente_rfc', clienteRFC)
       .gte('fecha', desde).lte('fecha', hasta)
       .in('trabajador_id', trabIds);
+    let { data: asistencias, error: aErr } = await qAsis(COLS_BASE + ',entrada_ts,salida_ts');
+    if (aErr && /entrada_ts|salida_ts|42703/i.test(aErr.message || aErr.code || '')) {
+      // Migración 20261101000000_sello_servidor_marcaciones.sql aún no aplicada
+      ({ data: asistencias, error: aErr } = await qAsis(COLS_BASE));
+    }
     if (aErr) throw aErr;
 
     // ── 3. Mapa de registros: trabId → fecha → datos ─────────────────────────
@@ -139,6 +145,11 @@ exports.handler = async (event) => {
           // geolocalización capturados por el checador digital — evidencia de mayor
           // fuerza probatoria que hora_entrada/hora_salida ante la STPS o un tribunal.
           registrado_ts: a.registrado_ts,
+          // Sello de servidor por marcación (trigger trg_sellar_marcaciones):
+          // cuándo recibió Postgres la entrada y la salida, sin importar el
+          // reloj de la tablet/reloj checador.
+          entrada_ts:    a.entrada_ts ?? null,
+          salida_ts:     a.salida_ts ?? null,
           geo_lat:       a.geo_lat,
           geo_lng:       a.geo_lng,
         };

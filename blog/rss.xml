@@ -5,9 +5,17 @@
     <link>https://clicklaboral.mx/blog/</link>
     <description>Artículos, noticias y tips de compliance laboral para PyMEs mexicanas</description>
     <language>es-MX</language>
-    <lastBuildDate>Mon, 02 Nov 2026 19:23:23 GMT</lastBuildDate>
+    <lastBuildDate>Mon, 02 Nov 2026 22:32:01 GMT</lastBuildDate>
     <managingEditor>blog@clicklaboral.mx (ClickLaboral.mx)</managingEditor>
     <atom:link href="https://clicklaboral.mx/blog/rss.xml" rel="self" type="application/rss+xml"/>
+    <item>
+      <title>Subcontratación 2021: qué puede y qué no puede hacer con el REPSE en 2025</title>
+      <link>https://clicklaboral.mx/blog/noticia-subcontratacion-2021-que-puede-y-que-no-puede-hace-2026-11-02.html</link>
+      <guid isPermaLink="true">https://clicklaboral.mx/blog/noticia-subcontratacion-2021-que-puede-y-que-no-puede-hace-2026-11-02.html</guid>
+      <pubDate>Mon, 02 Nov 2026 12:00:00 GMT</pubDate>
+      <category>Reforma Laboral</category>
+      <description>Desde la reforma a la Ley Federal del Trabajo de abril de 2021, la subcontratación de personal quedó prohibida en términos generales; sin embargo, el esquema de servicios especializados —regulado por…</description>
+    </item>
     <item>
       <title>Licencia de maternidad y paternidad 2025: días, pagos y obligaciones patronales</title>
       <link>https://clicklaboral.mx/blog/licencia-de-maternidad-y-paternidad-2025-dias-pagos-y-obligaciones-patronales-2026-11-02.html</link>
@@ -199,14 +207,6 @@
       <pubDate>Fri, 16 Oct 2026 12:00:00 GMT</pubDate>
       <category>Alerta Legal</category>
       <description>Un RFC con un solo carácter incorrecto en el CFDI de nómina puede convertirse en una deducción rechazada y, en caso de revisión del IMSS, en un crédito fiscal inesperado para su empresa.…</description>
-    </item>
-    <item>
-      <title>Archivo laboral: qué documentos debe conservar el patrón y por cuánto tiempo</title>
-      <link>https://clicklaboral.mx/blog/archivo-laboral-que-documentos-debe-conservar-el-patron-y-por-cuanto-tiempo-2026-10-16.html</link>
-      <guid isPermaLink="true">https://clicklaboral.mx/blog/archivo-laboral-que-documentos-debe-conservar-el-patron-y-por-cuanto-tiempo-2026-10-16.html</guid>
-      <pubDate>Fri, 16 Oct 2026 12:00:00 GMT</pubDate>
-      <category>Cumplimiento</category>
-      <description>Guardar documentos laborales no es opcional: es una obligación legal que, si se ignora, puede costarle a su empresa multas, juicios perdidos y pagos que de otra forma hubiera evitado. Sepa exactamente…</description>
     </item>
   </channel>
 </rss>

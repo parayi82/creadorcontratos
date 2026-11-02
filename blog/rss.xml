@@ -5,9 +5,17 @@
     <link>https://clicklaboral.mx/blog/</link>
     <description>Artículos, noticias y tips de compliance laboral para PyMEs mexicanas</description>
     <language>es-MX</language>
-    <lastBuildDate>Sun, 01 Nov 2026 18:41:39 GMT</lastBuildDate>
+    <lastBuildDate>Mon, 02 Nov 2026 19:23:23 GMT</lastBuildDate>
     <managingEditor>blog@clicklaboral.mx (ClickLaboral.mx)</managingEditor>
     <atom:link href="https://clicklaboral.mx/blog/rss.xml" rel="self" type="application/rss+xml"/>
+    <item>
+      <title>Licencia de maternidad y paternidad 2025: días, pagos y obligaciones patronales</title>
+      <link>https://clicklaboral.mx/blog/licencia-de-maternidad-y-paternidad-2025-dias-pagos-y-obligaciones-patronales-2026-11-02.html</link>
+      <guid isPermaLink="true">https://clicklaboral.mx/blog/licencia-de-maternidad-y-paternidad-2025-dias-pagos-y-obligaciones-patronales-2026-11-02.html</guid>
+      <pubDate>Mon, 02 Nov 2026 12:00:00 GMT</pubDate>
+      <category>Prestaciones</category>
+      <description>En 2025, el incumplimiento de las licencias de maternidad y paternidad puede costarle a su empresa multas, demandas ante la JFCA y un daño reputacional difícil de revertir. Conocer con precisión los d…</description>
+    </item>
     <item>
       <title>Alerta: el REPSE vence cada 3 años — verifique si su empresa necesita renovarlo</title>
       <link>https://clicklaboral.mx/blog/noticia-alerta-el-repse-vence-cada-3-anos-verifique-si-su--2026-11-01.html</link>
@@ -199,14 +207,6 @@
       <pubDate>Fri, 16 Oct 2026 12:00:00 GMT</pubDate>
       <category>Cumplimiento</category>
       <description>Guardar documentos laborales no es opcional: es una obligación legal que, si se ignora, puede costarle a su empresa multas, juicios perdidos y pagos que de otra forma hubiera evitado. Sepa exactamente…</description>
-    </item>
-    <item>
-      <title>PTU 2025: por qué el cálculo es diferente para empresas de reciente creación</title>
-      <link>https://clicklaboral.mx/blog/noticia-ptu-2025-por-que-el-calculo-es-diferente-para-empr-2026-10-15.html</link>
-      <guid isPermaLink="true">https://clicklaboral.mx/blog/noticia-ptu-2025-por-que-el-calculo-es-diferente-para-empr-2026-10-15.html</guid>
-      <pubDate>Thu, 15 Oct 2026 12:00:00 GMT</pubDate>
-      <category>Noticias</category>
-      <description>Las empresas constituidas durante 2024 no calculan la PTU 2025 como el resto: la Ley Federal del Trabajo establece un régimen especial para el primer año de operaciones que reduce la base de cálculo y…</description>
     </item>
   </channel>
 </rss>

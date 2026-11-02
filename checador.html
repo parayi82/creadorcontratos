@@ -127,6 +127,10 @@ let trabajadores = [];          // roster activo
 let registrosHoy = {};          // trabajador_id -> registro de asistencia de hoy
 let trabajadorSel = null;
 let accionSel = null;           // 'entrada' | 'salida'
+// Registro inmutable (migración 20261102000000_marcaciones_inmutables.sql).
+// Si la tabla/función aún no existe, el kiosco sigue con el flujo anterior.
+let marcacionesOK = false;
+let marcacionesPorTrab = {};    // trabajador_id -> [{id,fecha,tipo,anula_id,hora_dispositivo}]
 let geoActual = null;           // {lat, lng} — se pide una vez, en background
 
 // ── Reloj ─────────────────────────────────────────────────────────────────────
@@ -304,6 +308,15 @@ async function cargarDatos(){
     if(!registrosHoy[a.trabajador_id]) registrosHoy[a.trabajador_id] = a; // no pisar registro de hoy
   });
 
+  // Marcaciones de hoy y ayer (para saber quién está en pausa)
+  const { data: marcs, error: mErr } = await sb.from('marcaciones')
+    .select('id,trabajador_id,fecha,tipo,anula_id,hora_dispositivo')
+    .eq('cliente_rfc', clienteRFC).in('fecha', [hoyISO(), ayerISO()])
+    .order('id');
+  marcacionesOK = !mErr;
+  marcacionesPorTrab = {};
+  (marcs||[]).forEach(m => { (marcacionesPorTrab[m.trabajador_id] ||= []).push(m); });
+
   render();
 }
 
@@ -341,6 +354,14 @@ function esFeriadoHoy(){
   return feriadosObligatoriosMx(parseInt(hoy.slice(0,4),10)).includes(hoy);
 }
 
+// Última marcación vigente (no anulada) de la jornada del trabajador
+function ultimaMarcacion(tid, fecha){
+  const lista = (marcacionesPorTrab[tid] || []).filter(m => m.fecha === fecha);
+  const anuladas = new Set(lista.filter(m => m.anula_id).map(m => m.anula_id));
+  const vigentes = lista.filter(m => m.tipo !== 'anulacion' && !anuladas.has(m.id));
+  return vigentes[vigentes.length - 1] || null;
+}
+
 function estadoTrabajador(t){
   const r = registrosHoy[t.id];
   if(!r || !r.hora_entrada){
@@ -350,6 +371,11 @@ function estadoTrabajador(t){
   }
   if(r.hora_entrada && !r.hora_salida){
     const deAyer = r.fecha && r.fecha !== hoyISO();
+    const ult = ultimaMarcacion(t.id, r.fecha || hoyISO());
+    if(ult?.tipo === 'inicio_pausa'){
+      const desde = (ult.hora_dispositivo || '').slice(11, 16);
+      return { clave:'pausa', label:'☕ En pausa' + (desde ? ' desde ' + desde : ''), css:'st-retraso' };
+    }
     return r.status==='retraso'
       ? { clave:'dentro', label:'⏰ Dentro (retraso ' + r.hora_entrada.slice(0,5) + ')', css:'st-retraso' }
       : { clave:'dentro', label:'✓ Dentro desde ' + (deAyer?'ayer ':'') + r.hora_entrada.slice(0,5), css:'st-dentro' };
@@ -360,7 +386,7 @@ function estadoTrabajador(t){
 function render(){
   const filtro = (document.getElementById('buscar')?.value || '').toLowerCase();
   const lista = trabajadores.filter(t => !filtro || t.nombre.toLowerCase().includes(filtro));
-  const dentro = trabajadores.filter(t => estadoTrabajador(t).clave==='dentro').length;
+  const dentro = trabajadores.filter(t => ['dentro','pausa'].includes(estadoTrabajador(t).clave)).length;
 
   document.getElementById('main').innerHTML = `
     <input type="text" class="buscador" id="buscar" name="filtro-roster" autocomplete="off" autocapitalize="off" spellcheck="false" placeholder="🔍 Busca tu nombre…" value="${filtro.replace(/"/g,'&quot;')}" oninput="render()">
@@ -404,7 +430,12 @@ function abrirAccion(id){
     botones.innerHTML = `<button class="btn btn-entrada" onclick="registrar('entrada')">Registrar ENTRADA de todas formas</button>`;
   } else if(e.clave==='dentro'){
     document.getElementById('m-ico').textContent = '🌇';
-    botones.innerHTML = `<button class="btn btn-salida" onclick="registrar('salida')">Registrar SALIDA</button>`;
+    botones.innerHTML = (marcacionesOK ? `<button class="btn btn-entrada" style="background:#b45309;" onclick="registrar('inicio_pausa')">☕ Iniciar PAUSA</button>` : '')
+      + `<button class="btn btn-salida" onclick="registrar('salida')">Registrar SALIDA</button>`;
+  } else if(e.clave==='pausa'){
+    document.getElementById('m-ico').textContent = '☕';
+    botones.innerHTML = `<button class="btn btn-entrada" onclick="registrar('fin_pausa')">Terminar PAUSA</button>`
+      + `<button class="btn btn-salida" onclick="registrar('salida')">Registrar SALIDA</button>`;
   } else {
     document.getElementById('m-ico').textContent = '✅';
     document.getElementById('m-sub').textContent = 'Jornada de hoy ya registrada (entrada y salida).';
@@ -429,16 +460,57 @@ async function registrar(accion){
   const hora = horaAhora();
   const existente = registrosHoy[trabajadorSel.id];
 
+  // Retraso vs hora habitual (+ tolerancia) — solo aplica a la entrada
+  let statusEntrada = 'presente';
+  if(trabajadorSel.hora_entrada_habitual){
+    const [hh,mm] = trabajadorSel.hora_entrada_habitual.split(':').map(Number);
+    const ahoraMin = new Date().getHours()*60 + new Date().getMinutes();
+    if(ahoraMin > hh*60 + mm + toleranciaRetrasoMin) statusEntrada = 'retraso';
+  }
+
+  // ── Vía principal: función del servidor (marcación inmutable + resumen) ──
+  if(marcacionesOK){
+    const { data, error } = await sb.rpc('registrar_marcacion', {
+      p_trabajador_id:    trabajadorSel.id,
+      p_tipo:             accion,
+      p_fecha:            accion === 'entrada' ? hoyISO() : (existente?.fecha || hoyISO()),
+      p_hora_dispositivo: fechaLocalISO() + ' ' + hora,
+      p_nip:              document.getElementById('m-nip').value.trim() || null,
+      p_geo_lat:          geoActual?.lat ?? null,
+      p_geo_lng:          geoActual?.lng ?? null,
+      p_status:           statusEntrada,
+    });
+    if(!error){
+      const nom = trabajadorSel.nombre.split(' ')[0], hm = hora.slice(0,5);
+      const msg = {
+        entrada:      [`🌅 Entrada registrada — ${nom}, ${hm}${statusEntrada==='retraso'?' (retraso)':''}`, statusEntrada==='retraso'?'warn':'ok'],
+        inicio_pausa: [`☕ Pausa iniciada — ${nom}, ${hm}`, 'ok'],
+        fin_pausa:    [`💪 Pausa terminada — ${nom}, ${hm}`, 'ok'],
+        salida:       [`🌇 Salida registrada — ${nom}, ${hm}. ¡Buen descanso!`, 'ok'],
+      }[accion];
+      toast(msg[0], msg[1]);
+      cerrarModal();
+      await cargarDatos();
+      return;
+    }
+    // Función aún no desplegada → seguir con el flujo anterior (sin pausas)
+    if(error.code === 'PGRST202' || /registrar_marcacion/i.test(error.message||'')){
+      marcacionesOK = false;
+      if(accion !== 'entrada' && accion !== 'salida'){
+        toast('Las pausas aún no están habilitadas', 'err');
+        botones.querySelectorAll('.btn').forEach(b=>b.disabled=false);
+        return;
+      }
+    } else {
+      toast(error.message || 'No se pudo registrar', 'err');
+      botones.querySelectorAll('.btn').forEach(b=>b.disabled=false);
+      return;
+    }
+  }
+
   try {
     if(accion==='entrada'){
-      // Detectar retraso vs hora habitual (+ tolerancia)
-      let status = 'presente';
-      if(trabajadorSel.hora_entrada_habitual){
-        const [hh,mm] = trabajadorSel.hora_entrada_habitual.split(':').map(Number);
-        const limite = hh*60 + mm + toleranciaRetrasoMin;
-        const ahora = new Date().getHours()*60 + new Date().getMinutes();
-        if(ahora > limite) status = 'retraso';
-      }
+      const status = statusEntrada;
       const payload = {
         trabajador_id: trabajadorSel.id, cliente_rfc: clienteRFC,
         fecha: hoyISO(), status, hora_entrada: hora,

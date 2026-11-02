@@ -17,6 +17,8 @@
 //                                            dias_descanso individual de cada uno y los
 //                                            días de descanso obligatorio — Art. 74 LFT)
 //   registros: { [trabajador_id]: { [fecha]: { status, hora_entrada, hora_salida, notas, fuente, registrado_ts, entrada_ts, salida_ts, geo_lat, geo_lng } } }
+//   marcaciones: { [trabajador_id]: { [fecha]: [ { id, tipo, hora_dispositivo, ts_servidor, fuente, anula_id, motivo } ] } }
+//     (registro inmutable de checadas, incluye pausas y contra-asientos; {} si la tabla no existe)
 //   resumen: [{ trabajador_id, nombre, presentes, retrasos, faltas_injustificadas, ... descansos, pct_asistencia }]
 //   meta_nom: { generado_en, periodo_desde, periodo_hasta, articulo_804_lft, ... }
 // }
@@ -112,7 +114,7 @@ exports.handler = async (event) => {
     if (tErr) throw tErr;
 
     if (!trabajadores?.length) {
-      return ok({ trabajadores: [], dias: [], dias_laborales: [], registros: {}, resumen: [], meta_nom: {} });
+      return ok({ trabajadores: [], dias: [], dias_laborales: [], registros: {}, marcaciones: {}, resumen: [], meta_nom: {} });
     }
 
     // ── 2. Registros de asistencia en el rango ────────────────────────────────
@@ -129,6 +131,26 @@ exports.handler = async (event) => {
       ({ data: asistencias, error: aErr } = await qAsis(COLS_BASE));
     }
     if (aErr) throw aErr;
+
+    // ── 2b. Marcaciones inmutables (entrada, pausas, salida, correcciones) ────
+    // Tabla de la migración 20261102000000; si aún no existe se omite.
+    const marcaciones = {};
+    {
+      const { data: marcs, error: mErr } = await sb.from('marcaciones')
+        .select('id,trabajador_id,fecha,tipo,hora_dispositivo,ts_servidor,fuente,anula_id,motivo')
+        .eq('cliente_rfc', clienteRFC)
+        .gte('fecha', desde).lte('fecha', hasta)
+        .in('trabajador_id', trabIds)
+        .order('ts_servidor');
+      if (mErr) {
+        if (!/marcaciones|42P01|PGRST205/i.test(`${mErr.message} ${mErr.code}`)) throw mErr;
+      } else {
+        for (const m of (marcs || [])) {
+          const { trabajador_id, ...resto } = m;
+          ((marcaciones[trabajador_id] ||= {})[m.fecha] ||= []).push(resto);
+        }
+      }
+    }
 
     // ── 3. Mapa de registros: trabId → fecha → datos ─────────────────────────
     const regMap = {};
@@ -267,6 +289,7 @@ exports.handler = async (event) => {
       dias,
       dias_laborales: diasLaborales,
       registros,
+      marcaciones,
       resumen,
       meta_nom,
     });

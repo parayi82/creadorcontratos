@@ -6323,11 +6323,26 @@ async function exportarExpedienteIndividual() {
     // el checador digital (independientes del reloj del dispositivo del trabajador)
     // como evidencia adicional de mayor fuerza probatoria ante la STPS o un tribunal.
     const filasAsist = [
-      ['DETALLE DE ASISTENCIAS DÍA A DÍA', '', '', '', '', '', '', '', '', '', ''],
-      ['Fecha', 'Día', 'Status', 'Hora Entrada (dispositivo)', 'Hora Salida (dispositivo)', 'Fuente',
+      ['DETALLE DE ASISTENCIAS DÍA A DÍA', '', '', '', '', '', '', '', '', '', '', ''],
+      ['Fecha', 'Día', 'Status', 'Hora Entrada (dispositivo)', 'Hora Salida (dispositivo)', 'Pausas (dispositivo)', 'Fuente',
        'Sello servidor entrada', 'Sello servidor salida', 'Sello servidor (alta del registro)', 'Geolocalización', 'Notas'],
     ];
     const fmtSello = ts => ts ? new Date(ts).toLocaleString('es-MX', { timeZone: 'America/Mexico_City' }) : '';
+    // Marcaciones inmutables del trabajador: fecha → lista (vacío si la migración no se ha aplicado)
+    const marcs = rep.marcaciones?.[t.id] || {};
+    const hhmm = m => (m.hora_dispositivo || '').slice(11, 16) || '¿?';
+    const pausasDe = dia => {
+      const lista = marcs[dia] || [];
+      const anuladas = new Set(lista.filter(m => m.anula_id).map(m => m.anula_id));
+      const vig = lista.filter(m => m.tipo !== 'anulacion' && !anuladas.has(m.id));
+      const tramos = []; let ini = null;
+      for (const m of vig) {
+        if (m.tipo === 'inicio_pausa') ini = m;
+        else if (m.tipo === 'fin_pausa') { tramos.push(`${ini ? hhmm(ini) : '¿?'}–${hhmm(m)}`); ini = null; }
+      }
+      if (ini) tramos.push(`${hhmm(ini)}–(sin fin)`);
+      return tramos.join(', ');
+    };
     for (const dia of (rep.dias || [])) {
       const r = regs[dia] || { status: 'sin_registro' };
       const dow = new Date(dia + 'T12:00:00Z').toLocaleDateString('es-MX', { weekday: 'long', timeZone: 'America/Mexico_City' });
@@ -6337,6 +6352,7 @@ async function exportarExpedienteIndividual() {
         STATUS_LABELS[r.status] || r.status,
         r.hora_entrada || '',
         r.hora_salida  || '',
+        pausasDe(dia),
         r.fuente       || '',
         fmtSello(r.entrada_ts),
         fmtSello(r.salida_ts),
@@ -6345,6 +6361,26 @@ async function exportarExpedienteIndividual() {
         r.notas        || '',
       ]);
     }
+
+    // ── Sección 2b: Registro inmutable de marcaciones (solo-agregar) ──
+    // Cada checada tal como se recibió, con su sello de servidor. Las
+    // correcciones aparecen como renglones adicionales con motivo; nada se borra.
+    const TIPO_MARC = { entrada:'Entrada', inicio_pausa:'Inicio de pausa', fin_pausa:'Fin de pausa', salida:'Salida', anulacion:'Anulación' };
+    const filasMarc = [
+      [''],
+      ['REGISTRO INMUTABLE DE MARCACIONES (no editable; correcciones = contra-asientos)', '', '', '', '', '', '', ''],
+      ['Folio', 'Fecha jornada', 'Tipo', 'Hora declarada por dispositivo', 'Sello de servidor', 'Fuente', 'Anula folio', 'Motivo'],
+    ];
+    for (const dia of Object.keys(marcs).sort()) {
+      for (const m of marcs[dia]) {
+        filasMarc.push([
+          m.id, dia, TIPO_MARC[m.tipo] || m.tipo,
+          m.hora_dispositivo ? m.hora_dispositivo.replace('T', ' ').slice(0, 19) : '',
+          fmtSello(m.ts_servidor), m.fuente || '', m.anula_id || '', m.motivo || '',
+        ]);
+      }
+    }
+    if (filasMarc.length === 3) filasMarc.push(['(sin marcaciones en el período)']);
 
     // ── Sección 3: Documentos en expediente ──
     const filasDocs = [
@@ -6356,7 +6392,7 @@ async function exportarExpedienteIndividual() {
 
     descargarCSV(
       `expediente_${t.nombre.replace(/\s+/g, '_')}_${anio}`,
-      [...filasDatos, ...filasAsist, ...filasDocs],
+      [...filasDatos, ...filasAsist, ...filasMarc, ...filasDocs],
     );
   } catch (e) {
     alert('Error al exportar expediente: ' + e.message);

@@ -134,6 +134,13 @@ async function processAttlog(sb, sn, body) {
   // { "trabId|2026-08-20": { trabId, clienteRFC, fecha, entrada?, salida?, trabajador } }
   const groups = {};
 
+  // Checadas crudas para la tabla inmutable `marcaciones` (una por línea del
+  // ATTLOG, incluidas las pausas). Códigos ZKTeco: 0=entrada, 1=salida,
+  // 2=inicio de pausa (break-out), 3=fin de pausa (break-in), 4=entrada T.E.,
+  // 5=salida T.E.
+  const TIPO_ZK = { 0: 'entrada', 1: 'salida', 2: 'inicio_pausa', 3: 'fin_pausa', 4: 'entrada', 5: 'salida' };
+  const crudas = [];
+
   for (const line of lines) {
     const parts = line.split('\t');
     if (parts.length < 2) continue;
@@ -152,6 +159,19 @@ async function processAttlog(sb, sn, body) {
     const trab = pinMap[pin];
     if (!trab) continue;
 
+    const tipoZk = TIPO_ZK[statusCode];
+    const horaCompleta = datetimeStr.slice(spaceIdx + 1, spaceIdx + 9); // HH:MM:SS
+    if (tipoZk && /^\d{4}-\d{2}-\d{2}$/.test(fecha) && /^\d{2}:\d{2}(:\d{2})?$/.test(horaCompleta)) {
+      crudas.push({
+        trabajador_id:    trab.id,
+        cliente_rfc:      clienteRFC,
+        fecha,
+        tipo:             tipoZk,
+        hora_dispositivo: `${fecha} ${horaCompleta}`, // hora local del reloj ZKTeco
+        fuente:           'adms',
+      });
+    }
+
     const key = `${trab.id}|${fecha}`;
     if (!groups[key]) {
       groups[key] = { trab, fecha, entrada: null, salida: null };
@@ -169,6 +189,17 @@ async function processAttlog(sb, sn, body) {
         groups[key].salida = timePart;
       }
     }
+  }
+
+  // Registro inmutable de checadas (migración 20261102000000). El reloj reenvía
+  // lotes: la restricción marcaciones_dedup + ignoreDuplicates evita duplicar.
+  // Si la tabla aún no existe, se omite sin afectar el resumen de asistencias.
+  if (crudas.length) {
+    const { error: mErr } = await sb.from('marcaciones').upsert(crudas, {
+      onConflict: 'trabajador_id,fuente,tipo,hora_dispositivo',
+      ignoreDuplicates: true,
+    });
+    if (mErr) console.error('adms marcaciones error:', mErr.message);
   }
 
   // Upsert de asistencias

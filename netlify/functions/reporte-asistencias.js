@@ -17,7 +17,8 @@
 //                                            dias_descanso individual de cada uno y los
 //                                            días de descanso obligatorio — Art. 74 LFT)
 //   registros: { [trabajador_id]: { [fecha]: { status, hora_entrada, hora_salida, notas, fuente, registrado_ts, entrada_ts, salida_ts, geo_lat, geo_lng } } }
-//   marcaciones: { [trabajador_id]: { [fecha]: [ { id, tipo, hora_dispositivo, ts_servidor, fuente, anula_id, motivo } ] } }
+//   marcaciones: { [trabajador_id]: { [fecha]: [ { id, tipo, hora_dispositivo, ts_servidor, fuente, anula_id, motivo, foto_path, foto_sha256, foto_estado } ] } }
+//   consentimientos: { [trabajador_id]: [ { id, finalidad, acepta, version, con_nip, ts_servidor } ] }   ({} si la tabla no existe)
 //     (registro inmutable de checadas, incluye pausas y contra-asientos; {} si la tabla no existe)
 //   resumen: [{ trabajador_id, nombre, presentes, retrasos, faltas_injustificadas, ... descansos, pct_asistencia }]
 //   meta_nom: { generado_en, periodo_desde, periodo_hasta, articulo_804_lft, ... }
@@ -114,7 +115,7 @@ exports.handler = async (event) => {
     if (tErr) throw tErr;
 
     if (!trabajadores?.length) {
-      return ok({ trabajadores: [], dias: [], dias_laborales: [], registros: {}, marcaciones: {}, resumen: [], meta_nom: {} });
+      return ok({ trabajadores: [], dias: [], dias_laborales: [], registros: {}, marcaciones: {}, consentimientos: {}, resumen: [], meta_nom: {} });
     }
 
     // ── 2. Registros de asistencia en el rango ────────────────────────────────
@@ -136,18 +137,42 @@ exports.handler = async (event) => {
     // Tabla de la migración 20261102000000; si aún no existe se omite.
     const marcaciones = {};
     {
-      const { data: marcs, error: mErr } = await sb.from('marcaciones')
-        .select('id,trabajador_id,fecha,tipo,hora_dispositivo,ts_servidor,fuente,anula_id,motivo')
+      const MARC_BASE = 'id,trabajador_id,fecha,tipo,hora_dispositivo,ts_servidor,fuente,anula_id,motivo';
+      const qMarc = cols => sb.from('marcaciones')
+        .select(cols)
         .eq('cliente_rfc', clienteRFC)
         .gte('fecha', desde).lte('fecha', hasta)
         .in('trabajador_id', trabIds)
         .order('ts_servidor');
+      // Columnas de foto: migración 20261103000000 (si no existe, sin ellas)
+      let { data: marcs, error: mErr } = await qMarc(MARC_BASE + ',foto_path,foto_sha256,foto_estado');
+      if (mErr && /foto_|42703/i.test(`${mErr.message} ${mErr.code}`)) {
+        ({ data: marcs, error: mErr } = await qMarc(MARC_BASE));
+      }
       if (mErr) {
         if (!/marcaciones|42P01|PGRST205/i.test(`${mErr.message} ${mErr.code}`)) throw mErr;
       } else {
         for (const m of (marcs || [])) {
           const { trabajador_id, ...resto } = m;
           ((marcaciones[trabajador_id] ||= {})[m.fecha] ||= []).push(resto);
+        }
+      }
+    }
+
+    // ── 2c. Consentimientos del trabajador (foto al checar) ──────────────────
+    const consentimientos = {};
+    {
+      const { data: cons, error: cErr } = await sb.from('consentimientos_trabajador')
+        .select('id,trabajador_id,finalidad,acepta,version,con_nip,ts_servidor')
+        .eq('cliente_rfc', clienteRFC)
+        .in('trabajador_id', trabIds)
+        .order('id');
+      if (cErr) {
+        if (!/consentimientos|42P01|PGRST205/i.test(`${cErr.message} ${cErr.code}`)) throw cErr;
+      } else {
+        for (const c of (cons || [])) {
+          const { trabajador_id, ...resto } = c;
+          (consentimientos[trabajador_id] ||= []).push(resto);
         }
       }
     }
@@ -290,6 +315,7 @@ exports.handler = async (event) => {
       dias_laborales: diasLaborales,
       registros,
       marcaciones,
+      consentimientos,
       resumen,
       meta_nom,
     });

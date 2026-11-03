@@ -84,7 +84,7 @@ footer a:hover{color:#fff;}
   <div class="legal-header">
     <div class="legal-eyebrow">Protección de datos personales</div>
     <h1>Aviso de Privacidad Integral</h1>
-    <div class="legal-updated">Última actualización: 26 de junio de 2026</div>
+    <div class="legal-updated">Última actualización: 3 de noviembre de 2026</div>
   </div>
 
   <div class="legal-body">
@@ -101,10 +101,21 @@ footer a:hover{color:#fff;}
       <tr><td>Datos de facturación y pago</td><td>Datos de tarjeta (tokenizados por Stripe, nunca almacenados por nosotros), historial de pagos</td><td>Usuario / Stripe</td></tr>
       <tr><td>Datos de navegación</td><td>Dirección IP, tipo de navegador, cookies de sesión</td><td>Cualquier visitante</td></tr>
       <tr><td>Datos de los trabajadores del cliente (contenidos en los documentos generados)</td><td>Nombre, CURP, NSS, salario, puesto, domicilio</td><td>Capturados por el cliente al usar los generadores de documentos</td></tr>
+      <tr><td>Datos del registro de jornada (checador digital)</td><td>Fecha y hora de entrada, pausas y salida; ubicación aproximada del dispositivo, si este la permite; fotografía de la checada, solo si la empresa la activa y el trabajador la autoriza</td><td>Trabajadores del cliente, al usar el checador digital</td></tr>
     </table>
 
     <h3>2.1 Datos sensibles</h3>
     <p>La Plataforma no solicita de manera directa datos personales sensibles. No obstante, algunos documentos (por ejemplo, avisos de incapacidad) pueden involucrar datos relacionados con la salud del trabajador, capturados directamente por el cliente bajo su propia responsabilidad como responsable de dichos datos frente a sus trabajadores. El Responsable trata esa información únicamente como encargado técnico, conforme a la sección 6 de este aviso.</p>
+
+    <h3>2.2 Fotografía y ubicación en el checador digital</h3>
+    <p>Si la empresa-cliente activa la fotografía en su checador digital, el dispositivo toma una fotografía del rostro del trabajador cada vez que registra su entrada, pausas o salida. La fotografía:</p>
+    <ul>
+      <li>Solo se toma si el trabajador la autoriza expresamente en el propio checador. La autorización (o su negativa, o su revocación posterior) queda registrada con fecha y hora, junto con el texto exacto que se le mostró.</li>
+      <li>Tiene como única finalidad acreditar que fue el propio trabajador quien registró su jornada (Art. 132, fracción XXXIV, de la Ley Federal del Trabajo).</li>
+      <li><strong>No se utiliza para reconocimiento facial automatizado</strong> ni se procesa para obtener patrones biométricos: es una imagen para revisión humana en caso de aclaración o disputa.</li>
+      <li>Se almacena en un repositorio privado, sin acceso público, y solo la puede consultar la empresa-cliente. Se conserva junto con el registro de jornada durante el plazo que exige la ley.</li>
+    </ul>
+    <p>La ubicación aproximada del dispositivo se registra al checar, solo si el dispositivo lo permite, con la misma finalidad. Frente a sus trabajadores, la empresa-cliente es la responsable de estos datos; el Responsable los trata como encargado técnico, conforme a la sección 6 de este aviso. El trabajador puede ejercer sus derechos ARCO y revocar su autorización ante su patrón o escribiendo al correo señalado en la sección 8.</p>
 
     <h2>3. Finalidades del tratamiento</h2>
     <h3>Finalidades primarias (necesarias para el servicio)</h3>
@@ -128,7 +139,7 @@ footer a:hover{color:#fff;}
     <table>
       <tr><th>Proveedor</th><th>Función</th><th>Datos compartidos</th></tr>
       <tr><td>Stripe, Inc.</td><td>Procesamiento de pagos</td><td>Datos de facturación y pago (tokenizados)</td></tr>
-      <tr><td>Supabase / hosting en la nube</td><td>Almacenamiento de base de datos</td><td>Datos de cuenta, documentos generados</td></tr>
+      <tr><td>Supabase / hosting en la nube</td><td>Almacenamiento de base de datos y archivos</td><td>Datos de cuenta, documentos generados, registros de jornada y fotografías del checador</td></tr>
       <tr><td>Resend</td><td>Envío de correos transaccionales</td><td>Nombre y correo electrónico</td></tr>
       <tr><td>Anthropic (API de Claude)</td><td>Asistente legal con inteligencia artificial</td><td>Consultas formuladas por el usuario al asistente</td></tr>
     </table>

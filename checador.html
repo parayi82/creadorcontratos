@@ -59,6 +59,9 @@ body{font-family:var(--font);background:var(--surface);color:var(--ink);display:
 .modal{background:var(--white);border-radius:18px;padding:26px;width:100%;max-width:380px;text-align:center;}
 .modal h3{font-size:17px;color:var(--navy);margin-bottom:4px;}
 .modal .sub{font-size:13px;color:var(--ink3);margin-bottom:18px;}
+.cam-prev{width:100%;max-height:200px;object-fit:cover;border-radius:12px;background:#0f172a;transform:scaleX(-1);display:block;}
+.cam-msg{font-size:12px;color:var(--ink3);margin-top:6px;}
+.consent-txt{font-size:12px;line-height:1.5;text-align:left;background:#f8fafc;border:1px solid var(--border);border-radius:10px;padding:10px 12px;max-height:190px;overflow:auto;color:var(--ink2,#334155);}
 .nip-input{font-size:28px;letter-spacing:14px;text-align:center;width:100%;padding:12px;border:1.5px solid var(--border);border-radius:12px;font-family:var(--font);margin-bottom:16px;}
 .nip-input:focus{outline:none;border-color:var(--navy2);}
 .btn-row{display:flex;gap:10px;}
@@ -106,6 +109,7 @@ body{font-family:var(--font);background:var(--surface);color:var(--ink);display:
     <h3 id="m-nombre">—</h3>
     <div class="sub" id="m-sub">—</div>
     <input type="text" class="nip-input" id="m-nip" name="nip-checador" placeholder="••••" maxlength="4" inputmode="numeric" pattern="[0-9]*" autocomplete="one-time-code" autocapitalize="off" spellcheck="false" style="display:none;-webkit-text-security:disc;text-security:disc;">
+    <div id="m-foto" style="display:none;margin-bottom:14px;"></div>
     <div class="btn-row" id="m-botones"></div>
     <div class="btn-row" style="margin-top:10px;">
       <button class="btn btn-cancel" onclick="cerrarModal()">Cancelar</button>
@@ -127,6 +131,25 @@ let trabajadores = [];          // roster activo
 let registrosHoy = {};          // trabajador_id -> registro de asistencia de hoy
 let trabajadorSel = null;
 let accionSel = null;           // 'entrada' | 'salida'
+// Registro inmutable (migración 20261102000000_marcaciones_inmutables.sql).
+// Si la tabla/función aún no existe, el kiosco sigue con el flujo anterior.
+let marcacionesOK = false;
+let marcacionesPorTrab = {};    // trabajador_id -> [{id,fecha,tipo,anula_id,hora_dispositivo}]
+// Foto al checar (migración 20261103000000_fotos_checador.sql). Sin reconocimiento
+// facial: la foto es evidencia para revisión humana, con hash SHA-256.
+let fotoModo = 'apagada';       // 'apagada' | 'opcional' | 'obligatoria' (checador_config)
+let fotoConfigOK = false;       // la tabla existe → la RPC acepta los parámetros de foto
+let consentFoto = {};           // trabajador_id -> true/false (último consentimiento)
+let camStream = null, camEstado = null;
+const CONSENT_FOTO_VERSION = 'foto-checador-v1';
+const CONSENT_FOTO_TEXTO =
+  'Autorizo a mi patrón a tomar una fotografía de mi rostro cada vez que registre mi entrada, ' +
+  'pausas o salida en este checador, con la única finalidad de acreditar que fui yo quien registró ' +
+  'mi jornada laboral (Art. 132 fr. XXXIV de la Ley Federal del Trabajo). La fotografía no se usa ' +
+  'para reconocimiento facial automático, solo la puede consultar mi patrón y se conserva junto con ' +
+  'mi registro de jornada durante el plazo que marca la ley. Puedo negarme o retirar esta ' +
+  'autorización en cualquier momento; en ese caso registraré mi asistencia sin foto o, si mi patrón ' +
+  'la requiere, con apoyo de Recursos Humanos. Aviso de privacidad: clicklaboral.mx/aviso-de-privacidad.html';
 let geoActual = null;           // {lat, lng} — se pide una vez, en background
 
 // ── Reloj ─────────────────────────────────────────────────────────────────────
@@ -304,6 +327,32 @@ async function cargarDatos(){
     if(!registrosHoy[a.trabajador_id]) registrosHoy[a.trabajador_id] = a; // no pisar registro de hoy
   });
 
+  // Marcaciones de hoy y ayer (para saber quién está en pausa)
+  const { data: marcs, error: mErr } = await sb.from('marcaciones')
+    .select('id,trabajador_id,fecha,tipo,anula_id,hora_dispositivo')
+    .eq('cliente_rfc', clienteRFC).in('fecha', [hoyISO(), ayerISO()])
+    .order('id');
+  marcacionesOK = !mErr;
+  marcacionesPorTrab = {};
+  (marcs||[]).forEach(m => { (marcacionesPorTrab[m.trabajador_id] ||= []).push(m); });
+
+  // Configuración de foto y consentimientos (si la migración de fotos existe)
+  fotoConfigOK = false; fotoModo = 'apagada'; consentFoto = {};
+  if(marcacionesOK){
+    const { data: cfg, error: cErr } = await sb.from('checador_config')
+      .select('foto_modo').eq('cliente_rfc', clienteRFC).maybeSingle();
+    if(!cErr){
+      fotoConfigOK = true;
+      fotoModo = cfg?.foto_modo || 'apagada';
+      if(fotoModo !== 'apagada'){
+        const { data: cons } = await sb.from('consentimientos_trabajador')
+          .select('id,trabajador_id,acepta').eq('cliente_rfc', clienteRFC)
+          .eq('finalidad', 'foto_checador').order('id');
+        (cons||[]).forEach(c => { consentFoto[c.trabajador_id] = c.acepta; });
+      }
+    }
+  }
+
   render();
 }
 
@@ -341,6 +390,14 @@ function esFeriadoHoy(){
   return feriadosObligatoriosMx(parseInt(hoy.slice(0,4),10)).includes(hoy);
 }
 
+// Última marcación vigente (no anulada) de la jornada del trabajador
+function ultimaMarcacion(tid, fecha){
+  const lista = (marcacionesPorTrab[tid] || []).filter(m => m.fecha === fecha);
+  const anuladas = new Set(lista.filter(m => m.anula_id).map(m => m.anula_id));
+  const vigentes = lista.filter(m => m.tipo !== 'anulacion' && !anuladas.has(m.id));
+  return vigentes[vigentes.length - 1] || null;
+}
+
 function estadoTrabajador(t){
   const r = registrosHoy[t.id];
   if(!r || !r.hora_entrada){
@@ -350,6 +407,11 @@ function estadoTrabajador(t){
   }
   if(r.hora_entrada && !r.hora_salida){
     const deAyer = r.fecha && r.fecha !== hoyISO();
+    const ult = ultimaMarcacion(t.id, r.fecha || hoyISO());
+    if(ult?.tipo === 'inicio_pausa'){
+      const desde = (ult.hora_dispositivo || '').slice(11, 16);
+      return { clave:'pausa', label:'☕ En pausa' + (desde ? ' desde ' + desde : ''), css:'st-retraso' };
+    }
     return r.status==='retraso'
       ? { clave:'dentro', label:'⏰ Dentro (retraso ' + r.hora_entrada.slice(0,5) + ')', css:'st-retraso' }
       : { clave:'dentro', label:'✓ Dentro desde ' + (deAyer?'ayer ':'') + r.hora_entrada.slice(0,5), css:'st-dentro' };
@@ -360,7 +422,7 @@ function estadoTrabajador(t){
 function render(){
   const filtro = (document.getElementById('buscar')?.value || '').toLowerCase();
   const lista = trabajadores.filter(t => !filtro || t.nombre.toLowerCase().includes(filtro));
-  const dentro = trabajadores.filter(t => estadoTrabajador(t).clave==='dentro').length;
+  const dentro = trabajadores.filter(t => ['dentro','pausa'].includes(estadoTrabajador(t).clave)).length;
 
   document.getElementById('main').innerHTML = `
     <input type="text" class="buscador" id="buscar" name="filtro-roster" autocomplete="off" autocapitalize="off" spellcheck="false" placeholder="🔍 Busca tu nombre…" value="${filtro.replace(/"/g,'&quot;')}" oninput="render()">
@@ -404,17 +466,142 @@ function abrirAccion(id){
     botones.innerHTML = `<button class="btn btn-entrada" onclick="registrar('entrada')">Registrar ENTRADA de todas formas</button>`;
   } else if(e.clave==='dentro'){
     document.getElementById('m-ico').textContent = '🌇';
-    botones.innerHTML = `<button class="btn btn-salida" onclick="registrar('salida')">Registrar SALIDA</button>`;
+    botones.innerHTML = (marcacionesOK ? `<button class="btn btn-entrada" style="background:#b45309;" onclick="registrar('inicio_pausa')">☕ Iniciar PAUSA</button>` : '')
+      + `<button class="btn btn-salida" onclick="registrar('salida')">Registrar SALIDA</button>`;
+  } else if(e.clave==='pausa'){
+    document.getElementById('m-ico').textContent = '☕';
+    botones.innerHTML = `<button class="btn btn-entrada" onclick="registrar('fin_pausa')">Terminar PAUSA</button>`
+      + `<button class="btn btn-salida" onclick="registrar('salida')">Registrar SALIDA</button>`;
   } else {
     document.getElementById('m-ico').textContent = '✅';
     document.getElementById('m-sub').textContent = 'Jornada de hoy ya registrada (entrada y salida).';
     botones.innerHTML = '';
     nipEl.style.display = 'none';
   }
+  pintarPanelFoto(e.clave !== 'completo');
   document.getElementById('overlay').classList.add('show');
   if(trabajadorSel.nip) setTimeout(()=>nipEl.focus(), 150);
 }
-function cerrarModal(){ document.getElementById('overlay').classList.remove('show'); trabajadorSel=null; }
+function cerrarModal(){
+  detenerCamara();
+  document.getElementById('overlay').classList.remove('show');
+  document.getElementById('m-foto').style.display = 'none';
+  trabajadorSel = null;
+}
+
+// ── Foto al checar ───────────────────────────────────────────────────────────
+// Muestra: aviso de consentimiento (primera vez), vista previa de la cámara
+// (si autorizó) o una nota (si no autorizó). Las botoneras de acción se
+// guardan para restaurarlas después de responder el consentimiento.
+let _botonesAccion = '';
+function pintarPanelFoto(hayAccion){
+  const panel = document.getElementById('m-foto');
+  detenerCamara(); camEstado = null;
+  if(!hayAccion || !fotoConfigOK || fotoModo === 'apagada'){ panel.style.display = 'none'; return; }
+  const botones = document.getElementById('m-botones');
+  const c = consentFoto[trabajadorSel.id];
+  panel.style.display = 'block';
+  if(c === true){
+    panel.innerHTML = `<video id="m-cam" class="cam-prev" autoplay playsinline muted></video>
+      <div class="cam-msg" id="m-cam-msg">📷 Se tomará una foto al registrar</div>`;
+    iniciarCamara();
+  } else if(c === undefined){
+    _botonesAccion = botones.innerHTML;
+    panel.innerHTML = `<div style="font-size:13px;font-weight:800;margin-bottom:6px;">📷 Autorización de fotografía</div>
+      <div class="consent-txt">${CONSENT_FOTO_TEXTO}</div>
+      ${trabajadorSel.nip ? '<div class="cam-msg">Confirma con tu NIP arriba.</div>' : ''}`;
+    botones.innerHTML = `<button class="btn btn-entrada" onclick="responderConsentimiento(true)">✅ Acepto</button>`
+      + `<button class="btn btn-cancel" onclick="responderConsentimiento(false)">No acepto</button>`;
+  } else {
+    panel.innerHTML = fotoModo === 'obligatoria'
+      ? `<div class="cam-msg" style="color:#b91c1c;font-weight:700;">Esta empresa requiere foto para checar y no la has autorizado. Acude con Recursos Humanos o <a href="#" onclick="cambiarConsentimiento();return false;">autoriza la foto</a>.</div>`
+      : `<div class="cam-msg">Sin foto (no autorizaste la fotografía) · <a href="#" onclick="cambiarConsentimiento();return false;">Autorizar foto</a></div>`;
+  }
+}
+function cambiarConsentimiento(){
+  if(!trabajadorSel) return;
+  delete consentFoto[trabajadorSel.id];   // vuelve a mostrar el aviso
+  pintarPanelFoto(true);
+}
+async function responderConsentimiento(acepta){
+  if(!trabajadorSel) return;
+  const nip = document.getElementById('m-nip').value.trim();
+  if(trabajadorSel.nip && nip !== String(trabajadorSel.nip)){ toast('NIP incorrecto', 'err'); return; }
+  const botones = document.getElementById('m-botones');
+  botones.querySelectorAll('.btn').forEach(b=>b.disabled=true);
+  const { error } = await sb.rpc('registrar_consentimiento', {
+    p_trabajador_id: trabajadorSel.id, p_finalidad: 'foto_checador', p_acepta: acepta,
+    p_version: CONSENT_FOTO_VERSION, p_texto: CONSENT_FOTO_TEXTO, p_nip: nip || null,
+  });
+  if(error){
+    toast(error.message || 'No se pudo guardar la autorización', 'err');
+    botones.querySelectorAll('.btn').forEach(b=>b.disabled=false);
+    return;
+  }
+  consentFoto[trabajadorSel.id] = acepta;
+  toast(acepta ? '✅ Autorización registrada' : 'Registrado: sin foto', 'ok');
+  botones.innerHTML = _botonesAccion;
+  pintarPanelFoto(true);
+}
+async function iniciarCamara(){
+  const sinFoto = fotoModo === 'obligatoria' ? ': esta empresa requiere foto, acude con Recursos Humanos' : ': se registrará sin foto';
+  const msg = t => { const m = document.getElementById('m-cam-msg'); if(m) m.textContent = t.replace(': se registrará sin foto', sinFoto); };
+  if(!navigator.mediaDevices?.getUserMedia){
+    camEstado = 'sin_camara'; msg('Este dispositivo no tiene cámara disponible: se registrará sin foto'); return;
+  }
+  try{
+    const stream = await navigator.mediaDevices.getUserMedia({
+      video: { facingMode: 'user', width: { ideal: 640 }, height: { ideal: 480 } }, audio: false,
+    });
+    if(!trabajadorSel || !document.getElementById('m-cam')){ stream.getTracks().forEach(t=>t.stop()); return; }
+    camStream = stream;
+    const v = document.getElementById('m-cam');
+    v.srcObject = stream;
+    await v.play().catch(()=>{});
+  } catch(err){
+    camEstado = (err?.name === 'NotAllowedError' || err?.name === 'SecurityError') ? 'permiso_denegado'
+              : (err?.name === 'NotFoundError' || err?.name === 'OverconstrainedError') ? 'sin_camara' : 'error';
+    msg(camEstado === 'permiso_denegado'
+      ? 'Permiso de cámara denegado en este dispositivo: se registrará sin foto'
+      : 'No se pudo abrir la cámara: se registrará sin foto');
+  }
+}
+function detenerCamara(){
+  if(camStream){ camStream.getTracks().forEach(t=>t.stop()); camStream = null; }
+}
+async function capturarFoto(){
+  const v = document.getElementById('m-cam');
+  if(!camStream || !v) return null;
+  // Si el trabajador tocó muy rápido, esperar a que llegue el primer cuadro
+  for(let i=0; i<30 && !v.videoWidth; i++) await new Promise(r=>setTimeout(r,50));
+  if(!v.videoWidth) return null;
+  const w = 480, h = Math.round(v.videoHeight * w / v.videoWidth);
+  const c = document.createElement('canvas'); c.width = w; c.height = h;
+  c.getContext('2d').drawImage(v, 0, 0, w, h);
+  const blob = await new Promise(r => c.toBlob(r, 'image/jpeg', 0.72));
+  if(!blob) return null;
+  const dig = await crypto.subtle.digest('SHA-256', await blob.arrayBuffer());
+  const sha = [...new Uint8Array(dig)].map(b=>b.toString(16).padStart(2,'0')).join('');
+  return { blob, sha };
+}
+function uuidLocal(){
+  return (crypto.randomUUID ? crypto.randomUUID()
+    : Date.now().toString(36) + '-' + Math.random().toString(36).slice(2, 12));
+}
+// Devuelve los parámetros de foto para registrar_marcacion y, si algo falló,
+// un mensaje (en modo obligatoria el registro se detiene; en opcional sigue).
+async function prepararFoto(fechaJornada){
+  if(!fotoConfigOK || fotoModo === 'apagada') return { args: {} };
+  if(consentFoto[trabajadorSel.id] !== true)
+    return { args: { p_foto_estado: 'sin_consentimiento' }, error: 'Falta tu autorización de foto' };
+  if(camEstado) return { args: { p_foto_estado: camEstado }, error: 'No hay cámara disponible' };
+  const f = await capturarFoto();
+  if(!f) return { args: { p_foto_estado: 'error' }, error: 'No se pudo tomar la foto' };
+  const path = `${clienteRFC}/${trabajadorSel.id}/${fechaJornada}/${uuidLocal()}.jpg`;
+  const { error } = await sb.storage.from('checadas').upload(path, f.blob, { contentType: 'image/jpeg', upsert: false });
+  if(error) return { args: { p_foto_estado: 'error' }, error: 'No se pudo subir la foto' };
+  return { args: { p_foto_path: path, p_foto_sha256: f.sha } };
+}
 
 async function registrar(accion){
   if(!trabajadorSel) return;
@@ -429,16 +616,67 @@ async function registrar(accion){
   const hora = horaAhora();
   const existente = registrosHoy[trabajadorSel.id];
 
+  // Retraso vs hora habitual (+ tolerancia) — solo aplica a la entrada
+  let statusEntrada = 'presente';
+  if(trabajadorSel.hora_entrada_habitual){
+    const [hh,mm] = trabajadorSel.hora_entrada_habitual.split(':').map(Number);
+    const ahoraMin = new Date().getHours()*60 + new Date().getMinutes();
+    if(ahoraMin > hh*60 + mm + toleranciaRetrasoMin) statusEntrada = 'retraso';
+  }
+
+  // ── Vía principal: función del servidor (marcación inmutable + resumen) ──
+  if(marcacionesOK){
+    const fechaJornada = accion === 'entrada' ? hoyISO() : (existente?.fecha || hoyISO());
+    const foto = await prepararFoto(fechaJornada);
+    if(foto.error && fotoModo === 'obligatoria'){
+      toast(foto.error + ' — esta empresa requiere foto para checar', 'err');
+      botones.querySelectorAll('.btn').forEach(b=>b.disabled=false);
+      return;
+    }
+    const { data, error } = await sb.rpc('registrar_marcacion', {
+      ...foto.args,
+      p_trabajador_id:    trabajadorSel.id,
+      p_tipo:             accion,
+      p_fecha:            fechaJornada,
+      p_hora_dispositivo: fechaLocalISO() + ' ' + hora,
+      p_nip:              document.getElementById('m-nip').value.trim() || null,
+      p_geo_lat:          geoActual?.lat ?? null,
+      p_geo_lng:          geoActual?.lng ?? null,
+      p_status:           statusEntrada,
+    });
+    if(!error){
+      const nom = trabajadorSel.nombre.split(' ')[0], hm = hora.slice(0,5);
+      const msg = {
+        entrada:      [`🌅 Entrada registrada — ${nom}, ${hm}${statusEntrada==='retraso'?' (retraso)':''}`, statusEntrada==='retraso'?'warn':'ok'],
+        inicio_pausa: [`☕ Pausa iniciada — ${nom}, ${hm}`, 'ok'],
+        fin_pausa:    [`💪 Pausa terminada — ${nom}, ${hm}`, 'ok'],
+        salida:       [`🌇 Salida registrada — ${nom}, ${hm}. ¡Buen descanso!`, 'ok'],
+      }[accion];
+      if(foto.args.p_foto_path) msg[0] += ' 📷';
+      else if(foto.error){ msg[0] += ' · sin foto'; msg[1] = 'warn'; }
+      toast(msg[0], msg[1]);
+      cerrarModal();
+      await cargarDatos();
+      return;
+    }
+    // Función aún no desplegada → seguir con el flujo anterior (sin pausas)
+    if(error.code === 'PGRST202' || /registrar_marcacion/i.test(error.message||'')){
+      marcacionesOK = false;
+      if(accion !== 'entrada' && accion !== 'salida'){
+        toast('Las pausas aún no están habilitadas', 'err');
+        botones.querySelectorAll('.btn').forEach(b=>b.disabled=false);
+        return;
+      }
+    } else {
+      toast(error.message || 'No se pudo registrar', 'err');
+      botones.querySelectorAll('.btn').forEach(b=>b.disabled=false);
+      return;
+    }
+  }
+
   try {
     if(accion==='entrada'){
-      // Detectar retraso vs hora habitual (+ tolerancia)
-      let status = 'presente';
-      if(trabajadorSel.hora_entrada_habitual){
-        const [hh,mm] = trabajadorSel.hora_entrada_habitual.split(':').map(Number);
-        const limite = hh*60 + mm + toleranciaRetrasoMin;
-        const ahora = new Date().getHours()*60 + new Date().getMinutes();
-        if(ahora > limite) status = 'retraso';
-      }
+      const status = statusEntrada;
       const payload = {
         trabajador_id: trabajadorSel.id, cliente_rfc: clienteRFC,
         fecha: hoyISO(), status, hora_entrada: hora,

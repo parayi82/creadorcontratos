@@ -16,7 +16,10 @@
 //                                            dias_laborales_propios, que sí respeta el
 //                                            dias_descanso individual de cada uno y los
 //                                            días de descanso obligatorio — Art. 74 LFT)
-//   registros: { [trabajador_id]: { [fecha]: { status, hora_entrada, hora_salida, notas, fuente, registrado_ts, geo_lat, geo_lng } } }
+//   registros: { [trabajador_id]: { [fecha]: { status, hora_entrada, hora_salida, notas, fuente, registrado_ts, entrada_ts, salida_ts, geo_lat, geo_lng } } }
+//   marcaciones: { [trabajador_id]: { [fecha]: [ { id, tipo, hora_dispositivo, ts_servidor, fuente, anula_id, motivo, foto_path, foto_sha256, foto_estado } ] } }
+//   consentimientos: { [trabajador_id]: [ { id, finalidad, acepta, version, con_nip, ts_servidor } ] }   ({} si la tabla no existe)
+//     (registro inmutable de checadas, incluye pausas y contra-asientos; {} si la tabla no existe)
 //   resumen: [{ trabajador_id, nombre, presentes, retrasos, faltas_injustificadas, ... descansos, pct_asistencia }]
 //   meta_nom: { generado_en, periodo_desde, periodo_hasta, articulo_804_lft, ... }
 // }
@@ -112,17 +115,67 @@ exports.handler = async (event) => {
     if (tErr) throw tErr;
 
     if (!trabajadores?.length) {
-      return ok({ trabajadores: [], dias: [], dias_laborales: [], registros: {}, resumen: [], meta_nom: {} });
+      return ok({ trabajadores: [], dias: [], dias_laborales: [], registros: {}, marcaciones: {}, consentimientos: {}, resumen: [], meta_nom: {} });
     }
 
     // ── 2. Registros de asistencia en el rango ────────────────────────────────
     const trabIds = trabajadores.map(t => t.id);
-    const { data: asistencias, error: aErr } = await sb.from('asistencias')
-      .select('trabajador_id,fecha,status,hora_entrada,hora_salida,notas,fuente,registrado_ts,geo_lat,geo_lng')
+    const COLS_BASE = 'trabajador_id,fecha,status,hora_entrada,hora_salida,notas,fuente,registrado_ts,geo_lat,geo_lng';
+    const qAsis = cols => sb.from('asistencias')
+      .select(cols)
       .eq('cliente_rfc', clienteRFC)
       .gte('fecha', desde).lte('fecha', hasta)
       .in('trabajador_id', trabIds);
+    let { data: asistencias, error: aErr } = await qAsis(COLS_BASE + ',entrada_ts,salida_ts');
+    if (aErr && /entrada_ts|salida_ts|42703/i.test(aErr.message || aErr.code || '')) {
+      // Migración 20261101000000_sello_servidor_marcaciones.sql aún no aplicada
+      ({ data: asistencias, error: aErr } = await qAsis(COLS_BASE));
+    }
     if (aErr) throw aErr;
+
+    // ── 2b. Marcaciones inmutables (entrada, pausas, salida, correcciones) ────
+    // Tabla de la migración 20261102000000; si aún no existe se omite.
+    const marcaciones = {};
+    {
+      const MARC_BASE = 'id,trabajador_id,fecha,tipo,hora_dispositivo,ts_servidor,fuente,anula_id,motivo';
+      const qMarc = cols => sb.from('marcaciones')
+        .select(cols)
+        .eq('cliente_rfc', clienteRFC)
+        .gte('fecha', desde).lte('fecha', hasta)
+        .in('trabajador_id', trabIds)
+        .order('ts_servidor');
+      // Columnas de foto: migración 20261103000000 (si no existe, sin ellas)
+      let { data: marcs, error: mErr } = await qMarc(MARC_BASE + ',foto_path,foto_sha256,foto_estado');
+      if (mErr && /foto_|42703/i.test(`${mErr.message} ${mErr.code}`)) {
+        ({ data: marcs, error: mErr } = await qMarc(MARC_BASE));
+      }
+      if (mErr) {
+        if (!/marcaciones|42P01|PGRST205/i.test(`${mErr.message} ${mErr.code}`)) throw mErr;
+      } else {
+        for (const m of (marcs || [])) {
+          const { trabajador_id, ...resto } = m;
+          ((marcaciones[trabajador_id] ||= {})[m.fecha] ||= []).push(resto);
+        }
+      }
+    }
+
+    // ── 2c. Consentimientos del trabajador (foto al checar) ──────────────────
+    const consentimientos = {};
+    {
+      const { data: cons, error: cErr } = await sb.from('consentimientos_trabajador')
+        .select('id,trabajador_id,finalidad,acepta,version,con_nip,ts_servidor')
+        .eq('cliente_rfc', clienteRFC)
+        .in('trabajador_id', trabIds)
+        .order('id');
+      if (cErr) {
+        if (!/consentimientos|42P01|PGRST205/i.test(`${cErr.message} ${cErr.code}`)) throw cErr;
+      } else {
+        for (const c of (cons || [])) {
+          const { trabajador_id, ...resto } = c;
+          (consentimientos[trabajador_id] ||= []).push(resto);
+        }
+      }
+    }
 
     // ── 3. Mapa de registros: trabId → fecha → datos ─────────────────────────
     const regMap = {};
@@ -139,6 +192,11 @@ exports.handler = async (event) => {
           // geolocalización capturados por el checador digital — evidencia de mayor
           // fuerza probatoria que hora_entrada/hora_salida ante la STPS o un tribunal.
           registrado_ts: a.registrado_ts,
+          // Sello de servidor por marcación (trigger trg_sellar_marcaciones):
+          // cuándo recibió Postgres la entrada y la salida, sin importar el
+          // reloj de la tablet/reloj checador.
+          entrada_ts:    a.entrada_ts ?? null,
+          salida_ts:     a.salida_ts ?? null,
           geo_lat:       a.geo_lat,
           geo_lng:       a.geo_lng,
         };
@@ -256,6 +314,8 @@ exports.handler = async (event) => {
       dias,
       dias_laborales: diasLaborales,
       registros,
+      marcaciones,
+      consentimientos,
       resumen,
       meta_nom,
     });

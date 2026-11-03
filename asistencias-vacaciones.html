@@ -271,6 +271,16 @@ body.modo-apartar .tablero-tabla tbody td:hover{outline:1px solid #f97316;outlin
           <button class="btn btn-outline" style="width:100%;margin-top:6px;" onclick="abrirModalImportarRoster()">📥 Importar varios (CSV)</button>
           <button class="btn btn-outline" style="width:100%;margin-top:6px;" onclick="abrirModalHorarioMasivo()">📅 Importar horarios masivo</button>
           <a href="checador.html" class="btn btn-outline" style="width:100%;margin-top:6px;display:block;text-align:center;text-decoration:none;box-sizing:border-box;">⏱ Abrir Checador Digital</a>
+          <!-- Foto al checar (migración 20261103000000_fotos_checador.sql) — se muestra solo si existe -->
+          <div id="foto-config-box" style="display:none;margin-top:8px;padding:8px 10px;border:1px solid var(--border);border-radius:8px;">
+            <label for="foto-modo-select" style="font-size:12px;font-weight:700;color:var(--navy2);">📷 Foto al checar</label>
+            <select id="foto-modo-select" onchange="guardarFotoModo()" style="width:100%;margin-top:4px;font-size:12px;padding:4px 8px;border:1px solid var(--border);border-radius:6px;background:var(--white);">
+              <option value="apagada">Apagada</option>
+              <option value="opcional">Opcional (recomendado)</option>
+              <option value="obligatoria">Obligatoria</option>
+            </select>
+            <div id="foto-modo-ayuda" style="font-size:10.5px;color:var(--ink3);margin-top:5px;line-height:1.45;"></div>
+          </div>
         </div>
       </div>
 
@@ -641,6 +651,8 @@ body.modo-apartar .tablero-tabla tbody td:hover{outline:1px solid #f97316;outlin
   <div class="modal-box">
     <h3 id="modal-dia-fecha">—</h3>
     <div class="status-pick" id="status-pick"></div>
+    <!-- Checadas del día (registro inmutable) con foto si existe -->
+    <div id="dia-marcaciones" style="display:none;border-top:1px solid var(--border);padding-top:10px;margin:6px 0 10px;"></div>
 
     <!-- Campos de hora — visibles cuando el status es "presente" o "retraso" -->
     <div id="hora-fields" style="display:none;border-top:1px solid var(--border);padding-top:12px;margin-top:4px;margin-bottom:8px;">
@@ -1133,6 +1145,7 @@ async function init() {
       toleranciaRetrasoMin = _meta.tolerancia_retraso_min;
     }
     pintarToleranciaSelect();
+    cargarFotoModo();
     document.getElementById('auth-gate').style.setProperty('display','none','important');
     document.getElementById('app').style.setProperty('display','block','important');
     if(document.getElementById('header-empresa'))
@@ -2536,6 +2549,7 @@ async function abrirModalDia(fecha){
   if(typeof calcularMinutosRetraso === 'function') calcularMinutosRetraso();
 
   document.getElementById('modal-dia').classList.add('show');
+  pintarMarcacionesDia(fecha);
 }
 
 function elegirStatus(key){
@@ -6323,26 +6337,77 @@ async function exportarExpedienteIndividual() {
     // el checador digital (independientes del reloj del dispositivo del trabajador)
     // como evidencia adicional de mayor fuerza probatoria ante la STPS o un tribunal.
     const filasAsist = [
-      ['DETALLE DE ASISTENCIAS DÍA A DÍA', '', '', '', '', '', '', '', ''],
-      ['Fecha', 'Día', 'Status', 'Hora Entrada', 'Hora Salida', 'Fuente', 'Sello de servidor', 'Geolocalización', 'Notas'],
+      ['DETALLE DE ASISTENCIAS DÍA A DÍA', '', '', '', '', '', '', '', '', '', '', ''],
+      ['Fecha', 'Día', 'Status', 'Hora Entrada (dispositivo)', 'Hora Salida (dispositivo)', 'Pausas (dispositivo)', 'Fuente',
+       'Sello servidor entrada', 'Sello servidor salida', 'Sello servidor (alta del registro)', 'Geolocalización', 'Notas'],
     ];
+    const fmtSello = ts => ts ? new Date(ts).toLocaleString('es-MX', { timeZone: 'America/Mexico_City' }) : '';
+    // Marcaciones inmutables del trabajador: fecha → lista (vacío si la migración no se ha aplicado)
+    const marcs = rep.marcaciones?.[t.id] || {};
+    const hhmm = m => (m.hora_dispositivo || '').slice(11, 16) || '¿?';
+    const pausasDe = dia => {
+      const lista = marcs[dia] || [];
+      const anuladas = new Set(lista.filter(m => m.anula_id).map(m => m.anula_id));
+      const vig = lista.filter(m => m.tipo !== 'anulacion' && !anuladas.has(m.id));
+      const tramos = []; let ini = null;
+      for (const m of vig) {
+        if (m.tipo === 'inicio_pausa') ini = m;
+        else if (m.tipo === 'fin_pausa') { tramos.push(`${ini ? hhmm(ini) : '¿?'}–${hhmm(m)}`); ini = null; }
+      }
+      if (ini) tramos.push(`${hhmm(ini)}–(sin fin)`);
+      return tramos.join(', ');
+    };
     for (const dia of (rep.dias || [])) {
       const r = regs[dia] || { status: 'sin_registro' };
       const dow = new Date(dia + 'T12:00:00Z').toLocaleDateString('es-MX', { weekday: 'long', timeZone: 'America/Mexico_City' });
-      const selloServidor = r.registrado_ts
-        ? new Date(r.registrado_ts).toLocaleString('es-MX', { timeZone: 'America/Mexico_City' })
-        : '';
       const geo = (r.geo_lat != null && r.geo_lng != null) ? `${r.geo_lat}, ${r.geo_lng}` : '';
       filasAsist.push([
         dia, dow,
         STATUS_LABELS[r.status] || r.status,
         r.hora_entrada || '',
         r.hora_salida  || '',
+        pausasDe(dia),
         r.fuente       || '',
-        selloServidor,
+        fmtSello(r.entrada_ts),
+        fmtSello(r.salida_ts),
+        fmtSello(r.registrado_ts),
         geo,
         r.notas        || '',
       ]);
+    }
+
+    // ── Sección 2b: Registro inmutable de marcaciones (solo-agregar) ──
+    // Cada checada tal como se recibió, con su sello de servidor. Las
+    // correcciones aparecen como renglones adicionales con motivo; nada se borra.
+    const TIPO_MARC = { entrada:'Entrada', inicio_pausa:'Inicio de pausa', fin_pausa:'Fin de pausa', salida:'Salida', anulacion:'Anulación' };
+    const filasMarc = [
+      [''],
+      ['REGISTRO INMUTABLE DE MARCACIONES (no editable; correcciones = contra-asientos)', '', '', '', '', '', '', '', '', '', ''],
+      ['Folio', 'Fecha jornada', 'Tipo', 'Hora declarada por dispositivo', 'Sello de servidor', 'Fuente', 'Anula folio', 'Motivo',
+       'Foto', 'Archivo de foto (storage: checadas)', 'SHA-256 de la foto'],
+    ];
+    const FOTO_EST = { tomada:'Sí', sin_camara:'No — sin cámara', permiso_denegado:'No — permiso denegado', sin_consentimiento:'No — no autorizó', error:'No — falló' };
+    for (const dia of Object.keys(marcs).sort()) {
+      for (const m of marcs[dia]) {
+        filasMarc.push([
+          m.id, dia, TIPO_MARC[m.tipo] || m.tipo,
+          m.hora_dispositivo ? m.hora_dispositivo.replace('T', ' ').slice(0, 19) : '',
+          fmtSello(m.ts_servidor), m.fuente || '', m.anula_id || '', m.motivo || '',
+          m.foto_estado ? (FOTO_EST[m.foto_estado] || m.foto_estado) : '', m.foto_path || '', m.foto_sha256 || '',
+        ]);
+      }
+    }
+    if (filasMarc.length === 3) filasMarc.push(['(sin marcaciones en el período)']);
+
+    // ── Sección 2c: Autorizaciones del trabajador (foto al checar) ──
+    const cons = rep.consentimientos?.[t.id] || [];
+    if (cons.length) {
+      filasMarc.push([''], ['AUTORIZACIONES DEL TRABAJADOR (registro inmutable)', '', '', '', ''],
+        ['Folio', 'Finalidad', 'Respuesta', 'Versión del texto', 'Confirmado con NIP', 'Sello de servidor']);
+      for (const c of cons) {
+        filasMarc.push([c.id, c.finalidad === 'foto_checador' ? 'Foto al checar' : c.finalidad,
+          c.acepta ? 'Acepta' : 'No acepta / revoca', c.version, c.con_nip ? 'Sí' : 'No', fmtSello(c.ts_servidor)]);
+      }
     }
 
     // ── Sección 3: Documentos en expediente ──
@@ -6355,7 +6420,7 @@ async function exportarExpedienteIndividual() {
 
     descargarCSV(
       `expediente_${t.nombre.replace(/\s+/g, '_')}_${anio}`,
-      [...filasDatos, ...filasAsist, ...filasDocs],
+      [...filasDatos, ...filasAsist, ...filasMarc, ...filasDocs],
     );
   } catch (e) {
     alert('Error al exportar expediente: ' + e.message);
@@ -7051,6 +7116,85 @@ function pintarToleranciaSelect() {
 function actualizarToleranciaLocal() {
   const sel = document.getElementById('tolerancia-select');
   if (sel) toleranciaRetrasoMin = parseInt(sel.value, 10);
+}
+
+// ════════════════════════════════════════════
+// FOTO AL CHECAR — configuración por empresa y visor de checadas del día
+// ════════════════════════════════════════════
+const AYUDA_FOTO = {
+  apagada:     'El checador no usa la cámara.',
+  opcional:    'Cada trabajador autoriza (o no) la foto la primera vez que checa. Si no autoriza o el dispositivo no tiene cámara, la checada se registra igual y queda marcada "sin foto".',
+  obligatoria: 'Sin foto no se puede checar. Quien no autorice la foto o no tenga cámara tendrá que registrarse con apoyo de RH.',
+};
+async function cargarFotoModo() {
+  const box = document.getElementById('foto-config-box');
+  if (!box || !clienteRFC) return;
+  const { data, error } = await sb.from('checador_config').select('foto_modo').eq('cliente_rfc', clienteRFC).maybeSingle();
+  if (error) { box.style.display = 'none'; return; }   // migración aún no aplicada
+  const modo = data?.foto_modo || 'apagada';
+  document.getElementById('foto-modo-select').value = modo;
+  document.getElementById('foto-modo-ayuda').textContent = AYUDA_FOTO[modo];
+  box.style.display = 'block';
+}
+async function guardarFotoModo() {
+  const sel = document.getElementById('foto-modo-select');
+  const modo = sel.value;
+  if (modo === 'obligatoria' && !confirm('Con foto obligatoria, nadie podrá checar sin foto. Quien no autorice la fotografía tendrá que registrarse con apoyo de RH. ¿Continuar?')) {
+    await cargarFotoModo(); return;
+  }
+  const { error } = await sb.from('checador_config').upsert({ cliente_rfc: clienteRFC, foto_modo: modo }, { onConflict: 'cliente_rfc' });
+  if (error) { alert('No se pudo guardar: ' + error.message); await cargarFotoModo(); return; }
+  document.getElementById('foto-modo-ayuda').textContent = '✓ Guardado. ' + AYUDA_FOTO[modo];
+}
+
+function escHtmlMarc(v) {
+  return String(v ?? '').replace(/[&<>"']/g, c => ({ '&':'&amp;', '<':'&lt;', '>':'&gt;', '"':'&quot;', "'":'&#39;' }[c]));
+}
+const TIPO_MARC_LABEL = { entrada:'🌅 Entrada', inicio_pausa:'☕ Inicio de pausa', fin_pausa:'💪 Fin de pausa', salida:'🌇 Salida', anulacion:'⛔ Anulación' };
+const FOTO_ESTADO_LABEL = { sin_camara:'sin cámara', permiso_denegado:'permiso de cámara denegado', sin_consentimiento:'no autorizó foto', error:'falló la foto' };
+async function pintarMarcacionesDia(fecha) {
+  const box = document.getElementById('dia-marcaciones');
+  if (!box) return;
+  box.style.display = 'none'; box.innerHTML = '';
+  const tid = trabajadorActual?.id;
+  if (!tid) return;
+  let res = await sb.from('marcaciones')
+    .select('id,tipo,hora_dispositivo,ts_servidor,fuente,anula_id,motivo,foto_path,foto_sha256,foto_estado')
+    .eq('trabajador_id', tid).eq('fecha', fecha).order('ts_servidor');
+  if (res.error && /foto_/i.test(res.error.message || '')) {
+    res = await sb.from('marcaciones')
+      .select('id,tipo,hora_dispositivo,ts_servidor,fuente,anula_id,motivo')
+      .eq('trabajador_id', tid).eq('fecha', fecha).order('ts_servidor');
+  }
+  if (res.error || !res.data?.length || diaSeleccionado !== fecha) return;
+  const lista = res.data;
+  const anuladas = new Set(lista.filter(m => m.anula_id).map(m => m.anula_id));
+  const conFoto = lista.filter(m => m.foto_path).map(m => m.foto_path);
+  const urls = {};
+  if (conFoto.length) {
+    const { data: firmadas } = await sb.storage.from('checadas').createSignedUrls(conFoto, 600);
+    (firmadas || []).forEach(f => { if (f.signedUrl) urls[f.path] = f.signedUrl; });
+  }
+  if (diaSeleccionado !== fecha) return;   // el usuario ya abrió otro día
+  const fmtSrv = ts => ts ? new Date(ts).toLocaleTimeString('es-MX', { timeZone: 'America/Mexico_City' }) : '';
+  box.innerHTML = `<div style="font-size:11px;font-weight:700;color:var(--accent);text-transform:uppercase;letter-spacing:.08em;margin-bottom:8px;">🔒 Checadas del día (registro inmutable)</div>`
+    + lista.map(m => {
+      const tachada = anuladas.has(m.id) ? 'text-decoration:line-through;opacity:.55;' : '';
+      const hDisp = (m.hora_dispositivo || '').replace('T', ' ').slice(11, 19);
+      const foto = m.foto_path && urls[m.foto_path]
+        ? `<a href="${escHtmlMarc(urls[m.foto_path])}" target="_blank" rel="noopener" title="SHA-256: ${escHtmlMarc(m.foto_sha256)}"><img src="${escHtmlMarc(urls[m.foto_path])}" alt="Foto de la checada" style="width:52px;height:40px;object-fit:cover;border-radius:6px;border:1px solid var(--border);"></a>`
+        : (m.foto_estado && FOTO_ESTADO_LABEL[m.foto_estado] ? `<span style="font-size:10px;color:#92400e;">📷 ${FOTO_ESTADO_LABEL[m.foto_estado]}</span>` : '');
+      const extra = m.tipo === 'anulacion' ? ` de folio ${escHtmlMarc(m.anula_id)}` : '';
+      const motivo = m.motivo ? `<div style="font-size:10.5px;color:var(--ink3);">Motivo: ${escHtmlMarc(m.motivo)}</div>` : '';
+      return `<div style="display:flex;align-items:center;gap:10px;padding:5px 0;border-bottom:1px dashed var(--border);${tachada}">
+        <div style="flex:1;font-size:12px;">
+          <b>${TIPO_MARC_LABEL[m.tipo] || escHtmlMarc(m.tipo)}</b>${extra}
+          ${hDisp ? ` · ${hDisp} <span style="color:var(--ink3);font-size:10.5px;">(dispositivo)</span>` : ''}
+          <div style="font-size:10.5px;color:var(--ink3);">Servidor: ${fmtSrv(m.ts_servidor)} · ${escHtmlMarc(m.fuente)} · folio ${escHtmlMarc(m.id)}</div>
+          ${motivo}
+        </div>${foto}</div>`;
+    }).join('');
+  box.style.display = 'block';
 }
 
 async function guardarToleranciaRetraso() {

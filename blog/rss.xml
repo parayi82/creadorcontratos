@@ -5,9 +5,17 @@
     <link>https://clicklaboral.mx/blog/</link>
     <description>Artículos, noticias y tips de compliance laboral para PyMEs mexicanas</description>
     <language>es-MX</language>
-    <lastBuildDate>Mon, 02 Nov 2026 22:32:01 GMT</lastBuildDate>
+    <lastBuildDate>Tue, 03 Nov 2026 20:21:22 GMT</lastBuildDate>
     <managingEditor>blog@clicklaboral.mx (ClickLaboral.mx)</managingEditor>
     <atom:link href="https://clicklaboral.mx/blog/rss.xml" rel="self" type="application/rss+xml"/>
+    <item>
+      <title>Tip: cómo calcular correctamente la prima vacacional proporcional al momento de una renuncia</title>
+      <link>https://clicklaboral.mx/blog/noticia-tip-como-calcular-correctamente-la-prima-vacaciona-2026-11-03.html</link>
+      <guid isPermaLink="true">https://clicklaboral.mx/blog/noticia-tip-como-calcular-correctamente-la-prima-vacaciona-2026-11-03.html</guid>
+      <pubDate>Tue, 03 Nov 2026 12:00:00 GMT</pubDate>
+      <category>Tip RH</category>
+      <description>Al recibir una renuncia, calcule la prima vacacional de forma proporcional a los días de vacaciones generados en el año en curso: es una obligación legal que, si se omite, puede derivar en un juicio a…</description>
+    </item>
     <item>
       <title>Subcontratación 2021: qué puede y qué no puede hacer con el REPSE en 2025</title>
       <link>https://clicklaboral.mx/blog/noticia-subcontratacion-2021-que-puede-y-que-no-puede-hace-2026-11-02.html</link>
@@ -199,14 +207,6 @@
       <pubDate>Sat, 17 Oct 2026 12:00:00 GMT</pubDate>
       <category>Tip RH</category>
       <description>Un acta administrativa mal redactada puede convertirse en la principal debilidad de su empresa ante un juicio laboral. Para que tenga valor probatorio ante la Junta de Conciliación o el Tribunal Labor…</description>
-    </item>
-    <item>
-      <title>Alerta: IMSS puede rechazar CFDI de nómina con errores en RFC — cómo prevenirlo</title>
-      <link>https://clicklaboral.mx/blog/noticia-alerta-imss-puede-rechazar-cfdi-de-nomina-con-erro-2026-10-16.html</link>
-      <guid isPermaLink="true">https://clicklaboral.mx/blog/noticia-alerta-imss-puede-rechazar-cfdi-de-nomina-con-erro-2026-10-16.html</guid>
-      <pubDate>Fri, 16 Oct 2026 12:00:00 GMT</pubDate>
-      <category>Alerta Legal</category>
-      <description>Un RFC con un solo carácter incorrecto en el CFDI de nómina puede convertirse en una deducción rechazada y, en caso de revisión del IMSS, en un crédito fiscal inesperado para su empresa.…</description>
     </item>
   </channel>
 </rss>

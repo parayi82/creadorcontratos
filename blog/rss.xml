@@ -5,9 +5,17 @@
     <link>https://clicklaboral.mx/blog/</link>
     <description>Artículos, noticias y tips de compliance laboral para PyMEs mexicanas</description>
     <language>es-MX</language>
-    <lastBuildDate>Tue, 03 Nov 2026 20:21:22 GMT</lastBuildDate>
+    <lastBuildDate>Wed, 04 Nov 2026 17:00:18 GMT</lastBuildDate>
     <managingEditor>blog@clicklaboral.mx (ClickLaboral.mx)</managingEditor>
     <atom:link href="https://clicklaboral.mx/blog/rss.xml" rel="self" type="application/rss+xml"/>
+    <item>
+      <title>Comisión Mixta de PTU: integración, funciones y plazos legales</title>
+      <link>https://clicklaboral.mx/blog/comision-mixta-de-ptu-integracion-funciones-y-plazos-legales-2026-11-04.html</link>
+      <guid isPermaLink="true">https://clicklaboral.mx/blog/comision-mixta-de-ptu-integracion-funciones-y-plazos-legales-2026-11-04.html</guid>
+      <pubDate>Wed, 04 Nov 2026 12:00:00 GMT</pubDate>
+      <category>Cumplimiento</category>
+      <description>Si su empresa reparte utilidades, está obligada por ley a constituir una Comisión Mixta de PTU antes de iniciar el proceso de cálculo y pago. No hacerlo —o hacerlo mal— puede derivar en multas, confli…</description>
+    </item>
     <item>
       <title>Tip: cómo calcular correctamente la prima vacacional proporcional al momento de una renuncia</title>
       <link>https://clicklaboral.mx/blog/noticia-tip-como-calcular-correctamente-la-prima-vacaciona-2026-11-03.html</link>
@@ -199,14 +207,6 @@
       <pubDate>Sun, 18 Oct 2026 12:00:00 GMT</pubDate>
       <category>Tip RH</category>
       <description>Registre por escrito cada hora extra desde el primer día: sin ese soporte, cualquier reclamación del trabajador ante la STPS o el IMSS puede convertirse en una contingencia laboral que su empresa difí…</description>
-    </item>
-    <item>
-      <title>Tip: qué debe decir un acta administrativa para que sea válida ante un juez laboral</title>
-      <link>https://clicklaboral.mx/blog/noticia-tip-que-debe-decir-un-acta-administrativa-para-que-2026-10-17.html</link>
-      <guid isPermaLink="true">https://clicklaboral.mx/blog/noticia-tip-que-debe-decir-un-acta-administrativa-para-que-2026-10-17.html</guid>
-      <pubDate>Sat, 17 Oct 2026 12:00:00 GMT</pubDate>
-      <category>Tip RH</category>
-      <description>Un acta administrativa mal redactada puede convertirse en la principal debilidad de su empresa ante un juicio laboral. Para que tenga valor probatorio ante la Junta de Conciliación o el Tribunal Labor…</description>
     </item>
   </channel>
 </rss>

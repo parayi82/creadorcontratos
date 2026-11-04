@@ -5,9 +5,17 @@
     <link>https://clicklaboral.mx/blog/</link>
     <description>Artículos, noticias y tips de compliance laboral para PyMEs mexicanas</description>
     <language>es-MX</language>
-    <lastBuildDate>Wed, 04 Nov 2026 17:00:18 GMT</lastBuildDate>
+    <lastBuildDate>Wed, 04 Nov 2026 20:37:14 GMT</lastBuildDate>
     <managingEditor>blog@clicklaboral.mx (ClickLaboral.mx)</managingEditor>
     <atom:link href="https://clicklaboral.mx/blog/rss.xml" rel="self" type="application/rss+xml"/>
+    <item>
+      <title>NOM-037 dos años después: qué obligaciones del teletrabajo siguen sin cumplirse en las PyMEs</title>
+      <link>https://clicklaboral.mx/blog/noticia-nom-037-dos-anos-despues-que-obligaciones-del-tele-2026-11-04.html</link>
+      <guid isPermaLink="true">https://clicklaboral.mx/blog/noticia-nom-037-dos-anos-despues-que-obligaciones-del-tele-2026-11-04.html</guid>
+      <pubDate>Wed, 04 Nov 2026 12:00:00 GMT</pubDate>
+      <category>Reforma Laboral</category>
+      <description>Dos años después de su entrada en vigor, la NOM-037-STPS-2023 sobre teletrabajo sigue sin cumplirse en la mayoría de las pequeñas y medianas empresas: inspecciones de la STPS reportan que más del 60%…</description>
+    </item>
     <item>
       <title>Comisión Mixta de PTU: integración, funciones y plazos legales</title>
       <link>https://clicklaboral.mx/blog/comision-mixta-de-ptu-integracion-funciones-y-plazos-legales-2026-11-04.html</link>
@@ -199,14 +207,6 @@
       <pubDate>Mon, 19 Oct 2026 12:00:00 GMT</pubDate>
       <category>Terminación laboral</category>
       <description>Cuando un laudo condena a su empresa a reinstalar a un trabajador despedido, el reloj empieza a correr de inmediato. Muchos patrones no saben que la Ley Federal del Trabajo les otorga opciones reales…</description>
-    </item>
-    <item>
-      <title>Tip: cómo evitar que las horas extra no documentadas se conviertan en una deuda millonaria</title>
-      <link>https://clicklaboral.mx/blog/noticia-tip-como-evitar-que-las-horas-extra-no-documentada-2026-10-18.html</link>
-      <guid isPermaLink="true">https://clicklaboral.mx/blog/noticia-tip-como-evitar-que-las-horas-extra-no-documentada-2026-10-18.html</guid>
-      <pubDate>Sun, 18 Oct 2026 12:00:00 GMT</pubDate>
-      <category>Tip RH</category>
-      <description>Registre por escrito cada hora extra desde el primer día: sin ese soporte, cualquier reclamación del trabajador ante la STPS o el IMSS puede convertirse en una contingencia laboral que su empresa difí…</description>
     </item>
   </channel>
 </rss>

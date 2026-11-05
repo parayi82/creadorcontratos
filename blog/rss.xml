@@ -5,9 +5,17 @@
     <link>https://clicklaboral.mx/blog/</link>
     <description>Artículos, noticias y tips de compliance laboral para PyMEs mexicanas</description>
     <language>es-MX</language>
-    <lastBuildDate>Wed, 04 Nov 2026 20:37:14 GMT</lastBuildDate>
+    <lastBuildDate>Thu, 05 Nov 2026 20:53:46 GMT</lastBuildDate>
     <managingEditor>blog@clicklaboral.mx (ClickLaboral.mx)</managingEditor>
     <atom:link href="https://clicklaboral.mx/blog/rss.xml" rel="self" type="application/rss+xml"/>
+    <item>
+      <title>Encuesta: el 58% de PyMEs mexicanas no conoce todas sus obligaciones bajo NOM-037</title>
+      <link>https://clicklaboral.mx/blog/noticia-encuesta-el-58-de-pymes-mexicanas-no-conoce-todas--2026-11-05.html</link>
+      <guid isPermaLink="true">https://clicklaboral.mx/blog/noticia-encuesta-el-58-de-pymes-mexicanas-no-conoce-todas--2026-11-05.html</guid>
+      <pubDate>Thu, 05 Nov 2026 12:00:00 GMT</pubDate>
+      <category>Noticias</category>
+      <description>El 58% de las pequeñas y medianas empresas mexicanas desconoce al menos una obligación establecida en la NOM-037-STPS-2023, la norma que regula el teletrabajo en México, según una encuesta reciente ap…</description>
+    </item>
     <item>
       <title>NOM-037 dos años después: qué obligaciones del teletrabajo siguen sin cumplirse en las PyMEs</title>
       <link>https://clicklaboral.mx/blog/noticia-nom-037-dos-anos-despues-que-obligaciones-del-tele-2026-11-04.html</link>
@@ -199,14 +207,6 @@
       <pubDate>Mon, 19 Oct 2026 12:00:00 GMT</pubDate>
       <category>Jurisprudencia</category>
       <description>Una carta de renuncia firmada ante dos testigos constituye prueba suficiente para acreditar la voluntariedad de la separación laboral en juicio, según criterio jurisprudencial que los tribunales labor…</description>
-    </item>
-    <item>
-      <title>Reinstalación de trabajador por laudo: derechos del patrón y opciones legales</title>
-      <link>https://clicklaboral.mx/blog/reinstalacion-de-trabajador-por-laudo-derechos-del-patron-y-opciones-legales-2026-10-19.html</link>
-      <guid isPermaLink="true">https://clicklaboral.mx/blog/reinstalacion-de-trabajador-por-laudo-derechos-del-patron-y-opciones-legales-2026-10-19.html</guid>
-      <pubDate>Mon, 19 Oct 2026 12:00:00 GMT</pubDate>
-      <category>Terminación laboral</category>
-      <description>Cuando un laudo condena a su empresa a reinstalar a un trabajador despedido, el reloj empieza a correr de inmediato. Muchos patrones no saben que la Ley Federal del Trabajo les otorga opciones reales…</description>
     </item>
   </channel>
 </rss>

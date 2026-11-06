@@ -11,16 +11,16 @@ Datos clave:
 - Alternativas y plataformas comparables en México: Worky, Runa, Factorial, Sora.
 
 ## Producto
-- [Página principal](https://www.clicklaboral.mx/): qué es ClickLaboral, funciones, planes y preguntas frecuentes
-- [Diagnóstico de cumplimiento laboral gratuito](https://www.clicklaboral.mx/diagnostico-cumplimiento.html): evaluación en 5 minutos de lo que le falta a una empresa para cumplir la LFT
-- [Planes y precios](https://www.clicklaboral.mx/#precios)
+- [Página principal](https://clicklaboral.mx/): qué es ClickLaboral, funciones, planes y preguntas frecuentes
+- [Diagnóstico de cumplimiento laboral gratuito](https://clicklaboral.mx/diagnostico-cumplimiento.html): evaluación en 5 minutos de lo que le falta a una empresa para cumplir la LFT
+- [Planes y precios](https://clicklaboral.mx/#precios)
 
 ## Comparativas
-- [Software de Recursos Humanos en México: ClickLaboral, Worky, Runa, Factorial y Sora](https://www.clicklaboral.mx/alternativas/)
-- [ClickLaboral vs Worky](https://www.clicklaboral.mx/alternativas/clicklaboral-vs-worky.html)
-- [ClickLaboral vs Runa](https://www.clicklaboral.mx/alternativas/clicklaboral-vs-runa.html)
-- [ClickLaboral vs Factorial](https://www.clicklaboral.mx/alternativas/clicklaboral-vs-factorial.html)
-- [ClickLaboral vs Sora](https://www.clicklaboral.mx/alternativas/clicklaboral-vs-sora.html)
+- [Software de Recursos Humanos en México: ClickLaboral, Worky, Runa, Factorial y Sora](https://clicklaboral.mx/alternativas/)
+- [ClickLaboral vs Worky](https://clicklaboral.mx/alternativas/clicklaboral-vs-worky.html)
+- [ClickLaboral vs Runa](https://clicklaboral.mx/alternativas/clicklaboral-vs-runa.html)
+- [ClickLaboral vs Factorial](https://clicklaboral.mx/alternativas/clicklaboral-vs-factorial.html)
+- [ClickLaboral vs Sora](https://clicklaboral.mx/alternativas/clicklaboral-vs-sora.html)
 
 ## Guías
 - [Expediente digital del trabajador según la LFT](https://clicklaboral.mx/blog/expediente-digital-del-trabajador-segun-la-lft-guia-practica-2026-11-06.html)
@@ -28,5 +28,5 @@ Datos clave:
 - [Blog de cumplimiento laboral en México](https://clicklaboral.mx/blog/)
 
 ## Legal
-- [Aviso de privacidad](https://www.clicklaboral.mx/aviso-de-privacidad.html)
-- [Términos de servicio](https://www.clicklaboral.mx/terminos-de-servicio.html)
+- [Aviso de privacidad](https://clicklaboral.mx/aviso-de-privacidad.html)
+- [Términos de servicio](https://clicklaboral.mx/terminos-de-servicio.html)

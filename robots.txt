@@ -35,4 +35,4 @@ Disallow: /netlify/
 Disallow: /_db/
 Disallow: /_interno/
 
-Sitemap: https://www.clicklaboral.mx/sitemap.xml
+Sitemap: https://clicklaboral.mx/sitemap.xml

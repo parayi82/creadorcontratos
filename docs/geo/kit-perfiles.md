@@ -9,7 +9,7 @@ Para que los motores de IA (ChatGPT, Gemini, Claude, Perplexity) incluyan a Clic
 ## 1. Textos base (copia y pega)
 
 **Nombre:** ClickLaboral
-**Sitio:** https://www.clicklaboral.mx
+**Sitio:** https://clicklaboral.mx
 **País:** México · **Idioma:** español
 **Categoría principal:** Software de Recursos Humanos (HR Software)
 **Categorías secundarias:** Expediente digital de empleados (Employee Records Management) · Firma electrónica (Digital Signature) · Control de asistencia (Time & Attendance) · Gestión de contratos (Contract Management) · Cumplimiento laboral (Compliance)
@@ -70,7 +70,7 @@ Wikipedia exige fuentes independientes (prensa) y borra páginas escritas por la
 |---|---|
 | instancia de (P31) | software como servicio · software de recursos humanos |
 | país de origen (P495) | México |
-| sitio web oficial (P856) | https://www.clicklaboral.mx |
+| sitio web oficial (P856) | https://clicklaboral.mx |
 | idioma (P407) | español |
 | desarrollador (P178) | ClickLaboral.mx |
 

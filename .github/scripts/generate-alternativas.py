@@ -17,7 +17,7 @@ Consumidor) y no deben denigrar a nadie.
 import html, json, os
 
 ROOT = os.path.abspath(os.path.join(os.path.dirname(__file__), '..', '..'))
-BASE = 'https://www.clicklaboral.mx'
+BASE = 'https://clicklaboral.mx'
 REVISION = 'noviembre de 2026'
 FECHA_ISO = '2026-11-06'
 CONSULTAR = 'Consultar con el proveedor'

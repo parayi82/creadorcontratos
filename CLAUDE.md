@@ -59,6 +59,18 @@ Auditado y verificado contra producción (septiembre 2026, PR #114 y #115). Ante
 - El panel de administración ("Firmas electrónicas", sidebar → Operación de `dashboard-compliance.html`) se agregó en el PR #114: totales agregados, tabla por cliente con saldo/conteo de firmas por estado, y modal de detalle + ajuste de créditos por cliente. Se alimenta de `netlify/functions/firmas-admin-resumen.js` (solo lectura, admin-only, agrega `firmas_creditos` + `firmas_electronicas` por RFC).
 - **Pendiente, no bloqueante**: `firmas_creditos`/`firmas_creditos_log` siguen sin tener su `CREATE TABLE` en `supabase/migrations/` — solo su fix de RLS. Si se vuelve a tocar el esquema de estas tablas, considera traer también la definición base a una migración versionada, para dejar de depender de `EJECUTAR-CREDITOS-FIRMAS.sql` como fuente de verdad.
 
+## GEO / posicionamiento en motores de IA (noviembre 2026)
+
+Objetivo: que ChatGPT, Gemini, Claude y Perplexity clasifiquen a ClickLaboral como **software de Recursos Humanos en México** (junto a Worky, Runa, Factorial y Sora) y no como "servicio jurídico".
+
+- `index.html`: title, description, og/twitter y el H1 (línea `.hero-cat`) declaran "Software de Recursos Humanos en México". El JSON-LD tiene como entidad principal `SoftwareApplication` (`applicationSubCategory: "Software de Recursos Humanos (HR Software)"`, `featureList`), luego `Organization` y `FAQPage`. **Antes era `LegalService` con `serviceType: "Asesoría jurídica laboral"`: eso era lo que empujaba la clasificación a LegalTech; no lo regreses.** El respaldo de abogados se comunica como atributo del producto, no como categoría.
+- `/alternativas/` (página general + `clicklaboral-vs-{worky,runa,factorial,sora}.html`) se genera con `python3 .github/scripts/generate-alternativas.py`. **Edita los datos ahí, nunca el HTML generado.** Regla: todo dato de un competidor necesita fuente pública citada en `FUENTES`/`fuentes` y fecha de revisión; si no está verificado se escribe "Consultar con el proveedor", nunca "No". Es publicidad comparativa (LFPC): debe poder comprobarse y no denigrar. ClickLaboral **no timbra nómina** y las páginas lo dicen así a propósito.
+- `llms.txt` (raíz): resumen del producto para LLMs. Actualízalo si cambian precios, planes o funciones.
+- `robots.txt`: los rastreadores de IA (GPTBot, OAI-SearchBot, ClaudeBot, PerplexityBot, Google-Extended…) tienen permiso explícito, con las mismas rutas privadas bloqueadas.
+- Artículo guía `blog/expediente-digital-del-trabajador-segun-la-lft-guia-practica-2026-11-06.html`, registrado en `blog/posts.json` para que la automatización del blog lo conserve en el índice y el sitemap.
+- **Pendiente: dominio canónico inconsistente.** La home, `/alternativas/` y `robots.txt` usan `https://www.clicklaboral.mx`; los artículos del blog y `generate-blog-post.js` usan `https://clicklaboral.mx`. Hay que confirmar en Netlify cuál es el dominio principal y unificar (incluido el generador del blog), o los buscadores y LLMs reparten las señales entre dos sitios.
+- Lo que no vive en el repo (Capterra/G2/ComparaSoftware, LinkedIn, Wikidata, co-menciones en medios): textos listos en `docs/geo/kit-perfiles.md`. Las reseñas deben ser de clientes reales; nunca redactarlas ni incentivarlas sin declararlo.
+
 ## Herramientas de este repo
 
 - `graphify-out/` (si existe) es un artefacto local generado por la herramienta externa `graphify` para explorar el grafo de dependencias del código — está en `.gitignore`, no se commitea.

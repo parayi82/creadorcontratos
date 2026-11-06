@@ -1,3 +1,27 @@
+# Rastreadores de motores de IA: acceso explícito al contenido público
+# (búsqueda y respuestas de ChatGPT, Claude, Gemini, Perplexity, Copilot).
+# Las mismas rutas privadas de abajo siguen bloqueadas para todos.
+User-agent: GPTBot
+User-agent: OAI-SearchBot
+User-agent: ChatGPT-User
+User-agent: ClaudeBot
+User-agent: Claude-SearchBot
+User-agent: Claude-User
+User-agent: PerplexityBot
+User-agent: Google-Extended
+User-agent: Bingbot
+Allow: /
+Disallow: /launcher.html
+Disallow: /dashboard-compliance.html
+Disallow: /admin-suscripciones.html
+Disallow: /portal-cliente.html
+Disallow: /panel-despacho.html
+Disallow: /asistencias-vacaciones.html
+Disallow: /recibos-pagos.html
+Disallow: /netlify/
+Disallow: /_db/
+Disallow: /_interno/
+
 User-agent: *
 Allow: /
 Disallow: /launcher.html

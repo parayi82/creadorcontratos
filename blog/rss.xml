@@ -5,9 +5,17 @@
     <link>https://clicklaboral.mx/blog/</link>
     <description>Artículos, noticias y tips de compliance laboral para PyMEs mexicanas</description>
     <language>es-MX</language>
-    <lastBuildDate>Thu, 05 Nov 2026 20:53:46 GMT</lastBuildDate>
+    <lastBuildDate>Fri, 06 Nov 2026 16:41:16 GMT</lastBuildDate>
     <managingEditor>blog@clicklaboral.mx (ClickLaboral.mx)</managingEditor>
     <atom:link href="https://clicklaboral.mx/blog/rss.xml" rel="self" type="application/rss+xml"/>
+    <item>
+      <title>NOM-035-STPS: guía práctica para centros de trabajo con más de 16 empleados</title>
+      <link>https://clicklaboral.mx/blog/nom-035-stps-guia-practica-para-centros-de-trabajo-con-mas-de-16-empleados-2026-11-06.html</link>
+      <guid isPermaLink="true">https://clicklaboral.mx/blog/nom-035-stps-guia-practica-para-centros-de-trabajo-con-mas-de-16-empleados-2026-11-06.html</guid>
+      <pubDate>Fri, 06 Nov 2026 12:00:00 GMT</pubDate>
+      <category>NOMs</category>
+      <description>Si su empresa tiene más de 16 trabajadores, la NOM-035-STPS no es opcional: es una obligación legal vigente con multas reales. Esta guía práctica le explica exactamente qué debe hacer, cuándo y cómo d…</description>
+    </item>
     <item>
       <title>Encuesta: el 58% de PyMEs mexicanas no conoce todas sus obligaciones bajo NOM-037</title>
       <link>https://clicklaboral.mx/blog/noticia-encuesta-el-58-de-pymes-mexicanas-no-conoce-todas--2026-11-05.html</link>
@@ -199,14 +207,6 @@
       <pubDate>Tue, 20 Oct 2026 12:00:00 GMT</pubDate>
       <category>Alerta Legal</category>
       <description>Las empresas que no cuenten con una Comisión de Seguridad e Higiene activa, documentada y actualizada pueden recibir multas de hasta 435 veces la Unidad de Medida y Actualización (UMA), equivalentes a…</description>
-    </item>
-    <item>
-      <title>Tesis: la carta de renuncia firmada ante dos testigos es prueba suficiente de voluntariedad en juicio</title>
-      <link>https://clicklaboral.mx/blog/noticia-tesis-la-carta-de-renuncia-firmada-ante-dos-testig-2026-10-19.html</link>
-      <guid isPermaLink="true">https://clicklaboral.mx/blog/noticia-tesis-la-carta-de-renuncia-firmada-ante-dos-testig-2026-10-19.html</guid>
-      <pubDate>Mon, 19 Oct 2026 12:00:00 GMT</pubDate>
-      <category>Jurisprudencia</category>
-      <description>Una carta de renuncia firmada ante dos testigos constituye prueba suficiente para acreditar la voluntariedad de la separación laboral en juicio, según criterio jurisprudencial que los tribunales labor…</description>
     </item>
   </channel>
 </rss>

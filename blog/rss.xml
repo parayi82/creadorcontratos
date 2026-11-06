@@ -5,9 +5,25 @@
     <link>https://clicklaboral.mx/blog/</link>
     <description>Artículos, noticias y tips de compliance laboral para PyMEs mexicanas</description>
     <language>es-MX</language>
-    <lastBuildDate>Fri, 06 Nov 2026 16:41:16 GMT</lastBuildDate>
+    <lastBuildDate>Fri, 06 Nov 2026 20:10:41 GMT</lastBuildDate>
     <managingEditor>blog@clicklaboral.mx (ClickLaboral.mx)</managingEditor>
     <atom:link href="https://clicklaboral.mx/blog/rss.xml" rel="self" type="application/rss+xml"/>
+    <item>
+      <title>Tesis: las cámaras de seguridad en el trabajo son prueba válida solo si el trabajador fue notificado</title>
+      <link>https://clicklaboral.mx/blog/noticia-tesis-las-camaras-de-seguridad-en-el-trabajo-son-p-2026-11-06.html</link>
+      <guid isPermaLink="true">https://clicklaboral.mx/blog/noticia-tesis-las-camaras-de-seguridad-en-el-trabajo-son-p-2026-11-06.html</guid>
+      <pubDate>Fri, 06 Nov 2026 12:00:00 GMT</pubDate>
+      <category>Jurisprudencia</category>
+      <description>Las grabaciones de cámaras de seguridad solo son admisibles como prueba en un juicio laboral si el trabajador fue previamente notificado de su existencia y finalidad: así lo establece una tesis aislad…</description>
+    </item>
+    <item>
+      <title>Expediente digital del trabajador según la LFT: qué debe contener y cómo llevarlo</title>
+      <link>https://clicklaboral.mx/blog/expediente-digital-del-trabajador-segun-la-lft-guia-practica-2026-11-06.html</link>
+      <guid isPermaLink="true">https://clicklaboral.mx/blog/expediente-digital-del-trabajador-segun-la-lft-guia-practica-2026-11-06.html</guid>
+      <pubDate>Fri, 06 Nov 2026 12:00:00 GMT</pubDate>
+      <category>Cumplimiento</category>
+      <description>El expediente del trabajador es la primera prueba de su empresa ante una inspección o una demanda. Qué documentos debe contener según la LFT, cuánto tiempo conservarlos y cómo llevarlo en digital con firma electrónica.</description>
+    </item>
     <item>
       <title>NOM-035-STPS: guía práctica para centros de trabajo con más de 16 empleados</title>
       <link>https://clicklaboral.mx/blog/nom-035-stps-guia-practica-para-centros-de-trabajo-con-mas-de-16-empleados-2026-11-06.html</link>
@@ -191,22 +207,6 @@
       <pubDate>Wed, 21 Oct 2026 12:00:00 GMT</pubDate>
       <category>Tip RH</category>
       <description>Entregue el CFDI de nómina a cada trabajador a más tardar el último día del período de pago correspondiente: esa es la regla práctica que todo patrón debe tener clara para evitar contingencias ante el…</description>
-    </item>
-    <item>
-      <title>Subcontratación (outsourcing) tras la reforma 2021: qué cambió y cómo cumplir</title>
-      <link>https://clicklaboral.mx/blog/subcontratacion-outsourcing-tras-la-reforma-2021-que-cambio-y-como-cumplir-2026-10-21.html</link>
-      <guid isPermaLink="true">https://clicklaboral.mx/blog/subcontratacion-outsourcing-tras-la-reforma-2021-que-cambio-y-como-cumplir-2026-10-21.html</guid>
-      <pubDate>Wed, 21 Oct 2026 12:00:00 GMT</pubDate>
-      <category>Contratos</category>
-      <description>Desde mayo de 2021, la subcontratación de personal en México dejó de ser una opción libre para convertirse en un régimen estrictamente regulado. Si su empresa todavía opera bajo esquemas del antiguo o…</description>
-    </item>
-    <item>
-      <title>Alerta: las multas por no tener Comisión de Seguridad e Higiene actualizada son hasta 435 UMAs</title>
-      <link>https://clicklaboral.mx/blog/noticia-alerta-las-multas-por-no-tener-comision-de-segurid-2026-10-20.html</link>
-      <guid isPermaLink="true">https://clicklaboral.mx/blog/noticia-alerta-las-multas-por-no-tener-comision-de-segurid-2026-10-20.html</guid>
-      <pubDate>Tue, 20 Oct 2026 12:00:00 GMT</pubDate>
-      <category>Alerta Legal</category>
-      <description>Las empresas que no cuenten con una Comisión de Seguridad e Higiene activa, documentada y actualizada pueden recibir multas de hasta 435 veces la Unidad de Medida y Actualización (UMA), equivalentes a…</description>
     </item>
   </channel>
 </rss>

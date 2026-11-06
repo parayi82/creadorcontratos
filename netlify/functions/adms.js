@@ -16,6 +16,7 @@
 // Env: SUPABASE_URL, SUPABASE_SERVICE_KEY
 
 const { createClient } = require('@supabase/supabase-js');
+const { combinarAsistencia, normHora } = require('./_adms-merge');
 
 const TXT = { 'Content-Type': 'text/plain; charset=utf-8' };
 const ok  = (body) => ({ statusCode: 200, headers: TXT, body: String(body) });
@@ -177,16 +178,20 @@ async function processAttlog(sb, sn, body) {
       groups[key] = { trab, fecha, entrada: null, salida: null };
     }
 
-    // 0=entrada, 4=OT-entrada → registrar hora de entrada (más temprana del día)
+    // Hora con segundos (HH:MM:SS) para comparar y guardar con precisión
+    const hora = normHora(horaCompleta) || normHora(timePart);
+    if (!hora) continue;
+
+    // 0=entrada, 4=OT-entrada → registrar hora de entrada (más temprana del lote)
     if (statusCode === 0 || statusCode === 4) {
-      if (!groups[key].entrada || timePart < groups[key].entrada) {
-        groups[key].entrada = timePart;
+      if (!groups[key].entrada || hora < groups[key].entrada) {
+        groups[key].entrada = hora;
       }
     }
-    // 1=salida, 5=OT-salida → registrar hora de salida (más tardía del día)
+    // 1=salida, 5=OT-salida → registrar hora de salida (más tardía del lote)
     if (statusCode === 1 || statusCode === 5) {
-      if (!groups[key].salida || timePart > groups[key].salida) {
-        groups[key].salida = timePart;
+      if (!groups[key].salida || hora > groups[key].salida) {
+        groups[key].salida = hora;
       }
     }
   }
@@ -202,30 +207,35 @@ async function processAttlog(sb, sn, body) {
     if (mErr) console.error('adms marcaciones error:', mErr.message);
   }
 
-  // Upsert de asistencias
+  // Upsert de asistencias, COMBINANDO con lo que ya existe: el reloj manda las
+  // checadas del día en varios lotes, y un lote con solo la salida borraba la
+  // entrada (escribía hora_entrada = null). Ver _adms-merge.js.
+  const grupos = Object.values(groups).filter(g => g.entrada || g.salida);
+  if (!grupos.length) return ok('OK: 0');
+
+  const ids    = [...new Set(grupos.map(g => g.trab.id))];
+  const fechas = [...new Set(grupos.map(g => g.fecha))];
+  const { data: existentes, error: exErr } = await sb.from('asistencias')
+    .select('trabajador_id,fecha,hora_entrada,hora_salida,status')
+    .eq('cliente_rfc', clienteRFC)
+    .in('trabajador_id', ids)
+    .in('fecha', fechas);
+  if (exErr) {
+    // Sin saber qué hay, no se escribe: sobrescribir a ciegas es justo el bug.
+    // Las checadas crudas ya quedaron en `marcaciones`.
+    console.error('adms lectura asistencias error:', exErr.message);
+    return ok('OK: 0');
+  }
+  const porClave = {};
+  for (const a of (existentes || [])) porClave[`${a.trabajador_id}|${a.fecha}`] = a;
+
   const registros = [];
-  for (const { trab, fecha, entrada, salida } of Object.values(groups)) {
-    if (!entrada && !salida) continue;
-
-    let status = 'presente';
-    if (entrada && trab.hora_entrada_habitual) {
-      const [eh, em] = trab.hora_entrada_habitual.split(':').map(Number);
-      const [ch, cm] = entrada.split(':').map(Number);
-      if ((ch * 60 + cm) > (eh * 60 + em) + 15) status = 'retraso';
-    }
-
-    registros.push({
-      trabajador_id: trab.id,
-      cliente_rfc:   clienteRFC,
-      fecha,
-      status,
-      hora_entrada:  entrada || null,
-      hora_salida:   salida  || null,
-      fuente:        'adms',
-    });
+  for (const g of grupos) {
+    const r = combinarAsistencia(g, porClave[`${g.trab.id}|${g.fecha}`], clienteRFC);
+    if (r) registros.push(r);
   }
 
-  if (!registros.length) return ok('OK: 0');
+  if (!registros.length) return ok(`OK: ${grupos.length}`);   // nada nuevo que escribir
 
   const { error } = await sb.from('asistencias').upsert(registros, {
     onConflict: 'trabajador_id,fecha',

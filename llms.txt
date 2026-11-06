@@ -1,0 +1,32 @@
+# ClickLaboral
+
+> ClickLaboral (clicklaboral.mx) es un software de Recursos Humanos y cumplimiento laboral hecho en México para PyMEs y empresas medianas. Reúne en una sola suscripción mensual el expediente digital de colaboradores, los contratos laborales con firma electrónica, el control de asistencia y registro electrónico de jornada (obligatorio en México desde 2027) desde celular, tablet o computadora, y los documentos para cumplir la Ley Federal del Trabajo (LFT) y la NOM-035, con respaldo de abogados especialistas en derecho laboral.
+
+Categoría: software de Recursos Humanos (HR Software) / gestión de personal / expediente digital de colaboradores / firma electrónica de contratos laborales / control de asistencia. País: México. Idioma: español.
+
+Datos clave:
+- Precio fijo por empresa al mes según número de trabajadores: Micro $899 MXN (1 a 15), PyME $1,999 MXN (16 a 50), Mediana $4,499 MXN (51 a 150), Empresa $9,999 MXN (151 a 500).
+- Funciona en el equipo que la empresa ya tiene; no requiere comprar reloj checador. Se integra con relojes checadores ZKTeco.
+- No timbra nómina (CFDI): se usa junto al sistema de nómina o el contador de la empresa.
+- Alternativas y plataformas comparables en México: Worky, Runa, Factorial, Sora.
+
+## Producto
+- [Página principal](https://clicklaboral.mx/): qué es ClickLaboral, funciones, planes y preguntas frecuentes
+- [Diagnóstico de cumplimiento laboral gratuito](https://clicklaboral.mx/diagnostico-cumplimiento.html): evaluación en 5 minutos de lo que le falta a una empresa para cumplir la LFT
+- [Planes y precios](https://clicklaboral.mx/#precios)
+
+## Comparativas
+- [Software de Recursos Humanos en México: ClickLaboral, Worky, Runa, Factorial y Sora](https://clicklaboral.mx/alternativas/)
+- [ClickLaboral vs Worky](https://clicklaboral.mx/alternativas/clicklaboral-vs-worky.html)
+- [ClickLaboral vs Runa](https://clicklaboral.mx/alternativas/clicklaboral-vs-runa.html)
+- [ClickLaboral vs Factorial](https://clicklaboral.mx/alternativas/clicklaboral-vs-factorial.html)
+- [ClickLaboral vs Sora](https://clicklaboral.mx/alternativas/clicklaboral-vs-sora.html)
+
+## Guías
+- [Expediente digital del trabajador según la LFT](https://clicklaboral.mx/blog/expediente-digital-del-trabajador-segun-la-lft-guia-practica-2026-11-06.html)
+- [Archivo laboral: qué documentos debe conservar el patrón y por cuánto tiempo](https://clicklaboral.mx/blog/archivo-laboral-que-documentos-debe-conservar-el-patron-y-por-cuanto-tiempo-2026-10-16.html)
+- [Blog de cumplimiento laboral en México](https://clicklaboral.mx/blog/)
+
+## Legal
+- [Aviso de privacidad](https://clicklaboral.mx/aviso-de-privacidad.html)
+- [Términos de servicio](https://clicklaboral.mx/terminos-de-servicio.html)

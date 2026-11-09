@@ -5,9 +5,17 @@
     <link>https://clicklaboral.mx/blog/</link>
     <description>Artículos, noticias y tips de compliance laboral para PyMEs mexicanas</description>
     <language>es-MX</language>
-    <lastBuildDate>Mon, 09 Nov 2026 19:41:57 GMT</lastBuildDate>
+    <lastBuildDate>Mon, 09 Nov 2026 23:14:15 GMT</lastBuildDate>
     <managingEditor>blog@clicklaboral.mx (ClickLaboral.mx)</managingEditor>
     <atom:link href="https://clicklaboral.mx/blog/rss.xml" rel="self" type="application/rss+xml"/>
+    <item>
+      <title>PTU 2025: por qué el cálculo es diferente para empresas de reciente creación</title>
+      <link>https://clicklaboral.mx/blog/noticia-ptu-2025-por-que-el-calculo-es-diferente-para-empr-2026-11-09.html</link>
+      <guid isPermaLink="true">https://clicklaboral.mx/blog/noticia-ptu-2025-por-que-el-calculo-es-diferente-para-empr-2026-11-09.html</guid>
+      <pubDate>Mon, 09 Nov 2026 12:00:00 GMT</pubDate>
+      <category>Noticias</category>
+      <description>Las empresas constituidas durante 2024 no calculan la PTU 2025 con las mismas reglas que el resto: la Ley Federal del Trabajo establece condiciones específicas para el primer ejercicio fiscal que pued…</description>
+    </item>
     <item>
       <title>Aviso de rescisión: qué debe decir y en qué plazo entregarlo</title>
       <link>https://clicklaboral.mx/blog/aviso-de-rescision-que-debe-decir-y-en-que-plazo-entregarlo-2026-11-09.html</link>
@@ -199,14 +207,6 @@
       <pubDate>Sat, 24 Oct 2026 12:00:00 GMT</pubDate>
       <category>Tip RH</category>
       <description>El patrón tiene la obligación de entregar el CFDI de nómina a cada trabajador a más tardar el mismo día en que se realiza el pago del salario, sin excepción. Cumplir con este plazo no es opcional: el…</description>
-    </item>
-    <item>
-      <title>NOM-037 dos años después: qué obligaciones del teletrabajo siguen sin cumplirse en las PyMEs</title>
-      <link>https://clicklaboral.mx/blog/noticia-nom-037-dos-anos-despues-que-obligaciones-del-tele-2026-10-23.html</link>
-      <guid isPermaLink="true">https://clicklaboral.mx/blog/noticia-nom-037-dos-anos-despues-que-obligaciones-del-tele-2026-10-23.html</guid>
-      <pubDate>Fri, 23 Oct 2026 12:00:00 GMT</pubDate>
-      <category>Reforma Laboral</category>
-      <description>A dos años de su entrada en vigor, la NOM-037-STPS-2023 sigue presentando niveles bajos de cumplimiento en las pequeñas y medianas empresas: según estimaciones de la Secretaría del Trabajo y Previsión…</description>
     </item>
   </channel>
 </rss>

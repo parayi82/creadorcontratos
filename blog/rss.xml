@@ -5,9 +5,17 @@
     <link>https://clicklaboral.mx/blog/</link>
     <description>Artículos, noticias y tips de compliance laboral para PyMEs mexicanas</description>
     <language>es-MX</language>
-    <lastBuildDate>Wed, 11 Nov 2026 17:00:51 GMT</lastBuildDate>
+    <lastBuildDate>Wed, 11 Nov 2026 21:00:05 GMT</lastBuildDate>
     <managingEditor>blog@clicklaboral.mx (ClickLaboral.mx)</managingEditor>
     <atom:link href="https://clicklaboral.mx/blog/rss.xml" rel="self" type="application/rss+xml"/>
+    <item>
+      <title>Alerta: las multas por no tener Comisión de Seguridad e Higiene actualizada son hasta 435 UMAs</title>
+      <link>https://clicklaboral.mx/blog/noticia-alerta-las-multas-por-no-tener-comision-de-segurid-2026-11-11.html</link>
+      <guid isPermaLink="true">https://clicklaboral.mx/blog/noticia-alerta-las-multas-por-no-tener-comision-de-segurid-2026-11-11.html</guid>
+      <pubDate>Wed, 11 Nov 2026 12:00:00 GMT</pubDate>
+      <category>Alerta Legal</category>
+      <description>Las empresas que no cuenten con una Comisión de Seguridad e Higiene debidamente constituida y actualizada pueden recibir multas de hasta 435 veces la Unidad de Medida y Actualización (UMA), equivalent…</description>
+    </item>
     <item>
       <title>Contrato colectivo de trabajo: qué es, cuándo aplica y cómo negociarlo</title>
       <link>https://clicklaboral.mx/blog/contrato-colectivo-de-trabajo-que-es-cuando-aplica-y-como-negociarlo-2026-11-11.html</link>
@@ -199,14 +207,6 @@
       <pubDate>Mon, 26 Oct 2026 12:00:00 GMT</pubDate>
       <category>Alerta Legal</category>
       <description>Alerta para patrones: si un trabajador no disfrutó sus vacaciones en el año que le correspondían, tiene hasta un año adicional para reclamarlas ante la STPS o un Tribunal Laboral, conforme al artículo…</description>
-    </item>
-    <item>
-      <title>NOM-017-STPS: equipo de protección personal — qué debe proveer el patrón</title>
-      <link>https://clicklaboral.mx/blog/nom-017-stps-equipo-de-proteccion-personal-que-debe-proveer-el-patron-2026-10-26.html</link>
-      <guid isPermaLink="true">https://clicklaboral.mx/blog/nom-017-stps-equipo-de-proteccion-personal-que-debe-proveer-el-patron-2026-10-26.html</guid>
-      <pubDate>Mon, 26 Oct 2026 12:00:00 GMT</pubDate>
-      <category>NOMs</category>
-      <description>Si un trabajador sufre un accidente porque el patrón no le proporcionó el equipo de protección personal adecuado, la empresa no solo enfrenta una multa: puede ser responsable de la incapacidad permane…</description>
     </item>
   </channel>
 </rss>

@@ -5,9 +5,17 @@
     <link>https://clicklaboral.mx/blog/</link>
     <description>Artículos, noticias y tips de compliance laboral para PyMEs mexicanas</description>
     <language>es-MX</language>
-    <lastBuildDate>Tue, 10 Nov 2026 20:39:55 GMT</lastBuildDate>
+    <lastBuildDate>Wed, 11 Nov 2026 17:00:51 GMT</lastBuildDate>
     <managingEditor>blog@clicklaboral.mx (ClickLaboral.mx)</managingEditor>
     <atom:link href="https://clicklaboral.mx/blog/rss.xml" rel="self" type="application/rss+xml"/>
+    <item>
+      <title>Contrato colectivo de trabajo: qué es, cuándo aplica y cómo negociarlo</title>
+      <link>https://clicklaboral.mx/blog/contrato-colectivo-de-trabajo-que-es-cuando-aplica-y-como-negociarlo-2026-11-11.html</link>
+      <guid isPermaLink="true">https://clicklaboral.mx/blog/contrato-colectivo-de-trabajo-que-es-cuando-aplica-y-como-negociarlo-2026-11-11.html</guid>
+      <pubDate>Wed, 11 Nov 2026 12:00:00 GMT</pubDate>
+      <category>Contratos</category>
+      <description>Si su empresa tiene sindicato o sus trabajadores están organizados colectivamente, el contrato colectivo de trabajo no es una opción: es una obligación legal que, bien negociada, puede convertirse en…</description>
+    </item>
     <item>
       <title>Licencia de paternidad en México: la reforma que muchos patrones todavía aplican mal</title>
       <link>https://clicklaboral.mx/blog/noticia-licencia-de-paternidad-en-mexico-la-reforma-que-mu-2026-11-10.html</link>
@@ -199,14 +207,6 @@
       <pubDate>Mon, 26 Oct 2026 12:00:00 GMT</pubDate>
       <category>NOMs</category>
       <description>Si un trabajador sufre un accidente porque el patrón no le proporcionó el equipo de protección personal adecuado, la empresa no solo enfrenta una multa: puede ser responsable de la incapacidad permane…</description>
-    </item>
-    <item>
-      <title>STPS actualiza plataforma digital para que PyMEs generen su reglamento interior en línea</title>
-      <link>https://clicklaboral.mx/blog/noticia-stps-actualiza-plataforma-digital-para-que-pymes-g-2026-10-25.html</link>
-      <guid isPermaLink="true">https://clicklaboral.mx/blog/noticia-stps-actualiza-plataforma-digital-para-que-pymes-g-2026-10-25.html</guid>
-      <pubDate>Sun, 25 Oct 2026 12:00:00 GMT</pubDate>
-      <category>Noticias</category>
-      <description>La Secretaría del Trabajo y Previsión Social (STPS) actualizó su plataforma digital para que las empresas puedan generar, revisar y descargar su Reglamento Interior de Trabajo (RIT) en línea, sin nece…</description>
     </item>
   </channel>
 </rss>

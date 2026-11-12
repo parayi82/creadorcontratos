@@ -5,9 +5,17 @@
     <link>https://clicklaboral.mx/blog/</link>
     <description>Artículos, noticias y tips de compliance laboral para PyMEs mexicanas</description>
     <language>es-MX</language>
-    <lastBuildDate>Wed, 11 Nov 2026 21:00:05 GMT</lastBuildDate>
+    <lastBuildDate>Thu, 12 Nov 2026 21:15:53 GMT</lastBuildDate>
     <managingEditor>blog@clicklaboral.mx (ClickLaboral.mx)</managingEditor>
     <atom:link href="https://clicklaboral.mx/blog/rss.xml" rel="self" type="application/rss+xml"/>
+    <item>
+      <title>Trabajo híbrido y derecho laboral mexicano: qué dice la LFT y qué vacíos legales quedan</title>
+      <link>https://clicklaboral.mx/blog/noticia-trabajo-hibrido-y-derecho-laboral-mexicano-que-dic-2026-11-12.html</link>
+      <guid isPermaLink="true">https://clicklaboral.mx/blog/noticia-trabajo-hibrido-y-derecho-laboral-mexicano-que-dic-2026-11-12.html</guid>
+      <pubDate>Thu, 12 Nov 2026 12:00:00 GMT</pubDate>
+      <category>Noticias</category>
+      <description>Desde 2021, México reconoce el teletrabajo en la Ley Federal del Trabajo, pero el modelo híbrido —parte presencial, parte remoto— opera en un vacío regulatorio que puede generar contingencias laborale…</description>
+    </item>
     <item>
       <title>Alerta: las multas por no tener Comisión de Seguridad e Higiene actualizada son hasta 435 UMAs</title>
       <link>https://clicklaboral.mx/blog/noticia-alerta-las-multas-por-no-tener-comision-de-segurid-2026-11-11.html</link>
@@ -199,14 +207,6 @@
       <pubDate>Tue, 27 Oct 2026 12:00:00 GMT</pubDate>
       <category>Alerta Legal</category>
       <description>El Registro de Prestadoras de Servicios Especializados u Obras Especializadas (REPSE) tiene una vigencia de tres años: si su empresa lo obtuvo en 2021 —cuando entró en vigor la reforma al artículo 15…</description>
-    </item>
-    <item>
-      <title>Alerta: las vacaciones no gozadas no prescriben en el año — pueden reclamarse hasta 1 año después</title>
-      <link>https://clicklaboral.mx/blog/noticia-alerta-las-vacaciones-no-gozadas-no-prescriben-en--2026-10-26.html</link>
-      <guid isPermaLink="true">https://clicklaboral.mx/blog/noticia-alerta-las-vacaciones-no-gozadas-no-prescriben-en--2026-10-26.html</guid>
-      <pubDate>Mon, 26 Oct 2026 12:00:00 GMT</pubDate>
-      <category>Alerta Legal</category>
-      <description>Alerta para patrones: si un trabajador no disfrutó sus vacaciones en el año que le correspondían, tiene hasta un año adicional para reclamarlas ante la STPS o un Tribunal Laboral, conforme al artículo…</description>
     </item>
   </channel>
 </rss>

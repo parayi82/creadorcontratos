@@ -5,9 +5,17 @@
     <link>https://clicklaboral.mx/blog/</link>
     <description>Artículos, noticias y tips de compliance laboral para PyMEs mexicanas</description>
     <language>es-MX</language>
-    <lastBuildDate>Fri, 13 Nov 2026 17:05:03 GMT</lastBuildDate>
+    <lastBuildDate>Fri, 13 Nov 2026 20:42:33 GMT</lastBuildDate>
     <managingEditor>blog@clicklaboral.mx (ClickLaboral.mx)</managingEditor>
     <atom:link href="https://clicklaboral.mx/blog/rss.xml" rel="self" type="application/rss+xml"/>
+    <item>
+      <title>Tip: el error más común al calcular la prima dominical y cómo evitarlo</title>
+      <link>https://clicklaboral.mx/blog/noticia-tip-el-error-mas-comun-al-calcular-la-prima-domini-2026-11-13.html</link>
+      <guid isPermaLink="true">https://clicklaboral.mx/blog/noticia-tip-el-error-mas-comun-al-calcular-la-prima-domini-2026-11-13.html</guid>
+      <pubDate>Fri, 13 Nov 2026 12:00:00 GMT</pubDate>
+      <category>Tip RH</category>
+      <description>Pagar el 25 % sobre el salario ordinario cuando el trabajador labora en domingo suena sencillo, pero la mayoría de los patrones cometen un error antes de hacer ese cálculo: aplican el porcentaje sobre…</description>
+    </item>
     <item>
       <title>Reducción de personal por causas económicas: procedimiento legal correcto</title>
       <link>https://clicklaboral.mx/blog/reduccion-de-personal-por-causas-economicas-procedimiento-legal-correcto-2026-11-13.html</link>
@@ -199,14 +207,6 @@
       <pubDate>Wed, 28 Oct 2026 12:00:00 GMT</pubDate>
       <category>Noticias</category>
       <description>El 58% de las pequeñas y medianas empresas mexicanas desconoce la totalidad de sus obligaciones bajo la NOM-037-STPS-2023, la norma que regula el teletrabajo en el país, de acuerdo con una encuesta re…</description>
-    </item>
-    <item>
-      <title>REPSE: qué es el Registro de Prestadoras de Servicios y cómo obtenerlo</title>
-      <link>https://clicklaboral.mx/blog/repse-que-es-el-registro-de-prestadoras-de-servicios-y-como-obtenerlo-2026-10-28.html</link>
-      <guid isPermaLink="true">https://clicklaboral.mx/blog/repse-que-es-el-registro-de-prestadoras-de-servicios-y-como-obtenerlo-2026-10-28.html</guid>
-      <pubDate>Wed, 28 Oct 2026 12:00:00 GMT</pubDate>
-      <category>Cumplimiento</category>
-      <description>Si su empresa contrata a otra empresa para que le proporcione trabajadores o ejecute servicios especializados, necesita conocer el REPSE. Sin este registro, tanto la empresa prestadora como la contrat…</description>
     </item>
   </channel>
 </rss>

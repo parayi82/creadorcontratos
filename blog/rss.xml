@@ -5,9 +5,17 @@
     <link>https://clicklaboral.mx/blog/</link>
     <description>Artículos, noticias y tips de compliance laboral para PyMEs mexicanas</description>
     <language>es-MX</language>
-    <lastBuildDate>Fri, 13 Nov 2026 20:42:33 GMT</lastBuildDate>
+    <lastBuildDate>Sat, 14 Nov 2026 18:54:42 GMT</lastBuildDate>
     <managingEditor>blog@clicklaboral.mx (ClickLaboral.mx)</managingEditor>
     <atom:link href="https://clicklaboral.mx/blog/rss.xml" rel="self" type="application/rss+xml"/>
+    <item>
+      <title>Tesis: la carta de renuncia firmada ante dos testigos es prueba suficiente de voluntariedad en juicio</title>
+      <link>https://clicklaboral.mx/blog/noticia-tesis-la-carta-de-renuncia-firmada-ante-dos-testig-2026-11-14.html</link>
+      <guid isPermaLink="true">https://clicklaboral.mx/blog/noticia-tesis-la-carta-de-renuncia-firmada-ante-dos-testig-2026-11-14.html</guid>
+      <pubDate>Sat, 14 Nov 2026 12:00:00 GMT</pubDate>
+      <category>Jurisprudencia</category>
+      <description>Una carta de renuncia firmada ante dos testigos constituye prueba suficiente para acreditar la voluntariedad de la separación laboral en juicio, según criterio jurisprudencial reciente de los Tribunal…</description>
+    </item>
     <item>
       <title>Tip: el error más común al calcular la prima dominical y cómo evitarlo</title>
       <link>https://clicklaboral.mx/blog/noticia-tip-el-error-mas-comun-al-calcular-la-prima-domini-2026-11-13.html</link>
@@ -199,14 +207,6 @@
       <pubDate>Thu, 29 Oct 2026 12:00:00 GMT</pubDate>
       <category>Noticias</category>
       <description>El trabajo híbrido opera hoy en miles de PyMEs mexicanas sin un marco legal específico que lo regule: la Ley Federal del Trabajo reconoce el teletrabajo, pero guarda silencio sobre los esquemas mixtos…</description>
-    </item>
-    <item>
-      <title>Encuesta: el 58% de PyMEs mexicanas no conoce todas sus obligaciones bajo NOM-037</title>
-      <link>https://clicklaboral.mx/blog/noticia-encuesta-el-58-de-pymes-mexicanas-no-conoce-todas--2026-10-28.html</link>
-      <guid isPermaLink="true">https://clicklaboral.mx/blog/noticia-encuesta-el-58-de-pymes-mexicanas-no-conoce-todas--2026-10-28.html</guid>
-      <pubDate>Wed, 28 Oct 2026 12:00:00 GMT</pubDate>
-      <category>Noticias</category>
-      <description>El 58% de las pequeñas y medianas empresas mexicanas desconoce la totalidad de sus obligaciones bajo la NOM-037-STPS-2023, la norma que regula el teletrabajo en el país, de acuerdo con una encuesta re…</description>
     </item>
   </channel>
 </rss>

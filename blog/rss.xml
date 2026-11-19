@@ -5,9 +5,17 @@
     <link>https://clicklaboral.mx/blog/</link>
     <description>Artículos, noticias y tips de compliance laboral para PyMEs mexicanas</description>
     <language>es-MX</language>
-    <lastBuildDate>Wed, 18 Nov 2026 21:40:20 GMT</lastBuildDate>
+    <lastBuildDate>Thu, 19 Nov 2026 21:56:16 GMT</lastBuildDate>
     <managingEditor>blog@clicklaboral.mx (ClickLaboral.mx)</managingEditor>
     <atom:link href="https://clicklaboral.mx/blog/rss.xml" rel="self" type="application/rss+xml"/>
+    <item>
+      <title>NOM-037 dos años después: qué obligaciones del teletrabajo siguen sin cumplirse en las PyMEs</title>
+      <link>https://clicklaboral.mx/blog/noticia-nom-037-dos-anos-despues-que-obligaciones-del-tele-2026-11-19.html</link>
+      <guid isPermaLink="true">https://clicklaboral.mx/blog/noticia-nom-037-dos-anos-despues-que-obligaciones-del-tele-2026-11-19.html</guid>
+      <pubDate>Thu, 19 Nov 2026 12:00:00 GMT</pubDate>
+      <category>Reforma Laboral</category>
+      <description>Dos años después de su entrada en vigor, la NOM-037-STPS-2023 sobre teletrabajo sigue siendo una de las normas con mayor incumplimiento en las pequeñas y medianas empresas mexicanas: según estimacione…</description>
+    </item>
     <item>
       <title>Alerta: el REPSE vence cada 3 años — verifique si su empresa necesita renovarlo</title>
       <link>https://clicklaboral.mx/blog/noticia-alerta-el-repse-vence-cada-3-anos-verifique-si-su--2026-11-18.html</link>
@@ -199,14 +207,6 @@
       <pubDate>Tue, 03 Nov 2026 12:00:00 GMT</pubDate>
       <category>Tip RH</category>
       <description>Al recibir una renuncia, calcule la prima vacacional de forma proporcional a los días de vacaciones generados en el año en curso: es una obligación legal que, si se omite, puede derivar en un juicio a…</description>
-    </item>
-    <item>
-      <title>Subcontratación 2021: qué puede y qué no puede hacer con el REPSE en 2025</title>
-      <link>https://clicklaboral.mx/blog/noticia-subcontratacion-2021-que-puede-y-que-no-puede-hace-2026-11-02.html</link>
-      <guid isPermaLink="true">https://clicklaboral.mx/blog/noticia-subcontratacion-2021-que-puede-y-que-no-puede-hace-2026-11-02.html</guid>
-      <pubDate>Mon, 02 Nov 2026 12:00:00 GMT</pubDate>
-      <category>Reforma Laboral</category>
-      <description>Desde la reforma a la Ley Federal del Trabajo de abril de 2021, la subcontratación de personal quedó prohibida en términos generales; sin embargo, el esquema de servicios especializados —regulado por…</description>
     </item>
   </channel>
 </rss>

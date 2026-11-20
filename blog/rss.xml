@@ -5,9 +5,17 @@
     <link>https://clicklaboral.mx/blog/</link>
     <description>Artículos, noticias y tips de compliance laboral para PyMEs mexicanas</description>
     <language>es-MX</language>
-    <lastBuildDate>Fri, 20 Nov 2026 17:41:32 GMT</lastBuildDate>
+    <lastBuildDate>Fri, 20 Nov 2026 21:38:22 GMT</lastBuildDate>
     <managingEditor>blog@clicklaboral.mx (ClickLaboral.mx)</managingEditor>
     <atom:link href="https://clicklaboral.mx/blog/rss.xml" rel="self" type="application/rss+xml"/>
+    <item>
+      <title>Tip: cómo registrar correctamente una amonestación verbal sin que se vuelva contra usted</title>
+      <link>https://clicklaboral.mx/blog/noticia-tip-como-registrar-correctamente-una-amonestacion--2026-11-20.html</link>
+      <guid isPermaLink="true">https://clicklaboral.mx/blog/noticia-tip-como-registrar-correctamente-una-amonestacion--2026-11-20.html</guid>
+      <pubDate>Fri, 20 Nov 2026 12:00:00 GMT</pubDate>
+      <category>Tip RH</category>
+      <description>Documente toda amonestación verbal con una constancia escrita firmada por el trabajador y un testigo el mismo día en que ocurra: sin ese respaldo, la sanción no existe ante una Junta de Conciliación o…</description>
+    </item>
     <item>
       <title>Vales de despensa: tratamiento fiscal y laboral para la empresa</title>
       <link>https://clicklaboral.mx/blog/vales-de-despensa-tratamiento-fiscal-y-laboral-para-la-empresa-2026-11-20.html</link>
@@ -199,14 +207,6 @@
       <pubDate>Wed, 04 Nov 2026 12:00:00 GMT</pubDate>
       <category>Reforma Laboral</category>
       <description>Dos años después de su entrada en vigor, la NOM-037-STPS-2023 sobre teletrabajo sigue sin cumplirse en la mayoría de las pequeñas y medianas empresas: inspecciones de la STPS reportan que más del 60%…</description>
-    </item>
-    <item>
-      <title>Comisión Mixta de PTU: integración, funciones y plazos legales</title>
-      <link>https://clicklaboral.mx/blog/comision-mixta-de-ptu-integracion-funciones-y-plazos-legales-2026-11-04.html</link>
-      <guid isPermaLink="true">https://clicklaboral.mx/blog/comision-mixta-de-ptu-integracion-funciones-y-plazos-legales-2026-11-04.html</guid>
-      <pubDate>Wed, 04 Nov 2026 12:00:00 GMT</pubDate>
-      <category>Cumplimiento</category>
-      <description>Si su empresa reparte utilidades, está obligada por ley a constituir una Comisión Mixta de PTU antes de iniciar el proceso de cálculo y pago. No hacerlo —o hacerlo mal— puede derivar en multas, confli…</description>
     </item>
   </channel>
 </rss>

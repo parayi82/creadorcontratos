@@ -5,9 +5,17 @@
     <link>https://clicklaboral.mx/blog/</link>
     <description>Artículos, noticias y tips de compliance laboral para PyMEs mexicanas</description>
     <language>es-MX</language>
-    <lastBuildDate>Thu, 19 Nov 2026 21:56:16 GMT</lastBuildDate>
+    <lastBuildDate>Fri, 20 Nov 2026 17:41:32 GMT</lastBuildDate>
     <managingEditor>blog@clicklaboral.mx (ClickLaboral.mx)</managingEditor>
     <atom:link href="https://clicklaboral.mx/blog/rss.xml" rel="self" type="application/rss+xml"/>
+    <item>
+      <title>Vales de despensa: tratamiento fiscal y laboral para la empresa</title>
+      <link>https://clicklaboral.mx/blog/vales-de-despensa-tratamiento-fiscal-y-laboral-para-la-empresa-2026-11-20.html</link>
+      <guid isPermaLink="true">https://clicklaboral.mx/blog/vales-de-despensa-tratamiento-fiscal-y-laboral-para-la-empresa-2026-11-20.html</guid>
+      <pubDate>Fri, 20 Nov 2026 12:00:00 GMT</pubDate>
+      <category>Prestaciones</category>
+      <description>Los vales de despensa son una de las prestaciones más utilizadas en México, pero también una de las más mal aplicadas. Un error en su registro fiscal puede costarle a su empresa miles de pesos en impu…</description>
+    </item>
     <item>
       <title>NOM-037 dos años después: qué obligaciones del teletrabajo siguen sin cumplirse en las PyMEs</title>
       <link>https://clicklaboral.mx/blog/noticia-nom-037-dos-anos-despues-que-obligaciones-del-tele-2026-11-19.html</link>
@@ -199,14 +207,6 @@
       <pubDate>Wed, 04 Nov 2026 12:00:00 GMT</pubDate>
       <category>Cumplimiento</category>
       <description>Si su empresa reparte utilidades, está obligada por ley a constituir una Comisión Mixta de PTU antes de iniciar el proceso de cálculo y pago. No hacerlo —o hacerlo mal— puede derivar en multas, confli…</description>
-    </item>
-    <item>
-      <title>Tip: cómo calcular correctamente la prima vacacional proporcional al momento de una renuncia</title>
-      <link>https://clicklaboral.mx/blog/noticia-tip-como-calcular-correctamente-la-prima-vacaciona-2026-11-03.html</link>
-      <guid isPermaLink="true">https://clicklaboral.mx/blog/noticia-tip-como-calcular-correctamente-la-prima-vacaciona-2026-11-03.html</guid>
-      <pubDate>Tue, 03 Nov 2026 12:00:00 GMT</pubDate>
-      <category>Tip RH</category>
-      <description>Al recibir una renuncia, calcule la prima vacacional de forma proporcional a los días de vacaciones generados en el año en curso: es una obligación legal que, si se omite, puede derivar en un juicio a…</description>
     </item>
   </channel>
 </rss>

@@ -5,9 +5,17 @@
     <link>https://clicklaboral.mx/blog/</link>
     <description>Artículos, noticias y tips de compliance laboral para PyMEs mexicanas</description>
     <language>es-MX</language>
-    <lastBuildDate>Fri, 20 Nov 2026 21:38:22 GMT</lastBuildDate>
+    <lastBuildDate>Sat, 21 Nov 2026 20:19:04 GMT</lastBuildDate>
     <managingEditor>blog@clicklaboral.mx (ClickLaboral.mx)</managingEditor>
     <atom:link href="https://clicklaboral.mx/blog/rss.xml" rel="self" type="application/rss+xml"/>
+    <item>
+      <title>Tesis: las cámaras de seguridad en el trabajo son prueba válida solo si el trabajador fue notificado</title>
+      <link>https://clicklaboral.mx/blog/noticia-tesis-las-camaras-de-seguridad-en-el-trabajo-son-p-2026-11-21.html</link>
+      <guid isPermaLink="true">https://clicklaboral.mx/blog/noticia-tesis-las-camaras-de-seguridad-en-el-trabajo-son-p-2026-11-21.html</guid>
+      <pubDate>Sat, 21 Nov 2026 12:00:00 GMT</pubDate>
+      <category>Jurisprudencia</category>
+      <description>Las cámaras de seguridad instaladas en el centro de trabajo solo son admisibles como prueba en un juicio laboral si el trabajador fue notificado previamente de su existencia y finalidad, según el crit…</description>
+    </item>
     <item>
       <title>Tip: cómo registrar correctamente una amonestación verbal sin que se vuelva contra usted</title>
       <link>https://clicklaboral.mx/blog/noticia-tip-como-registrar-correctamente-una-amonestacion--2026-11-20.html</link>
@@ -199,14 +207,6 @@
       <pubDate>Thu, 05 Nov 2026 12:00:00 GMT</pubDate>
       <category>Noticias</category>
       <description>El 58% de las pequeñas y medianas empresas mexicanas desconoce al menos una obligación establecida en la NOM-037-STPS-2023, la norma que regula el teletrabajo en México, según una encuesta reciente ap…</description>
-    </item>
-    <item>
-      <title>NOM-037 dos años después: qué obligaciones del teletrabajo siguen sin cumplirse en las PyMEs</title>
-      <link>https://clicklaboral.mx/blog/noticia-nom-037-dos-anos-despues-que-obligaciones-del-tele-2026-11-04.html</link>
-      <guid isPermaLink="true">https://clicklaboral.mx/blog/noticia-nom-037-dos-anos-despues-que-obligaciones-del-tele-2026-11-04.html</guid>
-      <pubDate>Wed, 04 Nov 2026 12:00:00 GMT</pubDate>
-      <category>Reforma Laboral</category>
-      <description>Dos años después de su entrada en vigor, la NOM-037-STPS-2023 sobre teletrabajo sigue sin cumplirse en la mayoría de las pequeñas y medianas empresas: inspecciones de la STPS reportan que más del 60%…</description>
     </item>
   </channel>
 </rss>

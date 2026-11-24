@@ -5,9 +5,17 @@
     <link>https://clicklaboral.mx/blog/</link>
     <description>Artículos, noticias y tips de compliance laboral para PyMEs mexicanas</description>
     <language>es-MX</language>
-    <lastBuildDate>Mon, 23 Nov 2026 21:06:30 GMT</lastBuildDate>
+    <lastBuildDate>Tue, 24 Nov 2026 01:25:18 GMT</lastBuildDate>
     <managingEditor>blog@clicklaboral.mx (ClickLaboral.mx)</managingEditor>
     <atom:link href="https://clicklaboral.mx/blog/rss.xml" rel="self" type="application/rss+xml"/>
+    <item>
+      <title>Tesis: las cámaras de seguridad en el trabajo son prueba válida solo si el trabajador fue notificado</title>
+      <link>https://clicklaboral.mx/blog/noticia-tesis-las-camaras-de-seguridad-en-el-trabajo-son-p-2026-11-24.html</link>
+      <guid isPermaLink="true">https://clicklaboral.mx/blog/noticia-tesis-las-camaras-de-seguridad-en-el-trabajo-son-p-2026-11-24.html</guid>
+      <pubDate>Tue, 24 Nov 2026 12:00:00 GMT</pubDate>
+      <category>Jurisprudencia</category>
+      <description>Las cámaras de videovigilancia instaladas en el centro de trabajo solo son admisibles como prueba en un juicio laboral si el trabajador fue notificado previamente de su existencia, según criterio juri…</description>
+    </item>
     <item>
       <title>Reinstalación de trabajador por laudo: derechos del patrón y opciones legales</title>
       <link>https://clicklaboral.mx/blog/reinstalacion-de-trabajador-por-laudo-derechos-del-patron-y-opciones-legales-2026-11-23.html</link>
@@ -199,14 +207,6 @@
       <pubDate>Fri, 06 Nov 2026 12:00:00 GMT</pubDate>
       <category>Jurisprudencia</category>
       <description>Las grabaciones de cámaras de seguridad solo son admisibles como prueba en un juicio laboral si el trabajador fue previamente notificado de su existencia y finalidad: así lo establece una tesis aislad…</description>
-    </item>
-    <item>
-      <title>Expediente digital del trabajador según la LFT: qué debe contener y cómo llevarlo</title>
-      <link>https://clicklaboral.mx/blog/expediente-digital-del-trabajador-segun-la-lft-guia-practica-2026-11-06.html</link>
-      <guid isPermaLink="true">https://clicklaboral.mx/blog/expediente-digital-del-trabajador-segun-la-lft-guia-practica-2026-11-06.html</guid>
-      <pubDate>Fri, 06 Nov 2026 12:00:00 GMT</pubDate>
-      <category>Cumplimiento</category>
-      <description>El expediente del trabajador es la primera prueba de su empresa ante una inspección o una demanda. Qué documentos debe contener según la LFT, cuánto tiempo conservarlos y cómo llevarlo en digital con firma electrónica.</description>
     </item>
   </channel>
 </rss>

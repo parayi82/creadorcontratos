@@ -5,9 +5,17 @@
     <link>https://clicklaboral.mx/blog/</link>
     <description>Artículos, noticias y tips de compliance laboral para PyMEs mexicanas</description>
     <language>es-MX</language>
-    <lastBuildDate>Fri, 27 Nov 2026 18:48:40 GMT</lastBuildDate>
+    <lastBuildDate>Fri, 27 Nov 2026 22:25:49 GMT</lastBuildDate>
     <managingEditor>blog@clicklaboral.mx (ClickLaboral.mx)</managingEditor>
     <atom:link href="https://clicklaboral.mx/blog/rss.xml" rel="self" type="application/rss+xml"/>
+    <item>
+      <title>Tip: qué preguntar y qué no en una entrevista de trabajo para no violar la LFPED</title>
+      <link>https://clicklaboral.mx/blog/noticia-tip-que-preguntar-y-que-no-en-una-entrevista-de-tr-2026-11-27.html</link>
+      <guid isPermaLink="true">https://clicklaboral.mx/blog/noticia-tip-que-preguntar-y-que-no-en-una-entrevista-de-tr-2026-11-27.html</guid>
+      <pubDate>Fri, 27 Nov 2026 12:00:00 GMT</pubDate>
+      <category>Tip RH</category>
+      <description>En una entrevista de trabajo, preguntar la edad, el estado civil o si la candidata está embarazada puede costarle a su empresa una denuncia ante el INAI o ante la STPS por discriminación laboral.…</description>
+    </item>
     <item>
       <title>Aviso de rescisión: qué debe decir y en qué plazo entregarlo</title>
       <link>https://clicklaboral.mx/blog/aviso-de-rescision-que-debe-decir-y-en-que-plazo-entregarlo-2026-11-27.html</link>
@@ -199,14 +207,6 @@
       <pubDate>Tue, 10 Nov 2026 12:00:00 GMT</pubDate>
       <category>Reforma Laboral</category>
       <description>Desde la reforma al artículo 132, fracción XXVII Bis de la Ley Federal del Trabajo, los trabajadores tienen derecho a cinco días de licencia de paternidad con goce de sueldo al nacimiento de un hijo o…</description>
-    </item>
-    <item>
-      <title>PTU 2025: por qué el cálculo es diferente para empresas de reciente creación</title>
-      <link>https://clicklaboral.mx/blog/noticia-ptu-2025-por-que-el-calculo-es-diferente-para-empr-2026-11-09.html</link>
-      <guid isPermaLink="true">https://clicklaboral.mx/blog/noticia-ptu-2025-por-que-el-calculo-es-diferente-para-empr-2026-11-09.html</guid>
-      <pubDate>Mon, 09 Nov 2026 12:00:00 GMT</pubDate>
-      <category>Noticias</category>
-      <description>Las empresas constituidas durante 2024 no calculan la PTU 2025 con las mismas reglas que el resto: la Ley Federal del Trabajo establece condiciones específicas para el primer ejercicio fiscal que pued…</description>
     </item>
   </channel>
 </rss>
